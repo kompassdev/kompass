@@ -1,12 +1,26 @@
-{{pr-review}}
+## Determining What to Review
 
-Use `changes_load` first to get the branch summary, changed file list, and commit list.
-Interpret $ARGUMENTS as an optional base branch.
-When no base or head is provided, a dirty worktree should return only uncommitted local changes; otherwise it should return the committed branch delta.
+Interpret `$ARGUMENTS` to determine which type of review to perform:
+
+1. **No arguments (default)**: Auto-detect based on repo state
+   - Dirty worktree (uncommitted changes) → Review uncommitted local changes only
+   - Clean worktree on feature branch → Review branch delta vs default base branch (typically "main")
+
+2. **"uncommitted"** → Force review of uncommitted local changes only
+
+3. **Branch name** (e.g., "main", "origin/main") → Compare current branch to that base
+
+Use `changes_load` to get the branch summary, changed file list, and commit list:
+- For uncommitted changes: call with no base/head
+- For branch comparison: call with explicit `base` argument
+
 Do not publish PR comments.
+
 Return a chat review with:
 - an overall grade formatted like `★★☆☆☆`
 - a short verdict on merge risk
 - a concise list of high-confidence findings ordered by impact
 - explicit mention when no material issues were found
 - concise wording and only findings you are sure about
+
+{{code-review}}

@@ -1,19 +1,18 @@
-## PR Review Navigation Guide
+## Code Review Navigation Guide
 
 When reviewing code, optimize for high-signal findings per token.
 
 ### Workflow
-1. Start with a thin loader: use `changes_load` for git-based change inspection and `pr_load` only for PR metadata, review history, issue comments, thread state, and reviewer identity
+1. Start with a thin loader: use `changes_load` for git-based change inspection
 2. Check `AGENTS.md` guidance before reviewing behavior or conventions; when changed files live under nested directories, use the most specific nested `AGENTS.md` that governs that path
 3. Scan the summary first so you know the scope, file states, commit history, and where the risk clusters are
-4. Use `changes_load` to get the changed-file set and structured per-file diffs; do not rely on `pr_load` for file changes
+4. Use `changes_load` to get the changed-file set and structured per-file diffs
 5. When `changes_load` is called without explicit base/head, a dirty worktree should return only uncommitted local changes; otherwise it should return the committed branch delta against the default base branch
 6. Read every changed file individually before finalizing the review so you have full file context, not just diff context
 7. Use the diff to prioritize and navigate, but do not treat diff hunks alone as sufficient context for a finding
 8. Read the full current file for added, modified, renamed, copied, or untracked files before making a claim. For deleted files, inspect the previous file contents from git
 9. After reading each changed file once, follow related code only when it is necessary to confirm behavior, prove a regression, or verify compliance with project guidance
 10. In CI or shallow clones, prefer `changes_load` with explicit base and head refs so it can fetch only the history it needs
-11. Only publish signals when the command explicitly asks for it
 
 ### Efficient Expansion
 - Use the loader output to decide reading order, not whether a changed file gets read at all
@@ -47,19 +46,5 @@ When reviewing code, optimize for high-signal findings per token.
 - Be certain before flagging a hazard
 - Prefer a small number of high-confidence findings—mark the dangers, not every ripple
 - Follow `AGENTS.md` and nested `AGENTS.md` guidance strictly when deciding whether something is compliant
-- When publishing signals, make each one actionable, specific, and importance-graded
-- For PR reviews, publish comments by default; only approve when the final grade is `★★★★★`
-- Do not duplicate prior feedback; if the same issue was already flagged, skip it
-- Do not repeat the same grade; if the grade is unchanged, add only genuinely new comments or skip publishing entirely
 - When reporting a grade, format it as stars like `★★☆☆☆`
-- When not publishing, present the survey clearly in chat with a star grade, a short overall verdict, and a concise finding list ordered by impact
-
-### Publishing Reviews
-- Use `pr_load.viewerLogin` plus the returned review and thread history to detect your own prior feedback before posting anything
-- Use issue comments for normal PR discussion context, and review threads for resolved/outdated state when deciding whether something still needs to be raised
-- Treat a comment as duplicate when you already flagged the same issue on the same file location, even if the wording differs slightly
-- Compare the new grade against your latest prior grade from the same reviewer identity before posting a review summary
-- If the grade is unchanged and there are no new comments, skip publishing entirely
-- If the grade is unchanged and there are new comments, submit only inline comments with `event: COMMENT` and no review body
-- If the grade changed, submit a review body with the star grade; use `APPROVE` only for `★★★★★`, otherwise use `COMMENT`
-- Publish through `gh api --method POST repos/{repo}/pulls/{pr}/reviews --input <json-file>`
+- Present the survey clearly in chat with a star grade, a short overall verdict, and a concise finding list ordered by impact

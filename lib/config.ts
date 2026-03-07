@@ -97,7 +97,7 @@ const defaultComponentPaths: Record<string, string> = {
   "dev-flow": "components/dev-flow.txt",
   "ticket-plan": "components/ticket-plan.txt",
   "pr-fix": "components/pr-fix.txt",
-  "pr-review": "components/pr-review.txt",
+  "code-review": "components/code-review.txt",
 };
 
 export function mergeWithDefaults(
@@ -135,7 +135,7 @@ export function mergeWithDefaults(
         "dev-flow",
         "ticket-plan",
         "pr-fix",
-        "pr-review",
+        "code-review",
       ],
       paths: { ...defaultComponentPaths, ...config?.components?.paths },
     },

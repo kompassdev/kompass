@@ -1,4 +1,4 @@
-{{pr-review}}
+{{code-review}}
 
 Use `pr_load` first, with `reviews`, `issueComments`, and `threads` enabled, to load PR metadata, prior review summaries, normal PR comments, thread state, and your reviewer identity.
 Load ticket context with `ticket_load` when the PR body points to exactly one clear linked ticket.

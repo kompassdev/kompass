@@ -25,6 +25,8 @@ describe("changes_load e2e", () => {
     const result = await runChangesLoad(repo, {});
 
     assert.deepEqual(result, {
+      comparison: "uncommitted",
+      branch: "main",
       files: [{ status: "modified", path: "notes.txt" }],
     });
   });
@@ -38,6 +40,8 @@ describe("changes_load e2e", () => {
 
     const result = await runChangesLoad(repo, { diff: true });
 
+    assert.equal(result.comparison, "uncommitted");
+    assert.equal(result.branch, "main");
     assert.equal(result.files.length, 1);
     assert.deepEqual(
       {
@@ -67,6 +71,8 @@ describe("changes_load e2e", () => {
 
     const result = await runChangesLoad(repo, { base: "main", head: "HEAD", diff: true });
 
+    assert.equal(result.comparison, "main...HEAD");
+    assert.equal(result.branch, "feature");
     assert.equal(result.commits.length, 1);
     assert.deepEqual(result.files, [
       {
@@ -86,6 +92,8 @@ describe("changes_load e2e", () => {
 
     const result = await runChangesLoad(repo, { base: "main", head: "HEAD", diff: true });
 
+    assert.equal(result.comparison, "main...HEAD");
+    assert.equal(result.branch, "feature");
     assert.equal(result.files.length, 1);
     assert.deepEqual(
       {
@@ -113,6 +121,8 @@ describe("changes_load e2e", () => {
 
     const result = await runChangesLoad(repo, { base: "main", head: "HEAD", diff: true });
 
+    assert.equal(result.comparison, "main...HEAD");
+    assert.equal(result.branch, "feature");
     assert.equal(result.files.length, 1);
     assert.deepEqual(result.files[0], {
       status: "modified",

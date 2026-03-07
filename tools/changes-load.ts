@@ -36,6 +36,7 @@ export function createChangesLoadTool($: Shell) {
       args: { base?: string; head?: string; depthHint?: number; diff?: boolean },
       ctx: PluginContext,
     ) {
+      const branch = await loadCurrentBranch($, ctx.worktree);
       const implicitWorkspaceMode = !args.base?.trim() && !args.head?.trim();
       if (implicitWorkspaceMode && (await hasWorktreeChanges($, ctx.worktree))) {
         const filesWithDiff = await withTemporaryIndex($, ctx.worktree, async (indexPath) => {
@@ -46,6 +47,8 @@ export function createChangesLoadTool($: Shell) {
         });
 
         return stringifyJson({
+          comparison: "uncommitted",
+          ...(branch ? { branch } : {}),
           files: filesWithDiff,
         });
       }
@@ -87,6 +90,8 @@ export function createChangesLoadTool($: Shell) {
       const commits = implicitWorkspaceMode ? [] : parseCommitList(log.text());
 
       return stringifyJson({
+        comparison: `${baseRef}...${headRef}`,
+        ...(branch ? { branch } : {}),
         files: filesWithDiff,
         ...(commits.length > 0 ? { commits } : {}),
       });
@@ -102,6 +107,16 @@ async function hasWorktreeChanges($: Shell, cwd: string) {
 
   const untracked = await $`git ls-files --others --exclude-standard`.cwd(cwd).quiet().nothrow();
   return nonEmptyLines(untracked.text()).length > 0;
+}
+
+async function loadCurrentBranch($: Shell, cwd: string) {
+  const proc = await $`git symbolic-ref --quiet --short HEAD`.cwd(cwd).quiet().nothrow();
+  if (proc.exitCode !== 0) {
+    return undefined;
+  }
+
+  const branch = proc.text().trim();
+  return branch || undefined;
 }
 
 async function withTemporaryIndex<T>(

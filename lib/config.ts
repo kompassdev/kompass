@@ -125,8 +125,6 @@ export function mergeWithDefaults(
       enabled: config?.tools?.enabled ?? [
         "changes_load",
         "pr_load",
-        "review_load",
-        "review_submit",
         "ticket_load",
         "ticket_create",
       ],

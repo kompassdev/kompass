@@ -28,7 +28,7 @@
   },
   
   "tools": {
-    "enabled": ["changes_load", "pr_load", "review_load", "review_submit", "ticket_load", "ticket_create"]
+    "enabled": ["changes_load", "pr_load", "ticket_load", "ticket_create"]
   },
   
   "components": {

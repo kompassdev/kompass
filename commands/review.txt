@@ -1,10 +1,11 @@
 {{pr-review}}
 
-Use `review_load` in `branch` mode to load the full changed-file list plus token-aware per-file diffs and file contents.
+Use `changes_load` first to get the branch summary, changed file list, and commit list.
 Interpret $ARGUMENTS as an optional base branch.
 Check the applicable `AGENTS.md` and nested `AGENTS.md` files for the touched paths before deciding whether the changes follow project rules.
-Start with a single-pass review of all returned file entries before any follow-up exploration.
-Only inspect extra files if `review_load` marks a file as truncated or summary-only and a finding depends on that missing context.
+Use the summary to choose what to inspect next; do not expand every file automatically in large branches.
+For files that need deeper inspection, use targeted git diff commands per file and read the full file contents with `Read`.
+For deleted files, inspect the previous version from git before claiming a regression.
 Do not publish PR comments.
 Return a chat review with:
 - an overall grade formatted like `★★☆☆☆`

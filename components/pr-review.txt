@@ -3,13 +3,22 @@
 When reviewing code, optimize for high-signal findings per token.
 
 ### Workflow
-1. Use `review_load` first; it should be the default entrypoint for both `/review` and `/pr/review`
+1. Start with a thin loader: use `changes_load` for git-based change inspection and `pr_load` only for PR metadata, reviews, comments, and reviewer identity
 2. Check `AGENTS.md` guidance before reviewing behavior or conventions; when changed files live under nested directories, use the most specific nested `AGENTS.md` that governs that path
-3. Scan the returned summary before diving into details so you know the scope, file states, and where the risk clusters are
-4. Review each changed file entry once before doing any follow-up reads; this keeps the first pass comprehensive and token efficient
-5. Handle file states deliberately: added and modified files use current content, deleted files use previous content, and renamed or copied files include path movement metadata that must be validated
-6. Only inspect extra files or related code when `review_load` marks a file as truncated or summary-only, or when a real concern depends on external behavior
-7. Only publish signals when the command explicitly asks for it, and use `review_submit` for graded PR reviews
+3. Scan the summary first so you know the scope, file states, commit history, and where the risk clusters are
+4. Use `changes_load` to get the changed-file set and structured per-file diffs; do not rely on `pr_load` for file changes
+5. Do not expand every file by default; inspect diffs and full files selectively, prioritizing risky files and suspicious paths first
+6. Read the full current file for added or modified files before making a claim; for deleted files, inspect the previous file contents from git; for renamed files, validate the move and all affected references
+7. In CI or shallow clones, prefer `changes_load` with explicit base and head refs so it can fetch the missing git history it needs
+8. Follow related code only when it is necessary to confirm behavior, prove a regression, or verify compliance with project guidance
+9. Only publish signals when the command explicitly asks for it
+
+### Efficient Expansion
+- Use the loader output to decide which files deserve deeper inspection; do not blindly read every changed file in large PRs
+- Prefer `changes_load` structured per-file diffs first, then targeted git diff commands for deeper inspection when needed
+- Read only the files that are likely to contain the root cause, not every downstream caller
+- Skip generated, lockfile, or bulk-format churn unless it hides a meaningful source change nearby
+- If the first-pass summary already proves there is no issue, move on instead of spending more tokens
 
 ### What To Look For
 - behavior that changed accidentally, not just code that looks unusual
@@ -42,3 +51,12 @@ When reviewing code, optimize for high-signal findings per token.
 - Do not repeat the same grade; if the grade is unchanged, add only genuinely new comments or skip publishing entirely
 - When reporting a grade, format it as stars like `★★☆☆☆`
 - When not publishing, present the survey clearly in chat with a star grade, a short overall verdict, and a concise finding list ordered by impact
+
+### Publishing Reviews
+- Use `pr_load.viewer.login` plus the returned review and comment history to detect your own prior feedback before posting anything
+- Treat a comment as duplicate when you already flagged the same issue on the same file location, even if the wording differs slightly
+- Compare the new grade against your latest prior grade from the same reviewer identity before posting a review summary
+- If the grade is unchanged and there are no new comments, skip publishing entirely
+- If the grade is unchanged and there are new comments, submit only inline comments with `event: COMMENT` and no review body
+- If the grade changed, submit a review body with the star grade; use `APPROVE` only for `★★★★★`, otherwise use `COMMENT`
+- Publish through `gh api --method POST repos/{repo}/pulls/{pr}/reviews --input <json-file>`

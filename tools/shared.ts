@@ -30,12 +30,66 @@ export function nonEmptyLines(text: string) {
     .filter(Boolean);
 }
 
+export type ChangeStatus =
+  | "added"
+  | "modified"
+  | "deleted"
+  | "renamed"
+  | "copied"
+  | "type_changed"
+  | "unmerged"
+  | "unknown";
+
+export type ChangedFile = {
+  rawStatus: string;
+  status: ChangeStatus;
+  path: string;
+  previousPath?: string;
+  similarity?: number;
+};
+
+function normalizeStatus(code: string): ChangeStatus {
+  switch (code[0]) {
+    case "A":
+      return "added";
+    case "M":
+      return "modified";
+    case "D":
+      return "deleted";
+    case "R":
+      return "renamed";
+    case "C":
+      return "copied";
+    case "T":
+      return "type_changed";
+    case "U":
+      return "unmerged";
+    default:
+      return "unknown";
+  }
+}
+
 export function parseNameStatus(text: string) {
-  return nonEmptyLines(text).map((line) => {
-    const [status, ...rest] = line.split("\t");
+  return nonEmptyLines(text).map((line): ChangedFile => {
+    const [rawStatus, ...parts] = line.split("\t");
+    const status = normalizeStatus(rawStatus);
+    const similarity = Number.parseInt(rawStatus.slice(1), 10);
+
+    if ((status === "renamed" || status === "copied") && parts.length >= 2) {
+      return {
+        rawStatus,
+        status,
+        previousPath: parts[0],
+        path: parts[1],
+        similarity: Number.isNaN(similarity) ? undefined : similarity,
+      };
+    }
+
     return {
+      rawStatus,
       status,
-      path: rest.join("\t"),
+      path: parts[0] || "",
+      similarity: Number.isNaN(similarity) ? undefined : similarity,
     };
   });
 }
@@ -89,6 +143,45 @@ export async function resolveBaseRef($: Shell, cwd: string, input?: string) {
   }
 
   return "HEAD~1";
+}
+
+export async function gitRefExists($: Shell, cwd: string, ref: string) {
+  const proc = await $`git rev-parse --verify ${ref}`.cwd(cwd).quiet().nothrow();
+  return proc.exitCode === 0;
+}
+
+export async function ensureGitRef($: Shell, cwd: string, ref: string) {
+  const trimmed = ref.trim();
+  if (!trimmed) {
+    throw new Error("Git ref cannot be empty");
+  }
+
+  const directCandidates = [trimmed];
+  if (!trimmed.startsWith("origin/")) {
+    directCandidates.push(`origin/${trimmed}`);
+  }
+
+  for (const candidate of directCandidates) {
+    if (await gitRefExists($, cwd, candidate)) {
+      return candidate;
+    }
+  }
+
+  const remoteBranch = trimmed.startsWith("origin/") ? trimmed.slice("origin/".length) : trimmed;
+  const fetchProc = await $`git fetch --no-tags --depth=50 origin ${remoteBranch}:${`refs/remotes/origin/${remoteBranch}`}`
+    .cwd(cwd)
+    .quiet()
+    .nothrow();
+
+  if (fetchProc.exitCode === 0 && (await gitRefExists($, cwd, `origin/${remoteBranch}`))) {
+    return `origin/${remoteBranch}`;
+  }
+
+  if (await gitRefExists($, cwd, trimmed)) {
+    return trimmed;
+  }
+
+  throw new Error(fetchProc.stderr.toString() || `Failed to resolve git ref ${ref}`);
 }
 
 export function parseIssueReference(source: string) {

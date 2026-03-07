@@ -1,12 +1,12 @@
-# opencode-compass
+> **Status**: Under active development. APIs and commands may change.
 
 <p align="center">
   <img src="assets/opencode-compass.png" alt="OpenCode Compass mascot" width="420" />
 </p>
 
-Navigate your codebase with confidence. A plugin that keeps your AI agents on course—from planning to PR.
+# opencode-compass
 
-> **Status**: Under active development. APIs and commands may change.
+Navigate your codebase with confidence. A plugin that keeps your AI agents on course—from planning to PR.
 
 ## What it adds
 

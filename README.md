@@ -26,6 +26,10 @@ Navigate your codebase with confidence. A plugin that keeps your AI agents on co
 - `./scripts/changes-load.ts --base origin/main --head HEAD --diff`
 - `./scripts/pr-load.ts --reviews --comments`
 
+## Tests
+
+- `bun test`
+
 ## Install from npm
 
 Add the package to your OpenCode config:

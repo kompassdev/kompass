@@ -284,6 +284,13 @@ function serializeFile(
 }
 
 function normalizeNativeDiff(file: ChangedFile, rawDiff: string) {
+  const binaryLine = rawDiff
+    .split("\n")
+    .find((line) => line.startsWith("Binary files ") || line.startsWith("GIT binary patch"));
+  if (binaryLine) {
+    return { diffOmittedReason: "binary change; inspect file contents or metadata directly" };
+  }
+
   const diff = rawDiff
     .split("\n")
     .filter(

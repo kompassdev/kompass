@@ -13,7 +13,7 @@ Navigate your codebase with confidence. A plugin that keeps your AI agents on co
 - tools: `changes_load`, `pr_load`, `ticket_load`, `ticket_create`
 - subagents: `reviewer`, `planner`
 - commands: `/pr/create`, `/pr/review`, `/pr/fix`, `/ticket/plan`, `/ticket/dev`, `/review`, `/dev`
-- bundled skills loaded automatically from `skills/`
+- embeddable navigation components for consistent guidance
 
 ## Install from npm
 
@@ -28,12 +28,12 @@ Add the package to your OpenCode config:
 ## Structure
 
 ```text
-agents/    subagent prompts
-commands/  command templates
-lib/       shared loaders and path helpers
-tools/     one file per tool
-skills/    reusable workflow guidance
-index.ts   plugin entrypoint
+agents/      subagent prompts
+commands/    command templates with embedded guidance
+components/  reusable navigation guidance
+lib/         shared loaders and path helpers
+tools/       one file per tool
+index.ts     plugin entrypoint
 ```
 
 ## Test locally before publishing

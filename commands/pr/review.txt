@@ -1,3 +1,5 @@
+{{pr-review}}
+
 Load the pr-review skill to navigate the review.
 Use pr_load with reviews and comments enabled to chart the territory.
 Interpret $ARGUMENTS as an optional PR number, URL, or base branch hint.

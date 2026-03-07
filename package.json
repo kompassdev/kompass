@@ -11,9 +11,9 @@
     "index.ts",
     "agents",
     "commands",
+    "components",
     "lib",
     "tools",
-    "skills",
     "README.md",
     "LICENSE"
   ],

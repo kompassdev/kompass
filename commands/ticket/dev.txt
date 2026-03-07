@@ -1,3 +1,6 @@
+{{dev-flow}}
+{{pr-author}}
+
 Load the dev-flow and pr-author skills to navigate the full journey.
 Interpret $ARGUMENTS as the destination (ticket reference, file path, or raw request).
 Use ticket_load to get your bearings, navigate to completion, and arrive at a PR.

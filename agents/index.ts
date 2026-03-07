@@ -1,3 +1,5 @@
+import type { AgentConfig, Config } from "@opencode-ai/sdk";
+
 import { loadProjectText } from "../lib/text.ts";
 
 const agentDefinitions = {
@@ -5,36 +7,30 @@ const agentDefinitions = {
     description: "Review diffs, PRs, and existing feedback without editing files.",
     promptPath: "agents/reviewer.txt",
     permission: {
-      "*": "allow",
       edit: "deny",
-      todowrite: "deny",
-      todoread: "deny",
-      ticket_create: "deny",
     },
   },
   planner: {
     description: "Turn requests or tickets into scoped implementation plans.",
     promptPath: "agents/planner.txt",
     permission: {
-      "*": "allow",
       edit: "deny",
-      todowrite: "deny",
-      todoread: "deny",
     },
   },
 } as const;
 
-export async function applyAgentsConfig(cfg: any) {
+export async function applyAgentsConfig(cfg: Config) {
   cfg.agent ??= {};
 
   await Promise.all(
     Object.entries(agentDefinitions).map(async ([name, definition]) => {
-      cfg.agent[name] ??= {
+      const agentConfig: AgentConfig = {
         mode: "subagent",
         description: definition.description,
         prompt: await loadProjectText(definition.promptPath),
         permission: definition.permission,
       };
+      cfg.agent![name] ??= agentConfig;
     }),
   );
 }

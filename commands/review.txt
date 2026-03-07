@@ -1,3 +1,5 @@
+{{pr-review}}
+
 Load the pr-review skill to get your bearings.
 Use changes_load to survey the current branch against the base branch.
 Interpret $ARGUMENTS as an optional base branch.

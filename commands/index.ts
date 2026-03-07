@@ -1,3 +1,5 @@
+import type { Config } from "@opencode-ai/sdk";
+
 import { loadProjectText } from "../lib/text.ts";
 
 const commandDefinitions = {
@@ -38,16 +40,50 @@ const commandDefinitions = {
   },
 } as const;
 
-export async function applyCommandsConfig(cfg: any) {
+const componentMap: Record<string, string> = {
+  "pr-author": "components/pr-author.txt",
+  "dev-flow": "components/dev-flow.txt",
+  "ticket-plan": "components/ticket-plan.txt",
+  "pr-fix": "components/pr-fix.txt",
+  "pr-review": "components/pr-review.txt",
+};
+
+async function loadComponents(): Promise<Record<string, string>> {
+  const components: Record<string, string> = {};
+
+  await Promise.all(
+    Object.entries(componentMap).map(async ([name, path]) => {
+      components[name] = await loadProjectText(path);
+    }),
+  );
+
+  return components;
+}
+
+function embedComponents(
+  template: string,
+  components: Record<string, string>,
+): string {
+  return template.replace(/\{\{(\w+)\}\}/g, (match, name) => {
+    return components[name] || match;
+  });
+}
+
+export async function applyCommandsConfig(cfg: Config) {
   cfg.command ??= {};
+
+  const components = await loadComponents();
 
   await Promise.all(
     Object.entries(commandDefinitions).map(async ([name, definition]) => {
-      cfg.command[name] ??= {
+      const rawTemplate = await loadProjectText(definition.templatePath);
+      const template = embedComponents(rawTemplate, components);
+
+      cfg.command![name] ??= {
         description: definition.description,
         agent: definition.agent,
         subtask: true,
-        template: await loadProjectText(definition.templatePath),
+        template,
       };
     }),
   );

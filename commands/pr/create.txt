@@ -1,3 +1,5 @@
+{{pr-author}}
+
 Load the pr-author skill to navigate the PR creation.
 Use changes_load first to survey the current branch against the base branch.
 Interpret $ARGUMENTS as optional base-branch or extra context for the journey.

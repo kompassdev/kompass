@@ -1,3 +1,6 @@
+{{dev-flow}}
+{{pr-author}}
+
 Load the dev-flow and pr-author skills to navigate the journey.
 Interpret $ARGUMENTS as the destination to reach.
 Plot the course, validate the path, and arrive at a PR.

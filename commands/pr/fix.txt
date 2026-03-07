@@ -1,3 +1,5 @@
+{{pr-fix}}
+
 Load the pr-fix skill to correct course.
 Use pr_load with reviews and comments enabled to see where to steer.
 Interpret $ARGUMENTS as an optional PR number or URL.

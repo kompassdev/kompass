@@ -1,19 +1,18 @@
+import type { Plugin, PluginInput } from "@opencode-ai/plugin";
+
 import { applyAgentsConfig } from "./agents/index.ts";
 import { applyCommandsConfig } from "./commands/index.ts";
-import { skillsDir } from "./lib/paths.ts";
 import { createTools } from "./tools/index.ts";
 
-export const OpencodeCompassPlugin = async ({ $ }: { $: any }) => {
+const OpencodeCompassPlugin: Plugin = async ({ $ }: PluginInput) => {
   return {
     tool: createTools($),
-    async config(cfg: any) {
-      cfg.skills ??= {};
-      cfg.skills.paths = [...new Set([...(cfg.skills.paths ?? []), skillsDir])];
-
+    async config(cfg) {
       await applyAgentsConfig(cfg);
       await applyCommandsConfig(cfg);
     },
   };
 };
 
+export { OpencodeCompassPlugin };
 export default OpencodeCompassPlugin;

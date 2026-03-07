@@ -1,8 +1,8 @@
-> **Status**: Under active development. APIs and commands may change.
-
 <p align="center">
   <img src="assets/opencode-compass.png" alt="OpenCode Compass mascot" width="420" />
 </p>
+
+> **Status**: Under active development. APIs and commands may change.
 
 # opencode-compass
 

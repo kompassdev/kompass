@@ -2,7 +2,7 @@
 
 Use `changes_load` first to get the branch summary, changed file list, and commit list.
 Interpret $ARGUMENTS as an optional base branch.
-When no base or head is provided, treat the returned file list as the effective local delta.
+When no base or head is provided, a dirty worktree should return only uncommitted local changes; otherwise it should return the committed branch delta.
 Do not publish PR comments.
 Return a chat review with:
 - an overall grade formatted like `★★☆☆☆`

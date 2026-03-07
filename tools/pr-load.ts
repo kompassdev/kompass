@@ -14,7 +14,6 @@ const prJsonKeys = [
   "headRefName",
   "headRefOid",
   "author",
-  "commits",
 ].join(",");
 
 async function loadPaginatedArray($: Shell, cwd: string, endpoint: string) {
@@ -27,6 +26,80 @@ async function loadPaginatedArray($: Shell, cwd: string, endpoint: string) {
   const pages = JSON.parse(proc.text()) as unknown[];
   return pages.flatMap((page) => (Array.isArray(page) ? page : [page]));
 }
+
+async function loadReviewThreads($: Shell, cwd: string, owner: string, repo: string, number: number) {
+  const threads: any[] = [];
+  let cursor: string | undefined;
+
+  while (true) {
+    const proc = cursor
+      ? await $`gh api graphql -f query=${REVIEW_THREADS_QUERY} -F owner=${owner} -F repo=${repo} -F number=${number} -F cursor=${cursor}`
+          .cwd(cwd)
+          .quiet()
+          .nothrow()
+      : await $`gh api graphql -f query=${REVIEW_THREADS_QUERY} -F owner=${owner} -F repo=${repo} -F number=${number}`
+          .cwd(cwd)
+          .quiet()
+          .nothrow();
+
+    if (proc.exitCode !== 0) {
+      throw new Error(proc.stderr.toString() || "Failed to load review threads");
+    }
+
+    const response = JSON.parse(proc.text());
+    const pullRequest = response?.data?.repository?.pullRequest;
+    const connection = pullRequest?.reviewThreads;
+
+    if (!connection) {
+      break;
+    }
+
+    threads.push(...(connection.nodes ?? []));
+    if (!connection.pageInfo?.hasNextPage) {
+      break;
+    }
+
+    cursor = connection.pageInfo.endCursor;
+  }
+
+  return threads;
+}
+
+const REVIEW_THREADS_QUERY = `query($owner: String!, $repo: String!, $number: Int!, $cursor: String) {
+  repository(owner: $owner, name: $repo) {
+    pullRequest(number: $number) {
+      reviewThreads(first: 100, after: $cursor) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          id
+          isResolved
+          isOutdated
+          path
+          line
+          startLine
+          comments(first: 100) {
+            nodes {
+              id
+              author {
+                login
+              }
+              body
+              createdAt
+              updatedAt
+              path
+              line
+              startLine
+              url
+            }
+          }
+        }
+      }
+    }
+  }
+}`;
 
 function simplifyPullRequest(info: any) {
   return {
@@ -41,47 +114,51 @@ function simplifyPullRequest(info: any) {
     headRefName: info.headRefName,
     headRefOid: info.headRefOid,
     author: info.author?.login ?? info.author?.name ?? info.author,
-    commits: Array.isArray(info.commits)
-      ? info.commits.map((commit: any) => ({
-          oid: commit.oid,
-          messageHeadline:
-            commit.messageHeadline ??
-            (typeof commit.message === "string" ? commit.message.split("\n")[0] : undefined),
-          authoredDate: commit.authoredDate,
-          authors: Array.isArray(commit.authors)
-            ? commit.authors
-                .map((author: any) => author.login ?? author.name)
-                .filter(Boolean)
-            : undefined,
-        }))
-      : [],
   };
 }
 
 function simplifyReviews(reviews: any[]) {
-  return reviews.map((review) => ({
-    id: review.id,
-    state: review.state,
-    author: review.user?.login,
-    body: review.body,
-    submittedAt: review.submitted_at,
-    commitId: review.commit_id,
-  }));
+  return reviews
+    .map((review) => ({
+      id: review.id,
+      state: review.state,
+      author: review.user?.login,
+      body: review.body,
+      submittedAt: review.submitted_at,
+      commitId: review.commit_id,
+    }))
+    .filter((review) => typeof review.body === "string" && review.body.trim().length > 0);
 }
 
-function simplifyComments(comments: any[]) {
+function simplifyIssueComments(comments: any[]) {
   return comments.map((comment) => ({
     id: comment.id,
-    path: comment.path,
-    line: comment.line,
-    side: comment.side,
-    startLine: comment.start_line,
-    startSide: comment.start_side,
     author: comment.user?.login,
     createdAt: comment.created_at,
     updatedAt: comment.updated_at,
     body: comment.body,
-    url: comment.html_url,
+  }));
+}
+
+function simplifyThreads(threads: any[]) {
+  return threads.map((thread) => ({
+    id: thread.id,
+    path: thread.path,
+    ...(typeof thread.startLine === "number" && thread.startLine !== thread.line
+      ? { startLine: thread.startLine }
+      : {}),
+    line: thread.line,
+    isResolved: thread.isResolved,
+    isOutdated: thread.isOutdated,
+    comments: Array.isArray(thread.comments?.nodes)
+      ? thread.comments.nodes.map((comment: any) => ({
+          id: comment.id,
+          author: comment.author?.login,
+          body: comment.body,
+          createdAt: comment.createdAt,
+          updatedAt: comment.updatedAt,
+        }))
+      : [],
   }));
 }
 
@@ -94,13 +171,22 @@ export function createPrLoadTool($: Shell) {
         .boolean()
         .optional()
         .describe("Include review summaries"),
-      comments: tool.schema
+      issueComments: tool.schema
         .boolean()
         .optional()
-        .describe("Include review comments"),
+        .describe("Include normal PR conversation comments"),
+      threads: tool.schema
+        .boolean()
+        .optional()
+        .describe("Include review thread resolution state"),
     },
     async execute(
-      args: { pr?: string; reviews?: boolean; comments?: boolean },
+      args: {
+        pr?: string;
+        reviews?: boolean;
+        issueComments?: boolean;
+        threads?: boolean;
+      },
       ctx: PluginContext,
     ) {
       const proc = args.pr
@@ -119,6 +205,7 @@ export function createPrLoadTool($: Shell) {
 
       const info = JSON.parse(proc.text());
       const repo = await loadRepoName($, ctx.worktree);
+      const [owner, repoName] = repo.split("/");
       const viewerProc = await $`gh api user`.cwd(ctx.worktree).quiet().nothrow();
 
       if (viewerProc.exitCode !== 0) {
@@ -132,21 +219,23 @@ export function createPrLoadTool($: Shell) {
             `repos/${repo}/pulls/${info.number}/reviews?per_page=100`,
           )
         : undefined;
-      const comments = args.comments
+      const issueComments = args.issueComments
         ? await loadPaginatedArray(
             $,
             ctx.worktree,
-            `repos/${repo}/pulls/${info.number}/comments?per_page=100`,
+            `repos/${repo}/issues/${info.number}/comments?per_page=100`,
           )
+        : undefined;
+      const threads = args.threads
+        ? await loadReviewThreads($, ctx.worktree, owner, repoName, info.number)
         : undefined;
       return stringifyJson({
         repo,
-        viewer: {
-          login: JSON.parse(viewerProc.text()).login,
-        },
+        viewerLogin: JSON.parse(viewerProc.text()).login,
         pr: simplifyPullRequest(info),
         reviews: reviews ? simplifyReviews(reviews) : undefined,
-        comments: comments ? simplifyComments(comments) : undefined,
+        issueComments: issueComments ? simplifyIssueComments(issueComments) : undefined,
+        threads: threads ? simplifyThreads(threads) : undefined,
       });
     },
   });

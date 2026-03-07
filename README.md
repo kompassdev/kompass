@@ -8,6 +8,16 @@
 
 Navigate your codebase with confidence. A plugin that keeps your AI agents on course—from planning to PR.
 
+## Why
+
+Most AI coding setups give you raw model power, but not much workflow discipline. `opencode-compass` adds opinionated rails around common engineering tasks so agents can load the right context, follow a repeatable path, and stay grounded in the actual repo state.
+
+## Why use this plugin
+
+- Opinionated yet composable workflows for plan, dev, and review. `opencode-compass` gives you default rails for common engineering flows, while still letting teams enable only the commands they want and override templates, prompts, and components.
+- Handcrafted tools for better performance and token efficiency. Instead of forcing agents to rediscover context through broad repo exploration, tools like `changes_load`, `pr_load`, and `ticket_load` return focused, structured data for the exact workflow at hand.
+- Optimized for token-efficient execution. The plugin is designed to keep context compact: review flows load normalized PR metadata first, development flows reuse embedded guidance, and diff loading omits expensive or unnecessary payloads like full added-file bodies and binary patches.
+
 ## What it adds
 
 - tools: `changes_load`, `pr_load`, `ticket_load`, `ticket_create`
@@ -24,7 +34,12 @@ Navigate your codebase with confidence. A plugin that keeps your AI agents on co
 
 - `./scripts/changes-load.ts --diff`
 - `./scripts/changes-load.ts --base origin/main --head HEAD --diff`
-- `./scripts/pr-load.ts --reviews --comments`
+- `./scripts/pr-load.ts --reviews --issueComments --threads`
+- `./scripts/pr-load.ts --pr 123 --reviews --issueComments --threads`
+
+## Tests
+
+- `bun test`
 
 ## Install from npm
 

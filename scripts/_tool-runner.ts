@@ -131,6 +131,10 @@ class Command implements PromiseLike<CommandResult> {
 }
 
 export function createShell(): Shell {
+  return createShellForDirectory(repoRoot);
+}
+
+export function createShellForDirectory(defaultDirectory: string): Shell {
   return (strings: TemplateStringsArray, ...expressions: unknown[]) => {
     let command = strings[0] ?? "";
 
@@ -138,17 +142,23 @@ export function createShell(): Shell {
       command += shellEscape(expression) + (strings[index + 1] ?? "");
     });
 
-    return new Command(command) as unknown as ShellPromise;
+    const runner = new Command(command);
+    runner.cwd(defaultDirectory);
+    return runner as unknown as ShellPromise;
   };
 }
 
 export function createToolContext(): ToolContext {
+  return createToolContextForDirectory(repoRoot);
+}
+
+export function createToolContextForDirectory(worktree: string): ToolContext {
   return {
     sessionID: "script-session",
     messageID: "script-message",
     agent: "script",
-    directory: repoRoot,
-    worktree: repoRoot,
+    directory: worktree,
+    worktree,
     abort: new AbortController().signal,
     metadata() {},
     async ask() {},

@@ -1,0 +1,4 @@
+Load the pr-review skill.
+Use changes_load first for the current branch against the base branch.
+Interpret $ARGUMENTS as an optional base branch.
+Show the review findings without publishing them.

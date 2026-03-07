@@ -1,0 +1,35 @@
+{
+  "name": "opencode-kit",
+  "version": "0.0.1",
+  "description": "Reusable OpenCode workflows for PRs, tickets, reviews, and development",
+  "type": "module",
+  "main": "./index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "files": [
+    "index.ts",
+    "agents",
+    "commands",
+    "lib",
+    "tools",
+    "skills",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "check": "bun --eval \"await import('./index.ts')\""
+  },
+  "keywords": [
+    "opencode",
+    "plugin",
+    "toolkit",
+    "github",
+    "review",
+    "pull-request"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.2.20"
+  }
+}

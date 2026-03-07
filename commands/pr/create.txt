@@ -1,0 +1,4 @@
+Load the pr-author skill.
+Use changes_load first to gather the current branch against the base branch.
+Interpret $ARGUMENTS as optional base-branch or extra PR context.
+Then create the pull request.

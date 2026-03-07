@@ -1,0 +1,4 @@
+Load the pr-review skill.
+Use pr_load with reviews and comments enabled.
+Interpret $ARGUMENTS as an optional PR number, URL, or base branch hint.
+Review the changes and publish the review feedback.

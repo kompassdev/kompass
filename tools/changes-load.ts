@@ -27,13 +27,9 @@ export function createChangesLoadTool($: Shell) {
         .positive()
         .optional()
         .describe("Optional shallow-fetch hint, such as PR commit count"),
-      diff: tool.schema
-        .boolean()
-        .optional()
-        .describe("Include structured per-file diffs"),
     },
     async execute(
-      args: { base?: string; head?: string; depthHint?: number; diff?: boolean },
+      args: { base?: string; head?: string; depthHint?: number },
       ctx: PluginContext,
     ) {
       const branch = await loadCurrentBranch($, ctx.worktree);
@@ -41,9 +37,7 @@ export function createChangesLoadTool($: Shell) {
       if (implicitWorkspaceMode && (await hasWorktreeChanges($, ctx.worktree))) {
         const filesWithDiff = await withTemporaryIndex($, ctx.worktree, async (indexPath) => {
           const files = await loadTemporaryIndexFiles($, ctx.worktree, indexPath);
-          return args.diff
-            ? await loadTemporaryIndexDiffs($, ctx.worktree, indexPath, files)
-            : files.map((file) => serializeFile(file));
+          return await loadTemporaryIndexDiffs($, ctx.worktree, indexPath, files);
         });
 
         return stringifyJson({
@@ -82,11 +76,9 @@ export function createChangesLoadTool($: Shell) {
       }
 
       const parsedFiles = parseNameStatus(files.text()).filter((file) => file.path);
-      const filesWithDiff = args.diff
-        ? implicitWorkspaceMode
-          ? await loadWorkspaceFileDiffs($, ctx.worktree, baseRef, parsedFiles)
-          : await loadFileDiffs($, ctx.worktree, baseRef, headRef, parsedFiles)
-        : parsedFiles.map((file) => serializeFile(file));
+      const filesWithDiff = implicitWorkspaceMode
+        ? await loadWorkspaceFileDiffs($, ctx.worktree, baseRef, parsedFiles)
+        : await loadFileDiffs($, ctx.worktree, baseRef, headRef, parsedFiles);
       const commits = implicitWorkspaceMode ? [] : parseCommitList(log.text());
 
       return stringifyJson({

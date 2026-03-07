@@ -2,17 +2,13 @@
 
 Interpret `$ARGUMENTS` to determine which type of review to perform:
 
-1. **No arguments (default)**: Auto-detect based on repo state
-   - Dirty worktree (uncommitted changes) → Review uncommitted local changes only
-   - Clean worktree on feature branch → Review branch delta vs default base branch (typically "main")
+1. **No arguments (default)**: Call `changes_load` without base/head arguments. It will auto-detect:
+   - If there are uncommitted changes → Review uncommitted local changes only
+   - If worktree is clean → Review current branch delta vs default base branch (typically "main")
 
-2. **"uncommitted"** → Force review of uncommitted local changes only
+2. **"uncommitted"** → Call `changes_load` without base/head to force review of uncommitted local changes only
 
-3. **Branch name** (e.g., "main", "origin/main") → Compare current branch to that base
-
-Use `changes_load` to get the branch summary, changed file list, and commit list:
-- For uncommitted changes: call with no base/head
-- For branch comparison: call with explicit `base` argument
+3. **Branch name** (e.g., "main", "origin/main") → Call `changes_load` with explicit `base` argument to compare current branch to that base
 
 Do not publish PR comments.
 

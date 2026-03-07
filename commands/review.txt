@@ -1,4 +1,4 @@
-Load the pr-review skill.
-Use changes_load first for the current branch against the base branch.
+Load the pr-review skill to get your bearings.
+Use changes_load to survey the current branch against the base branch.
 Interpret $ARGUMENTS as an optional base branch.
-Show the review findings without publishing them.
+Chart the findings without publishing—review the route before signaling.

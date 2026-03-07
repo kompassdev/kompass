@@ -1,6 +1,8 @@
-# opencode-kit
+# opencode-compass
 
-Reusable OpenCode workflows for PR creation, review, ticket planning, and request-driven development.
+Navigate your codebase with confidence. A plugin that keeps your AI agents on course—from planning to PR.
+
+> **Status**: Under active development. APIs and commands may change.
 
 ## What it adds
 
@@ -11,11 +13,11 @@ Reusable OpenCode workflows for PR creation, review, ticket planning, and reques
 
 ## Install from npm
 
-Add the package name to your OpenCode config:
+Add the package to your OpenCode config:
 
 ```json
 {
-  "plugin": ["opencode-kit"]
+  "plugin": ["opencode-compass"]
 }
 ```
 
@@ -36,7 +38,7 @@ Point OpenCode at the local entry file:
 
 ```json
 {
-  "plugin": ["file:///Users/danielpolito/Code/opencode-toolkit/index.ts"]
+  "plugin": ["file:///Users/danielpolito/Code/opencode-compass/index.ts"]
 }
 ```
 
@@ -49,7 +51,7 @@ bun run check
 ## Publish
 
 ```bash
-npm publish
+npm publish --access public
 ```
 
 The package is plain Bun-friendly ESM TypeScript, so there is no build step.

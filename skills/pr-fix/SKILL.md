@@ -1,23 +1,23 @@
 ---
 name: pr-fix
-description: Turn PR review feedback into code changes, validation, and follow-up replies
+description: Correct course from PR feedback—adjust heading, validate, and signal arrival
 ---
 
 ## Use this skill
 
-Use this when existing PR feedback needs to be addressed.
+Use this when PR feedback indicates you need to adjust course.
 
 ## Workflow
 
-1. Use `pr_load` with reviews and comments enabled.
-2. Separate actionable requests from non-actionable or already-resolved feedback.
-3. Fix the real issues first.
-4. Run the most relevant validation.
-5. Push the branch.
-6. Reply with a concise resolution note for each addressed thread when the workflow asks for it.
+1. Use `pr_load` with reviews and comments enabled to see where to steer.
+2. Separate true course corrections from noise or already-resolved feedback.
+3. Fix the critical navigation issues first.
+4. Run the most relevant validation to confirm you're on track.
+5. Push the branch to update your position.
+6. Reply with a concise signal for each addressed thread when the workflow asks for it.
 
 ## Notes
 
-- Do not blindly implement every comment.
-- Explain when a comment is not applied.
-- Keep replies short and factual.
+- Do not blindly follow every suggestion—some may lead you off course.
+- Explain when you're maintaining your current heading despite a suggestion.
+- Keep replies short and factual—clear signals, no chatter.

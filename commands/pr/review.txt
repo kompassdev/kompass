@@ -1,4 +1,4 @@
-Load the pr-review skill.
-Use pr_load with reviews and comments enabled.
+Load the pr-review skill to navigate the review.
+Use pr_load with reviews and comments enabled to chart the territory.
 Interpret $ARGUMENTS as an optional PR number, URL, or base branch hint.
-Review the changes and publish the review feedback.
+Survey the changes and signal the findings.

@@ -1,21 +1,21 @@
 ---
 name: ticket-plan
-description: Convert a request or ticket into a scoped plan and optionally create a new ticket
+description: Chart the course from vague destination to clear implementation roadmap
 ---
 
 ## Use this skill
 
-Use this for planning work from free text, a file, or a GitHub issue.
+Use this for planning the route from free text, a file, or a GitHub issue.
 
 ## Workflow
 
-1. Use `ticket_load` when the input looks like a ticket reference, URL, or file path.
-2. Normalize the problem statement.
-3. Produce scope, constraints, unknowns, acceptance criteria, and implementation steps.
-4. Create a ticket with `ticket_create` only when the workflow explicitly asks for it.
+1. Use `ticket_load` when the destination looks like a ticket reference, URL, or file path.
+2. Orient yourself by normalizing the problem statement.
+3. Map out scope, constraints, unknowns, acceptance criteria, and implementation waypoints.
+4. Create a ticket with `ticket_create` only when the workflow explicitly sets a new destination.
 
 ## Planning rules
 
-- Keep the plan implementation-ready.
-- Call out assumptions.
-- Ask a question only when blocked by missing product intent.
+- Keep the plan navigation-ready—clear headings, no getting lost.
+- Call out assumptions that might lead you off course.
+- Ask for directions only when truly blocked by missing product intent.

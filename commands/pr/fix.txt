@@ -1,4 +1,4 @@
-Load the pr-fix skill.
-Use pr_load with reviews and comments enabled.
+Load the pr-fix skill to correct course.
+Use pr_load with reviews and comments enabled to see where to steer.
 Interpret $ARGUMENTS as an optional PR number or URL.
-Apply the fixes, run validation, push the branch, and reply on the PR.
+Adjust the heading, validate the route, push forward, and signal your arrival on the PR.

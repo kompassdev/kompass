@@ -3,7 +3,7 @@ import { applyCommandsConfig } from "./commands/index.ts";
 import { skillsDir } from "./lib/paths.ts";
 import { createTools } from "./tools/index.ts";
 
-export const OpencodeToolkitPlugin = async ({ $ }: { $: any }) => {
+export const OpencodeCompassPlugin = async ({ $ }: { $: any }) => {
   return {
     tool: createTools($),
     async config(cfg: any) {
@@ -16,4 +16,4 @@ export const OpencodeToolkitPlugin = async ({ $ }: { $: any }) => {
   };
 };
 
-export default OpencodeToolkitPlugin;
+export default OpencodeCompassPlugin;

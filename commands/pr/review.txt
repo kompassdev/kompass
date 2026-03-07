@@ -3,21 +3,10 @@
 Use `pr_load` first, with `reviews` and `comments` enabled, to load PR metadata, prior reviews, prior inline comments, and your reviewer identity.
 Load ticket context with `ticket_load` when the PR body points to exactly one clear linked ticket.
 Interpret $ARGUMENTS as an optional PR number or URL.
-Then use `changes_load` for the actual changed-file set and diffs, typically with `base=pr.baseRefName`, `head=pr.headRefOid`, and `diff=true` when you need the structured per-file diffs.
-Check the applicable `AGENTS.md` and nested `AGENTS.md` files for the touched paths before deciding whether the changes follow project rules.
-Use the `changes_load` file list to decide what deserves deeper inspection; avoid loading one giant raw diff unless the PR is small.
-Inspect suspicious files with the structured per-file diffs first, then use targeted git diff commands and `Read` for deeper inspection when needed.
-For deleted files, inspect the previous version from git; for renamed files, verify the move and impacted references.
+Then use `changes_load` for the actual changed-file set and diffs, typically with `base=pr.baseRefName`, `head=pr.headRefOid`, `depthHint=pr.commits.length`, and `diff=true` when you need the structured per-file diffs.
 Publish the final result with `gh api`.
 When publishing:
-- include only actionable, high-confidence inline comments
-- set an importance for each inline comment
-- keep comments focused on concrete failure modes and fixes
-- include an overall grade formatted like `★★☆☆☆` and a short overall review summary
-- publish a comment review by default, and only approve when the grade is `★★★★★`
 - use `pr_load.viewer.login` to compare only against your own prior reviews and inline comments
-- skip issues that you already flagged in prior review comments
-- if the grade is unchanged, publish only new comments without repeating the review message, or skip entirely if there is nothing new
-- avoid flooding the PR; prefer a few strong comments over many weak ones
-- be concise and only flag things you are sure about
-Create a JSON payload for `POST /repos/{repo}/pulls/{pr}/reviews` and submit it with `gh api --method POST ... --input <file>`.
+- include only actionable, high-confidence inline comments
+- include an overall grade formatted like `★★☆☆☆`
+- create a JSON payload for `POST /repos/{repo}/pulls/{pr}/reviews` and submit it with `gh api --method POST ... --input <file>`

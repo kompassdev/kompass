@@ -36,6 +36,7 @@ export type ChangeStatus =
   | "deleted"
   | "renamed"
   | "copied"
+  | "untracked"
   | "type_changed"
   | "unmerged"
   | "unknown";
@@ -49,6 +50,10 @@ export type ChangedFile = {
 };
 
 function normalizeStatus(code: string): ChangeStatus {
+  if (code === "??") {
+    return "untracked";
+  }
+
   switch (code[0]) {
     case "A":
       return "added";
@@ -150,7 +155,12 @@ export async function gitRefExists($: Shell, cwd: string, ref: string) {
   return proc.exitCode === 0;
 }
 
-export async function ensureGitRef($: Shell, cwd: string, ref: string) {
+export async function ensureGitRef(
+  $: Shell,
+  cwd: string,
+  ref: string,
+  options?: { depthHint?: number },
+) {
   const trimmed = ref.trim();
   if (!trimmed) {
     throw new Error("Git ref cannot be empty");
@@ -168,10 +178,15 @@ export async function ensureGitRef($: Shell, cwd: string, ref: string) {
   }
 
   const remoteBranch = trimmed.startsWith("origin/") ? trimmed.slice("origin/".length) : trimmed;
-  const fetchProc = await $`git fetch --no-tags --depth=50 origin ${remoteBranch}:${`refs/remotes/origin/${remoteBranch}`}`
-    .cwd(cwd)
-    .quiet()
-    .nothrow();
+  const fetchProc = options?.depthHint
+    ? await $`git fetch --no-tags --depth=${Math.max(options.depthHint, 20)} origin ${remoteBranch}:${`refs/remotes/origin/${remoteBranch}`}`
+        .cwd(cwd)
+        .quiet()
+        .nothrow()
+    : await $`git fetch --no-tags origin ${remoteBranch}:${`refs/remotes/origin/${remoteBranch}`}`
+        .cwd(cwd)
+        .quiet()
+        .nothrow();
 
   if (fetchProc.exitCode === 0 && (await gitRefExists($, cwd, `origin/${remoteBranch}`))) {
     return `origin/${remoteBranch}`;

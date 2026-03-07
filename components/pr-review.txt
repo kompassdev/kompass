@@ -7,18 +7,20 @@ When reviewing code, optimize for high-signal findings per token.
 2. Check `AGENTS.md` guidance before reviewing behavior or conventions; when changed files live under nested directories, use the most specific nested `AGENTS.md` that governs that path
 3. Scan the summary first so you know the scope, file states, commit history, and where the risk clusters are
 4. Use `changes_load` to get the changed-file set and structured per-file diffs; do not rely on `pr_load` for file changes
-5. Do not expand every file by default; inspect diffs and full files selectively, prioritizing risky files and suspicious paths first
-6. Read the full current file for added or modified files before making a claim; for deleted files, inspect the previous file contents from git; for renamed files, validate the move and all affected references
-7. In CI or shallow clones, prefer `changes_load` with explicit base and head refs so it can fetch the missing git history it needs
-8. Follow related code only when it is necessary to confirm behavior, prove a regression, or verify compliance with project guidance
-9. Only publish signals when the command explicitly asks for it
+5. When `changes_load` is called without explicit base/head, treat its file list as the combined effective delta: uncommitted local changes first, then committed branch changes against the default base branch
+6. Read every changed file individually before finalizing the review so you have full file context, not just diff context
+7. Use the diff to prioritize and navigate, but do not treat diff hunks alone as sufficient context for a finding
+8. Read the full current file for added, modified, renamed, copied, or untracked files before making a claim. For deleted files, inspect the previous file contents from git
+9. After reading each changed file once, follow related code only when it is necessary to confirm behavior, prove a regression, or verify compliance with project guidance
+10. In CI or shallow clones, prefer `changes_load` with explicit base and head refs, plus `depthHint` from the PR commit count when available, so it can fetch only the history it needs
+11. Only publish signals when the command explicitly asks for it
 
 ### Efficient Expansion
-- Use the loader output to decide which files deserve deeper inspection; do not blindly read every changed file in large PRs
-- Prefer `changes_load` structured per-file diffs first, then targeted git diff commands for deeper inspection when needed
+- Use the loader output to decide reading order, not whether a changed file gets read at all
+- Prefer `changes_load` structured per-file diffs first, then read each changed file in full
 - Read only the files that are likely to contain the root cause, not every downstream caller
 - Skip generated, lockfile, or bulk-format churn unless it hides a meaningful source change nearby
-- If the first-pass summary already proves there is no issue, move on instead of spending more tokens
+- After you have read each changed file, stop expanding unless a real concern depends on more context
 
 ### What To Look For
 - behavior that changed accidentally, not just code that looks unusual

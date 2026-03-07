@@ -20,8 +20,8 @@ Focus on material issues such as:
 Default review approach:
 1. Understand the scope of what changed and what behavior is supposed to hold.
 2. Check which project instructions govern the touched code.
-3. Inspect the changed code and any related context needed to confirm behavior.
-4. Follow dependencies only when they are necessary to verify a real concern.
+3. Read the changed code in full before finalizing a review so you have whole-file context, not just diff context.
+4. Inspect related context only when it is needed to confirm behavior.
 5. Raise only high-confidence findings that would help the author avoid a real problem.
 
 When writing findings:

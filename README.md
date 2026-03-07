@@ -20,6 +20,12 @@ Navigate your codebase with confidence. A plugin that keeps your AI agents on co
 - `/pr/review` starts with paginated, normalized `pr_load` metadata, then uses `changes_load` for the actual git-based file diffs, and publishes via `gh api`
 - `/review` starts with `changes_load`, expands only the files that matter, and summarizes findings in chat
 
+## Debug Scripts
+
+- `./scripts/changes-load.ts --diff`
+- `./scripts/changes-load.ts --base origin/main --head HEAD --diff`
+- `./scripts/pr-load.ts --reviews --comments`
+
 ## Install from npm
 
 Add the package to your OpenCode config:

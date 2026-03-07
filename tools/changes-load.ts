@@ -49,9 +49,6 @@ export function createChangesLoadTool($: Shell) {
         .cwd(ctx.worktree)
         .quiet()
         .nothrow();
-      const stat = implicitWorkspaceMode
-        ? await $`git diff --stat ${baseRef}`.cwd(ctx.worktree).quiet().nothrow()
-        : await $`git diff --stat ${baseRef}...${headRef}`.cwd(ctx.worktree).quiet().nothrow();
       const files = implicitWorkspaceMode
         ? await $`git diff --find-renames --find-copies --name-status ${baseRef}`
             .cwd(ctx.worktree)
@@ -65,9 +62,9 @@ export function createChangesLoadTool($: Shell) {
         .cwd(ctx.worktree)
         .quiet()
         .nothrow();
-      if (stat.exitCode !== 0) {
+      if (files.exitCode !== 0) {
         throw new Error(
-          stat.stderr.toString() ||
+          files.stderr.toString() ||
             `Failed to diff ${implicitWorkspaceMode ? `${baseRef} against working tree` : `${baseRef}...${headRef}`}`,
         );
       }
@@ -88,7 +85,6 @@ export function createChangesLoadTool($: Shell) {
         head: headRef,
         branch: branch.text().trim(),
         status: nonEmptyLines(status.text()),
-        stat: stat.text().trim(),
         files: filesWithDiff,
         commits,
       });

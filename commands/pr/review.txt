@@ -1,12 +1,12 @@
 {{pr-review}}
 
-Use `pr_load` first, with `reviews` and `comments` enabled, to load PR metadata, prior reviews, prior inline comments, and your reviewer identity.
+Use `pr_load` first, with `reviews`, `issueComments`, and `threads` enabled, to load PR metadata, prior review summaries, normal PR comments, thread state, and your reviewer identity.
 Load ticket context with `ticket_load` when the PR body points to exactly one clear linked ticket.
 Interpret $ARGUMENTS as an optional PR number or URL.
-Then use `changes_load` for the actual changed-file set and diffs, typically with `base=pr.baseRefName`, `head=pr.headRefOid`, `depthHint=pr.commits.length`, and `diff=true` when you need the structured per-file diffs.
+Then use `changes_load` for the actual changed-file set and diffs, typically with `base=pr.baseRefName`, `head=pr.headRefOid`, and `diff=true` when you need the structured per-file diffs.
 Publish the final result with `gh api`.
 When publishing:
-- use `pr_load.viewer.login` to compare only against your own prior reviews and inline comments
+- use `pr_load.viewerLogin` to compare only against your own prior reviews and inline comments
 - include only actionable, high-confidence inline comments
 - include an overall grade formatted like `★★☆☆☆`
 - create a JSON payload for `POST /repos/{repo}/pulls/{pr}/reviews` and submit it with `gh api --method POST ... --input <file>`

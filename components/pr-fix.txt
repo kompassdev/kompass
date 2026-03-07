@@ -3,7 +3,7 @@
 When addressing PR feedback, follow this compass:
 
 ### Workflow
-1. Use `pr_load` with reviews and comments enabled to see where to steer
+1. Use `pr_load` with reviews and threads enabled to see where to steer
 2. Separate true course corrections from noise or already-resolved feedback
 3. Fix the critical navigation issues first
 4. Run the most relevant validation to confirm you're on track

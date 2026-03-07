@@ -1,3 +1,6 @@
+import path from "node:path";
+import { mkdtemp, rm } from "node:fs/promises";
+
 import { tool } from "@opencode-ai/plugin/tool";
 
 import {
@@ -34,63 +37,54 @@ export function createChangesLoadTool($: Shell) {
       ctx: PluginContext,
     ) {
       const implicitWorkspaceMode = !args.base?.trim() && !args.head?.trim();
-      const dirtyWorktree = implicitWorkspaceMode
-        ? await hasWorktreeChanges($, ctx.worktree)
-        : false;
+      if (implicitWorkspaceMode && (await hasWorktreeChanges($, ctx.worktree))) {
+        const filesWithDiff = await withTemporaryIndex($, ctx.worktree, async (indexPath) => {
+          const files = await loadTemporaryIndexFiles($, ctx.worktree, indexPath);
+          return args.diff
+            ? await loadTemporaryIndexDiffs($, ctx.worktree, indexPath, files)
+            : files.map((file) => serializeFile(file));
+        });
 
-      const requestedBase = dirtyWorktree
-        ? "HEAD"
-        : await resolveBaseRef($, ctx.worktree, args.base);
-      const baseRef = dirtyWorktree
-        ? "HEAD"
-        : await ensureGitRef($, ctx.worktree, requestedBase, {
-            depthHint: args.depthHint,
-          });
-      const headRef = dirtyWorktree
-        ? "HEAD"
-        : args.head?.trim()
-          ? await resolveHeadRef($, ctx.worktree, args.head, args.depthHint)
-          : "HEAD";
+        return stringifyJson({
+          files: filesWithDiff,
+        });
+      }
 
-      const files = dirtyWorktree
-        ? await $`git diff --find-renames --find-copies --name-status HEAD`
+      const requestedBase = await resolveBaseRef($, ctx.worktree, args.base);
+      const baseRef = await ensureGitRef($, ctx.worktree, requestedBase, {
+        depthHint: args.depthHint,
+      });
+      const headRef = args.head?.trim()
+        ? await resolveHeadRef($, ctx.worktree, args.head, args.depthHint)
+        : "HEAD";
+
+      const files = implicitWorkspaceMode
+        ? await $`git diff --find-renames --find-copies --name-status ${baseRef}`
             .cwd(ctx.worktree)
             .quiet()
             .nothrow()
-        : implicitWorkspaceMode
-          ? await $`git diff --find-renames --find-copies --name-status ${baseRef}`
-              .cwd(ctx.worktree)
-              .quiet()
-              .nothrow()
-          : await $`git diff --find-renames --find-copies --name-status ${baseRef}...${headRef}`
-              .cwd(ctx.worktree)
-              .quiet()
-              .nothrow();
-      const log = dirtyWorktree
-        ? undefined
-        : await $`git log --format=%H%x09%s ${baseRef}..${headRef}`
+        : await $`git diff --find-renames --find-copies --name-status ${baseRef}...${headRef}`
             .cwd(ctx.worktree)
             .quiet()
             .nothrow();
+      const log = await $`git log --format=%H%x09%s ${baseRef}..${headRef}`
+        .cwd(ctx.worktree)
+        .quiet()
+        .nothrow();
       if (files.exitCode !== 0) {
         throw new Error(
           files.stderr.toString() ||
-            `Failed to diff ${dirtyWorktree ? "HEAD against working tree" : implicitWorkspaceMode ? `${baseRef} against working tree` : `${baseRef}...${headRef}`}`,
+            `Failed to diff ${implicitWorkspaceMode ? `${baseRef} against working tree` : `${baseRef}...${headRef}`}`,
         );
       }
 
       const parsedFiles = parseNameStatus(files.text()).filter((file) => file.path);
-      const mergedFiles = dirtyWorktree || implicitWorkspaceMode
-        ? await mergeUntrackedFiles($, ctx.worktree, parsedFiles)
-        : parsedFiles;
       const filesWithDiff = args.diff
-        ? dirtyWorktree
-          ? await loadWorktreeDiffs($, ctx.worktree, mergedFiles)
-          : implicitWorkspaceMode
-          ? await loadWorkspaceFileDiffs($, ctx.worktree, baseRef, mergedFiles)
-          : await loadFileDiffs($, ctx.worktree, baseRef, headRef, mergedFiles)
-        : mergedFiles.map((file) => serializeFile(file));
-      const commits = dirtyWorktree || implicitWorkspaceMode || !log ? [] : parseCommitList(log.text());
+        ? implicitWorkspaceMode
+          ? await loadWorkspaceFileDiffs($, ctx.worktree, baseRef, parsedFiles)
+          : await loadFileDiffs($, ctx.worktree, baseRef, headRef, parsedFiles)
+        : parsedFiles.map((file) => serializeFile(file));
+      const commits = implicitWorkspaceMode ? [] : parseCommitList(log.text());
 
       return stringifyJson({
         files: filesWithDiff,
@@ -108,6 +102,56 @@ async function hasWorktreeChanges($: Shell, cwd: string) {
 
   const untracked = await $`git ls-files --others --exclude-standard`.cwd(cwd).quiet().nothrow();
   return nonEmptyLines(untracked.text()).length > 0;
+}
+
+async function withTemporaryIndex<T>(
+  $: Shell,
+  cwd: string,
+  operation: (indexPath: string) => Promise<T>,
+) {
+  const gitDirProc = await $`git rev-parse --git-dir`.cwd(cwd).quiet().nothrow();
+  if (gitDirProc.exitCode !== 0) {
+    throw new Error(gitDirProc.stderr.toString() || "Failed to resolve .git directory");
+  }
+
+  const gitDir = path.resolve(cwd, gitDirProc.text().trim());
+  const tempDir = await mkdtemp(path.join(gitDir, "opencode-compass-index-"));
+  const indexPath = path.join(tempDir, "index");
+
+  try {
+    const readTree = await $`env GIT_INDEX_FILE=${indexPath} git read-tree HEAD`
+      .cwd(cwd)
+      .quiet()
+      .nothrow();
+    if (readTree.exitCode !== 0) {
+      throw new Error(readTree.stderr.toString() || "Failed to initialize temporary index");
+    }
+
+    const addAll = await $`env GIT_INDEX_FILE=${indexPath} git add -A -- .`
+      .cwd(cwd)
+      .quiet()
+      .nothrow();
+    if (addAll.exitCode !== 0) {
+      throw new Error(addAll.stderr.toString() || "Failed to stage worktree in temporary index");
+    }
+
+    return await operation(indexPath);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+}
+
+async function loadTemporaryIndexFiles($: Shell, cwd: string, indexPath: string) {
+  const proc = await $`env GIT_INDEX_FILE=${indexPath} git diff --cached --find-renames --find-copies --name-status`
+    .cwd(cwd)
+    .quiet()
+    .nothrow();
+
+  if (proc.exitCode !== 0) {
+    throw new Error(proc.stderr.toString() || "Failed to load temporary index changes");
+  }
+
+  return parseNameStatus(proc.text()).filter((file) => file.path);
 }
 
 async function loadFileDiffs(
@@ -188,7 +232,7 @@ async function loadWorkspaceFileDiffs($: Shell, cwd: string, baseRef: string, fi
   return enriched;
 }
 
-async function loadWorktreeDiffs($: Shell, cwd: string, files: ChangedFile[]) {
+async function loadTemporaryIndexDiffs($: Shell, cwd: string, indexPath: string, files: ChangedFile[]) {
   const enriched: Array<Record<string, unknown>> = [];
 
   for (const file of files) {
@@ -205,11 +249,11 @@ async function loadWorktreeDiffs($: Shell, cwd: string, files: ChangedFile[]) {
     }
 
     const proc = [file.previousPath, file.path].filter(Boolean).length > 1
-      ? await $`git diff --find-renames --find-copies --unified=3 --no-color --no-ext-diff --no-prefix HEAD -- ${file.previousPath!} ${file.path}`
+      ? await $`env GIT_INDEX_FILE=${indexPath} git diff --cached --find-renames --find-copies --unified=3 --no-color --no-ext-diff --no-prefix -- ${file.previousPath!} ${file.path}`
           .cwd(cwd)
           .quiet()
           .nothrow()
-      : await $`git diff --find-renames --find-copies --unified=3 --no-color --no-ext-diff --no-prefix HEAD -- ${file.path}`
+      : await $`env GIT_INDEX_FILE=${indexPath} git diff --cached --find-renames --find-copies --unified=3 --no-color --no-ext-diff --no-prefix -- ${file.path}`
           .cwd(cwd)
           .quiet()
           .nothrow();
@@ -223,35 +267,6 @@ async function loadWorktreeDiffs($: Shell, cwd: string, files: ChangedFile[]) {
   }
 
   return enriched;
-}
-
-async function mergeUntrackedFiles($: Shell, cwd: string, files: ChangedFile[]) {
-  const untrackedProc = await $`git ls-files --others --exclude-standard`
-    .cwd(cwd)
-    .quiet()
-    .nothrow();
-
-  if (untrackedProc.exitCode !== 0) {
-    return files;
-  }
-
-  const merged = [...files];
-  const seen = new Set(merged.map((file) => file.path));
-
-  for (const filePath of nonEmptyLines(untrackedProc.text())) {
-    if (seen.has(filePath)) {
-      continue;
-    }
-
-    merged.push({
-      rawStatus: "??",
-      status: "untracked",
-      path: filePath,
-    });
-    seen.add(filePath);
-  }
-
-  return merged;
 }
 
 function serializeFile(
@@ -275,6 +290,15 @@ function normalizeNativeDiff(file: ChangedFile, rawDiff: string) {
       (line) =>
         !line.startsWith("diff --git ") &&
         !line.startsWith("index ") &&
+        !line.startsWith("old mode ") &&
+        !line.startsWith("new mode ") &&
+        !line.startsWith("deleted file mode ") &&
+        !line.startsWith("new file mode ") &&
+        !line.startsWith("similarity index ") &&
+        !line.startsWith("rename from ") &&
+        !line.startsWith("rename to ") &&
+        !line.startsWith("copy from ") &&
+        !line.startsWith("copy to ") &&
         !line.startsWith("--- ") &&
         !line.startsWith("+++ "),
     )

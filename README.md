@@ -96,7 +96,7 @@ Create a configuration file at `.opencode/compass.json` or `opencode-compass.jso
   },
   "defaults": {
     "baseBranch": "main",
-    "agentMode": "subagent"
+    "agentMode": "all"
   }
 }
 ```

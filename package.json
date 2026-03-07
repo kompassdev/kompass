@@ -1,6 +1,6 @@
 {
   "name": "opencode-compass",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Navigate your codebase with confidence—guided workflows that keep your AI agents on course from planning to PR",
   "type": "module",
   "main": "./index.ts",

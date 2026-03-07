@@ -141,7 +141,7 @@ export function mergeWithDefaults(
     },
     defaults: {
       baseBranch: config?.defaults?.baseBranch ?? "main",
-      agentMode: config?.defaults?.agentMode ?? "subagent",
+      agentMode: config?.defaults?.agentMode ?? "all",
     },
   };
 }

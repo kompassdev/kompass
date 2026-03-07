@@ -41,6 +41,6 @@
   
   "defaults": {
     "baseBranch": "main",
-    "agentMode": "subagent"
+    "agentMode": "all"
   }
 }

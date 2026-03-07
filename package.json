@@ -14,11 +14,17 @@
     "components",
     "lib",
     "tools",
+    "config.example.json",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "check": "bun --eval \"await import('./index.ts')\""
+    "check": "bun --eval \"await import('./index.ts')\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.5",
+    "typescript": "^5.4.0"
   },
   "keywords": [
     "opencode",

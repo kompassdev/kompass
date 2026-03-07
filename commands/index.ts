@@ -1,8 +1,15 @@
 import type { Config } from "@opencode-ai/sdk";
 
+import { loadCompassConfig, mergeWithDefaults } from "../lib/config.ts";
 import { loadProjectText } from "../lib/text.ts";
 
-const commandDefinitions = {
+interface CommandDefinition {
+  description: string;
+  agent: string;
+  templatePath: string;
+}
+
+const commandDefinitions: Record<string, CommandDefinition> = {
   "pr/create": {
     description: "Summarize branch work and create a PR",
     agent: "build",
@@ -38,24 +45,20 @@ const commandDefinitions = {
     agent: "build",
     templatePath: "commands/dev.txt",
   },
-} as const;
-
-const componentMap: Record<string, string> = {
-  "pr-author": "components/pr-author.txt",
-  "dev-flow": "components/dev-flow.txt",
-  "ticket-plan": "components/ticket-plan.txt",
-  "pr-fix": "components/pr-fix.txt",
-  "pr-review": "components/pr-review.txt",
 };
 
-async function loadComponents(): Promise<Record<string, string>> {
+async function loadComponents(
+  componentPaths: Record<string, string>,
+): Promise<Record<string, string>> {
   const components: Record<string, string> = {};
 
-  await Promise.all(
-    Object.entries(componentMap).map(async ([name, path]) => {
+  for (const [name, path] of Object.entries(componentPaths)) {
+    try {
       components[name] = await loadProjectText(path);
-    }),
-  );
+    } catch {
+      // Component file doesn't exist, skip
+    }
+  }
 
   return components;
 }
@@ -69,22 +72,39 @@ function embedComponents(
   });
 }
 
-export async function applyCommandsConfig(cfg: Config) {
+export async function applyCommandsConfig(cfg: Config, projectRoot: string) {
+  const userConfig = await loadCompassConfig(projectRoot);
+  const config = mergeWithDefaults(userConfig);
+
   cfg.command ??= {};
 
-  const components = await loadComponents();
+  const components = await loadComponents(config.components.paths);
 
-  await Promise.all(
-    Object.entries(commandDefinitions).map(async ([name, definition]) => {
-      const rawTemplate = await loadProjectText(definition.templatePath);
-      const template = embedComponents(rawTemplate, components);
+  for (const name of config.commands.enabled) {
+    const definition = commandDefinitions[name];
+    if (!definition) continue;
 
-      cfg.command![name] ??= {
-        description: definition.description,
-        agent: definition.agent,
-        subtask: true,
-        template,
-      };
-    }),
-  );
+    // Use custom template path if configured
+    const templatePath =
+      config.commands.templates[name] || definition.templatePath;
+
+    let template: string;
+    try {
+      const rawTemplate = await loadProjectText(templatePath);
+      // Only embed components if using default template
+      template = config.commands.templates[name]
+        ? rawTemplate
+        : embedComponents(rawTemplate, components);
+    } catch {
+      // Template file doesn't exist, skip
+      continue;
+    }
+
+    cfg.command[name] ??= {
+      description: definition.description,
+      agent: definition.agent,
+      subtask: true,
+      template,
+    };
+  }
 }

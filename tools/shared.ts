@@ -1,7 +1,18 @@
 import path from "node:path";
-import type { BunShell } from "@opencode-ai/plugin";
 
-export type Shell = BunShell;
+export interface ShellPromise {
+  cwd(dir: string): ShellPromise;
+  quiet(): ShellPromise;
+  nothrow(): ShellPromise;
+  text(): string;
+  json(): unknown;
+  exitCode: number;
+  stderr: Buffer;
+}
+
+export interface Shell {
+  (strings: TemplateStringsArray, ...expressions: unknown[]): ShellPromise;
+}
 
 export type PluginContext = {
   worktree: string;

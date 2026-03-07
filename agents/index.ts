@@ -1,36 +1,29 @@
 import type { AgentConfig, Config } from "@opencode-ai/sdk";
 
+import { loadCompassConfig, mergeWithDefaults, type AgentDefinition } from "../lib/config.ts";
 import { loadProjectText } from "../lib/text.ts";
 
-const agentDefinitions = {
-  reviewer: {
-    description: "Review diffs, PRs, and existing feedback without editing files.",
-    promptPath: "agents/reviewer.txt",
-    permission: {
-      edit: "deny",
-    },
-  },
-  planner: {
-    description: "Turn requests or tickets into scoped implementation plans.",
-    promptPath: "agents/planner.txt",
-    permission: {
-      edit: "deny",
-    },
-  },
-} as const;
+export async function applyAgentsConfig(cfg: Config, projectRoot: string) {
+  const userConfig = await loadCompassConfig(projectRoot);
+  const config = mergeWithDefaults(userConfig);
 
-export async function applyAgentsConfig(cfg: Config) {
   cfg.agent ??= {};
 
-  await Promise.all(
-    Object.entries(agentDefinitions).map(async ([name, definition]) => {
-      const agentConfig: AgentConfig = {
-        mode: "subagent",
-        description: definition.description,
-        prompt: await loadProjectText(definition.promptPath),
-        permission: definition.permission,
-      };
-      cfg.agent![name] ??= agentConfig;
-    }),
-  );
+  const agentDefinitions: Record<string, AgentDefinition> = {
+    reviewer: config.agents.reviewer,
+    planner: config.agents.planner,
+  };
+
+  for (const name of config.agents.enabled) {
+    const definition = agentDefinitions[name];
+    if (!definition) continue;
+
+    const agentConfig: AgentConfig = {
+      mode: config.defaults.agentMode,
+      description: definition.description,
+      prompt: await loadProjectText(definition.promptPath),
+      permission: definition.permission,
+    };
+    cfg.agent[name] ??= agentConfig;
+  }
 }

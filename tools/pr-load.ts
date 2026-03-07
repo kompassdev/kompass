@@ -1,4 +1,4 @@
-import { tool } from "@opencode-ai/plugin";
+import { tool } from "@opencode-ai/plugin/tool";
 
 import { loadRepoName, stringifyJson, type PluginContext, type Shell } from "./shared.ts";
 

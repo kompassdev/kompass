@@ -1,6 +1,6 @@
 import { access, readFile } from "node:fs/promises";
 
-import { tool } from "@opencode-ai/plugin";
+import { tool } from "@opencode-ai/plugin/tool";
 
 import {
   loadRepoName,

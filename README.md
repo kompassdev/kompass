@@ -28,13 +28,54 @@ Add the package to your OpenCode config:
 ## Structure
 
 ```text
-agents/      subagent prompts
-commands/    command templates with embedded guidance
-components/  reusable navigation guidance
-lib/         shared loaders and path helpers
-tools/       one file per tool
-index.ts     plugin entrypoint
+agents/          subagent prompts
+commands/        command templates with embedded guidance
+components/      reusable navigation guidance
+lib/             shared loaders and path helpers
+tools/           one file per tool
+config.example.json  example configuration file
+index.ts         plugin entrypoint
 ```
+
+## Configuration
+
+Create a configuration file at `.opencode/compass.json` or `opencode-compass.json` in your project root to customize behavior:
+
+```json
+{
+  "commands": {
+    "enabled": ["pr/create", "pr/review", "pr/fix", "ticket/plan", "ticket/dev", "review", "dev"],
+    "templates": {
+      "pr/create": "custom/path/to/pr-create.txt"
+    }
+  },
+  "agents": {
+    "enabled": ["reviewer", "planner"],
+    "reviewer": {
+      "description": "Custom reviewer description",
+      "promptPath": "custom/path/to/reviewer.txt",
+      "permission": {
+        "edit": "deny"
+      }
+    }
+  },
+  "tools": {
+    "enabled": ["changes_load", "pr_load", "ticket_load", "ticket_create"]
+  },
+  "components": {
+    "enabled": ["pr-author", "dev-flow", "ticket-plan", "pr-fix", "pr-review"],
+    "paths": {
+      "pr-author": "custom/path/to/pr-author.txt"
+    }
+  },
+  "defaults": {
+    "baseBranch": "main",
+    "agentMode": "subagent"
+  }
+}
+```
+
+See `config.example.json` for all available options.
 
 ## Test locally before publishing
 

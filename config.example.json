@@ -1,0 +1,46 @@
+{
+  "$schema": "https://opencode.ai/schemas/compass.json",
+  "_comment": "Configuration for opencode-compass plugin. Place this file at .opencode/compass.json or opencode-compass.json in your project root.",
+  
+  "commands": {
+    "enabled": ["pr/create", "pr/review", "pr/fix", "ticket/plan", "ticket/dev", "review", "dev"],
+    "templates": {
+      "pr/create": "custom/path/to/pr-create.txt"
+    }
+  },
+  
+  "agents": {
+    "enabled": ["reviewer", "planner"],
+    "reviewer": {
+      "description": "Custom reviewer description",
+      "promptPath": "custom/path/to/reviewer.txt",
+      "permission": {
+        "edit": "deny"
+      }
+    },
+    "planner": {
+      "description": "Custom planner description",
+      "promptPath": "custom/path/to/planner.txt",
+      "permission": {
+        "edit": "deny"
+      }
+    }
+  },
+  
+  "tools": {
+    "enabled": ["changes_load", "pr_load", "ticket_load", "ticket_create"]
+  },
+  
+  "components": {
+    "enabled": ["pr-author", "dev-flow", "ticket-plan", "pr-fix", "pr-review"],
+    "paths": {
+      "pr-author": "custom/path/to/pr-author.txt",
+      "dev-flow": "custom/path/to/dev-flow.txt"
+    }
+  },
+  
+  "defaults": {
+    "baseBranch": "main",
+    "agentMode": "subagent"
+  }
+}

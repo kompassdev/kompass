@@ -7,7 +7,7 @@ When reviewing code, optimize for high-signal findings per token.
 2. Check `AGENTS.md` guidance before reviewing behavior or conventions; when changed files live under nested directories, use the most specific nested `AGENTS.md` that governs that path
 3. Scan the summary first so you know the scope, file states, commit history, and where the risk clusters are
 4. Use `changes_load` to get the changed-file set and structured per-file diffs; do not rely on `pr_load` for file changes
-5. When `changes_load` is called without explicit base/head, treat its file list as the combined effective delta: uncommitted local changes first, then committed branch changes against the default base branch
+5. When `changes_load` is called without explicit base/head, a dirty worktree should return only uncommitted local changes; otherwise it should return the committed branch delta against the default base branch
 6. Read every changed file individually before finalizing the review so you have full file context, not just diff context
 7. Use the diff to prioritize and navigate, but do not treat diff hunks alone as sufficient context for a finding
 8. Read the full current file for added, modified, renamed, copied, or untracked files before making a claim. For deleted files, inspect the previous file contents from git

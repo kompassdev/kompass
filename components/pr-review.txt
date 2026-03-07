@@ -1,15 +1,44 @@
 ## PR Review Navigation Guide
 
-When reviewing code, follow this compass:
+When reviewing code, optimize for high-signal findings per token.
 
 ### Workflow
-1. Use `pr_load` for PR-based navigation and `changes_load` for branch-based surveys
-2. Survey the changed files before signaling findings
-3. Focus on hazards: bugs, regressions, missing edge cases, and accidental course changes
-4. Only publish signals (comments) when the command explicitly asks for it
+1. Use `review_load` first; it should be the default entrypoint for both `/review` and `/pr/review`
+2. Check `AGENTS.md` guidance before reviewing behavior or conventions; when changed files live under nested directories, use the most specific nested `AGENTS.md` that governs that path
+3. Scan the returned summary before diving into details so you know the scope, file states, and where the risk clusters are
+4. Review each changed file entry once before doing any follow-up reads; this keeps the first pass comprehensive and token efficient
+5. Handle file states deliberately: added and modified files use current content, deleted files use previous content, and renamed or copied files include path movement metadata that must be validated
+6. Only inspect extra files or related code when `review_load` marks a file as truncated or summary-only, or when a real concern depends on external behavior
+7. Only publish signals when the command explicitly asks for it, and use `review_submit` for graded PR reviews
+
+### What To Look For
+- behavior that changed accidentally, not just code that looks unusual
+- incorrect assumptions about null, empty, default, retry, timeout, ordering, and permission paths
+- caller and contract breakage: API shapes, return values, schema changes, renamed exports, moved files, and config semantics
+- partial updates: code path changed in one place but not in another dependent path
+- deleted or renamed files that leave stale references, docs, routes, imports, migrations, or tests behind
+- risky generated or lockfile churn that may hide a real source change nearby
+
+### Finding Threshold
+- Report a finding only when you can name the likely failure mode.
+- Report a convention or workflow violation only when it conflicts with the applicable `AGENTS.md` guidance.
+- Do not report style, naming, or minor cleanup unless it masks a real defect.
+- If something looks suspicious but unproven, call it out as a question only when the workflow asks for a chat summary; do not publish speculative inline comments.
+- Be concise; if a point is not important enough to state in a few direct sentences, it probably should not be a finding.
+
+### Importance Guide
+- `critical`: data loss, security exposure, broken deploy or migration, severe customer impact
+- `high`: likely bug or regression in normal usage, broken contract, missing validation on an important path
+- `medium`: edge-case bug, incomplete handling, or maintainability issue likely to cause follow-up breakage
+- `low`: useful but non-blocking improvement; avoid publishing these unless they are still worth interrupting the author for
 
 ### Output Rules
 - Be certain before flagging a hazard
 - Prefer a small number of high-confidence findings—mark the dangers, not every ripple
-- When publishing signals, make each one actionable and specific
-- When not publishing, present the survey clearly in chat
+- Follow `AGENTS.md` and nested `AGENTS.md` guidance strictly when deciding whether something is compliant
+- When publishing signals, make each one actionable, specific, and importance-graded
+- For PR reviews, publish comments by default; only approve when the final grade is `★★★★★`
+- Do not duplicate prior feedback; if the same issue was already flagged, skip it
+- Do not repeat the same grade; if the grade is unchanged, add only genuinely new comments or skip publishing entirely
+- When reporting a grade, format it as stars like `★★☆☆☆`
+- When not publishing, present the survey clearly in chat with a star grade, a short overall verdict, and a concise finding list ordered by impact

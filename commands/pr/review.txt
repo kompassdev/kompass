@@ -1,6 +1,19 @@
 {{pr-review}}
 
-Load the pr-review skill to navigate the review.
-Use pr_load with reviews and comments enabled to chart the territory.
-Interpret $ARGUMENTS as an optional PR number, URL, or base branch hint.
-Survey the changes and signal the findings.
+Use `review_load` in `pr` mode first, with `reviews` and `comments` enabled.
+Load ticket context when the PR body points to exactly one clear linked ticket.
+Interpret $ARGUMENTS as an optional PR number or URL.
+Check the applicable `AGENTS.md` and nested `AGENTS.md` files for the touched paths before deciding whether the changes follow project rules.
+Review the returned file list in one pass before any follow-up exploration.
+Only inspect extra files when `review_load` explicitly truncated or omitted detail you need to confirm a real finding.
+Publish the final result with `review_submit`.
+When publishing:
+- include only actionable, high-confidence inline comments
+- set an importance for each inline comment
+- keep comments focused on concrete failure modes and fixes
+- include an overall grade formatted like `★★☆☆☆` and a short overall review summary
+- publish a comment review by default, and only approve when the grade is `★★★★★`
+- skip issues that were already flagged in existing review comments
+- if the grade is unchanged, publish only new comments without repeating the review message, or skip entirely if there is nothing new
+- avoid flooding the PR; prefer a few strong comments over many weak ones
+- be concise and only flag things you are sure about

@@ -1,6 +1,14 @@
 {{pr-review}}
 
-Load the pr-review skill to get your bearings.
-Use changes_load to survey the current branch against the base branch.
+Use `review_load` in `branch` mode to load the full changed-file list plus token-aware per-file diffs and file contents.
 Interpret $ARGUMENTS as an optional base branch.
-Chart the findings without publishing—review the route before signaling.
+Check the applicable `AGENTS.md` and nested `AGENTS.md` files for the touched paths before deciding whether the changes follow project rules.
+Start with a single-pass review of all returned file entries before any follow-up exploration.
+Only inspect extra files if `review_load` marks a file as truncated or summary-only and a finding depends on that missing context.
+Do not publish PR comments.
+Return a chat review with:
+- an overall grade formatted like `★★☆☆☆`
+- a short verdict on merge risk
+- a concise list of high-confidence findings ordered by impact
+- explicit mention when no material issues were found
+- concise wording and only findings you are sure about

@@ -1,7 +1,7 @@
 import path from "node:path";
 import { readFile } from "node:fs/promises";
 
-import { tool } from "@opencode-ai/plugin";
+import { tool } from "@opencode-ai/plugin/tool";
 
 import {
   loadRepoName,
@@ -499,7 +499,7 @@ async function loadPerFileDiff(
   file: ChangedFile,
   maxLines: number,
   maxBytes: number,
-) {
+): Promise<TrimmedText> {
   const paths = [file.previousPath, file.path].filter(Boolean) as string[];
   const proc = target.kind === "commit"
     ? paths.length > 1
@@ -523,6 +523,9 @@ async function loadPerFileDiff(
 
   if (proc.exitCode !== 0) {
     return {
+      text: undefined,
+      lineCount: 0,
+      byteCount: 0,
       omittedReason: proc.stderr.toString() || "Failed to load diff",
       truncated: false,
     };
@@ -659,6 +662,9 @@ async function buildReviewFile(
 
   const diff = file.status === "untracked"
     ? {
+        text: undefined,
+        lineCount: 0,
+        byteCount: 0,
         omittedReason: "untracked file has no git diff against merge base",
         truncated: false,
       }
@@ -864,20 +870,19 @@ export function createReviewLoadTool($: Shell) {
         );
       }
 
-      const summary = detailedFiles.reduce(
-        (acc, file) => {
-          const statusName = String(file.status ?? "unknown");
-          acc.byStatus[statusName] = (acc.byStatus[statusName] ?? 0) + 1;
-          const detailLevel = String(file.detailLevel ?? "summary-only");
-          acc.byDetailLevel[detailLevel] = (acc.byDetailLevel[detailLevel] ?? 0) + 1;
-          return acc;
-        },
-        {
-          totalFiles: detailedFiles.length,
-          byStatus: {} as Record<string, number>,
-          byDetailLevel: {} as Record<string, number>,
-        },
-      );
+      const summary = {
+        totalFiles: detailedFiles.length,
+        byStatus: {} as Record<string, number>,
+        byDetailLevel: {} as Record<string, number>,
+      };
+
+      for (const file of detailedFiles) {
+        const statusName = String(file.status ?? "unknown");
+        summary.byStatus[statusName] = (summary.byStatus[statusName] ?? 0) + 1;
+
+        const detailLevel = String(file.detailLevel ?? "summary-only");
+        summary.byDetailLevel[detailLevel] = (summary.byDetailLevel[detailLevel] ?? 0) + 1;
+      }
 
       return stringifyJson({
         mode: args.mode,

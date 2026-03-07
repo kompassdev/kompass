@@ -10,10 +10,15 @@ Navigate your codebase with confidence. A plugin that keeps your AI agents on co
 
 ## What it adds
 
-- tools: `changes_load`, `pr_load`, `ticket_load`, `ticket_create`
+- tools: `changes_load`, `pr_load`, `review_load`, `review_submit`, `ticket_load`, `ticket_create`
 - subagents: `reviewer`, `planner`
 - commands: `/pr/create`, `/pr/review`, `/pr/fix`, `/ticket/plan`, `/ticket/dev`, `/review`, `/dev`
 - embeddable navigation components for consistent guidance
+
+## Review Workflow
+
+- `/pr/review` can load PR metadata, prior reviews, inline comments, linked ticket context, and a token-aware per-file review pack in one `review_load` call, then publish a graded review with `review_submit`
+- `/review` uses the same file-aware loading path without publishing so the agent can summarize findings in chat
 
 ## Install from npm
 
@@ -60,7 +65,7 @@ Create a configuration file at `.opencode/compass.json` or `opencode-compass.jso
     }
   },
   "tools": {
-    "enabled": ["changes_load", "pr_load", "ticket_load", "ticket_create"]
+    "enabled": ["changes_load", "pr_load", "review_load", "review_submit", "ticket_load", "ticket_create"]
   },
   "components": {
     "enabled": ["pr-author", "dev-flow", "ticket-plan", "pr-fix", "pr-review"],

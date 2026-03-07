@@ -45,10 +45,6 @@ export function createChangesLoadTool($: Shell) {
         .cwd(ctx.worktree)
         .quiet()
         .nothrow();
-      const status = await $`git status --short`
-        .cwd(ctx.worktree)
-        .quiet()
-        .nothrow();
       const files = implicitWorkspaceMode
         ? await $`git diff --find-renames --find-copies --name-status ${baseRef}`
             .cwd(ctx.worktree)
@@ -78,13 +74,12 @@ export function createChangesLoadTool($: Shell) {
           ? await loadWorkspaceFileDiffs($, ctx.worktree, baseRef, mergedFiles)
           : await loadFileDiffs($, ctx.worktree, baseRef, headRef, mergedFiles)
         : mergedFiles;
-      const commits = parseCommitList(log.text());
+      const commits = implicitWorkspaceMode ? [] : parseCommitList(log.text());
 
       return stringifyJson({
         base: baseRef,
         head: headRef,
         branch: branch.text().trim(),
-        status: nonEmptyLines(status.text()),
         files: filesWithDiff,
         commits,
       });

@@ -133,18 +133,11 @@ export async function resolveBaseRef($: Shell, cwd: string, input?: string) {
     return head.text().trim().replace(/^refs\/remotes\//, "");
   }
 
-  const remote = await $`git rev-parse --verify origin/dev`
-    .cwd(cwd)
-    .quiet()
-    .nothrow();
-
-  if (remote.exitCode === 0) {
-    return "origin/dev";
-  }
-
-  const local = await $`git rev-parse --verify dev`.cwd(cwd).quiet().nothrow();
-  if (local.exitCode === 0) {
-    return "dev";
+  for (const candidate of ["origin/main", "origin/master", "origin/dev", "main", "master", "dev"]) {
+    const proc = await $`git rev-parse --verify ${candidate}`.cwd(cwd).quiet().nothrow();
+    if (proc.exitCode === 0) {
+      return candidate;
+    }
   }
 
   return "HEAD~1";

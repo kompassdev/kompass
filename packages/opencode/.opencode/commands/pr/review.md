@@ -33,12 +33,17 @@ If `<pr-context.pr.body>` links to exactly one clear ticket:
 
 ### Load Changes
 
-Use `<pr-context.pr.commitCount>` as `<depth-hint>`.
+Use `<pr-context.pr.commitCount>` as `<depth-hint>` only when it is a known positive integer.
+
+Depth hint rules:
+- If `<pr-context.pr.commitCount>` is missing, zero, negative, non-integer, or otherwise invalid, omit `depthHint` entirely
+- Never negate, offset, estimate, or invent `depthHint` values
+- If the exact count is not available, prefer no `depthHint` over a guessed one
 
 Call `kompass_changes_load` with:
 - `base: <pr-context.pr.baseRefName>`
 - `head: <pr-context.pr.headRefName>`
-- `depthHint: <depth-hint>`
+- `depthHint: <depth-hint>` only when `<depth-hint>` is defined
 
 Store as `<changes>`.
 
@@ -55,16 +60,28 @@ While reading files:
 - Load relevant nested `AGENTS.md` files in the current session before applying review criteria
 - For deleted files, inspect the previous contents from git rather than assuming `kompass_changes_load` included the full file
 - Use a helper agent only if the changed-file set is too large to review comfortably in one session after the changed paths are already known
+- After reading the changed files and any directly relevant `AGENTS.md`, stop expanding unless a specific finding needs confirmation
+- Do not inspect unrelated tool implementations, callers, or config paths just to gain confidence when the changed files already answer the question
 
 Derive `<previous-grade>` from the most recent prior review body by `<pr-context.viewerLogin>` when one is present.
 
 Derive `<body-note>` only when you have review feedback that does not belong in an inline comment.
 
+Before publishing, derive:
+- `<has-inline-comments>` from whether the review payload would contain any inline comments
+- `<has-body-note>` from whether `<body-note>` exists
+- `<grade-changed>` from whether `<previous-grade>` differs from the current grade
+
 ### Publish Review
 
-If there are no new inline comments and no `<body-note>`:
+If `<has-inline-comments>` is false and `<has-body-note>` is false:
 - If `<previous-grade>` matches the current grade, skip publishing a review entirely
 - Otherwise, publish a grade-only review body
+
+If `<has-inline-comments>` is false, `<has-body-note>` is false, and `<grade-changed>` is false:
+- Stop immediately
+- Do not call `gh api`
+- Return the skip output
 
 Create the review payload inline and pipe it to `gh api`:
 

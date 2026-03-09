@@ -1,6 +1,6 @@
 {
   "name": "@kompassdev/opencode",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "OpenCode plugin for navigating repos with fewer wrong turns",
   "type": "module",
   "main": "./index.ts",
@@ -20,11 +20,16 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "keywords": [
-    "kompass",
     "opencode",
-    "adapter",
-    "ai",
-    "workflow"
+    "coding-agent",
+    "ai-agent",
+    "developer-tools",
+    "workflow",
+    "code-review",
+    "pull-request",
+    "ticketing",
+    "automation",
+    "kompass"
   ],
   "license": "MIT",
   "dependencies": {

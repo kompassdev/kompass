@@ -4,6 +4,8 @@ Kompass helps coding agents navigate repositories with fewer wrong turns.
 
 It packages reusable workflows, focused agents, and structured repository tools so planning, review, ticket work, and pull request prep stay grounded in real project context instead of broad repo guesswork.
 
+Kompass is under active development, so workflows, package APIs, and adapter support may keep evolving as the toolkit expands.
+
 Why people use it:
 
 - help agents navigate codebases with more direction and less drift

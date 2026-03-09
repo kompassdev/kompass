@@ -4,6 +4,8 @@
 
 It brings Kompass workflows, focused agents, and structured repository tools into OpenCode so sessions stay grounded in branch, PR, and ticket context instead of wandering through the repo from scratch.
 
+`@kompassdev/opencode` is under active development, so commands, tools, and integration details may keep evolving as Kompass matures.
+
 Why people use it:
 
 - help OpenCode navigate codebases with more direction and less drift

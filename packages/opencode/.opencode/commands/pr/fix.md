@@ -14,14 +14,14 @@ Address feedback on a pull request by making fixes and responding to review thre
 Store `$ARGUMENTS` as `<arguments>`:
 - If `<arguments>` looks like a PR number (e.g., "123") or URL, store it as `<pr-ref>`
 - If `<arguments>` includes extra fix guidance, scope constraints, or priorities, store it as `<additional-context>`
-- If empty, leave `<pr-ref>` undefined and let `pr_load` resolve the default PR context
+- If empty, leave `<pr-ref>` undefined and let `kompass_pr_load` resolve the default PR context
 
 ### Load PR Context
 
-Use `pr_load` as the source of truth for PR selection:
-- If `<pr-ref>` is defined, call `pr_load` with `pr: <pr-ref>`
-- Otherwise, call `pr_load` with no arguments
-- Do not run separate git or GitHub commands just to discover which PR to fix before calling `pr_load`
+Use `kompass_pr_load` as the source of truth for PR selection:
+- If `<pr-ref>` is defined, call `kompass_pr_load` with `pr: <pr-ref>`
+- Otherwise, call `kompass_pr_load` with no arguments
+- Do not run separate git or GitHub commands just to discover which PR to fix before calling `kompass_pr_load`
 
 Store the result as `<pr-context>`.
 

@@ -22,10 +22,10 @@
   },
   "tools": {
     "enabled": [
-      "changes_load",
-      "pr_load",
-      "ticket_load",
-      "ticket_create"
+      "kompass_changes_load",
+      "kompass_pr_load",
+      "kompass_ticket_load",
+      "kompass_ticket_create"
     ]
   },
   "defaults": {

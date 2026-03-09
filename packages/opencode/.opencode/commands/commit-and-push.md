@@ -18,12 +18,12 @@ Store `$ARGUMENTS` as `<arguments>`:
 ### Load Changes
 
 #### Step 1: Load Changes
-- call `changes_load`
+- call `kompass_changes_load`
 - pass `uncommitted: true` to get uncommitted changes only
-- Use `changes_load` as the source of truth; no additional git analysis commands are needed
+- Use `kompass_changes_load` as the source of truth; no additional git analysis commands are needed
 
 #### Step 2: Analyze Files
-- Review the paths, statuses, and diffs from `changes_load`
+- Review the paths, statuses, and diffs from `kompass_changes_load`
 - Identify the nature of changes (added, modified, deleted)
 - Note lines added/removed per file
 

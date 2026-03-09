@@ -18,7 +18,8 @@ Before reviewing, always check repository guidance:
     - Read full current files for added/modified/renamed/copied/untracked files
     - `changes_load` gives the changed-file set and diffs, but not full deleted-file contents; for deleted files, inspect previous contents from git
     - Use diffs to prioritize, but don't treat hunks as sufficient context
-    - If the change set spans multiple files, use `@explore` to gather full-file context for all changed paths before writing findings
+    - Prefer loading changed files directly in the current session so that file context remains available during analysis and write-up
+    - Use a helper agent only when the changed-file set is too large to review comfortably in one session after the changed paths are already known
     - Stop expanding after reading changed files unless needed to confirm behavior
 
 3. **Analyze**: Look for these material issues:

@@ -19,7 +19,7 @@ Store `$ARGUMENTS` as `<arguments>`, then normalize it:
 
 ### Orient Request
 
-- If `<request-source>` is defined, load it with `ticket_load` and store the result as `<request-context>`
+- If `<request-source>` is defined, load it with `kompass_ticket_load` and store the result as `<request-context>`
 - Otherwise, treat `<request>` as `<request-context>`
 - Summarize the goal, constraints, and acceptance criteria before making changes
 

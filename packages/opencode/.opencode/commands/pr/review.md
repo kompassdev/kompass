@@ -14,51 +14,47 @@ Review a GitHub pull request and publish findings as a formal review with inline
 Store `$ARGUMENTS` as `<arguments>`:
 - If `<arguments>` looks like a PR number (e.g., "123") or URL, store it as `<pr-ref>`
 - If `<arguments>` includes review focus areas, related tickets, or special concerns, store it as `<additional-context>`
-- If empty, leave `<pr-ref>` undefined and let `pr_load` resolve the default PR context
+- If empty, leave `<pr-ref>` undefined and let `kompass_pr_load` resolve the default PR context
 
 ### Load PR Context
 
-Use `pr_load` as the source of truth for PR selection:
-- If `<pr-ref>` is defined, call `pr_load` with `pr: <pr-ref>`
-- Otherwise, call `pr_load` with no arguments
-- Do not run separate git or GitHub commands just to discover which PR to review before calling `pr_load`
+Use `kompass_pr_load` as the source of truth for PR selection:
+- If `<pr-ref>` is defined, call `kompass_pr_load` with `pr: <pr-ref>`
+- Otherwise, call `kompass_pr_load` with no arguments
+- Do not run separate git or GitHub commands just to discover which PR to review before calling `kompass_pr_load`
 
 Store the result as `<pr-context>`.
 
 ### Load Ticket Context
 
 If `<pr-context.pr.body>` links to exactly one clear ticket:
-- Call `ticket_load` with the ticket reference
+- Call `kompass_ticket_load` with the ticket reference
 - Store the result as `<ticket-context>` for consideration during review
 
 ### Load Changes
 
-Derive `<depth-hint>` before calling `changes_load`:
-- If `<pr-context.pr.commitCount>` is a positive integer, store that exact value as `<depth-hint>`
-- Otherwise, leave `<depth-hint>` undefined
-- Never negate, transform, or guess this value
+Use `<pr-context.pr.commitCount>` as `<depth-hint>`.
 
-Call `changes_load` with:
+Call `kompass_changes_load` with:
 - `base: <pr-context.pr.baseRefName>`
 - `head: <pr-context.pr.headRefName>`
-- Include `depthHint: <depth-hint>` only when `<depth-hint>` is defined
+- `depthHint: <depth-hint>`
 
 Store as `<changes>`.
 
 ### Review Changes
 
 Following the reviewer agent guidance:
-1. Use `@explore` to read every changed file for full context before finalizing findings
+1. Read every changed file for full context in the current session before finalizing findings
 2. Inspect `<pr-context.reviews>`, `<pr-context.issueComments>`, and `<pr-context.threads>` for anything already posted by `<pr-context.viewerLogin>`
 3. Do not repeat the same finding when an equivalent unresolved or already-submitted comment exists
 4. Prefer inline comments for file-specific findings; use the review body only for anything that cannot be expressed inline
 5. Do not guess GitHub diff anchors from absolute file line numbers alone; use the diff hunks in `<changes>` to map any inline comment to the changed side of the patch
 
-When using `@explore`:
-- Provide the full changed-path list from `<changes>`
-- Ask it to read each changed file in full, plus relevant nested `AGENTS.md` files
-- Ask it to return a concise per-file context summary before review findings are drafted
-- For deleted files, ask it to inspect the previous contents from git rather than assuming `changes_load` included the full file
+While reading files:
+- Load relevant nested `AGENTS.md` files in the current session before applying review criteria
+- For deleted files, inspect the previous contents from git rather than assuming `kompass_changes_load` included the full file
+- Use a helper agent only if the changed-file set is too large to review comfortably in one session after the changed paths are already known
 
 Derive `<previous-grade>` from the most recent prior review body by `<pr-context.viewerLogin>` when one is present.
 

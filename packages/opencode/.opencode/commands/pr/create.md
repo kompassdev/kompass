@@ -19,14 +19,14 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
 ### Load & Analyze Changes
 
 #### Step 1: Load Changes
-- call `changes_load`
-- If `<base>` is defined: call `changes_load` with the `base` parameter set to `<base>`
-- Otherwise: call `changes_load` with no parameters
+- call `kompass_changes_load`
+- If `<base>` is defined: call `kompass_changes_load` with the `base` parameter set to `<base>`
+- Otherwise: call `kompass_changes_load` with no parameters
 - Never pass `uncommitted: true` in this command
-- Use `changes_load` as the source of truth; no additional git analysis commands are needed
+- Use `kompass_changes_load` as the source of truth; no additional git analysis commands are needed
 
 #### Step 2: Analyze Files
-- Review the paths, statuses, and diffs from `changes_load`
+- Review the paths, statuses, and diffs from `kompass_changes_load`
 - Identify the nature of changes (added, modified, deleted)
 - Note lines added/removed per file
 
@@ -41,7 +41,7 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
   - Report: "There are uncommitted changes. Please commit or stash them before creating a PR."
   - List the changed files from the result
   - Do NOT proceed further
-- Treat this as a blocker only when `changes_load` returns `comparison: "uncommitted"` from the default call above; never force that mode during PR creation
+- Treat this as a blocker only when `kompass_changes_load` returns `comparison: "uncommitted"` from the default call above; never force that mode during PR creation
 - If `branch` equals `<base>`:
   - STOP immediately
   - Report: "You are currently on the base branch (<base>). Please checkout a feature branch before creating a PR."

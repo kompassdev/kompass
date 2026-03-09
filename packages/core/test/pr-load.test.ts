@@ -166,7 +166,11 @@ describe("pr_load", () => {
 
   test("uses GITHUB_ACTOR when gh api user is unavailable", async () => {
     const previousActor = process.env.GITHUB_ACTOR;
+    const previousActions = process.env.GITHUB_ACTIONS;
+    const previousToken = process.env.GITHUB_TOKEN;
     process.env.GITHUB_ACTOR = "github-actions[bot]";
+    delete process.env.GITHUB_ACTIONS;
+    delete process.env.GITHUB_TOKEN;
 
     try {
       const shell = createMockShell([
@@ -223,12 +227,164 @@ describe("pr_load", () => {
       assert.equal(result.viewerLogin, "github-actions[bot]");
       assert.equal(result.pr.commitCount, 1);
     } finally {
+      if (previousActions === undefined) {
+        delete process.env.GITHUB_ACTIONS;
+      } else {
+        process.env.GITHUB_ACTIONS = previousActions;
+      }
+
+      if (previousToken === undefined) {
+        delete process.env.GITHUB_TOKEN;
+      } else {
+        process.env.GITHUB_TOKEN = previousToken;
+      }
+
       if (previousActor === undefined) {
         delete process.env.GITHUB_ACTOR;
       } else {
         process.env.GITHUB_ACTOR = previousActor;
       }
     }
+  });
+
+  test("uses github-actions bot identity in GitHub Actions", async () => {
+    const previousActor = process.env.GITHUB_ACTOR;
+    const previousActions = process.env.GITHUB_ACTIONS;
+    const previousToken = process.env.GITHUB_TOKEN;
+    process.env.GITHUB_ACTOR = "dbpolito";
+    process.env.GITHUB_ACTIONS = "true";
+    process.env.GITHUB_TOKEN = "test-token";
+
+    try {
+      const shell = createMockShell([
+        {
+          contains: "gh pr view --json",
+          stdout: JSON.stringify({
+            number: 7,
+            title: "Example PR",
+            body: "Body",
+            url: "https://github.com/acme/repo/pull/7",
+            state: "OPEN",
+            isDraft: false,
+            reviewDecision: "",
+            baseRefName: "main",
+            headRefName: "feature",
+            headRefOid: "abc123",
+            commits: [{ oid: "abc123" }],
+            author: { login: "octo" },
+          }),
+        },
+        {
+          contains: "gh repo view --json nameWithOwner",
+          stdout: JSON.stringify({ nameWithOwner: "acme/repo" }),
+        },
+        {
+          contains: "repos/acme/repo/pulls/7/reviews?per_page=100",
+          stdout: JSON.stringify([[]]),
+        },
+        {
+          contains: "repos/acme/repo/issues/7/comments?per_page=100",
+          stdout: JSON.stringify([[]]),
+        },
+        {
+          contains: "gh api graphql",
+          stdout: JSON.stringify({
+            data: {
+              repository: {
+                pullRequest: {
+                  reviewThreads: {
+                    pageInfo: { hasNextPage: false, endCursor: null },
+                    nodes: [],
+                  },
+                },
+              },
+            },
+          }),
+        },
+      ]);
+
+      const tool = createPrLoadTool(shell);
+      const output = await tool.execute({}, createToolContextForDirectory("/tmp/repo"));
+      const result = JSON.parse(output);
+
+      assert.equal(result.viewerLogin, "github-actions[bot]");
+    } finally {
+      if (previousActions === undefined) {
+        delete process.env.GITHUB_ACTIONS;
+      } else {
+        process.env.GITHUB_ACTIONS = previousActions;
+      }
+
+      if (previousToken === undefined) {
+        delete process.env.GITHUB_TOKEN;
+      } else {
+        process.env.GITHUB_TOKEN = previousToken;
+      }
+
+      if (previousActor === undefined) {
+        delete process.env.GITHUB_ACTOR;
+      } else {
+        process.env.GITHUB_ACTOR = previousActor;
+      }
+    }
+  });
+
+  test("always includes commitCount in PR payload", async () => {
+    const shell = createMockShell([
+      {
+        contains: "gh pr view --json",
+        stdout: JSON.stringify({
+          number: 7,
+          title: "Example PR",
+          body: "Body",
+          url: "https://github.com/acme/repo/pull/7",
+          state: "OPEN",
+          isDraft: false,
+          reviewDecision: "",
+          baseRefName: "main",
+          headRefName: "feature",
+          headRefOid: "abc123",
+          author: { login: "octo" },
+        }),
+      },
+      {
+        contains: "gh repo view --json nameWithOwner",
+        stdout: JSON.stringify({ nameWithOwner: "acme/repo" }),
+      },
+      {
+        contains: "gh api user",
+        stdout: JSON.stringify({ login: "review-bot" }),
+      },
+      {
+        contains: "repos/acme/repo/pulls/7/reviews?per_page=100",
+        stdout: JSON.stringify([[]]),
+      },
+      {
+        contains: "repos/acme/repo/issues/7/comments?per_page=100",
+        stdout: JSON.stringify([[]]),
+      },
+      {
+        contains: "gh api graphql",
+        stdout: JSON.stringify({
+          data: {
+            repository: {
+              pullRequest: {
+                reviewThreads: {
+                  pageInfo: { hasNextPage: false, endCursor: null },
+                  nodes: [],
+                },
+              },
+            },
+          },
+        }),
+      },
+    ]);
+
+    const tool = createPrLoadTool(shell);
+    const output = await tool.execute({}, createToolContextForDirectory("/tmp/repo"));
+    const result = JSON.parse(output);
+
+    assert.equal(result.pr.commitCount, 0);
   });
 });
 

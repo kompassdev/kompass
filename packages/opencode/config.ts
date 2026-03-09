@@ -6,11 +6,13 @@ import {
   resolveAgents,
   resolveCommands,
 } from "@kompassdev/core";
+import { prefixKompassToolReferences } from "./tool-names.ts";
 
 export async function applyAgentsConfig(cfg: Config, projectRoot: string) {
   const userConfig = await loadKompassConfig(projectRoot);
   const config = mergeWithDefaults(userConfig);
   const agents = await resolveAgents(projectRoot);
+  const rewriteToolNames = (input: string) => prefixKompassToolReferences(input, config.tools.enabled);
 
   cfg.agent ??= {};
 
@@ -18,7 +20,7 @@ export async function applyAgentsConfig(cfg: Config, projectRoot: string) {
     const agentConfig: AgentConfig = {
       mode: config.adapters.opencode.agentMode,
       description: definition.description,
-      prompt: definition.prompt,
+      prompt: rewriteToolNames(definition.prompt),
       permission: definition.permission,
     };
     cfg.agent[name] ??= agentConfig;
@@ -26,7 +28,10 @@ export async function applyAgentsConfig(cfg: Config, projectRoot: string) {
 }
 
 export async function applyCommandsConfig(cfg: Config, projectRoot: string) {
+  const userConfig = await loadKompassConfig(projectRoot);
+  const config = mergeWithDefaults(userConfig);
   const commands = await resolveCommands(projectRoot);
+  const rewriteToolNames = (input: string) => prefixKompassToolReferences(input, config.tools.enabled);
 
   cfg.command ??= {};
 
@@ -35,7 +40,7 @@ export async function applyCommandsConfig(cfg: Config, projectRoot: string) {
       description: definition.description,
       agent: definition.agent,
       subtask: definition.subtask,
-      template: definition.template,
+      template: rewriteToolNames(definition.template),
     };
   }
 }

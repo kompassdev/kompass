@@ -10,6 +10,7 @@ import {
   mergeWithDefaults,
 } from "@kompassdev/core";
 import { applyAgentsConfig, applyCommandsConfig } from "./config.ts";
+import { getOpenCodeToolName } from "./tool-names.ts";
 
 const opencodeToolCreators = {
   changes_load($: PluginInput["$"]) {
@@ -75,7 +76,7 @@ export async function createOpenCodeTools(
   for (const toolName of config.tools.enabled) {
     const creator = opencodeToolCreators[toolName as keyof typeof opencodeToolCreators];
     if (creator) {
-      tools[toolName] = creator($);
+      tools[getOpenCodeToolName(toolName)] = creator($);
     }
   }
 

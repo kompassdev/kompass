@@ -23,6 +23,7 @@ import {
   resolveAgents,
   resolveCommands,
 } from "@kompassdev/core";
+import { getOpenCodeToolName, prefixKompassToolReferences } from "../tool-names.ts";
 
 async function cleanOutputDirectory() {
   try {
@@ -43,6 +44,7 @@ async function main() {
   // Load configuration
   const userConfig = await loadKompassConfig(WORKSPACE_ROOT);
   const config = mergeWithDefaults(userConfig);
+  const rewriteToolNames = (input: string) => prefixKompassToolReferences(input, config.tools.enabled);
 
   // Compile commands
   console.log("\nCompiling commands...");
@@ -71,7 +73,7 @@ async function main() {
       description: command.description,
       agent: command.agent,
     });
-    const content = `---\n${frontmatter}---\n\n${command.template}`;
+    const content = `---\n${frontmatter}---\n\n${rewriteToolNames(command.template)}`;
     await writeFile(filepath, content);
     console.log(`  commands/${name}.md`);
   }
@@ -93,7 +95,7 @@ async function main() {
         permission: agent.permission,
       });
 
-      const content = `---\n${frontmatter}---\n\n${agent.prompt}`;
+      const content = `---\n${frontmatter}---\n\n${rewriteToolNames(agent.prompt)}`;
       await writeFile(filepath, content);
       console.log(`  agents/${filename}`);
     } catch {
@@ -111,7 +113,7 @@ async function main() {
       enabled: config.agents.enabled,
     },
     tools: {
-      enabled: config.tools.enabled,
+      enabled: config.tools.enabled.map(getOpenCodeToolName),
     },
     defaults: config.defaults,
     adapters: config.adapters,

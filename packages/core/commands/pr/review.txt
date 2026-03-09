@@ -28,32 +28,28 @@ If `<pr-context.pr.body>` links to exactly one clear ticket:
 
 ### Load Changes
 
-Derive `<depth-hint>` before calling `changes_load`:
-- If `<pr-context.pr.commitCount>` is a positive integer, store that exact value as `<depth-hint>`
-- Otherwise, leave `<depth-hint>` undefined
-- Never negate, transform, or guess this value
+Use `<pr-context.pr.commitCount>` as `<depth-hint>`.
 
 Call `changes_load` with:
 - `base: <pr-context.pr.baseRefName>`
 - `head: <pr-context.pr.headRefName>`
-- Include `depthHint: <depth-hint>` only when `<depth-hint>` is defined
+- `depthHint: <depth-hint>`
 
 Store as `<changes>`.
 
 ### Review Changes
 
 Following the reviewer agent guidance:
-1. Use `@explore` to read every changed file for full context before finalizing findings
+1. Read every changed file for full context in the current session before finalizing findings
 2. Inspect `<pr-context.reviews>`, `<pr-context.issueComments>`, and `<pr-context.threads>` for anything already posted by `<pr-context.viewerLogin>`
 3. Do not repeat the same finding when an equivalent unresolved or already-submitted comment exists
 4. Prefer inline comments for file-specific findings; use the review body only for anything that cannot be expressed inline
 5. Do not guess GitHub diff anchors from absolute file line numbers alone; use the diff hunks in `<changes>` to map any inline comment to the changed side of the patch
 
-When using `@explore`:
-- Provide the full changed-path list from `<changes>`
-- Ask it to read each changed file in full, plus relevant nested `AGENTS.md` files
-- Ask it to return a concise per-file context summary before review findings are drafted
-- For deleted files, ask it to inspect the previous contents from git rather than assuming `changes_load` included the full file
+While reading files:
+- Load relevant nested `AGENTS.md` files in the current session before applying review criteria
+- For deleted files, inspect the previous contents from git rather than assuming `changes_load` included the full file
+- Use a helper agent only if the changed-file set is too large to review comfortably in one session after the changed paths are already known
 
 Derive `<previous-grade>` from the most recent prior review body by `<pr-context.viewerLogin>` when one is present.
 

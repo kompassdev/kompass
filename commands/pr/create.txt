@@ -49,16 +49,7 @@ Use `gh pr create` to create the pull request:
   - `## Testing` - concrete validation steps or note if not tested
 - Do NOT restate the full diff
 - Keep it compact and directional
-
-## Output
-
-When the PR is created, display:
-```
-Created PR #<number>: <title>
-
-URL: <pr-url>
-Branch: <current-branch> → <base-branch>
-```
+- Store the URL from the command output as `<pr-url>`
 
 ## PR Body Guidelines
 
@@ -69,3 +60,13 @@ Branch: <current-branch> → <base-branch>
 ## Additional Guidance
 
 Consider `<additional-context>` when analyzing changes and writing the PR description.
+
+## Output
+
+When the PR is created, display:
+```
+Created PR: <title>
+
+URL: <pr-url>
+Branch: <current-branch> → <base-branch>
+```

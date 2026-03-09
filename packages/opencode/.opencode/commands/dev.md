@@ -9,20 +9,47 @@ Implement a feature or fix based on a ticket or request, then prepare for PR cre
 
 ## Workflow
 
-## Development Flow Navigation Guide
+### Interpret Arguments
 
-When implementing a request or ticket, follow this compass:
+Store `$ARGUMENTS` as `<arguments>`, then normalize it:
+- If `<arguments>` looks like a ticket reference, URL, or file path, store it as `<request-source>`
+- If `<arguments>` contains direct implementation guidance, store it as `<request>`
+- If `<arguments>` includes extra constraints, focus areas, or notes, store them as `<additional-context>`
+- If empty, derive the request from the conversation
 
-### Workflow
-1. Orient yourself by loading the request from `$ARGUMENTS` or `ticket_load`
-2. Survey the codebase before plotting your route
-3. Navigate the implementation following local conventions
-4. Validate the path with targeted checks
-5. Hand off to the PR creation flow to signal arrival at the pull request
+### Orient Request
 
-### Guidelines
-- Keep context compact—pack light for the journey
+- If `<request-source>` is defined, load it with `ticket_load` and store the result as `<request-context>`
+- Otherwise, treat `<request>` as `<request-context>`
+- Summarize the goal, constraints, and acceptance criteria before making changes
+
+### Development Flow Navigation Guide
+
+- Orient yourself using the normalized request context before editing
+- Survey the codebase before plotting the implementation
 - Prefer the smallest course correction that fully reaches the destination
+- Validate the path with targeted checks before handing off to PR creation
 - Surface any detours or follow-up destinations that should stay off the current route
 
-After completing the implementation and validation, hand off to the PR creation flow by using the `pr/create` command or following its workflow to create the pull request.
+### Prepare PR Handoff
+
+- Gather the key themes, tradeoffs, and validation results needed for the PR description
+- Hand off to the `pr/create` command or follow its workflow to create the pull request
+
+## Additional Context
+
+Use `<additional-context>` to refine priorities, scope, and tradeoffs while implementing `<request-context>`.
+
+## Output
+
+When the implementation is ready for PR creation, display:
+```
+Implementation ready: <request-summary>
+
+Validation:
+- Compile: <status>
+- Typecheck: <status>
+- Test: <status>
+
+Next: create a PR for <branch>
+```

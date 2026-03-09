@@ -11,8 +11,9 @@ Create a commit and immediately push it to the remote repository.
 
 ### Interpret Arguments
 
-Store $ARGUMENTS as <arguments>:
-- if <arguments> provides guidance for the commit message, store it as <additional-context>
+Store `$ARGUMENTS` as `<arguments>`:
+- If `<arguments>` provides guidance for the commit message, store it as `<additional-context>`
+- If empty, proceed with the default commit analysis
 
 ### Load Changes
 
@@ -45,15 +46,15 @@ Store $ARGUMENTS as <arguments>:
 4. Create the commit with `<commit-message>` using `git commit -m`
 5. Only run `git status` if the commit fails and additional diagnosis is required
 
-Use `changes_load` as the source of truth for what will be committed; do not run `git status` separately unless the commit fails and additional diagnosis is required.
-
-Consider `<additional-context>` when analyzing changes and writing the commit message.
-
 ### Push to Remote
 
 - Push the branch with `git push`
 - Use `-u` flag if the branch has no upstream set
 - Handle any merge conflicts if they arise
+
+## Additional Context
+
+Consider `<additional-context>` when analyzing changes and writing the commit message.
 
 ## Output
 

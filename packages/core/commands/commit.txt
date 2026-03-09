@@ -6,8 +6,9 @@ Create a commit with an appropriate message summarizing the uncommitted changes.
 
 ### Interpret Arguments
 
-Store $ARGUMENTS as <arguments>:
-- if <arguments> provides guidance for the commit message, store it as <additional-context>
+Store `$ARGUMENTS` as `<arguments>`:
+- If `<arguments>` provides guidance for the commit message, store it as `<additional-context>`
+- If empty, proceed with the default commit analysis
 
 ### Load Changes
 
@@ -16,6 +17,8 @@ Store $ARGUMENTS as <arguments>:
 ### Create Commit
 
 {{commit}}
+
+## Additional Context
 
 Consider `<additional-context>` when analyzing changes and writing the commit message.
 

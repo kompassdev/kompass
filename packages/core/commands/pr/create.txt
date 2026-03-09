@@ -7,13 +7,13 @@ Create a pull request for the current branch, handling the entire workflow from 
 ### Interpret Arguments
 
 Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed:
-- **Branch name**: If <arguments> looks like a branch reference (e.g., "main", "origin/develop"), store it as `<base>`
-- **Additional context**: If <arguments> provides guidance (focus areas, related issues, notes), store it as `<additional-context>`
-- **Empty**: If no <arguments> provided, proceed with defaults
+- **Branch name**: If `<arguments>` looks like a branch reference (e.g., "main", "origin/develop"), store it as `<base>`
+- **Additional context**: If `<arguments>` provides guidance (focus areas, related issues, notes), store it as `<additional-context>`
+- **Empty**: If no `<arguments>` provided, proceed with defaults
 
 ### Load & Analyze Changes
 
-{{change-summary rules="- If <base> is defined: pass it as the `base` parameter
+{{change-summary rules="- If `<base>` is defined: pass it as the `base` parameter
 - Otherwise: call with no parameters"}}
 
 ### Check Blockers
@@ -23,7 +23,7 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
   - Report: "There are uncommitted changes. Please commit or stash them before creating a PR."
   - List the changed files from the result
   - Do NOT proceed further
-- If `branch` equals <base>:
+- If `branch` equals `<base>`:
   - STOP immediately
   - Report: "You are currently on the base branch (<base>). Please checkout a feature branch before creating a PR."
   - Suggest: `git checkout -b <feature-name>`

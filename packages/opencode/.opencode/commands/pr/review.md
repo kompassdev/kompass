@@ -12,7 +12,8 @@ Review a GitHub pull request and publish findings as a formal review with inline
 ### Interpret Arguments
 
 Store `$ARGUMENTS` as `<arguments>`:
-- If <arguments> looks like a PR number (e.g., "123") or URL, store it as `<pr-ref>`
+- If `<arguments>` looks like a PR number (e.g., "123") or URL, store it as `<pr-ref>`
+- If `<arguments>` includes review focus areas, related tickets, or special concerns, store it as `<additional-context>`
 - If empty, use current branch's associated PR
 
 ### Load PR Context
@@ -29,7 +30,7 @@ Store from result:
 
 If the PR body links to exactly one clear ticket:
 - Call `ticket_load` with the ticket reference
-- Store context for consideration during review
+- Store the result as `<ticket-context>` for consideration during review
 
 ### Load Changes
 
@@ -88,6 +89,10 @@ gh api --method POST \
 ```
 
 Include only actionable inline comments (critical/high findings).
+
+## Additional Context
+
+Use `<ticket-context>` and `<additional-context>` to judge whether the PR meets its stated intent without over-indexing on stylistic preferences.
 
 ## Output
 

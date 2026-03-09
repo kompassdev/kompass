@@ -12,7 +12,8 @@ Address feedback on a pull request by making fixes and responding to review thre
 ### Interpret Arguments
 
 Store `$ARGUMENTS` as `<arguments>`:
-- If <arguments> looks like a PR number (e.g., "123") or URL, store it as `<pr-ref>`
+- If `<arguments>` looks like a PR number (e.g., "123") or URL, store it as `<pr-ref>`
+- If `<arguments>` includes extra fix guidance, scope constraints, or priorities, store it as `<additional-context>`
 - If empty, use current branch's associated PR
 
 ### Load PR Context
@@ -71,6 +72,10 @@ gh api --method POST \
 ```
 
 Confirm which feedback was addressed and which was intentionally not followed.
+
+## Additional Context
+
+Use `<additional-context>` when prioritizing which review feedback to address first and when deciding how much scope to take on in this pass.
 
 ## Output
 

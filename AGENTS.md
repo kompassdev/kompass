@@ -44,6 +44,7 @@ packages/opencode/.opencode/ # Generated OpenCode output for review
 - Keep this section order in command docs unless a command has a strong reason not to: `## Goal`, `## Workflow`, `## Additional Context`, `## Output`
 - Start `## Workflow` with `### Interpret Arguments`, and normalize `$ARGUMENTS` into named placeholders before any execution steps
 - Use angle-bracket placeholders consistently for derived values and stored context, such as `<arguments>`, `<base>`, `<additional-context>`, `<pr-url>`, and define each placeholder before it is referenced later in the command
+- When referring to placeholders literally in prose, always wrap them in backticks, such as `<arguments>` or `<pr-url>`; keep output examples plain when the placeholder represents substituted user-facing text
 - If arguments can mean different things, explicitly disambiguate them in `### Interpret Arguments` and store each interpretation in a separate placeholder
 - Use `## Additional Context` for instructions about how optional guidance, related tickets, focus areas, or other stored context should influence analysis and output
 - Use `## Output` to define the exact user-facing response shape, including placeholders for generated values

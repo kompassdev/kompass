@@ -7,8 +7,9 @@ Review code changes and provide actionable feedback with a grade and risk assess
 ### Interpret Arguments
 
 Store `$ARGUMENTS` as `<arguments>`:
-- If <arguments> equals "uncommitted", store as `<scope>` = "uncommitted"
-- If <arguments> looks like a branch reference (e.g., "main", "origin/main"), store as `<base>`
+- If `<arguments>` equals "uncommitted", store as `<scope>` = "uncommitted"
+- If `<arguments>` looks like a branch reference (e.g., "main", "origin/main"), store as `<base>`
+- If `<arguments>` provides review focus areas or related context, store it as `<additional-context>`
 - If empty, no placeholder needed
 
 ### Load Changes
@@ -29,6 +30,10 @@ Following the reviewer agent guidance:
 1. Read each changed file for full context
 2. Analyze for bugs, security issues, and correctness problems
 3. Formulate findings ordered by impact
+
+## Additional Context
+
+Use `<additional-context>` to prioritize specific risks, feature areas, or related concerns while reviewing `<changes>`.
 
 ## Output
 

@@ -4,15 +4,39 @@ Implement a ticket and create a pull request for the completed work.
 
 ## Workflow
 
-1. **Load Ticket**: 
-   - Interpret $ARGUMENTS as the destination (ticket reference, file path, or raw request)
-   - Use `ticket_load` to get your bearings and understand requirements
+### Interpret Arguments
 
-2. **Develop**: Follow the Development Flow to implement the changes
-   {{dev-flow}}
+Store `$ARGUMENTS` as `<arguments>`, then normalize it:
+- Interpret `<arguments>` as `<ticket-source>` (ticket reference, URL, file path, or raw request)
+- If `<arguments>` includes extra delivery guidance, scope constraints, or notes, store them as `<additional-context>`
 
-3. **Create PR**: After validation, create the pull request
-   - Push the branch if needed
-   - Follow the PR creation workflow to generate title and body
-   - Link to the original ticket
-   - Output the PR URL
+### Load Ticket Context
+
+- Use `ticket_load` with `<ticket-source>` to understand the requirements
+- Store the result as `<ticket-context>`
+
+{{dev-flow}}
+
+### Create PR
+
+- Push the branch if needed
+- Follow the `pr/create` workflow to generate the PR title and body
+- Link the PR back to the original ticket when appropriate
+- Store the resulting PR URL as `<pr-url>`
+
+## Additional Context
+
+Use `<additional-context>` to refine scope, sequencing, and tradeoffs while implementing `<ticket-context>`.
+
+## Output
+
+When the ticket work is complete, display:
+```
+Implemented ticket: <ticket-summary>
+
+PR: <pr-url>
+Validation:
+- Compile: <status>
+- Typecheck: <status>
+- Test: <status>
+```

@@ -9,39 +9,65 @@ Extract non-obvious learnings from this session and document them appropriately.
 
 ## Workflow
 
-1. **Review Session**: Analyze for discoveries, errors that took multiple attempts, unexpected connections
+### Interpret Arguments
 
-2. **Identify Learnings** (non-obvious only):
-   - Hidden relationships between files or modules
-   - Execution paths that differ from how code appears
-   - Non-obvious configuration, env vars, or flags
-   - Debugging breakthroughs when error messages were misleading
-   - API/tool quirks and workarounds
-   - Build/test commands not in README
-   - Architectural decisions and constraints
-   - Files that must change together
-   - Environment-specific behaviors
+Store `$ARGUMENTS` as `<arguments>`, then normalize it:
+- If `<arguments>` narrows the work to a package, directory, or feature area, store it as `<focus-scope>`
+- If `<arguments>` provides extra guidance about what to capture, store it as `<additional-context>`
+- If empty, review the full session
 
-3. **Determine Scope**: For each learning, identify which directory it applies to:
-   - Project-wide → root AGENTS.md or CONTRIBUTING.md
-   - Package/module-specific → packages/foo/AGENTS.md
-   - Feature-specific → src/auth/AGENTS.md or inline comments
+### Review Session
 
-4. **Read Existing Docs**: Check AGENTS.md files at relevant levels to avoid duplication
+- Analyze the session for discoveries, repeated failed attempts, unexpected connections, and non-obvious constraints
+- Focus on insights that would help a future agent avoid relearning the same thing
 
-5. **Create/Update Documentation**:
-   - Add learnings at the most specific level
-   - Keep entries to 1-3 lines per insight
-   - Be concise and actionable
+### Identify Learnings
 
-6. **Summarize**: Report which files were created/updated and how many learnings per file
+- Capture non-obvious learnings only, such as:
+  - Hidden relationships between files or modules
+  - Execution paths that differ from how code appears
+  - Non-obvious configuration, environment variables, or flags
+  - Debugging breakthroughs when error messages were misleading
+  - API or tool quirks and workarounds
+  - Build or test commands not documented elsewhere
+  - Architectural decisions and constraints
+  - Files that must change together
+  - Environment-specific behavior
 
-## Guidelines
+### Determine Documentation Scope
+
+- Place each learning at the most specific useful level:
+  - Project-wide -> root `AGENTS.md` or `CONTRIBUTING.md`
+  - Package-specific -> `packages/foo/AGENTS.md`
+  - Feature-specific -> a deeper `AGENTS.md` or concise inline documentation when appropriate
+
+### Read Existing Docs
+
+- Read the relevant `AGENTS.md` files before editing to avoid duplication and drift
+
+### Create or Update Documentation
+
+- Add the learnings in the selected location
+- Keep each learning to 1-3 concise, actionable lines
+- Prefer updates over new files unless a new scope boundary is warranted
+
+### Summarize Results
+
+- Report which files were created or updated and how many learnings were added to each
+
+## Additional Context
 
 - Document non-obvious discoveries only
 - Skip obvious facts, standard behavior, and already-documented items
 - Avoid verbose explanations and session-specific details
-- Place learnings as close to relevant code as possible
-- AGENTS.md files can exist at any level—most specific one applies
+- Use `<focus-scope>` and `<additional-context>` to decide where to look more closely
 
-$ARGUMENTS
+## Output
+
+When the documentation update is complete, display:
+```
+Documented learnings for <focus-summary>
+
+Files updated:
+- <file-path>: <learning-count> learnings
+```

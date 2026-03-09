@@ -9,31 +9,59 @@ Remove AI-generated code slop and inconsistencies from the branch changes.
 
 ## Workflow
 
-1. **Load Changes**: Call `changes_load` to get the diff against the base branch
+### Interpret Arguments
 
-2. **Identify Slop**: Review changes for:
-   - Extra comments that a human wouldn't add or that are inconsistent with the rest of the file
-   - Defensive checks or try/catch blocks that are abnormal for that area (especially in trusted/validated codepaths)
-   - Casts to `any` to work around type issues
-   - Style inconsistencies with the surrounding code
-   - Unnecessary emoji usage
-   - Verbose explanations where concise code would suffice
-   - Boilerplate that doesn't match project patterns
+Store `$ARGUMENTS` as `<arguments>`, then normalize it:
+- If `<arguments>` looks like a base branch reference, store it as `<base>`
+- If `<arguments>` provides cleanup priorities, exclusions, or style guidance, store it as `<additional-context>`
+- If empty, compare the current branch against the default base branch
 
-3. **Clean Up**:
-   - Remove or simplify unnecessary comments
-   - Replace defensive checks with idiomatic patterns used elsewhere
-   - Fix type issues properly instead of using `any`
-   - Align style with the existing codebase
-   - Remove emojis unless explicitly requested
+### Load Changes
 
-4. **Validate**:
-   - Run tests: `bun test` (or equivalent)
-   - Run type checking: `bun run typecheck` (or equivalent)
-   - Confirm the code still works correctly
+- Call `changes_load` to get the diff against `<base>` when defined, otherwise use the default comparison
+- Store the result as `<changes>`
 
-5. **Commit Changes**:
-   - Stage cleaned files with `git add`
-   - Create a commit with message like "chore: remove AI-generated slop"
+### Identify Slop
 
-6. **Report**: Output a 1-3 sentence summary of what was changed
+- Review `<changes>` for:
+  - Extra comments that a human would not add or that clash with nearby code
+  - Defensive checks or try/catch blocks that are abnormal for that area
+  - Casts to `any` used to bypass type issues
+  - Style inconsistencies with surrounding code
+  - Unnecessary emoji usage
+  - Verbose explanations where concise code would suffice
+  - Boilerplate that does not match project patterns
+
+### Clean Up
+
+- Remove or simplify unnecessary comments
+- Replace abnormal defensive patterns with idiomatic local patterns
+- Fix type issues properly instead of using `any`
+- Align style with the surrounding codebase
+- Remove emojis unless explicitly requested
+
+### Validate
+
+- Run the relevant validation commands for the affected area
+- Confirm the cleaned-up code still works correctly before committing
+
+### Commit Changes
+
+- Stage the cleaned files with `git add`
+- Create a focused commit describing the cleanup
+
+## Additional Context
+
+Use `<additional-context>` to decide which kinds of slop to prioritize and which areas should remain untouched.
+
+## Output
+
+When the cleanup is complete, display:
+```
+Cleaned branch changes for <scope-summary>
+
+Results:
+- Files updated: <count>
+- Validation: <status>
+- Commit: <hash>
+```

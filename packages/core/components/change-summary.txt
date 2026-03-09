@@ -1,6 +1,7 @@
 #### Step 1: Load Changes
 - call `changes_load`
 {{param:rules}}
+- Use the `changes_load` result as the source of truth for analyzing and summarizing the pending work
 
 #### Step 2: Analyze Files
 - Review file paths and their purposes

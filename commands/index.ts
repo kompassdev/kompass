@@ -67,7 +67,7 @@ function embedComponents(
   template: string,
   components: Record<string, string>,
 ): string {
-  return template.replace(/\{\{(\w+)\}\}/g, (match, name) => {
+  return template.replace(/\{\{([\w-]+)\}\}/g, (match, name) => {
     return components[name] || match;
   });
 }
@@ -75,6 +75,7 @@ function embedComponents(
 export async function applyCommandsConfig(cfg: Config, projectRoot: string) {
   const userConfig = await loadCompassConfig(projectRoot);
   const config = mergeWithDefaults(userConfig);
+  const isCi = !!process.env.CI;
 
   cfg.command ??= {};
 
@@ -103,7 +104,7 @@ export async function applyCommandsConfig(cfg: Config, projectRoot: string) {
     cfg.command[name] ??= {
       description: definition.description,
       agent: definition.agent,
-      subtask: true,
+      subtask: !isCi,
       template,
     };
   }

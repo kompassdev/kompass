@@ -27,25 +27,22 @@ export function createChangesLoadTool($: Shell) {
         .positive()
         .optional()
         .describe("Optional shallow-fetch hint, such as PR commit count"),
-      diff: tool.schema
-        .boolean()
-        .optional()
-        .describe("Include structured per-file diffs"),
     },
     async execute(
-      args: { base?: string; head?: string; depthHint?: number; diff?: boolean },
+      args: { base?: string; head?: string; depthHint?: number },
       ctx: PluginContext,
     ) {
+      const branch = await loadCurrentBranch($, ctx.worktree);
       const implicitWorkspaceMode = !args.base?.trim() && !args.head?.trim();
       if (implicitWorkspaceMode && (await hasWorktreeChanges($, ctx.worktree))) {
         const filesWithDiff = await withTemporaryIndex($, ctx.worktree, async (indexPath) => {
           const files = await loadTemporaryIndexFiles($, ctx.worktree, indexPath);
-          return args.diff
-            ? await loadTemporaryIndexDiffs($, ctx.worktree, indexPath, files)
-            : files.map((file) => serializeFile(file));
+          return await loadTemporaryIndexDiffs($, ctx.worktree, indexPath, files);
         });
 
         return stringifyJson({
+          comparison: "uncommitted",
+          ...(branch ? { branch } : {}),
           files: filesWithDiff,
         });
       }
@@ -79,14 +76,14 @@ export function createChangesLoadTool($: Shell) {
       }
 
       const parsedFiles = parseNameStatus(files.text()).filter((file) => file.path);
-      const filesWithDiff = args.diff
-        ? implicitWorkspaceMode
-          ? await loadWorkspaceFileDiffs($, ctx.worktree, baseRef, parsedFiles)
-          : await loadFileDiffs($, ctx.worktree, baseRef, headRef, parsedFiles)
-        : parsedFiles.map((file) => serializeFile(file));
+      const filesWithDiff = implicitWorkspaceMode
+        ? await loadWorkspaceFileDiffs($, ctx.worktree, baseRef, parsedFiles)
+        : await loadFileDiffs($, ctx.worktree, baseRef, headRef, parsedFiles);
       const commits = implicitWorkspaceMode ? [] : parseCommitList(log.text());
 
       return stringifyJson({
+        comparison: `${baseRef}...${headRef}`,
+        ...(branch ? { branch } : {}),
         files: filesWithDiff,
         ...(commits.length > 0 ? { commits } : {}),
       });
@@ -102,6 +99,16 @@ async function hasWorktreeChanges($: Shell, cwd: string) {
 
   const untracked = await $`git ls-files --others --exclude-standard`.cwd(cwd).quiet().nothrow();
   return nonEmptyLines(untracked.text()).length > 0;
+}
+
+async function loadCurrentBranch($: Shell, cwd: string) {
+  const proc = await $`git symbolic-ref --quiet --short HEAD`.cwd(cwd).quiet().nothrow();
+  if (proc.exitCode !== 0) {
+    return undefined;
+  }
+
+  const branch = proc.text().trim();
+  return branch || undefined;
 }
 
 async function withTemporaryIndex<T>(

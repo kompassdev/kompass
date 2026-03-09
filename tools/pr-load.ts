@@ -167,25 +167,10 @@ export function createPrLoadTool($: Shell) {
     description: "Load PR metadata and review history",
     args: {
       pr: tool.schema.string().optional().describe("PR number or URL"),
-      reviews: tool.schema
-        .boolean()
-        .optional()
-        .describe("Include review summaries"),
-      issueComments: tool.schema
-        .boolean()
-        .optional()
-        .describe("Include normal PR conversation comments"),
-      threads: tool.schema
-        .boolean()
-        .optional()
-        .describe("Include review thread resolution state"),
     },
     async execute(
       args: {
         pr?: string;
-        reviews?: boolean;
-        issueComments?: boolean;
-        threads?: boolean;
       },
       ctx: PluginContext,
     ) {
@@ -212,30 +197,24 @@ export function createPrLoadTool($: Shell) {
         throw new Error(viewerProc.stderr.toString() || "Failed to load GitHub viewer");
       }
 
-      const reviews = args.reviews
-        ? await loadPaginatedArray(
-            $,
-            ctx.worktree,
-            `repos/${repo}/pulls/${info.number}/reviews?per_page=100`,
-          )
-        : undefined;
-      const issueComments = args.issueComments
-        ? await loadPaginatedArray(
-            $,
-            ctx.worktree,
-            `repos/${repo}/issues/${info.number}/comments?per_page=100`,
-          )
-        : undefined;
-      const threads = args.threads
-        ? await loadReviewThreads($, ctx.worktree, owner, repoName, info.number)
-        : undefined;
+      const reviews = await loadPaginatedArray(
+        $,
+        ctx.worktree,
+        `repos/${repo}/pulls/${info.number}/reviews?per_page=100`,
+      );
+      const issueComments = await loadPaginatedArray(
+        $,
+        ctx.worktree,
+        `repos/${repo}/issues/${info.number}/comments?per_page=100`,
+      );
+      const threads = await loadReviewThreads($, ctx.worktree, owner, repoName, info.number);
       return stringifyJson({
         repo,
         viewerLogin: JSON.parse(viewerProc.text()).login,
         pr: simplifyPullRequest(info),
-        reviews: reviews ? simplifyReviews(reviews) : undefined,
-        issueComments: issueComments ? simplifyIssueComments(issueComments) : undefined,
-        threads: threads ? simplifyThreads(threads) : undefined,
+        reviews: simplifyReviews(reviews),
+        issueComments: simplifyIssueComments(issueComments),
+        threads: simplifyThreads(threads),
       });
     },
   });

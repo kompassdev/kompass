@@ -116,11 +116,7 @@ describe("pr_load", () => {
 
     const tool = createPrLoadTool(shell);
     const output = await tool.execute(
-      {
-        reviews: true,
-        issueComments: true,
-        threads: true,
-      },
+      {},
       createToolContextForDirectory("/tmp/repo"),
     );
 

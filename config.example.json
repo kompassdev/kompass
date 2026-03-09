@@ -32,15 +32,16 @@
   },
   
   "components": {
-    "enabled": ["pr-author", "dev-flow", "ticket-plan", "pr-fix", "pr-review"],
+    "enabled": ["pr-author", "dev-flow", "ticket-plan", "pr-fix", "code-review"],
     "paths": {
       "pr-author": "custom/path/to/pr-author.txt",
-      "dev-flow": "custom/path/to/dev-flow.txt"
+      "dev-flow": "custom/path/to/dev-flow.txt",
+      "code-review": "custom/path/to/code-review.txt"
     }
   },
   
   "defaults": {
     "baseBranch": "main",
-    "agentMode": "subagent"
+    "agentMode": "all"
   }
 }

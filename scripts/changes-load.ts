@@ -11,7 +11,6 @@ const { values } = parseArgs({
     base: { type: "string" },
     head: { type: "string" },
     depthHint: { type: "string" },
-    diff: { type: "boolean", default: false },
     help: { type: "boolean", default: false },
   },
   allowPositionals: false,
@@ -20,12 +19,12 @@ const { values } = parseArgs({
 if (values.help) {
   process.stdout.write(
     [
-      "Usage: ./scripts/changes-load.ts [--base <ref>] [--head <ref>] [--depthHint <n>] [--diff]",
+      "Usage: ./scripts/changes-load.ts [--base <ref>] [--head <ref>] [--depthHint <n>]",
       "",
       "Examples:",
-      "  ./scripts/changes-load.ts --diff",
-      "  ./scripts/changes-load.ts --base origin/main --head HEAD --diff",
-      "  ./scripts/changes-load.ts --base origin/main --head <sha> --depthHint 12 --diff",
+      "  ./scripts/changes-load.ts",
+      "  ./scripts/changes-load.ts --base origin/main --head HEAD",
+      "  ./scripts/changes-load.ts --base origin/main --head <sha> --depthHint 12",
       "",
     ].join("\n"),
   );
@@ -49,7 +48,6 @@ const output = await tool.execute(
     base: values.base,
     head: values.head,
     depthHint,
-    diff: values.diff,
   },
   createToolContext(),
 );

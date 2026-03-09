@@ -25,7 +25,9 @@ describe("changes_load e2e", () => {
     const result = await runChangesLoad(repo, {});
 
     assert.deepEqual(result, {
-      files: [{ status: "modified", path: "notes.txt" }],
+      comparison: "uncommitted",
+      branch: "main",
+      files: [{ status: "modified", path: "notes.txt", diff: "@@ -1 +1,2 @@\n hello\n+world" }],
     });
   });
 
@@ -36,8 +38,10 @@ describe("changes_load e2e", () => {
     await rename(path.join(repo, "commands/pr/review.txt"), path.join(repo, "commands/pr/review2.txt"));
     await writeFile(path.join(repo, "commands/pr/review2.txt"), "line one\nline two\nextra\n", "utf8");
 
-    const result = await runChangesLoad(repo, { diff: true });
+    const result = await runChangesLoad(repo, {});
 
+    assert.equal(result.comparison, "uncommitted");
+    assert.equal(result.branch, "main");
     assert.equal(result.files.length, 1);
     assert.deepEqual(
       {
@@ -65,8 +69,10 @@ describe("changes_load e2e", () => {
     await git(repo, ["add", "new-file.txt"]);
     await git(repo, ["commit", "-m", "add file"]);
 
-    const result = await runChangesLoad(repo, { base: "main", head: "HEAD", diff: true });
+    const result = await runChangesLoad(repo, { base: "main", head: "HEAD" });
 
+    assert.equal(result.comparison, "main...HEAD");
+    assert.equal(result.branch, "feature");
     assert.equal(result.commits.length, 1);
     assert.deepEqual(result.files, [
       {
@@ -84,8 +90,10 @@ describe("changes_load e2e", () => {
     await git(repo, ["rm", "remove-me.txt"]);
     await git(repo, ["commit", "-m", "remove file"]);
 
-    const result = await runChangesLoad(repo, { base: "main", head: "HEAD", diff: true });
+    const result = await runChangesLoad(repo, { base: "main", head: "HEAD" });
 
+    assert.equal(result.comparison, "main...HEAD");
+    assert.equal(result.branch, "feature");
     assert.equal(result.files.length, 1);
     assert.deepEqual(
       {
@@ -111,8 +119,10 @@ describe("changes_load e2e", () => {
     await git(repo, ["add", "image.bin"]);
     await git(repo, ["commit", "-m", "update binary"]);
 
-    const result = await runChangesLoad(repo, { base: "main", head: "HEAD", diff: true });
+    const result = await runChangesLoad(repo, { base: "main", head: "HEAD" });
 
+    assert.equal(result.comparison, "main...HEAD");
+    assert.equal(result.branch, "feature");
     assert.equal(result.files.length, 1);
     assert.deepEqual(result.files[0], {
       status: "modified",
@@ -145,7 +155,7 @@ async function git(cwd: string, args: string[]) {
 
 async function runChangesLoad(
   repo: string,
-  args: { base?: string; head?: string; depthHint?: number; diff?: boolean },
+  args: { base?: string; head?: string; depthHint?: number },
 ) {
   const tool = createChangesLoadTool(createShellForDirectory(repo));
   const output = await tool.execute(args, createToolContextForDirectory(repo));

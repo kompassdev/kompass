@@ -1,6 +1,5 @@
 {{pr-fix}}
 
-Load the pr-fix skill to correct course.
 Use pr_load with reviews and threads enabled to see where to steer.
 Interpret $ARGUMENTS as an optional PR number or URL.
-Adjust the heading, validate the route, push forward, and signal your arrival on the PR.
+Follow the PR Fix guide above to adjust the heading, validate the route, push forward, and signal your arrival on the PR.

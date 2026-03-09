@@ -1,5 +1,4 @@
 {{ticket-plan}}
 
-Load the ticket-plan skill to chart the route.
 Interpret $ARGUMENTS as a destination (ticket reference, file path, or raw request).
-Use ticket_load to orient yourself, map the plan, and create a ticket if setting a new destination.
+Follow the Ticket Planning guide above to orient yourself, map the plan, and create a ticket if setting a new destination.

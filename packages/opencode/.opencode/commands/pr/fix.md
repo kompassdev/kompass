@@ -14,23 +14,22 @@ Address feedback on a pull request by making fixes and responding to review thre
 Store `$ARGUMENTS` as `<arguments>`:
 - If `<arguments>` looks like a PR number (e.g., "123") or URL, store it as `<pr-ref>`
 - If `<arguments>` includes extra fix guidance, scope constraints, or priorities, store it as `<additional-context>`
-- If empty, use current branch's associated PR
+- If empty, leave `<pr-ref>` undefined and let `pr_load` resolve the default PR context
 
 ### Load PR Context
 
-Call `pr_load` with `pr: <pr-ref>` (if provided).
+Use `pr_load` as the source of truth for PR selection:
+- If `<pr-ref>` is defined, call `pr_load` with `pr: <pr-ref>`
+- Otherwise, call `pr_load` with no arguments
+- Do not run separate git or GitHub commands just to discover which PR to fix before calling `pr_load`
 
-Store from result:
-- PR number as `<pr-number>`
-- Reviews as `<reviews>`
-- Review threads as `<threads>`
-- Issue comments as `<issue-comments>`
+Store the result as `<pr-context>`.
 
 ### Analyze Feedback
 
 Separate true course corrections from noise or already-resolved feedback:
-1. Review `<threads>` for open, unresolved conversations
-2. Check `<reviews>` for state changes (CHANGES_REQUESTED, etc.)
+1. Review `<pr-context.threads>` for open, unresolved conversations
+2. Check `<pr-context.reviews>` for state changes (CHANGES_REQUESTED, etc.)
 3. Prioritize critical issues (bugs, security, broken contracts)
 4. Identify which files need changes
 
@@ -66,7 +65,7 @@ Reply to addressed threads:
 ```bash
 # Reply to a review thread
 gh api --method POST \
-  /repos/{owner}/{repo}/pulls/<pr-number>/comments \
+  /repos/{owner}/{repo}/pulls/<pr-context.pr.number>/comments \
   -f body="<reply-text>" \
   -f in_reply_to=<comment-id>
 ```
@@ -81,7 +80,7 @@ Use `<additional-context>` when prioritizing which review feedback to address fi
 
 When fixes are complete, display:
 ```
-Addressed feedback on PR #<pr-number>
+Addressed feedback on PR #<pr-context.pr.number>
 
 <details>
 - Changes made: <count> files modified

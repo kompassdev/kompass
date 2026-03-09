@@ -182,6 +182,7 @@ describe("changes_load e2e", () => {
     assert.match(result.commits[0].subject, /second commit/);
     assert.match(result.commits[1].subject, /first commit/);
   });
+
 });
 
 async function createRepo() {

@@ -2,7 +2,7 @@
 /**
  * Compile the OpenCode adapter into standalone files.
  *
- * This script expands the shared Compass source into concrete OpenCode command
+ * This script expands the shared Kompass source into concrete OpenCode command
  * and agent files so the adapter output can be reviewed without loading the
  * package at runtime.
  */
@@ -18,7 +18,7 @@ const WORKSPACE_ROOT = path.resolve(PACKAGE_ROOT, "..", "..");
 const OUTPUT_DIR = path.resolve(PACKAGE_ROOT, ".opencode");
 
 import {
-  loadCompassConfig,
+  loadKompassConfig,
   mergeWithDefaults,
   resolveAgents,
   resolveCommands,
@@ -35,13 +35,13 @@ async function cleanOutputDirectory() {
 }
 
 async function main() {
-  console.log("Compiling Compass OpenCode adapter...\n");
+  console.log("Compiling Kompass OpenCode adapter...\n");
 
   // Clean output directory for fresh build
   await cleanOutputDirectory();
 
   // Load configuration
-  const userConfig = await loadCompassConfig(WORKSPACE_ROOT);
+  const userConfig = await loadKompassConfig(WORKSPACE_ROOT);
   const config = mergeWithDefaults(userConfig);
 
   // Compile commands

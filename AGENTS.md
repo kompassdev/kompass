@@ -1,10 +1,10 @@
-# AGENTS.md - opencode-compass
+# AGENTS.md - kompass
 
 Guidelines for AI agents working in this repository.
 
 ## What This Is
 
-This is a Compass workspace with multiple packages.
+This is a Kompass workspace with multiple packages.
 
 - `packages/core` contains the generic workflow toolkit
 - `packages/opencode` contains the OpenCode adapter
@@ -27,7 +27,7 @@ Never edit `packages/opencode/.opencode/` directly.
 ```text
 packages/core/      # Shared commands, agents, components, tools, tests
 packages/opencode/  # OpenCode adapter package
-compass.json        # Local workspace config used for development
+kompass.json        # Local workspace config used for development
 packages/opencode/.opencode/ # Generated OpenCode output for review
 ```
 

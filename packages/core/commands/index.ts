@@ -1,5 +1,5 @@
 import { embedComponents } from "../lib/components.ts";
-import { loadCompassConfig, mergeWithDefaults } from "../lib/config.ts";
+import { loadKompassConfig, mergeWithDefaults } from "../lib/config.ts";
 import { loadProjectText } from "../lib/text.ts";
 
 interface CommandDefinition {
@@ -94,7 +94,7 @@ export async function resolveCommands(
   projectRoot: string,
   options?: { ci?: boolean },
 ): Promise<Record<string, ResolvedCommandDefinition>> {
-  const userConfig = await loadCompassConfig(projectRoot);
+  const userConfig = await loadKompassConfig(projectRoot);
   const config = mergeWithDefaults(userConfig);
   const isCi = options?.ci ?? !!process.env.CI;
 

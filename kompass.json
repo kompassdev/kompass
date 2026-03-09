@@ -1,5 +1,5 @@
 {
-  "$schema": "https://opencode.ai/schemas/compass.json",
+  "$schema": "https://raw.githubusercontent.com/kompassdev/kompass/main/kompass.schema.json",
   "commands": {
     "enabled": [
       "pr/create",

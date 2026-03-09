@@ -1,14 +1,14 @@
 import type { AgentConfig, Config } from "@opencode-ai/sdk";
 
 import {
-  loadCompassConfig,
+  loadKompassConfig,
   mergeWithDefaults,
   resolveAgents,
   resolveCommands,
 } from "@kompassdev/core";
 
 export async function applyAgentsConfig(cfg: Config, projectRoot: string) {
-  const userConfig = await loadCompassConfig(projectRoot);
+  const userConfig = await loadKompassConfig(projectRoot);
   const config = mergeWithDefaults(userConfig);
   const agents = await resolveAgents(projectRoot);
 

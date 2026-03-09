@@ -1,4 +1,4 @@
-import { loadCompassConfig, mergeWithDefaults, type AgentDefinition } from "../lib/config.ts";
+import { loadKompassConfig, mergeWithDefaults, type AgentDefinition } from "../lib/config.ts";
 import { loadProjectText } from "../lib/text.ts";
 
 export interface ResolvedAgentDefinition
@@ -17,7 +17,7 @@ export function getAgentDefinitions(config: ReturnType<typeof mergeWithDefaults>
 export async function resolveAgents(
   projectRoot: string,
 ): Promise<Record<string, ResolvedAgentDefinition>> {
-  const userConfig = await loadCompassConfig(projectRoot);
+  const userConfig = await loadKompassConfig(projectRoot);
   const config = mergeWithDefaults(userConfig);
   const agentDefinitions = getAgentDefinitions(config);
   const agents: Record<string, ResolvedAgentDefinition> = {};

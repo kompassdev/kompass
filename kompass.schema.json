@@ -1,0 +1,174 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/kompassdev/kompass/main/kompass.schema.json",
+  "title": "Kompass Config",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "_comment": {
+      "type": "string"
+    },
+    "commands": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "commit",
+              "commit-and-push",
+              "dev",
+              "learn",
+              "pr/create",
+              "pr/fix",
+              "pr/review",
+              "review",
+              "rmslop",
+              "ticket/dev",
+              "ticket/plan"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "templates": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "commit",
+              "commit-and-push",
+              "dev",
+              "learn",
+              "pr/create",
+              "pr/fix",
+              "pr/review",
+              "review",
+              "rmslop",
+              "ticket/dev",
+              "ticket/plan"
+            ]
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "agents": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["planner", "reviewer"]
+          },
+          "uniqueItems": true
+        },
+        "planner": {
+          "$ref": "#/$defs/agentDefinition"
+        },
+        "reviewer": {
+          "$ref": "#/$defs/agentDefinition"
+        }
+      }
+    },
+    "tools": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "changes_load",
+              "pr_load",
+              "ticket_create",
+              "ticket_load"
+            ]
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "components": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["change-summary", "commit", "dev-flow"]
+          },
+          "uniqueItems": true
+        },
+        "paths": {
+          "type": "object",
+          "propertyNames": {
+            "enum": ["change-summary", "commit", "dev-flow"]
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "baseBranch": {
+          "type": "string"
+        },
+        "agentMode": {
+          "type": "string",
+          "enum": ["subagent", "primary", "all"],
+          "deprecated": true
+        }
+      }
+    },
+    "adapters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "opencode": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "agentMode": {
+              "type": "string",
+              "enum": ["subagent", "primary", "all"]
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "agentDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "promptPath": {
+          "type": "string"
+        },
+        "permission": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

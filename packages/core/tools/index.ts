@@ -1,4 +1,4 @@
-import { loadCompassConfig, mergeWithDefaults } from "../lib/config.ts";
+import { loadKompassConfig, mergeWithDefaults } from "../lib/config.ts";
 import { createChangesLoadTool } from "./changes-load.ts";
 import { createPrLoadTool } from "./pr-load.ts";
 import { createTicketCreateTool } from "./ticket-create.ts";
@@ -13,7 +13,7 @@ const toolCreators: Record<string, ($: Shell) => ToolDefinition> = {
 };
 
 export async function createTools($: Shell, projectRoot: string) {
-  const userConfig = await loadCompassConfig(projectRoot);
+  const userConfig = await loadKompassConfig(projectRoot);
   const config = mergeWithDefaults(userConfig);
 
   const tools: Record<string, ToolDefinition> = {};

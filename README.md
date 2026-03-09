@@ -1,11 +1,179 @@
-# Compass Workspace
+# Kompass
 
-This repository is now a multi-package workspace.
+Kompass is a plugin toolkit for coding agents.
 
-- `packages/core`: shared Compass workflows, prompts, components, config loading, and handcrafted tool definitions
-- `packages/opencode`: OpenCode adapter package, publishable as `@kompassdev/opencode`
+It gives teams reusable workflows for planning work, reviewing changes, building from tickets, and preparing pull requests so AI-assisted development feels more consistent and more useful in real repositories.
 
-The root is no longer a publishable package. It exists to coordinate workspace scripts, shared config, tests, and compiled review output.
+Why people use it:
+
+- get opinionated commands for common engineering tasks instead of rewriting prompts every time
+- load branch, PR, and ticket context into workflows built for real repository work
+- use one shared toolkit across coding agents instead of rebuilding the same system for each one
+
+Today, Kompass supports OpenCode through `@kompassdev/opencode`.
+
+The toolkit is structured so additional adapters can plug into the same core workflows over time, with Claude Code support planned next.
+
+## Installation
+
+For OpenCode, add the adapter package to your config:
+
+```json
+{
+  "plugin": ["@kompassdev/opencode"]
+}
+```
+
+Config is optional. To publish a config file:
+
+```bash
+# Inside .opencode folder
+curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/.opencode/kompass.json -o .opencode/kompass.json
+
+# Project root
+curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/kompass.json -o kompass.json
+```
+
+Kompass looks for `.opencode/kompass.json` first, then `kompass.json`.
+
+## How To Use
+
+### OpenCode
+
+Use `@kompassdev/opencode` when you want Kompass workflows inside OpenCode.
+
+- install the plugin in your OpenCode config
+- optionally add `.opencode/kompass.json` or `kompass.json` to customize commands, agents, tools, and defaults
+- use commands like `/review`, `/pr/create`, or `/ticket/plan` inside OpenCode
+
+### Claude Code
+
+Claude Code adapter support is coming soon.
+
+Kompass is being structured as a shared core toolkit with adapter-specific packages, so the same workflows can be reused across agents instead of rebuilt from scratch.
+
+## Agents
+
+Kompass currently includes two focused agents:
+
+- `planner`: turns a request or ticket into a scoped implementation plan
+- `reviewer`: reviews branch or PR changes without editing files
+
+## Commands
+
+Kompass currently ships these command workflows:
+
+- `/commit`
+- `/commit-and-push`
+- `/dev`
+- `/learn`
+- `/pr/create`
+- `/pr/fix`
+- `/pr/review`
+- `/review`
+- `/rmslop`
+- `/ticket/dev`
+- `/ticket/plan`
+
+## Tools
+
+Kompass includes handcrafted tools that return focused, structured data for specific workflows instead of forcing the agent to rediscover everything through broad repo exploration.
+
+- `changes_load`: load branch changes against a base branch
+- `pr_load`: load PR metadata and review history
+- `ticket_load`: load a ticket from GitHub, file, or text
+- `ticket_create`: create a GitHub issue
+
+<details>
+<summary><strong>`changes_load` details</strong></summary>
+
+Load branch changes against a base branch.
+
+Parameters:
+
+- `base` (optional): base branch or ref
+- `head` (optional): head branch, commit, or ref override
+- `depthHint` (optional): shallow-fetch hint such as PR commit count
+- `uncommitted` (optional): include uncommitted workspace changes
+
+Why it helps:
+
+- keeps branch diff loading focused
+- works well for review and PR workflows
+- handles workspace changes separately from committed branch diffs
+
+</details>
+
+<details>
+<summary><strong>`pr_load` details</strong></summary>
+
+Load PR metadata and review history.
+
+Parameters:
+
+- `pr` (optional): PR number or URL
+
+Why it helps:
+
+- gives agents normalized PR context before they start reviewing or summarizing
+- keeps review workflows grounded in actual PR state instead of inferred context
+
+</details>
+
+<details>
+<summary><strong>`ticket_load` details</strong></summary>
+
+Load a ticket from GitHub, file, or text.
+
+Parameters:
+
+- `source` (required): issue URL, repo#id, #id, file path, or raw text
+- `comments` (optional): include issue comments
+
+Why it helps:
+
+- lets the same workflow start from GitHub, a local file, or pasted text
+- gives planning and implementation flows a consistent input format
+
+</details>
+
+<details>
+<summary><strong>`ticket_create` details</strong></summary>
+
+Create a GitHub issue.
+
+Parameters:
+
+- `title` (required): issue title
+- `body` (required): issue body
+- `repo` (optional): owner/repo override
+
+Why it helps:
+
+- makes ticket planning flows able to end in a real issue
+- avoids making the agent handcraft raw `gh` issue commands each time
+
+</details>
+
+## Config
+
+Project config is optional.
+
+If you want to customize Kompass, use one of these preferred locations in the consumer project:
+
+- `.opencode/kompass.json`
+- `kompass.json`
+
+See `kompass.json` for the root example, `.opencode/kompass.json` for the OpenCode-scoped example, and `kompass.schema.json` for the schema.
+
+## Workspace
+
+This repository is the Kompass development workspace.
+
+- `packages/core`: shared Kompass workflows, prompts, components, config loading, and tool definitions
+- `packages/opencode`: the OpenCode adapter package, published as `@kompassdev/opencode`
+
+The root coordinates workspace scripts, shared config, tests, and compiled review output.
 
 ## Workspace Scripts
 
@@ -16,21 +184,6 @@ bun run test
 ```
 
 `bun run compile` regenerates `packages/opencode/.opencode/` from the OpenCode package.
-
-## Config
-
-Project config lives at the repo or consumer project root:
-
-- `compass.json`
-
-Legacy Compass config path remains supported:
-
-- `.compass/config.json`
-
-Legacy OpenCode-specific config paths remain supported:
-
-- `.opencode/compass.json`
-- `opencode-compass.json`
 
 ## Publishing Direction
 

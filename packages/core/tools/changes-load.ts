@@ -144,7 +144,7 @@ async function withTemporaryIndex<T>(
   }
 
   const gitDir = path.resolve(cwd, gitDirProc.text().trim());
-  const tempDir = await mkdtemp(path.join(gitDir, "compass-index-"));
+  const tempDir = await mkdtemp(path.join(gitDir, "kompass-index-"));
   const indexPath = path.join(tempDir, "index");
 
   try {

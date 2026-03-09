@@ -7,7 +7,7 @@ export interface AgentDefinition {
   permission: Record<string, string>;
 }
 
-export interface CompassConfig {
+export interface KompassConfig {
   commands?: {
     enabled?: string[];
     templates?: Record<string, string>;
@@ -36,7 +36,7 @@ export interface CompassConfig {
   };
 }
 
-export interface MergedCompassConfig {
+export interface MergedKompassConfig {
   commands: {
     enabled: string[];
     templates: Record<string, string>;
@@ -64,6 +64,8 @@ export interface MergedCompassConfig {
 }
 
 const CONFIG_FILES = [
+  ".opencode/kompass.json",
+  "kompass.json",
   ".compass/config.json",
   "compass.json",
   ".opencode/compass.json",
@@ -79,14 +81,14 @@ async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
-export async function loadCompassConfig(
+export async function loadKompassConfig(
   projectRoot: string,
-): Promise<CompassConfig | null> {
+): Promise<KompassConfig | null> {
   for (const configFile of CONFIG_FILES) {
     const fullPath = path.resolve(projectRoot, configFile);
     if (await fileExists(fullPath)) {
       const content = await readFile(fullPath, "utf8");
-      return JSON.parse(content) as CompassConfig;
+      return JSON.parse(content) as KompassConfig;
     }
   }
   return null;
@@ -111,8 +113,8 @@ const defaultComponentPaths: Record<string, string> = {
 };
 
 export function mergeWithDefaults(
-  config: CompassConfig | null,
-): MergedCompassConfig {
+  config: KompassConfig | null,
+): MergedKompassConfig {
   return {
     commands: {
       enabled: config?.commands?.enabled ?? [

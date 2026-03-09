@@ -185,7 +185,7 @@ describe("changes_load e2e", () => {
 });
 
 async function createRepo() {
-  const repo = await mkdtemp(path.join(os.tmpdir(), "compass-test-"));
+  const repo = await mkdtemp(path.join(os.tmpdir(), "kompass-test-"));
   tempDirs.push(repo);
   await git(repo, ["init", "-b", "main"]);
   await git(repo, ["config", "user.name", "OpenCode Test"]);

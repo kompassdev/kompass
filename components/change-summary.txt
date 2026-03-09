@@ -1,0 +1,12 @@
+#### Step 1: Load Changes
+- call `changes_load`
+{{param:rules}}
+
+#### Step 2: Analyze Files
+- Review file paths and their purposes
+- Identify the nature of changes (added, modified, deleted)
+- Note lines added/removed per file
+
+#### Step 3: Group and Summarize
+- Group related changes into logical themes
+- Summarize the "what" and "why" (not the "how")

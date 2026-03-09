@@ -1,3 +1,8 @@
+---
+description: Review the current PR and publish review feedback
+agent: reviewer
+---
+
 ## Goal
 
 Review a GitHub pull request and publish findings as a formal review with inline comments.

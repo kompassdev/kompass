@@ -1,0 +1,37 @@
+## Goal
+
+Create a commit and immediately push it to the remote repository.
+
+## Workflow
+
+### Interpret Arguments
+
+Store $ARGUMENTS as <arguments>:
+- if <arguments> provides guidance for the commit message, store it as <additional-context>
+
+### Load Changes
+
+{{change-summary rules="- pass `uncommitted: true` to get uncommitted changes only"}}
+
+### Create Commit
+
+{{commit}}
+
+Consider `<additional-context>` when analyzing changes and writing the commit message.
+
+### Push to Remote
+
+- Push the branch with `git push`
+- Use `-u` flag if the branch has no upstream set
+- Handle any merge conflicts if they arise
+
+## Output
+
+When complete, display:
+```
+Created commit `<hash>`:
+
+<commit-message>
+
+Pushed to <remote>/<branch>
+```

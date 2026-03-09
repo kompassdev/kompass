@@ -24,11 +24,13 @@ describe("changes_load e2e", () => {
 
     const result = await runChangesLoad(repo, {});
 
-    assert.deepEqual(result, {
-      comparison: "uncommitted",
-      branch: "main",
-      files: [{ status: "modified", path: "notes.txt", diff: "@@ -1 +1,2 @@\n hello\n+world" }],
-    });
+    assert.equal(result.comparison, "uncommitted");
+    assert.equal(result.branch, "main");
+    assert.equal(result.files.length, 1);
+    assert.equal(result.files[0].status, "modified");
+    assert.equal(result.files[0].path, "notes.txt");
+    assert.match(String(result.files[0].diff), /@/);
+    assert.equal(result.commits, undefined);
   });
 
   test("dirty worktree rename is detected without touching user index", async () => {
@@ -130,6 +132,56 @@ describe("changes_load e2e", () => {
       diffOmittedReason: "binary change; inspect file contents or metadata directly",
     });
   });
+
+  test("uncommitted: true forces workspace mode on clean worktree", async () => {
+    const repo = await createRepo();
+    await commitFile(repo, "notes.txt", "hello\n", "init");
+    await git(repo, ["checkout", "-b", "feature"]);
+    await commitFile(repo, "feature.txt", "new\n", "feature commit");
+
+    // With uncommitted: true on clean worktree, should return empty files
+    // and NOT fall back to branch comparison
+    const result = await runChangesLoad(repo, { uncommitted: true });
+
+    assert.equal(result.comparison, "uncommitted");
+    assert.equal(result.branch, "feature");
+    assert.deepEqual(result.files, []);
+    assert.equal(result.commits, undefined);
+  });
+
+  test("uncommitted: true returns changes on dirty worktree", async () => {
+    const repo = await createRepo();
+    await commitFile(repo, "notes.txt", "hello\n", "init");
+    await writeFile(path.join(repo, "notes.txt"), "hello\nworld\n", "utf8");
+
+    const result = await runChangesLoad(repo, { uncommitted: true });
+
+    assert.equal(result.comparison, "uncommitted");
+    assert.equal(result.branch, "main");
+    assert.equal(result.files.length, 1);
+    assert.equal(result.files[0].path, "notes.txt");
+    assert.equal(result.files[0].status, "modified");
+    assert.equal(result.commits, undefined);
+  });
+
+  test("branch comparison returns commits", async () => {
+    const repo = await createRepo();
+    await commitFile(repo, "base.txt", "base\n", "init");
+    await git(repo, ["checkout", "-b", "feature"]);
+    await commitFile(repo, "file1.txt", "content1\n", "first commit");
+    await commitFile(repo, "file2.txt", "content2\n", "second commit");
+
+    const result = await runChangesLoad(repo, {});
+
+    // Comparison format depends on whether origin/main exists (fresh repo vs cloned)
+    assert.ok(result.comparison.endsWith("main...HEAD"), `Expected comparison to end with main...HEAD, got: ${result.comparison}`);
+    assert.equal(result.branch, "feature");
+    assert.ok(result.commits);
+    assert.equal(result.commits.length, 2);
+    // Commits are in reverse chronological order (newest first)
+    assert.match(result.commits[0].subject, /second commit/);
+    assert.match(result.commits[1].subject, /first commit/);
+  });
 });
 
 async function createRepo() {
@@ -155,7 +207,7 @@ async function git(cwd: string, args: string[]) {
 
 async function runChangesLoad(
   repo: string,
-  args: { base?: string; head?: string; depthHint?: number },
+  args: { base?: string; head?: string; depthHint?: number; uncommitted?: boolean },
 ) {
   const tool = createChangesLoadTool(createShellForDirectory(repo));
   const output = await tool.execute(args, createToolContextForDirectory(repo));

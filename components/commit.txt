@@ -1,0 +1,11 @@
+### Message Format
+- Start with a high-level overview (1 sentence)
+- One line if possible, max 72 characters
+- Use conventional commit format: "feat:", "fix:", "refactor:", "docs:", etc.
+- Add body only if additional context is essential
+
+### Commit Phase
+1. Check git status to confirm what will be committed
+2. Stage changes with `git add` (use `-A` for all, or specific files)
+3. Generate the commit message and store it as `<commit-message>`
+4. Create the commit with `<commit-message>` using `git commit -m`

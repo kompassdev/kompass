@@ -1,0 +1,29 @@
+## Goal
+
+Create a commit with an appropriate message summarizing the uncommitted changes.
+
+## Workflow
+
+### Interpret Arguments
+
+Store $ARGUMENTS as <arguments>:
+- if <arguments> provides guidance for the commit message, store it as <additional-context>
+
+### Load Changes
+
+{{change-summary rules="- pass `uncommitted: true` to get uncommitted changes only"}}
+
+### Create Commit
+
+{{commit}}
+
+Consider `<additional-context>` when analyzing changes and writing the commit message.
+
+## Output
+
+When the commit is created, display:
+```
+Created commit `<hash>`:
+
+<commit-message>
+```

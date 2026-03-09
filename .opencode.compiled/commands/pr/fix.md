@@ -1,3 +1,8 @@
+---
+description: Fix PR feedback, push updates, and reply
+agent: build
+---
+
 ## Goal
 
 Address feedback on a pull request by making fixes and responding to review threads.

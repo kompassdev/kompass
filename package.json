@@ -21,7 +21,8 @@
   "scripts": {
     "check": "bun --eval \"await import('./index.ts')\"",
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "compile": "bun run scripts/compile.ts"
   },
   "devDependencies": {
     "@types/node": "^25.3.5",
@@ -37,6 +38,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@opencode-ai/plugin": "^1.2.20"
+    "@opencode-ai/plugin": "^1.2.20",
+    "yaml": "^2.8.2"
   }
 }

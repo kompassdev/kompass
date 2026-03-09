@@ -1,5 +1,18 @@
-{{dev-flow}}
-{{pr-author}}
+## Goal
 
-Interpret $ARGUMENTS as the destination (ticket reference, file path, or raw request).
-Use ticket_load to get your bearings, then follow the Development Flow and PR Author guides to navigate to completion and arrive at a PR.
+Implement a ticket and create a pull request for the completed work.
+
+## Workflow
+
+1. **Load Ticket**: 
+   - Interpret $ARGUMENTS as the destination (ticket reference, file path, or raw request)
+   - Use `ticket_load` to get your bearings and understand requirements
+
+2. **Develop**: Follow the Development Flow to implement the changes
+   {{dev-flow}}
+
+3. **Create PR**: After validation, create the pull request
+   - Push the branch if needed
+   - Follow the PR creation workflow to generate title and body
+   - Link to the original ticket
+   - Output the PR URL

@@ -1,3 +1,8 @@
+---
+description: Summarize branch work and create a PR
+agent: build
+---
+
 ## Goal
 
 Create a pull request for the current branch, handling the entire workflow from change detection to PR submission.
@@ -13,8 +18,19 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
 
 ### Load & Analyze Changes
 
-{{change-summary rules="- If <base> is defined: pass it as the `base` parameter
-- Otherwise: call with no parameters"}}
+#### Step 1: Load Changes
+- call `changes_load`
+- If <base> is defined: pass it as the `base` parameter
+- Otherwise: call with no parameters
+
+#### Step 2: Analyze Files
+- Review file paths and their purposes
+- Identify the nature of changes (added, modified, deleted)
+- Note lines added/removed per file
+
+#### Step 3: Group and Summarize
+- Group related changes into logical themes
+- Summarize the "what" and "why" (not the "how")
 
 ### Check Blockers
 

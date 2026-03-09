@@ -1,5 +1,9 @@
-{{dev-flow}}
-{{pr-author}}
+## Goal
 
-Interpret $ARGUMENTS as the destination to reach.
-Follow the Development Flow and PR Author guides above to plot the course, validate the path, and arrive at a PR.
+Implement a feature or fix based on a ticket or request, then prepare for PR creation.
+
+## Workflow
+
+{{dev-flow}}
+
+After completing the implementation and validation, hand off to the PR creation flow by using the `pr/create` command or following its workflow to create the pull request.

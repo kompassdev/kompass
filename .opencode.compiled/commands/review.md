@@ -1,3 +1,8 @@
+---
+description: Review branch changes without publishing comments
+agent: reviewer
+---
+
 ## Goal
 
 Review code changes and provide actionable feedback with a grade and risk assessment.

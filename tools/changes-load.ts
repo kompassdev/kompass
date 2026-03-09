@@ -27,14 +27,21 @@ export function createChangesLoadTool($: Shell) {
         .positive()
         .optional()
         .describe("Optional shallow-fetch hint, such as PR commit count"),
+      uncommitted: tool.schema
+        .boolean()
+        .optional()
+        .describe("Only load uncommitted changes (staged and unstaged), never fall back to branch comparison"),
     },
     async execute(
-      args: { base?: string; head?: string; depthHint?: number },
+      args: { base?: string; head?: string; depthHint?: number; uncommitted?: boolean },
       ctx: PluginContext,
     ) {
       const branch = await loadCurrentBranch($, ctx.worktree);
       const implicitWorkspaceMode = !args.base?.trim() && !args.head?.trim();
-      if (implicitWorkspaceMode && (await hasWorktreeChanges($, ctx.worktree))) {
+      const forceWorkspaceMode = args.uncommitted === true;
+      const useWorkspaceMode = forceWorkspaceMode || (implicitWorkspaceMode && (await hasWorktreeChanges($, ctx.worktree)));
+
+      if (useWorkspaceMode) {
         const filesWithDiff = await withTemporaryIndex($, ctx.worktree, async (indexPath) => {
           const files = await loadTemporaryIndexFiles($, ctx.worktree, indexPath);
           return await loadTemporaryIndexDiffs($, ctx.worktree, indexPath, files);
@@ -79,7 +86,7 @@ export function createChangesLoadTool($: Shell) {
       const filesWithDiff = implicitWorkspaceMode
         ? await loadWorkspaceFileDiffs($, ctx.worktree, baseRef, parsedFiles)
         : await loadFileDiffs($, ctx.worktree, baseRef, headRef, parsedFiles);
-      const commits = implicitWorkspaceMode ? [] : parseCommitList(log.text());
+      const commits = useWorkspaceMode ? [] : parseCommitList(log.text());
 
       return stringifyJson({
         comparison: `${baseRef}...${headRef}`,
@@ -111,6 +118,10 @@ async function loadCurrentBranch($: Shell, cwd: string) {
   return branch || undefined;
 }
 
+/**
+ * Creates a temporary git index to capture staged+unstaged changes without
+ * affecting the user's working index. Uses GIT_INDEX_FILE env var pattern.
+ */
 async function withTemporaryIndex<T>(
   $: Shell,
   cwd: string,
@@ -290,6 +301,11 @@ function serializeFile(
   };
 }
 
+/**
+ * Normalize git diff output and detect binary changes.
+ * Uses string heuristic on diff output rather than git's native detection
+ * since we already have the diff text at this point.
+ */
 function normalizeNativeDiff(file: ChangedFile, rawDiff: string) {
   const binaryLine = rawDiff
     .split("\n")

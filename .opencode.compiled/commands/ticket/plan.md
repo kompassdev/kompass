@@ -1,3 +1,8 @@
+---
+description: Plan work from a request and create a ticket
+agent: planner
+---
+
 ## Goal
 
 Create a development plan from a request or ticket, mapping out scope and implementation approach.

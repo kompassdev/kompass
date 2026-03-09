@@ -1,4 +1,6 @@
-![Kompass for OpenCode](../../assets/kompass-opencode.png)
+<p align="center">
+  <img src="assets/kompass.png" alt="Kompass" height="300" />
+</p>
 
 # @kompassdev/opencode
 

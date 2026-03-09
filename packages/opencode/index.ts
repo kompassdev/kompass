@@ -13,6 +13,7 @@ import { applyAgentsConfig, applyCommandsConfig } from "./config.ts";
 import { getOpenCodeToolName } from "./tool-names.ts";
 
 const opencodeToolCreators = {
+  // useless comment
   changes_load($: PluginInput["$"]) {
     const definition = createChangesLoadTool($);
     return tool({

@@ -1,9 +1,0 @@
-## Goal
-
-Implement a feature or fix based on a ticket or request, then prepare for PR creation.
-
-## Workflow
-
-{{dev-flow}}
-
-After completing the implementation and validation, hand off to the PR creation flow by using the `pr/create` command or following its workflow to create the pull request.

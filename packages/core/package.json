@@ -1,0 +1,35 @@
+{
+  "name": "@kompassdev/core",
+  "version": "0.0.3",
+  "description": "Shared Compass workflows, prompts, components, and tool definitions",
+  "type": "module",
+  "main": "./index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "files": [
+    "index.ts",
+    "agents",
+    "assets",
+    "commands",
+    "components",
+    "lib",
+    "tools",
+    "scripts",
+    "config.example.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "bun test test",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "keywords": [
+    "kompass",
+    "workflow",
+    "ai",
+    "toolkit",
+    "agents"
+  ],
+  "license": "MIT"
+}

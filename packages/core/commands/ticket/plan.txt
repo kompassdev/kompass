@@ -1,0 +1,34 @@
+## Goal
+
+Create a development plan from a request or ticket, mapping out scope and implementation approach.
+
+## Workflow
+
+1. **Load Request**: 
+   - Interpret $ARGUMENTS as a destination (ticket reference, URL, file path, or raw request)
+   - Use `ticket_load` when the input looks like a ticket reference or URL
+
+2. **Orient**: Normalize the problem statement and understand what needs to be built
+
+3. **Map the Plan**:
+   - Define scope and boundaries (what's in/out)
+   - Identify constraints and limitations
+   - Note unknowns that need investigation
+   - Define acceptance criteria
+   - Outline implementation waypoints (key milestones)
+
+4. **Create Ticket** (only if explicitly setting a new destination):
+   - Use `ticket_create` to create a GitHub issue
+   - Include clear title, description, and acceptance criteria
+
+5. **Present Plan**:
+   - Use clear headings and structure
+   - Call out assumptions that might lead you off course
+   - Ask for clarification only when truly blocked by missing product intent
+
+## Planning Rules
+
+- Keep the plan navigation-ready—clear headings, no ambiguity
+- Identify risks and blockers early
+- Break down complex work into manageable waypoints
+- Only create tickets when explicitly requested

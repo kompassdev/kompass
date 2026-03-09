@@ -1,44 +1,18 @@
 {
-  "name": "opencode-compass",
-  "version": "0.0.3",
-  "description": "Navigate your codebase with confidence—guided workflows that keep your AI agents on course from planning to PR",
+  "name": "kompass-workspace",
+  "private": true,
   "type": "module",
-  "main": "./index.ts",
-  "exports": {
-    ".": "./index.ts"
-  },
-  "files": [
-    "index.ts",
-    "agents",
-    "commands",
-    "components",
-    "lib",
-    "tools",
-    "config.example.json",
-    "README.md",
-    "LICENSE"
+  "workspaces": [
+    "packages/*"
   ],
   "scripts": {
-    "check": "bun --eval \"await import('./index.ts')\"",
-    "test": "bun test",
-    "typecheck": "tsc --noEmit",
-    "compile": "bun run scripts/compile.ts"
+    "check": "bun --eval \"await import('./packages/opencode/index.ts')\"",
+    "compile": "bun run ./packages/opencode/scripts/compile.ts",
+    "typecheck": "tsc -p packages/core/tsconfig.json --noEmit && tsc -p packages/opencode/tsconfig.json --noEmit",
+    "test": "bun test packages/core/test packages/opencode/test"
   },
   "devDependencies": {
     "@types/node": "^25.3.5",
     "typescript": "^5.4.0"
-  },
-  "keywords": [
-    "opencode",
-    "plugin",
-    "toolkit",
-    "github",
-    "review",
-    "pull-request"
-  ],
-  "license": "MIT",
-  "dependencies": {
-    "@opencode-ai/plugin": "^1.2.20",
-    "yaml": "^2.8.2"
   }
 }

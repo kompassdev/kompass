@@ -12,8 +12,10 @@
     "declaration": true,
     "declarationMap": true,
     "lib": ["ESNext"],
-    "allowImportingTsExtensions": true
-  },
-  "include": ["**/*.ts"],
-  "exclude": ["node_modules"]
+    "allowImportingTsExtensions": true,
+    "baseUrl": ".",
+    "paths": {
+      "@kompassdev/core": ["packages/core/index.ts"]
+    }
+  }
 }

@@ -1,0 +1,36 @@
+{
+  "name": "@kompassdev/opencode",
+  "version": "0.0.3",
+  "description": "OpenCode adapter for Compass workflows",
+  "type": "module",
+  "main": "./index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "files": [
+    "index.ts",
+    "config.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "check": "bun --eval \"await import('./index.ts')\"",
+    "compile": "bun run ./scripts/compile.ts",
+    "test": "bun test test",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "keywords": [
+    "kompass",
+    "opencode",
+    "adapter",
+    "ai",
+    "workflow"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@kompassdev/core": "workspace:*",
+    "@opencode-ai/plugin": "^1.2.20",
+    "@opencode-ai/sdk": "1.2.20",
+    "yaml": "^2.8.2"
+  }
+}

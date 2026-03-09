@@ -1,4 +1,5 @@
 {
+  "$schema": "https://opencode.ai/schemas/compass.json",
   "commands": {
     "enabled": [
       "pr/create",
@@ -15,18 +16,13 @@
     ]
   },
   "agents": {
-    "enabled": [
-      "reviewer",
-      "planner"
-    ]
+    "enabled": ["reviewer", "planner"]
   },
   "tools": {
-    "enabled": [
-      "changes_load",
-      "pr_load",
-      "ticket_load",
-      "ticket_create"
-    ]
+    "enabled": ["changes_load", "pr_load", "ticket_load", "ticket_create"]
+  },
+  "components": {
+    "enabled": ["change-summary", "commit", "dev-flow"]
   },
   "defaults": {
     "baseBranch": "main"

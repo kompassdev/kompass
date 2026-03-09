@@ -2,8 +2,8 @@ export function parseComponentParams(paramString: string): Record<string, string
   const params: Record<string, string> = {};
   if (!paramString) return params;
 
-  // Match key="value" or key='value' patterns
-  const regex = /(\w+)=["']([^"']*)["']/g;
+  // Match key="value" or key='value' patterns (supports multi-line with dotAll)
+  const regex = /(\w+)=["']([\s\S]*?)["']/g;
   let match;
   while ((match = regex.exec(paramString)) !== null) {
     params[match[1]] = match[2];

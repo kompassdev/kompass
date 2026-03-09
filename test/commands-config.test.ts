@@ -135,7 +135,9 @@ describe("applyCommandsConfig", () => {
       assert.ok(cfg.command);
       assert.ok(cfg.command!["pr/review"]);
       assert.doesNotMatch(cfg.command!["pr/review"].template, /\{\{code-review\}\}/);
-      assert.match(cfg.command!["pr/review"].template, /Code Review Navigation Guide/);
+      // Template now has inline workflow instead of embedded component
+      assert.match(cfg.command!["pr/review"].template, /## Goal/);
+      assert.match(cfg.command!["pr/review"].template, /Review a GitHub pull request/);
     });
 
     test("preserves unknown placeholders when component not found", async () => {
@@ -246,7 +248,9 @@ describe("applyCommandsConfig", () => {
       
       // Should have replaced components
       assert.match(devTemplate, /Development Flow Navigation Guide/);
-      assert.match(devTemplate, /PR Author Navigation Guide/);
+      // PR Author content is now inline in pr/create, not embedded in dev
+      assert.match(devTemplate, /## Goal/);
+      assert.match(devTemplate, /Implement a feature or fix/);
       
       // Should not have any remaining placeholders
       assert.doesNotMatch(devTemplate, /\{\{[\w-]+\}\}/);
@@ -261,8 +265,11 @@ describe("applyCommandsConfig", () => {
       assert.ok(cfg.command);
       const prCreateTemplate = cfg.command!["pr/create"].template;
       
-      // Should have replaced components
-      assert.match(prCreateTemplate, /PR Author Navigation Guide/);
+      // Should have inline workflow content (no longer uses PR Author component)
+      assert.match(prCreateTemplate, /## Goal/);
+      assert.match(prCreateTemplate, /Create a pull request/);
+      assert.match(prCreateTemplate, /Interpret Arguments/);
+      assert.match(prCreateTemplate, /Load & Analyze Changes/);
       
       // Should not have any remaining placeholders
       assert.doesNotMatch(prCreateTemplate, /\{\{[\w-]+\}\}/);
@@ -279,7 +286,9 @@ describe("applyCommandsConfig", () => {
       
       // Should have replaced components
       assert.match(ticketDevTemplate, /Development Flow Navigation Guide/);
-      assert.match(ticketDevTemplate, /PR Author Navigation Guide/);
+      // PR Author content is now inline in pr/create, not embedded here
+      assert.match(ticketDevTemplate, /## Goal/);
+      assert.match(ticketDevTemplate, /Implement a ticket/);
       
       // Should not have any remaining placeholders
       assert.doesNotMatch(ticketDevTemplate, /\{\{[\w-]+\}\}/);
@@ -298,7 +307,7 @@ describe("applyCommandsConfig", () => {
       // commit command uses parameterized change-summary
       const commitTemplate = cfg.command!["commit"].template;
       // Should have replaced the parameter
-      assert.match(commitTemplate, /with `uncommitted: true` to get uncommitted changes only/);
+      assert.match(commitTemplate, /pass `uncommitted: true`/);
       // Should NOT have {{param:...}} placeholders
       assert.doesNotMatch(commitTemplate, /\{\{param:[\w-]+\}\}/);
     });
@@ -315,7 +324,7 @@ describe("applyCommandsConfig", () => {
       const prCreateTemplate = cfg.command!["pr/create"].template;
       
       // commit should mention uncommitted
-      assert.match(commitTemplate, /with `uncommitted: true`/);
+      assert.match(commitTemplate, /pass `uncommitted: true`/);
       // pr/create should mention base branch detection
       assert.match(prCreateTemplate, /base branch/);
     });

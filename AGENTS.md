@@ -2,178 +2,96 @@
 
 Guidelines for AI agents working in this repository.
 
-## Build / Lint / Test Commands
+## What This Is
+
+This is an **opencode plugin** that provides tools and commands for compass navigation patterns. It compiles templates into `.opencode.compiled/` for review, but runtime always uses source files.
+
+## When Making Changes
 
 ```bash
-# Run all tests
-bun test
-
-# Run a single test file
-bun test test/pr-load.test.ts
-
-# Run tests matching a pattern
-bun test --test-name-pattern="normalizes threads"
-
-# Type check without emitting
-bun run typecheck        # tsc --noEmit
-
-# Validate entry point loads
-bun run check            # bun --eval "await import('./index.ts')"
+# Always run after changes
+bun run compile    # Regenerates .opencode.compiled/
+bun run typecheck  # Verify types
+bun test          # Run tests
 ```
 
-## Runtime & Package Manager
-
-- **Runtime**: Bun (not Node)
-- **Module**: ESM (`"type": "module"`)
-- **No build step**: Plain TypeScript files executed directly
-- **Package files**: `bun.lock` (primary), `package-lock.json` (compatibility)
-
-## Code Style Guidelines
-
-### Imports
-
-- Use `node:` prefix for Node.js built-ins: `import { readFile } from "node:fs/promises"`
-- Use `.ts` extension on relative imports: `import { foo } from "./shared.ts"`
-- Use `import type` for type-only imports
-- Group imports: external packages first, then internal modules, then relative imports
-
-```typescript
-import type { Config } from "@opencode-ai/sdk";
-import { tool } from "@opencode-ai/plugin/tool";
-
-import { loadProjectText } from "../lib/text.ts";
-import type { PluginContext, Shell } from "./shared.ts";
-```
-
-### Naming Conventions
-
-- `camelCase` for functions, variables, properties
-- `PascalCase` for types, interfaces, classes
-- `kebab-case` for filenames (e.g., `changes-load.ts`, `ticket-load.ts`)
-- Descriptive verb-noun function names: `createChangesLoadTool`, `parseNameStatus`
-
-### Types
-
-- Prefer `interface` for object shapes
-- Use explicit parameter types; return types can be inferred
-- Use `type` for unions and complex types
-- Optional properties: `property?: Type`
-- Nullable handling via `undefined` rather than `null` where possible
-
-### Error Handling
-
-- Shell commands use `.nothrow()` to handle errors manually
-- Check `proc.exitCode !== 0` after shell operations
-- Error messages: `proc.stderr.toString() || "descriptive fallback"`
-- Async errors bubble up; don't catch unless handling
-
-```typescript
-const proc = await $\`git status\`.cwd(ctx.worktree).quiet().nothrow()
-if (proc.exitCode !== 0) {
-  throw new Error(proc.stderr.toString() || "Failed to get git status")
-}
-```
-
-### Shell Operations (Bun-specific)
-
-- Template literal syntax: `` await $\`command ${arg}\` ``
-- Chain methods: `.cwd(dir)`, `.quiet()`, `.nothrow()`
-- Extract output via `.text()` or `.json()`
-
-### Tool Patterns
-
-Tools follow a factory pattern:
-
-```typescript
-export function createXTool($: Shell) {
-  return tool({
-    description: "...",
-    args: {
-      param: tool.schema.string().optional().describe("...")
-    },
-    async execute(args, ctx: PluginContext) {
-      // Implementation
-      return stringifyJson(result)
-    }
-  })
-}
-```
-
-### Testing
-
-- Uses `node:test` and `node:assert/strict`
-- Test files: `test/*.test.ts`
-- E2E tests create real git repos in temp directories
-- Mock shell commands for unit tests
-- Nested `describe` blocks for grouping
-
-```typescript
-import { describe, test } from "node:test"
-import assert from "node:assert/strict"
-
-describe("feature", () => {
-  test("specific behavior", async () => {
-    assert.equal(actual, expected)
-  })
-})
-```
-
-### Formatting
-
-- 2-space indentation
-- No trailing semicolons
-- Single quotes for strings, backticks for templates
-- Trailing commas in multi-line objects/arrays
-- Max line length: ~100-120 characters
+**Never edit files in `.opencode.compiled/` directly** — always edit source files and regenerate. Use the compiled output only to verify the result looks correct.
 
 ## Project Structure
 
 ```
-tools/           # Handcrafted tools (one file per tool)
-lib/             # Shared loaders and utilities
-commands/        # Command templates (.txt files with embedded guidance)
-agents/          # Subagent prompts (reviewer.txt, planner.txt)
-components/      # Reusable navigation guidance
-scripts/         # Debug/development scripts
-test/            # Test files
-index.ts         # Plugin entry point
+tools/           # Handcrafted tools (changes_load, pr_load, etc.)
+lib/             # Shared utilities
+commands/        # Command templates (.txt with embedded components)
+components/      # Reusable guidance snippets
+agents/          # Subagent prompts
+.opencode.compiled/   # Generated files (review only, never edit)
 ```
 
-## Adding New Tools
+## Command Structure
 
-1. Create `tools/my-tool.ts` with factory function `createMyToolTool`
-2. Export from `tools/index.ts` via `toolCreators` record
-3. Add to default enabled list in `lib/config.ts` if applicable
-4. Create tests in `test/my-tool.test.ts`
+All commands follow this pattern:
 
-## Plugin Compilation
+```
+## Goal
+What this command does in one sentence.
 
-- Run `bun run compile` to generate `.opencode.compiled/` with standalone files
-- Compiled commands have components embedded (e.g., `{{dev-flow}}` expanded)
-- Compilation is for **review purposes only**—runtime uses source files directly
-- Command definitions are exported from `commands/index.ts` and imported by `scripts/compile.ts` (no duplication)
-- Source templates use `.txt` extension with component placeholders; compiled output uses `.md` with YAML frontmatter
-- Never manually edit files in `.opencode.compiled/`—always regenerate via `bun run compile`
+## Workflow
 
-## Command Templates
+### Interpret Arguments
+Store `$ARGUMENTS` as `<arguments>`, then derive semantic variables:
+- `<base>` — if arguments look like a branch reference
+- `<additional-context>` — if arguments provide guidance
+- Reference these variables throughout instead of `$ARGUMENTS`
 
-- Use `{{component-name}}` syntax to embed reusable components
-- Components are defined in `components/*.txt` and registered in `lib/config.ts`
-- Templates in `commands/*.txt` are plain text with embedded component placeholders
+### [Section Name]
+Action-oriented instructions using the derived variables.
+```
 
-## Component System
+## Components System
 
-- Parameterized components: Use `{{component-name param="value"}}` to pass params, referenced inside component as `{{param:key}}`
-- Custom templates bypass component embedding: If `commands.templates[name]` is set in config, raw template is used without component expansion
-- Compile-only output: `.opencode.compiled/` is for review purposes only—runtime always uses source files directly
+Components keep commands DRY by extracting reusable guidance:
 
-## Git Tooling
+**Define**: Create `components/my-component.txt` with placeholder parameters:
+```
+{{param:rules}}
+```
 
-- Temporary index pattern: `changes_load` tool uses `GIT_INDEX_FILE` env var with a temp index to capture staged+unstaged changes without touching user's working index
-- Binary detection heuristic: Checks for "Binary files" or "GIT binary patch" strings in diff output rather than using git's native detection
-- Namespace path mapping: Commands with `/` separators (e.g., `pr/create`) compile to nested directories (`commands/pr/create.md`)
+**Use**: In commands, embed with parameters:
+```
+{{my-component rules="- Pass uncommitted: true for workspace changes"}}
+```
 
-## CI/Environment Behavior
+**Multi-line parameters**: Supported with preserved newlines:
+```
+{{component-name rules="- Rule one
+- Rule two
+- Rule three"}}
+```
 
-- Subtask mode toggle: Commands have `subtask: true` outside CI, `subtask: false` when `process.env.CI` is set
-- Test environment isolation: E2E tests create real git repos in temp directories and clean up via `afterEach` hook
+**When to use components**:
+- Repeated guidance across multiple commands (change analysis, commit patterns)
+- Complex multi-step workflows that might evolve
+- Anything that benefits from centralized updates
+
+**When NOT to use components**:
+- Command-specific logic that won't be reused
+- Simple one-line instructions
+- Sections that need tight coupling with command context
+
+## changes_load Tool
+
+- **Auto-detects uncommitted changes** — don't pass `uncommitted: true` for PR workflows
+- Returns `comparison: "uncommitted"` when workspace has changes
+- Only pass `uncommitted: true` when you specifically want workspace mode (commit commands)
+- If result shows uncommitted changes, stop and require commit/stash
+
+## Testing
+
+```bash
+bun test                    # All tests
+bun test test/changes-load  # Single file
+bun test --test-name-pattern="pattern"  # Filter
+```
+
+E2E tests create real git repos in temp directories. Unit tests mock shell commands.

@@ -4,38 +4,55 @@ Create a pull request for the current branch, handling the entire workflow from 
 
 ## Workflow
 
-1. **Load & Analyze Changes**: 
-   {{change-summary changesLoadArgs=" tool. If $ARGUMENTS is provided, pass it as the `base` parameter"}}
+### Interpret Arguments
 
-2. **Check Blockers**:
-   - If `comparison` is "uncommitted":
-     - STOP immediately
-     - Report: "There are uncommitted changes. Please commit or stash them before creating a PR."
-     - List the changed files from the result
-     - Do NOT proceed further
-   - If `branch` equals the base branch name:
-     - STOP immediately  
-     - Report: "You are currently on the base branch ({base}). Please checkout a feature branch before creating a PR."
-     - Suggest: `git checkout -b <feature-name>`
-     - Do NOT proceed further
+Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed:
+- **Branch name**: If <arguments> looks like a branch reference (e.g., "main", "origin/develop"), store it as `<base>`
+- **Additional context**: If <arguments> provides guidance (focus areas, related issues, notes), store it as `<additional-context>`
+- **Empty**: If no <arguments> provided, proceed with defaults
 
-3. **Review Commits and Files**:
-   - Note the base branch and current branch from the result
-   - Review commit messages to understand the narrative
-   - Read the most relevant changed source files to understand the changes
-   - Group related changes into themes for the PR summary
+### Load & Analyze Changes
 
-4. **Push Branch**: If needed, push the current branch to origin
+{{change-summary rules="- If <base> is defined: pass it as the `base` parameter
+- Otherwise: call with no parameters"}}
 
-5. **Create PR**: Use `gh pr create` to create the pull request:
-   - Generate a concise title (max 70 chars) summarizing the change
-   - Generate a body with:
-     - `## Summary` - 1-3 bullets focused on WHY the change exists
-     - `## Testing` - concrete validation steps or note if not tested
-   - Do NOT restate the full diff
-   - Keep it compact and directional
+### Check Blockers
 
-6. **Return Result**: Output the PR URL or any errors encountered
+- If `comparison` is "uncommitted":
+  - STOP immediately
+  - Report: "There are uncommitted changes. Please commit or stash them before creating a PR."
+  - List the changed files from the result
+  - Do NOT proceed further
+- If `branch` equals <base>:
+  - STOP immediately
+  - Report: "You are currently on the base branch (<base>). Please checkout a feature branch before creating a PR."
+  - Suggest: `git checkout -b <feature-name>`
+  - Do NOT proceed further
+
+### Review Commits and Files
+
+- Note the base branch and current branch from the result
+- Review commit messages to understand the narrative
+- Read the most relevant changed source files to understand the changes
+- Group related changes into themes for the PR summary
+
+### Push Branch
+
+If needed, push the current branch to origin
+
+### Create PR
+
+Use `gh pr create` to create the pull request:
+- Generate a concise title (max 70 chars) summarizing the change
+- Generate a body with:
+  - `## Summary` - 1-3 bullets focused on WHY the change exists
+  - `## Testing` - concrete validation steps or note if not tested
+- Do NOT restate the full diff
+- Keep it compact and directional
+
+### Return Result
+
+Output the PR URL or any errors encountered
 
 ## PR Body Guidelines
 
@@ -43,4 +60,6 @@ Create a pull request for the current branch, handling the entire workflow from 
 - Testing section: mention commands run (tests, typecheck, etc.) or "No testing performed"
 - Uncommitted changes and being on base branch block PR creation entirely
 
-$ARGUMENTS can be an explicit base branch name or extra context to guide PR creation.
+## Additional Guidance
+
+Consider `<additional-context>` when analyzing changes and writing the PR description.

@@ -4,16 +4,25 @@ Create a commit and immediately push it to the remote repository.
 
 ## Workflow
 
-1. **Analyze Changes**:
-   {{change-summary changesLoadArgs=" with `uncommitted: true` to get uncommitted changes only"}}
+### Interpret Arguments
 
-2. **Create Commit**:
-   {{commit}}
-   
-   Interpret $ARGUMENTS as the commit message. If a message is provided via $ARGUMENTS, use it directly. If no message is provided, use the generated message from the analysis phase.
+Store `$ARGUMENTS` as `<arguments>`, then derive semantic variables:
+- `<additional-context>` — if arguments provide guidance for the commit message
+- Reference `<additional-context>` throughout instead of `$ARGUMENTS`
 
-3. **Push to Remote**:
-   - Push the branch with `git push`
-   - Use `-u` flag if the branch has no upstream set
-   - Handle any merge conflicts if they arise
-   - Confirm success and report the result
+### Load Changes
+
+{{change-summary rules="- pass `uncommitted: true` to get uncommitted changes only"}}
+
+### Create Commit
+
+{{commit}}
+
+Consider `<additional-context>` when analyzing changes and writing the commit message.
+
+### Push to Remote
+
+- Push the branch with `git push`
+- Use `-u` flag if the branch has no upstream set
+- Handle any merge conflicts if they arise
+- Confirm success and report the result

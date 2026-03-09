@@ -1,5 +1,3 @@
-## Commit Navigation Guide
-
 ### Message Format
 - Start with a high-level overview (1 sentence)
 - One line if possible, max 72 characters

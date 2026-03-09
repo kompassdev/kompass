@@ -1,10 +1,12 @@
-## Change Analysis Guide
+#### Step 1: Load Changes
+- call `changes_load`
+{{param:rules}}
 
-### Analysis Phase
-1. Call `changes_load`{{param:changesLoadArgs}}
-2. Analyze the changed files:
-   - File paths and their purposes
-   - The nature of changes (added, modified, deleted)
-   - Lines added/removed per file
-3. Group related changes into logical themes
-4. Summarize the "what" and "why" (not the "how")
+#### Step 2: Analyze Files
+- Review file paths and their purposes
+- Identify the nature of changes (added, modified, deleted)
+- Note lines added/removed per file
+
+#### Step 3: Group and Summarize
+- Group related changes into logical themes
+- Summarize the "what" and "why" (not the "how")

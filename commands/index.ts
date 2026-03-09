@@ -9,7 +9,7 @@ interface CommandDefinition {
   templatePath: string;
 }
 
-const commandDefinitions: Record<string, CommandDefinition> = {
+export const commandDefinitions: Record<string, CommandDefinition> = {
   "pr/create": {
     description: "Summarize branch work and create a PR",
     agent: "build",

@@ -1,9 +1,6 @@
-# pr/fix
-
-**Agent:** build
-
-**Description:** Fix PR feedback, push updates, and reply
-
+---
+description: Fix PR feedback, push updates, and reply
+agent: build
 ---
 
 ## PR Fix Navigation Guide

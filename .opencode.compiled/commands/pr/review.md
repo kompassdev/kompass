@@ -1,9 +1,6 @@
-# pr/review
-
-**Agent:** reviewer
-
-**Description:** Review the current PR and publish review feedback
-
+---
+description: Review the current PR and publish review feedback
+agent: reviewer
 ---
 
 ## Code Review Navigation Guide

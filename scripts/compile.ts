@@ -6,80 +6,25 @@
  * that represent what the plugin does, without requiring the plugin itself.
  * 
  * Output structure:
- * - compiled/commands/*.md - Fully expanded command prompts
+ * - compiled/commands/*.md - Fully expanded command prompts with YAML frontmatter
  * - compiled/agents/*.md - Agent definitions
  * - compiled/config.json - Complete configuration
  */
 
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile, rm, access } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import YAML from "yaml";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, "..");
 const OUTPUT_DIR = path.resolve(PROJECT_ROOT, ".opencode.compiled");
 
 // Import the actual definitions from the plugin
-import { loadCompassConfig, mergeWithDefaults } from "../lib/config.ts";
+import { loadCompassConfig, mergeWithDefaults, type AgentDefinition } from "../lib/config.ts";
 import { loadProjectText } from "../lib/text.ts";
-
-const commandDefinitions: Record<string, { description: string; agent: string; templatePath: string }> = {
-  "pr/create": {
-    description: "Summarize branch work and create a PR",
-    agent: "build",
-    templatePath: "commands/pr/create.txt",
-  },
-  "pr/review": {
-    description: "Review the current PR and publish review feedback",
-    agent: "reviewer",
-    templatePath: "commands/pr/review.txt",
-  },
-  "pr/fix": {
-    description: "Fix PR feedback, push updates, and reply",
-    agent: "build",
-    templatePath: "commands/pr/fix.txt",
-  },
-  "ticket/plan": {
-    description: "Plan work from a request and create a ticket",
-    agent: "planner",
-    templatePath: "commands/ticket/plan.txt",
-  },
-  "ticket/dev": {
-    description: "Implement a ticket and create a PR",
-    agent: "build",
-    templatePath: "commands/ticket/dev.txt",
-  },
-  review: {
-    description: "Review branch changes without publishing comments",
-    agent: "reviewer",
-    templatePath: "commands/review.txt",
-  },
-  dev: {
-    description: "Implement a request and create a PR",
-    agent: "build",
-    templatePath: "commands/dev.txt",
-  },
-  commit: {
-    description: "Commit current changes with a message",
-    agent: "build",
-    templatePath: "commands/commit.txt",
-  },
-  "commit-and-push": {
-    description: "Commit and push current changes",
-    agent: "build",
-    templatePath: "commands/commit-and-push.txt",
-  },
-  learn: {
-    description: "Extract learnings from session to AGENTS.md files",
-    agent: "build",
-    templatePath: "commands/learn.txt",
-  },
-  rmslop: {
-    description: "Remove AI code slop from current branch",
-    agent: "build",
-    templatePath: "commands/rmslop.txt",
-  },
-};
+import { commandDefinitions } from "../commands/index.ts";
+import { getAgentDefinitions } from "../agents/index.ts";
 
 async function loadComponents(componentPaths: Record<string, string>): Promise<Record<string, string>> {
   const components: Record<string, string> = {};
@@ -140,8 +85,22 @@ async function compileCommands(
   return compiled;
 }
 
+async function cleanOutputDirectory() {
+  try {
+    await access(OUTPUT_DIR);
+    // Remove recursively if exists
+    await rm(OUTPUT_DIR, { recursive: true });
+    console.log("Cleaned existing output directory\n");
+  } catch {
+    // Directory doesn't exist, that's fine
+  }
+}
+
 async function main() {
   console.log("Compiling opencode-compass plugin...\n");
+  
+  // Clean output directory for fresh build
+  await cleanOutputDirectory();
   
   // Load configuration
   const userConfig = await loadCompassConfig(PROJECT_ROOT);
@@ -164,24 +123,45 @@ async function main() {
   // Write compiled commands
   console.log("\nWriting compiled commands...");
   for (const [name, command] of Object.entries(compiledCommands)) {
-    const filename = name.replace(/\//g, "-") + ".md";
-    const filepath = path.join(OUTPUT_DIR, "commands", filename);
-    const content = `# ${name}\n\n**Agent:** ${command.agent}\n\n**Description:** ${command.description}\n\n---\n\n${command.content}`;
+    // Create nested directory structure for namespaced commands (e.g., pr/create -> commands/pr/create.md)
+    const parts = name.split("/");
+    const filename = parts.pop() + ".md";
+    const dirPath = path.join(OUTPUT_DIR, "commands", ...parts);
+    const filepath = path.join(dirPath, filename);
+
+    // Ensure directory exists
+    await mkdir(dirPath, { recursive: true });
+
+    // Generate YAML frontmatter per OpenCode spec, then append content with embedded components
+    const frontmatter = YAML.stringify({
+      description: command.description,
+      agent: command.agent,
+    });
+    const content = `---\n${frontmatter}---\n\n${command.content}`;
     await writeFile(filepath, content);
-    console.log(`  commands/${filename}`);
+    console.log(`  commands/${name}.md`);
   }
   
-  // Copy agent prompts
-  console.log("\nCopying agent definitions...");
+  // Compile agents
+  console.log("\nCompiling agents...");
+  const agentDefinitions = getAgentDefinitions(config);
+  
   for (const agentName of config.agents.enabled) {
-    const agent = config.agents[agentName as keyof typeof config.agents];
-    if (!agent || typeof agent !== "object" || !("promptPath" in agent)) continue;
+    const agent = agentDefinitions[agentName];
+    if (!agent) continue;
     
     try {
       const promptContent = await loadProjectText(agent.promptPath);
       const filename = agentName + ".md";
       const filepath = path.join(OUTPUT_DIR, "agents", filename);
-      const content = `# ${agentName}\n\n**Description:** ${agent.description}\n\n**Permissions:** ${JSON.stringify(agent.permission)}\n\n---\n\n${promptContent}`;
+      
+      // Generate YAML frontmatter with agent metadata
+      const frontmatter = YAML.stringify({
+        description: agent.description,
+        permission: agent.permission,
+      });
+      
+      const content = `---\n${frontmatter}---\n\n${promptContent}`;
       await writeFile(filepath, content);
       console.log(`  agents/${filename}`);
     } catch {

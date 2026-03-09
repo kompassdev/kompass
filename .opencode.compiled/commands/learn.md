@@ -1,9 +1,6 @@
-# learn
-
-**Agent:** build
-
-**Description:** Extract learnings from session to AGENTS.md files
-
+---
+description: Extract learnings from session to AGENTS.md files
+agent: build
 ---
 
 Analyze this session and extract non-obvious learnings to add to AGENTS.md files.

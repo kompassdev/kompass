@@ -1,9 +1,6 @@
-# commit-and-push
-
-**Agent:** build
-
-**Description:** Commit and push current changes
-
+---
+description: Commit and push current changes
+agent: build
 ---
 
 ## Change Summary & Commit Navigation Guide

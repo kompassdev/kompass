@@ -145,3 +145,18 @@ index.ts         # Plugin entry point
 2. Export from `tools/index.ts` via `toolCreators` record
 3. Add to default enabled list in `lib/config.ts` if applicable
 4. Create tests in `test/my-tool.test.ts`
+
+## Plugin Compilation
+
+- Run `bun run compile` to generate `.opencode.compiled/` with standalone files
+- Compiled commands have components embedded (e.g., `{{dev-flow}}` expanded)
+- Compilation is for **review purposes only**—runtime uses source files directly
+- Command definitions are exported from `commands/index.ts` and imported by `scripts/compile.ts` (no duplication)
+- Source templates use `.txt` extension with component placeholders; compiled output uses `.md` with YAML frontmatter
+- Never manually edit files in `.opencode.compiled/`—always regenerate via `bun run compile`
+
+## Command Templates
+
+- Use `{{component-name}}` syntax to embed reusable components
+- Components are defined in `components/*.txt` and registered in `lib/config.ts`
+- Templates in `commands/*.txt` are plain text with embedded component placeholders

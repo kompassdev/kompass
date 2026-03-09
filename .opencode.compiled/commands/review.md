@@ -1,9 +1,6 @@
-# review
-
-**Agent:** reviewer
-
-**Description:** Review branch changes without publishing comments
-
+---
+description: Review branch changes without publishing comments
+agent: reviewer
 ---
 
 ## Determining What to Review

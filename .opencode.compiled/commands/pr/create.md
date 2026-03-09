@@ -1,9 +1,6 @@
-# pr/create
-
-**Agent:** build
-
-**Description:** Summarize branch work and create a PR
-
+---
+description: Summarize branch work and create a PR
+agent: build
 ---
 
 ## PR Author Navigation Guide

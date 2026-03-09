@@ -1,9 +1,6 @@
-# commit
-
-**Agent:** build
-
-**Description:** Commit current changes with a message
-
+---
+description: Commit current changes with a message
+agent: build
 ---
 
 ## Change Summary & Commit Navigation Guide

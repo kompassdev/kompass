@@ -1,9 +1,6 @@
-# rmslop
-
-**Agent:** build
-
-**Description:** Remove AI code slop from current branch
-
+---
+description: Remove AI code slop from current branch
+agent: build
 ---
 
 Check the diff against dev, and remove all AI generated slop introduced in this branch.

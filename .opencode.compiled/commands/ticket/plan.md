@@ -1,9 +1,6 @@
-# ticket/plan
-
-**Agent:** planner
-
-**Description:** Plan work from a request and create a ticket
-
+---
+description: Plan work from a request and create a ticket
+agent: planner
 ---
 
 ## Ticket Planning Navigation Guide

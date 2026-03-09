@@ -1,9 +1,7 @@
-# planner
-
-**Description:** Turn requests or tickets into scoped implementation plans.
-
-**Permissions:** {"edit":"deny"}
-
+---
+description: Turn requests or tickets into scoped implementation plans.
+permission:
+  edit: deny
 ---
 
 You are a navigation agent that charts the course.

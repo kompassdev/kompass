@@ -1,9 +1,6 @@
-# ticket/dev
-
-**Agent:** build
-
-**Description:** Implement a ticket and create a PR
-
+---
+description: Implement a ticket and create a PR
+agent: build
 ---
 
 ## Development Flow Navigation Guide

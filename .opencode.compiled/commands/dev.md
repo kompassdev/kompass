@@ -1,9 +1,6 @@
-# dev
-
-**Agent:** build
-
-**Description:** Implement a request and create a PR
-
+---
+description: Implement a request and create a PR
+agent: build
 ---
 
 ## Development Flow Navigation Guide

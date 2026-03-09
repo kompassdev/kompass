@@ -3,7 +3,9 @@ description: Summarize branch work and create a PR
 agent: build
 ---
 
-1. Call `changes_load` to survey the current branch against the base branch
+1. Call `changes_load` to survey the current branch against the base branch:
+   - If $ARGUMENTS is provided, pass it as the `base` parameter
+   - If $ARGUMENTS is empty, call changes_load with no arguments (uses default base branch detection)
 
 ## PR Author Navigation Guide
 
@@ -25,4 +27,4 @@ When creating a pull request, follow this compass:
 - Do not restate the full diff
 - If there are uncommitted changes, either include them intentionally or call them out clearly
 
-Interpret $ARGUMENTS as optional base-branch or extra context for the journey.
+$ARGUMENTS can be an explicit base branch name or extra context to guide PR creation.

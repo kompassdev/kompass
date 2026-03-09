@@ -1,3 +1,5 @@
+![Kompass](assets/kompass.png)
+
 # Kompass
 
 Kompass helps coding agents navigate repositories with fewer wrong turns.

@@ -1,3 +1,5 @@
+![Kompass for OpenCode](../../assets/kompass-opencode.png)
+
 # @kompassdev/opencode
 
 `@kompassdev/opencode` is an OpenCode plugin that helps your agent navigate repositories with fewer wrong turns.

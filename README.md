@@ -15,14 +15,17 @@ bun run typecheck
 bun run test
 ```
 
-`bun run compile` regenerates `.opencode.compiled/` from the OpenCode package.
+`bun run compile` regenerates `packages/opencode/.opencode/` from the OpenCode package.
 
 ## Config
 
-Project config still lives at the repo or consumer project root:
+Project config lives at the repo or consumer project root:
+
+- `compass.json`
+
+Legacy Compass config path remains supported:
 
 - `.compass/config.json`
-- `compass.json`
 
 Legacy OpenCode-specific config paths remain supported:
 

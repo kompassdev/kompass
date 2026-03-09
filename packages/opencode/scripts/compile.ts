@@ -15,7 +15,7 @@ import YAML from "yaml";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PACKAGE_ROOT = path.resolve(__dirname, "..");
 const WORKSPACE_ROOT = path.resolve(PACKAGE_ROOT, "..", "..");
-const OUTPUT_DIR = path.resolve(WORKSPACE_ROOT, ".opencode.compiled");
+const OUTPUT_DIR = path.resolve(PACKAGE_ROOT, ".opencode");
 
 import {
   loadCompassConfig,
@@ -117,17 +117,17 @@ async function main() {
     adapters: config.adapters,
   };
   await writeFile(
-    path.join(OUTPUT_DIR, "config.json"),
+    path.join(OUTPUT_DIR, "kompass.json"),
     JSON.stringify(configOutput, null, 2)
   );
-  console.log("  config.json");
+  console.log("  kompass.json");
 
   console.log("\n✓ Compilation complete!");
   console.log(`\nOutput directory: ${OUTPUT_DIR}`);
   console.log("\nTo use the compiled OpenCode adapter:");
-  console.log("  1. Copy files from .opencode.compiled/commands/ to your .opencode/commands/");
-  console.log("  2. Copy files from .opencode.compiled/agents/ to your .opencode/agents/");
-  console.log("  3. Reference .opencode.compiled/config.json for the configuration");
+  console.log("  1. Copy files from packages/opencode/.opencode/commands/ to your .opencode/commands/");
+  console.log("  2. Copy files from packages/opencode/.opencode/agents/ to your .opencode/agents/");
+  console.log("  3. Reference packages/opencode/.opencode/kompass.json for the configuration");
 }
 
 main().catch((error) => {

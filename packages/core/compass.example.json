@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/schemas/compass.json",
-  "_comment": "Configuration for Compass. Place this file at .compass/config.json or compass.json in your project root. Legacy OpenCode-specific paths are still supported.",
+  "_comment": "Configuration for Compass. Place this file at compass.json in your project root. Legacy paths such as .compass/config.json, .opencode/compass.json, and opencode-compass.json are still supported.",
 
   "commands": {
     "enabled": ["commit", "commit-and-push", "dev", "learn", "pr/create", "pr/fix", "pr/review", "review", "rmslop", "ticket/dev", "ticket/plan"],

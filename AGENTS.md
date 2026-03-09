@@ -9,7 +9,7 @@ This is a Compass workspace with multiple packages.
 - `packages/core` contains the generic workflow toolkit
 - `packages/opencode` contains the OpenCode adapter
 
-Compiled OpenCode artifacts are still written to `.opencode.compiled/` at the workspace root for review.
+Compiled OpenCode artifacts are written to `packages/opencode/.opencode/` for review.
 
 ## When Making Changes
 
@@ -20,15 +20,15 @@ bun run typecheck
 bun run test
 ```
 
-Never edit `.opencode.compiled/` directly.
+Never edit `packages/opencode/.opencode/` directly.
 
 ## Project Structure
 
 ```text
 packages/core/      # Shared commands, agents, components, tools, tests
 packages/opencode/  # OpenCode adapter package
-.compass/           # Local workspace config used for development
-.opencode.compiled/ # Generated OpenCode output for review
+compass.json        # Local workspace config used for development
+packages/opencode/.opencode/ # Generated OpenCode output for review
 ```
 
 ## Package Boundaries

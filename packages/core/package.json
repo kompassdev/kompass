@@ -16,7 +16,7 @@
     "lib",
     "tools",
     "scripts",
-    "config.example.json",
+    "compass.example.json",
     "README.md",
     "LICENSE"
   ],

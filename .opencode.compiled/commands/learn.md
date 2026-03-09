@@ -3,42 +3,45 @@ description: Extract learnings from session to AGENTS.md files
 agent: build
 ---
 
-Analyze this session and extract non-obvious learnings to document for future development.
+## Goal
 
-Capture insights that will save time for developers (including yourself) on future work. Place learnings as close to the relevant code as possible. AGENTS.md files can exist at any directory level—when nested, the most specific one applies:
+Extract non-obvious learnings from this session and document them appropriately.
 
-- Project-wide learnings → root AGENTS.md or CONTRIBUTING.md
-- Package/module-specific → packages/foo/AGENTS.md (preferred if specific to that package)
-- Feature-specific → src/auth/AGENTS.md (preferred if specific to that folder), docs/, or inline comments
+## Workflow
 
-What counts as a learning (non-obvious discoveries only):
+1. **Review Session**: Analyze for discoveries, errors that took multiple attempts, unexpected connections
 
-- Hidden relationships between files or modules
-- Execution paths that differ from how code appears
-- Non-obvious configuration, env vars, or flags
-- Debugging breakthroughs when error messages were misleading
-- API/tool quirks and workarounds
-- Build/test commands not in README
-- Architectural decisions and constraints
-- Files that must change together
-- Environment-specific behaviors or requirements
+2. **Identify Learnings** (non-obvious only):
+   - Hidden relationships between files or modules
+   - Execution paths that differ from how code appears
+   - Non-obvious configuration, env vars, or flags
+   - Debugging breakthroughs when error messages were misleading
+   - API/tool quirks and workarounds
+   - Build/test commands not in README
+   - Architectural decisions and constraints
+   - Files that must change together
+   - Environment-specific behaviors
 
-What NOT to include:
+3. **Determine Scope**: For each learning, identify which directory it applies to:
+   - Project-wide → root AGENTS.md or CONTRIBUTING.md
+   - Package/module-specific → packages/foo/AGENTS.md
+   - Feature-specific → src/auth/AGENTS.md or inline comments
 
-- Obvious facts from documentation
-- Standard language/framework behavior
-- Things already documented
-- Verbose explanations
-- Session-specific details (user names, temporary paths, etc.)
+4. **Read Existing Docs**: Check AGENTS.md files at relevant levels to avoid duplication
 
-Process:
+5. **Create/Update Documentation**:
+   - Add learnings at the most specific level
+   - Keep entries to 1-3 lines per insight
+   - Be concise and actionable
 
-1. Review session for discoveries, errors that took multiple attempts, unexpected connections
-2. Determine scope - what directory does each learning apply to?
-3. Read existing documentation files at relevant levels
-4. Create or update documentation at the appropriate level
-5. Keep entries to 1-3 lines per insight
+6. **Summarize**: Report which files were created/updated and how many learnings per file
 
-After updating, summarize which files were created/updated and how many learnings per file.
+## Guidelines
+
+- Document non-obvious discoveries only
+- Skip obvious facts, standard behavior, and already-documented items
+- Avoid verbose explanations and session-specific details
+- Place learnings as close to relevant code as possible
+- AGENTS.md files can exist at any level—most specific one applies
 
 $ARGUMENTS

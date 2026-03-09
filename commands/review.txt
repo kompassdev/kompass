@@ -1,22 +1,33 @@
-## Determining What to Review
+## Goal
 
-Interpret `$ARGUMENTS` to determine which type of review to perform:
+Review code changes and provide actionable feedback with a grade and risk assessment.
 
-1. **No arguments (default)**: Call `changes_load` without base/head arguments. It will auto-detect:
-   - If there are uncommitted changes → Review uncommitted local changes only
-   - If worktree is clean → Review current branch delta vs default base branch (typically "main")
+## Workflow
 
-2. **"uncommitted"** → Call `changes_load` without base/head to force review of uncommitted local changes only
+1. **Determine Review Scope** based on $ARGUMENTS:
+   - **No arguments**: Call `changes_load` without base/head. It auto-detects:
+     - Uncommitted changes present → Review uncommitted changes only
+     - Clean worktree → Review current branch vs default base branch
+   - **"uncommitted"**: Call `changes_load` without base/head to force uncommitted changes review
+   - **Branch name** (e.g., "main", "origin/main"): Call `changes_load` with explicit `base` argument
 
-3. **Branch name** (e.g., "main", "origin/main") → Call `changes_load` with explicit `base` argument to compare current branch to that base
+2. **Review Changes**:
+   - Read the changed files and understand the modifications
+   - Identify patterns, conventions, and potential issues
+   - Look for bugs, security issues, performance problems, and style violations
 
-Do not publish PR comments.
+3. **Generate Review** with:
+   - Overall grade formatted as `★★☆☆☆` (1-5 stars)
+   - Short verdict on merge risk
+   - Concise list of high-confidence findings ordered by impact
+   - Explicit mention when no material issues were found
+   - Concise wording - only findings you are sure about
 
-Return a chat review with:
-- an overall grade formatted like `★★☆☆☆`
-- a short verdict on merge risk
-- a concise list of high-confidence findings ordered by impact
-- explicit mention when no material issues were found
-- concise wording and only findings you are sure about
+4. **Return Result**: Output the review as chat text (do not publish PR comments)
 
-{{code-review}}
+## Review Guidelines
+
+- Focus on correctness, security, and maintainability
+- Be specific about issues and provide clear rationale
+- Suggest concrete improvements when possible
+- Balance thoroughness with conciseness

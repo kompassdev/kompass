@@ -3,7 +3,14 @@ description: Commit and push current changes
 agent: build
 ---
 
-## Change Analysis Guide
+## Goal
+
+Create a commit and immediately push it to the remote repository.
+
+## Workflow
+
+1. **Analyze Changes**:
+   ## Change Analysis Guide
 
 ### Analysis Phase
 1. Call `changes_load` with `uncommitted: true` to get uncommitted changes only
@@ -14,7 +21,8 @@ agent: build
 3. Group related changes into logical themes
 4. Summarize the "what" and "why" (not the "how")
 
-## Commit Navigation Guide
+2. **Create Commit**:
+   ## Commit Navigation Guide
 
 ### Message Format
 - Start with a high-level overview (1 sentence)
@@ -27,8 +35,11 @@ agent: build
 2. Stage changes with `git add` (use `-A` for all, or specific files)
 3. Create the commit with the generated message
 4. Use `git diff --cached` to review staged changes before committing if unsure
+   
+   Interpret $ARGUMENTS as the commit message. If a message is provided via $ARGUMENTS, use it directly. If no message is provided, use the generated message from the analysis phase.
 
-Interpret $ARGUMENTS as the commit message.
-If no message is provided, follow the guides above to analyze changes and generate an appropriate commit message.
-Then stage all changes with `git add -A`, create the commit, and push to the remote repository.
-Handle any merge conflicts if they arise, and use `-u` flag if the branch has no upstream set.
+3. **Push to Remote**:
+   - Push the branch with `git push`
+   - Use `-u` flag if the branch has no upstream set
+   - Handle any merge conflicts if they arise
+   - Confirm success and report the result

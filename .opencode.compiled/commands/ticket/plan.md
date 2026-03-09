@@ -3,20 +3,37 @@ description: Plan work from a request and create a ticket
 agent: planner
 ---
 
-## Ticket Planning Navigation Guide
+## Goal
 
-When planning work from a request, follow this compass:
+Create a development plan from a request or ticket, mapping out scope and implementation approach.
 
-### Workflow
-1. Use `ticket_load` when the destination looks like a ticket reference, URL, or file path
-2. Orient yourself by normalizing the problem statement
-3. Map out scope, constraints, unknowns, acceptance criteria, and implementation waypoints
-4. Create a ticket with `ticket_create` only when the workflow explicitly sets a new destination
+## Workflow
 
-### Planning Rules
-- Keep the plan navigation-ready—clear headings, no getting lost
-- Call out assumptions that might lead you off course
-- Ask for directions only when truly blocked by missing product intent
+1. **Load Request**: 
+   - Interpret $ARGUMENTS as a destination (ticket reference, URL, file path, or raw request)
+   - Use `ticket_load` when the input looks like a ticket reference or URL
 
-Interpret $ARGUMENTS as a destination (ticket reference, file path, or raw request).
-Follow the Ticket Planning guide above to orient yourself, map the plan, and create a ticket if setting a new destination.
+2. **Orient**: Normalize the problem statement and understand what needs to be built
+
+3. **Map the Plan**:
+   - Define scope and boundaries (what's in/out)
+   - Identify constraints and limitations
+   - Note unknowns that need investigation
+   - Define acceptance criteria
+   - Outline implementation waypoints (key milestones)
+
+4. **Create Ticket** (only if explicitly setting a new destination):
+   - Use `ticket_create` to create a GitHub issue
+   - Include clear title, description, and acceptance criteria
+
+5. **Present Plan**:
+   - Use clear headings and structure
+   - Call out assumptions that might lead you off course
+   - Ask for clarification only when truly blocked by missing product intent
+
+## Planning Rules
+
+- Keep the plan navigation-ready—clear headings, no ambiguity
+- Identify risks and blockers early
+- Break down complex work into manageable waypoints
+- Only create tickets when explicitly requested

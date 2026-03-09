@@ -3,14 +3,37 @@ description: Remove AI code slop from current branch
 agent: build
 ---
 
-Check the diff against dev, and remove all AI generated slop introduced in this branch.
+## Goal
 
-This includes:
+Remove AI-generated code slop and inconsistencies from the branch changes.
 
-- Extra comments that a human wouldn't add or is inconsistent with the rest of the file
-- Extra defensive checks or try/catch blocks that are abnormal for that area of the codebase (especially if called by trusted / validated codepaths)
-- Casts to any to get around type issues
-- Any other style that is inconsistent with the file
-- Unnecessary emoji usage
+## Workflow
 
-Report at the end with only a 1-3 sentence summary of what you changed
+1. **Load Changes**: Call `changes_load` to get the diff against the base branch
+
+2. **Identify Slop**: Review changes for:
+   - Extra comments that a human wouldn't add or that are inconsistent with the rest of the file
+   - Defensive checks or try/catch blocks that are abnormal for that area (especially in trusted/validated codepaths)
+   - Casts to `any` to work around type issues
+   - Style inconsistencies with the surrounding code
+   - Unnecessary emoji usage
+   - Verbose explanations where concise code would suffice
+   - Boilerplate that doesn't match project patterns
+
+3. **Clean Up**:
+   - Remove or simplify unnecessary comments
+   - Replace defensive checks with idiomatic patterns used elsewhere
+   - Fix type issues properly instead of using `any`
+   - Align style with the existing codebase
+   - Remove emojis unless explicitly requested
+
+4. **Validate**:
+   - Run tests: `bun test` (or equivalent)
+   - Run type checking: `bun run typecheck` (or equivalent)
+   - Confirm the code still works correctly
+
+5. **Commit Changes**:
+   - Stage cleaned files with `git add`
+   - Create a commit with message like "chore: remove AI-generated slop"
+
+6. **Report**: Output a 1-3 sentence summary of what was changed

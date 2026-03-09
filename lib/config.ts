@@ -93,13 +93,13 @@ const defaultAgentPlanner: AgentDefinition = {
 };
 
 const defaultComponentPaths: Record<string, string> = {
-  "pr-author": "components/pr-author.txt",
-  "dev-flow": "components/dev-flow.txt",
-  "ticket-plan": "components/ticket-plan.txt",
-  "pr-fix": "components/pr-fix.txt",
-  "code-review": "components/code-review.txt",
   "change-summary": "components/change-summary.txt",
+  "code-review": "components/code-review.txt",
   "commit": "components/commit.txt",
+  "dev-flow": "components/dev-flow.txt",
+  "pr-author": "components/pr-author.txt",
+  "pr-fix": "components/pr-fix.txt",
+  "ticket-plan": "components/ticket-plan.txt",
 };
 
 export function mergeWithDefaults(
@@ -108,22 +108,22 @@ export function mergeWithDefaults(
   return {
     commands: {
       enabled: config?.commands?.enabled ?? [
-        "pr/create",
-        "pr/review",
-        "pr/fix",
-        "ticket/plan",
-        "ticket/dev",
-        "review",
-        "dev",
         "commit",
         "commit-and-push",
+        "dev",
         "learn",
+        "pr/create",
+        "pr/fix",
+        "pr/review",
+        "review",
         "rmslop",
+        "ticket/dev",
+        "ticket/plan",
       ],
       templates: config?.commands?.templates ?? {},
     },
     agents: {
-      enabled: config?.agents?.enabled ?? ["reviewer", "planner"],
+      enabled: config?.agents?.enabled ?? ["planner", "reviewer"],
       reviewer: { ...defaultAgentReviewer, ...config?.agents?.reviewer },
       planner: { ...defaultAgentPlanner, ...config?.agents?.planner },
     },
@@ -131,19 +131,19 @@ export function mergeWithDefaults(
       enabled: config?.tools?.enabled ?? [
         "changes_load",
         "pr_load",
-        "ticket_load",
         "ticket_create",
+        "ticket_load",
       ],
     },
     components: {
       enabled: config?.components?.enabled ?? [
-        "pr-author",
-        "dev-flow",
-        "ticket-plan",
-        "pr-fix",
-        "code-review",
         "change-summary",
+        "code-review",
         "commit",
+        "dev-flow",
+        "pr-author",
+        "pr-fix",
+        "ticket-plan",
       ],
       paths: { ...defaultComponentPaths, ...config?.components?.paths },
     },

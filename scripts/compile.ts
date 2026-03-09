@@ -114,7 +114,8 @@ async function main() {
   // Write compiled commands
   console.log("\nWriting compiled commands...");
   for (const [name, command] of Object.entries(compiledCommands)) {
-    // Create nested directory structure for namespaced commands (e.g., pr/create -> commands/pr/create.md)
+    // Namespace path mapping: pr/create -> commands/pr/create.md
+    // Commands with / separators compile to nested directories
     const parts = name.split("/");
     const filename = parts.pop() + ".md";
     const dirPath = path.join(OUTPUT_DIR, "commands", ...parts);

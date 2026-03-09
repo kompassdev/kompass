@@ -8,8 +8,8 @@ import type { Shell } from "./shared.ts";
 const toolCreators: Record<string, ($: Shell) => unknown> = {
   changes_load: createChangesLoadTool,
   pr_load: createPrLoadTool,
-  ticket_load: createTicketLoadTool,
   ticket_create: createTicketCreateTool,
+  ticket_load: createTicketLoadTool,
 };
 
 export async function createTools($: Shell, projectRoot: string) {

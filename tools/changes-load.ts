@@ -117,6 +117,10 @@ async function loadCurrentBranch($: Shell, cwd: string) {
   return branch || undefined;
 }
 
+/**
+ * Creates a temporary git index to capture staged+unstaged changes without
+ * affecting the user's working index. Uses GIT_INDEX_FILE env var pattern.
+ */
 async function withTemporaryIndex<T>(
   $: Shell,
   cwd: string,
@@ -296,6 +300,11 @@ function serializeFile(
   };
 }
 
+/**
+ * Normalize git diff output and detect binary changes.
+ * Uses string heuristic on diff output rather than git's native detection
+ * since we already have the diff text at this point.
+ */
 function normalizeNativeDiff(file: ChangedFile, rawDiff: string) {
   const binaryLine = rawDiff
     .split("\n")

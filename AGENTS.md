@@ -160,3 +160,20 @@ index.ts         # Plugin entry point
 - Use `{{component-name}}` syntax to embed reusable components
 - Components are defined in `components/*.txt` and registered in `lib/config.ts`
 - Templates in `commands/*.txt` are plain text with embedded component placeholders
+
+## Component System
+
+- Parameterized components: Use `{{component-name param="value"}}` to pass params, referenced inside component as `{{param:key}}`
+- Custom templates bypass component embedding: If `commands.templates[name]` is set in config, raw template is used without component expansion
+- Compile-only output: `.opencode.compiled/` is for review purposes only—runtime always uses source files directly
+
+## Git Tooling
+
+- Temporary index pattern: `changes_load` tool uses `GIT_INDEX_FILE` env var with a temp index to capture staged+unstaged changes without touching user's working index
+- Binary detection heuristic: Checks for "Binary files" or "GIT binary patch" strings in diff output rather than using git's native detection
+- Namespace path mapping: Commands with `/` separators (e.g., `pr/create`) compile to nested directories (`commands/pr/create.md`)
+
+## CI/Environment Behavior
+
+- Subtask mode toggle: Commands have `subtask: true` outside CI, `subtask: false` when `process.env.CI` is set
+- Test environment isolation: E2E tests create real git repos in temp directories and clean up via `afterEach` hook

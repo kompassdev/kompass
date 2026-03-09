@@ -182,10 +182,11 @@ describe("changes_load e2e", () => {
     assert.match(result.commits[0].subject, /second commit/);
     assert.match(result.commits[1].subject, /first commit/);
   });
+
 });
 
 async function createRepo() {
-  const repo = await mkdtemp(path.join(os.tmpdir(), "compass-test-"));
+  const repo = await mkdtemp(path.join(os.tmpdir(), "kompass-test-"));
   tempDirs.push(repo);
   await git(repo, ["init", "-b", "main"]);
   await git(repo, ["config", "user.name", "OpenCode Test"]);

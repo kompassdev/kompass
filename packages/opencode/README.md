@@ -1,6 +1,6 @@
 # @kompassdev/opencode
 
-OpenCode adapter for Compass workflows.
+OpenCode adapter for Kompass workflows.
 
 This package wires the shared toolkit from `@kompassdev/core` into OpenCode plugin APIs.
 

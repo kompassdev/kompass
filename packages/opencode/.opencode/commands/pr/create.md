@@ -20,8 +20,9 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
 
 #### Step 1: Load Changes
 - call `changes_load`
-- If `<base>` is defined: pass it as the `base` parameter
-- Otherwise: call with no parameters
+- If `<base>` is defined: call `changes_load` with the `base` parameter set to `<base>`
+- Otherwise: call `changes_load` with no parameters
+- Never pass `uncommitted: true` in this command
 - Use `changes_load` as the source of truth; no additional git analysis commands are needed
 
 #### Step 2: Analyze Files
@@ -40,6 +41,7 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
   - Report: "There are uncommitted changes. Please commit or stash them before creating a PR."
   - List the changed files from the result
   - Do NOT proceed further
+- Treat this as a blocker only when `changes_load` returns `comparison: "uncommitted"` from the default call above; never force that mode during PR creation
 - If `branch` equals `<base>`:
   - STOP immediately
   - Report: "You are currently on the base branch (<base>). Please checkout a feature branch before creating a PR."
@@ -55,7 +57,12 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
 
 ### Push Branch
 
-If needed, push the current branch to origin
+Run `git push` and use its output as the source of truth.
+
+- Do not run extra git commands just to decide whether to push
+- If the branch was pushed during this run, report `Push: yes`
+- If `git push` reports no push was needed, report `Push: no`
+- If `Push: yes`, also report `Pushed: <current-branch> → origin/<current-branch>`
 
 ### Create PR
 
@@ -67,6 +74,10 @@ Use `gh pr create` to create the pull request:
 - Do NOT restate the full diff
 - Keep it compact and directional
 - Store the URL from the command output as `<pr-url>`
+- Attempt `gh pr create` first; do not proactively check whether a PR already exists
+- Use the command output as the source of truth for whether the PR was created or already exists
+- If it reports that a PR already exists for the branch, do not try to create another one; treat the result as an existing PR and use the returned URL as `<pr-url>`
+- Track whether the branch was pushed during this run and report that status in the final response
 
 ## PR Body Guidelines
 
@@ -80,10 +91,33 @@ Consider `<additional-context>` when analyzing changes and writing the PR descri
 
 ## Output
 
-When the PR is created, display:
+When a new PR is created, display:
 ```
 Created PR: <title>
 
 URL: <pr-url>
 Branch: <current-branch> → <base-branch>
+```
+
+If a PR already exists for the branch, display:
+```
+PR already exists
+
+URL: <pr-url>
+Branch: <current-branch> → <base-branch>
+```
+
+After the branch line, always include one additional line reporting push status:
+```
+Push: yes
+```
+
+If `Push: yes`, include one more line:
+```
+Pushed: <current-branch> → origin/<current-branch>
+```
+
+If the branch did not need pushing, use:
+```
+Push: no
 ```

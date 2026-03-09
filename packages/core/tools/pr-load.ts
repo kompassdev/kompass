@@ -17,8 +17,21 @@ const prJsonKeys = [
   "baseRefName",
   "headRefName",
   "headRefOid",
+  "commits",
   "author",
 ].join(",");
+
+function countPullRequestCommits(commits: unknown) {
+  if (Array.isArray(commits)) {
+    return commits.length;
+  }
+
+  if (commits && typeof commits === "object" && Array.isArray((commits as any).nodes)) {
+    return (commits as any).nodes.length;
+  }
+
+  return undefined;
+}
 
 async function loadPaginatedArray($: Shell, cwd: string, endpoint: string) {
   const proc = await $`gh api --paginate --slurp ${endpoint}`.cwd(cwd).quiet().nothrow();
@@ -69,6 +82,20 @@ async function loadReviewThreads($: Shell, cwd: string, owner: string, repo: str
   return threads;
 }
 
+async function loadViewerLogin($: Shell, cwd: string) {
+  const actor = process.env.GITHUB_ACTOR?.trim();
+  if (actor) {
+    return actor;
+  }
+
+  const viewerProc = await $`gh api user`.cwd(cwd).quiet().nothrow();
+  if (viewerProc.exitCode !== 0) {
+    throw new Error(viewerProc.stderr.toString() || "Failed to load GitHub viewer");
+  }
+
+  return JSON.parse(viewerProc.text()).login;
+}
+
 const REVIEW_THREADS_QUERY = `query($owner: String!, $repo: String!, $number: Int!, $cursor: String) {
   repository(owner: $owner, name: $repo) {
     pullRequest(number: $number) {
@@ -106,6 +133,8 @@ const REVIEW_THREADS_QUERY = `query($owner: String!, $repo: String!, $number: In
 }`;
 
 function simplifyPullRequest(info: any) {
+  const commitCount = countPullRequestCommits(info.commits);
+
   return {
     number: info.number,
     title: info.title,
@@ -117,6 +146,7 @@ function simplifyPullRequest(info: any) {
     baseRefName: info.baseRefName,
     headRefName: info.headRefName,
     headRefOid: info.headRefOid,
+    ...(typeof commitCount === "number" ? { commitCount } : {}),
     author: info.author?.login ?? info.author?.name ?? info.author,
   };
 }
@@ -195,11 +225,7 @@ export function createPrLoadTool($: Shell) {
       const info = JSON.parse(proc.text());
       const repo = await loadRepoName($, ctx.worktree);
       const [owner, repoName] = repo.split("/");
-      const viewerProc = await $`gh api user`.cwd(ctx.worktree).quiet().nothrow();
-
-      if (viewerProc.exitCode !== 0) {
-        throw new Error(viewerProc.stderr.toString() || "Failed to load GitHub viewer");
-      }
+      const viewerLogin = await loadViewerLogin($, ctx.worktree);
 
       const reviews = await loadPaginatedArray(
         $,
@@ -214,7 +240,7 @@ export function createPrLoadTool($: Shell) {
       const threads = await loadReviewThreads($, ctx.worktree, owner, repoName, info.number);
       return stringifyJson({
         repo,
-        viewerLogin: JSON.parse(viewerProc.text()).login,
+        viewerLogin,
         pr: simplifyPullRequest(info),
         reviews: simplifyReviews(reviews),
         issueComments: simplifyIssueComments(issueComments),

@@ -1,7 +1,7 @@
 {
   "name": "@kompassdev/opencode",
   "version": "0.0.3",
-  "description": "OpenCode adapter for Compass workflows",
+  "description": "OpenCode adapter for Kompass workflows",
   "type": "module",
   "main": "./index.ts",
   "exports": {

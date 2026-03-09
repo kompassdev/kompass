@@ -21,6 +21,7 @@ describe("pr_load", () => {
           baseRefName: "main",
           headRefName: "feature",
           headRefOid: "abc123",
+          commits: [{ oid: "abc111" }, { oid: "abc123" }],
           author: { login: "octo" },
         }),
       },
@@ -122,6 +123,7 @@ describe("pr_load", () => {
 
     const result = JSON.parse(output);
     assert.equal(result.viewerLogin, "review-bot");
+    assert.equal(result.pr.commitCount, 2);
     assert.deepEqual(result.reviews, [
       {
         id: 1,
@@ -160,6 +162,73 @@ describe("pr_load", () => {
         ],
       },
     ]);
+  });
+
+  test("uses GITHUB_ACTOR when gh api user is unavailable", async () => {
+    const previousActor = process.env.GITHUB_ACTOR;
+    process.env.GITHUB_ACTOR = "github-actions[bot]";
+
+    try {
+      const shell = createMockShell([
+        {
+          contains: "gh pr view --json",
+          stdout: JSON.stringify({
+            number: 7,
+            title: "Example PR",
+            body: "Body",
+            url: "https://github.com/acme/repo/pull/7",
+            state: "OPEN",
+            isDraft: false,
+            reviewDecision: "",
+            baseRefName: "main",
+            headRefName: "feature",
+            headRefOid: "abc123",
+            commits: [{ oid: "abc123" }],
+            author: { login: "octo" },
+          }),
+        },
+        {
+          contains: "gh repo view --json nameWithOwner",
+          stdout: JSON.stringify({ nameWithOwner: "acme/repo" }),
+        },
+        {
+          contains: "repos/acme/repo/pulls/7/reviews?per_page=100",
+          stdout: JSON.stringify([[]]),
+        },
+        {
+          contains: "repos/acme/repo/issues/7/comments?per_page=100",
+          stdout: JSON.stringify([[]]),
+        },
+        {
+          contains: "gh api graphql",
+          stdout: JSON.stringify({
+            data: {
+              repository: {
+                pullRequest: {
+                  reviewThreads: {
+                    pageInfo: { hasNextPage: false, endCursor: null },
+                    nodes: [],
+                  },
+                },
+              },
+            },
+          }),
+        },
+      ]);
+
+      const tool = createPrLoadTool(shell);
+      const output = await tool.execute({}, createToolContextForDirectory("/tmp/repo"));
+      const result = JSON.parse(output);
+
+      assert.equal(result.viewerLogin, "github-actions[bot]");
+      assert.equal(result.pr.commitCount, 1);
+    } finally {
+      if (previousActor === undefined) {
+        delete process.env.GITHUB_ACTOR;
+      } else {
+        process.env.GITHUB_ACTOR = previousActor;
+      }
+    }
   });
 });
 

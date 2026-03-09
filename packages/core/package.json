@@ -1,7 +1,7 @@
 {
   "name": "@kompassdev/core",
   "version": "0.0.3",
-  "description": "Shared Compass workflows, prompts, components, and tool definitions",
+  "description": "Shared Kompass workflows, prompts, components, and tool definitions",
   "type": "module",
   "main": "./index.ts",
   "exports": {
@@ -16,7 +16,6 @@
     "lib",
     "tools",
     "scripts",
-    "compass.example.json",
     "README.md",
     "LICENSE"
   ],

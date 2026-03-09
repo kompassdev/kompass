@@ -1,10 +1,10 @@
-# AGENTS.md - opencode-compass
+# AGENTS.md - kompass
 
 Guidelines for AI agents working in this repository.
 
 ## What This Is
 
-This is a Compass workspace with multiple packages.
+This is a Kompass workspace with multiple packages.
 
 - `packages/core` contains the generic workflow toolkit
 - `packages/opencode` contains the OpenCode adapter
@@ -14,11 +14,16 @@ Compiled OpenCode artifacts are written to `packages/opencode/.opencode/` for re
 ## When Making Changes
 
 ```bash
-# Always run after changes
+# Run after making code or generated-file changes in this session
 bun run compile
 bun run typecheck
 bun run test
 ```
+
+- Only run these commands after you edit files in this session.
+- If you are only analyzing an existing branch, reviewing changes, or creating a PR without editing files, do not run them automatically.
+- Do not regenerate `packages/opencode/.opencode/` unless you changed the source that produces it or the user explicitly asked.
+- If no validation was run in the current session, say that clearly instead of implying the branch was tested.
 
 Never edit `packages/opencode/.opencode/` directly.
 
@@ -27,7 +32,7 @@ Never edit `packages/opencode/.opencode/` directly.
 ```text
 packages/core/      # Shared commands, agents, components, tools, tests
 packages/opencode/  # OpenCode adapter package
-compass.json        # Local workspace config used for development
+kompass.json        # Local workspace config used for development
 packages/opencode/.opencode/ # Generated OpenCode output for review
 ```
 
@@ -59,6 +64,8 @@ packages/opencode/.opencode/ # Generated OpenCode output for review
 - When a reusable pattern emerges from existing inline text, extract it into a component rather than duplicating and drifting over time
 
 ## Testing
+
+Use these commands when validation is required for changes you made in this session:
 
 ```bash
 bun run compile

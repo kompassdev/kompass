@@ -144,7 +144,7 @@ async function withTemporaryIndex<T>(
   }
 
   const gitDir = path.resolve(cwd, gitDirProc.text().trim());
-  const tempDir = await mkdtemp(path.join(gitDir, "compass-index-"));
+  const tempDir = await mkdtemp(path.join(gitDir, "kompass-index-"));
   const indexPath = path.join(tempDir, "index");
 
   try {
@@ -362,6 +362,25 @@ async function resolveHeadRef($: Shell, cwd: string, input: string, depthHint?: 
   const direct = await $`git rev-parse --verify ${trimmed}`.cwd(cwd).quiet().nothrow();
   if (direct.exitCode === 0) {
     return trimmed;
+  }
+
+  if (/^[0-9a-f]{7,40}$/i.test(trimmed)) {
+    const fetchProc = depthHint
+      ? await $`git fetch --no-tags --depth=${Math.max(depthHint, 20)} origin ${trimmed}`
+          .cwd(cwd)
+          .quiet()
+          .nothrow()
+      : await $`git fetch --no-tags origin ${trimmed}`
+          .cwd(cwd)
+          .quiet()
+          .nothrow();
+
+    if (fetchProc.exitCode === 0) {
+      const fetched = await $`git rev-parse --verify ${trimmed}`.cwd(cwd).quiet().nothrow();
+      if (fetched.exitCode === 0) {
+        return trimmed;
+      }
+    }
   }
 
   return ensureGitRef($, cwd, trimmed, { depthHint });

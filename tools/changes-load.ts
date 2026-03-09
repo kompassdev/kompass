@@ -27,14 +27,20 @@ export function createChangesLoadTool($: Shell) {
         .positive()
         .optional()
         .describe("Optional shallow-fetch hint, such as PR commit count"),
+      uncommitted: tool.schema
+        .boolean()
+        .optional()
+        .describe("Only load uncommitted changes (staged and unstaged), never fall back to branch comparison"),
     },
     async execute(
-      args: { base?: string; head?: string; depthHint?: number },
+      args: { base?: string; head?: string; depthHint?: number; uncommitted?: boolean },
       ctx: PluginContext,
     ) {
       const branch = await loadCurrentBranch($, ctx.worktree);
       const implicitWorkspaceMode = !args.base?.trim() && !args.head?.trim();
-      if (implicitWorkspaceMode && (await hasWorktreeChanges($, ctx.worktree))) {
+      const forceWorkspaceMode = args.uncommitted === true;
+
+      if (forceWorkspaceMode || (implicitWorkspaceMode && (await hasWorktreeChanges($, ctx.worktree)))) {
         const filesWithDiff = await withTemporaryIndex($, ctx.worktree, async (indexPath) => {
           const files = await loadTemporaryIndexFiles($, ctx.worktree, indexPath);
           return await loadTemporaryIndexDiffs($, ctx.worktree, indexPath, files);

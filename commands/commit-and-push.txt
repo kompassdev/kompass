@@ -1,4 +1,4 @@
-{{change-summary}}
+{{change-summary changesLoadArgs=" with `uncommitted: true` to get uncommitted changes only"}}
 
 Interpret $ARGUMENTS as the commit message.
 If no message is provided, follow the Change Summary & Commit Navigation Guide above to analyze changes and generate an appropriate commit message.

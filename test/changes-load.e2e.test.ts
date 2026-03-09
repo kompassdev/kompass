@@ -130,6 +130,36 @@ describe("changes_load e2e", () => {
       diffOmittedReason: "binary change; inspect file contents or metadata directly",
     });
   });
+
+  test("uncommitted: true forces workspace mode on clean worktree", async () => {
+    const repo = await createRepo();
+    await commitFile(repo, "notes.txt", "hello\n", "init");
+    await git(repo, ["checkout", "-b", "feature"]);
+    await commitFile(repo, "feature.txt", "new\n", "feature commit");
+
+    // With uncommitted: true on clean worktree, should return empty files
+    // and NOT fall back to branch comparison
+    const result = await runChangesLoad(repo, { uncommitted: true });
+
+    assert.equal(result.comparison, "uncommitted");
+    assert.equal(result.branch, "feature");
+    assert.deepEqual(result.files, []);
+    assert.equal(result.commits, undefined);
+  });
+
+  test("uncommitted: true returns changes on dirty worktree", async () => {
+    const repo = await createRepo();
+    await commitFile(repo, "notes.txt", "hello\n", "init");
+    await writeFile(path.join(repo, "notes.txt"), "hello\nworld\n", "utf8");
+
+    const result = await runChangesLoad(repo, { uncommitted: true });
+
+    assert.equal(result.comparison, "uncommitted");
+    assert.equal(result.branch, "main");
+    assert.equal(result.files.length, 1);
+    assert.equal(result.files[0].path, "notes.txt");
+    assert.equal(result.files[0].status, "modified");
+  });
 });
 
 async function createRepo() {
@@ -155,7 +185,7 @@ async function git(cwd: string, args: string[]) {
 
 async function runChangesLoad(
   repo: string,
-  args: { base?: string; head?: string; depthHint?: number },
+  args: { base?: string; head?: string; depthHint?: number; uncommitted?: boolean },
 ) {
   const tool = createChangesLoadTool(createShellForDirectory(repo));
   const output = await tool.execute(args, createToolContextForDirectory(repo));

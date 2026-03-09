@@ -1,5 +1,5 @@
 {{pr-author}}
-{{change-summary}}
+{{change-summary changesLoadArgs=" against the base branch to get all branch changes"}}
 
 Interpret $ARGUMENTS as optional base-branch or extra context for the journey.
 Follow the PR Author Navigation Guide and Change Summary Guide above to create the pull request.

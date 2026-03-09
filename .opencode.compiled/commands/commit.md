@@ -8,7 +8,7 @@ agent: build
 When creating commits, follow this compass:
 
 ### Analysis Phase
-1. Call `changes_load` to get the current diff against the base branch
+1. Call `changes_load` with `uncommitted: true` to get uncommitted changes only
 2. Analyze the changed files:
    - File paths and their purposes
    - The nature of changes (added, modified, deleted)

@@ -1,5 +1,6 @@
 import type { Config } from "@opencode-ai/sdk";
 
+import { embedComponents } from "../lib/components.ts";
 import { loadCompassConfig, mergeWithDefaults } from "../lib/config.ts";
 import { loadProjectText } from "../lib/text.ts";
 
@@ -81,15 +82,6 @@ async function loadComponents(
   }
 
   return components;
-}
-
-function embedComponents(
-  template: string,
-  components: Record<string, string>,
-): string {
-  return template.replace(/\{\{([\w-]+)\}\}/g, (match, name) => {
-    return components[name] || match;
-  });
 }
 
 export async function applyCommandsConfig(cfg: Config, projectRoot: string) {

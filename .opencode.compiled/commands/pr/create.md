@@ -28,7 +28,7 @@ When creating a pull request, follow this compass:
 When creating commits, follow this compass:
 
 ### Analysis Phase
-1. Call `changes_load` to get the current diff against the base branch
+1. Call `changes_load` against the base branch to get all branch changes
 2. Analyze the changed files:
    - File paths and their purposes
    - The nature of changes (added, modified, deleted)

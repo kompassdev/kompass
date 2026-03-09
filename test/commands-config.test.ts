@@ -285,4 +285,51 @@ describe("applyCommandsConfig", () => {
       assert.doesNotMatch(ticketDevTemplate, /\{\{[\w-]+\}\}/);
     });
   });
+
+  describe("parameterized component replacement", () => {
+    test("replaces {{param:name}} with provided parameter value", async () => {
+      delete process.env.CI;
+      const cfg: { command?: Record<string, { template: string }> } = {};
+
+      await applyCommandsConfig(cfg as never, process.cwd());
+
+      assert.ok(cfg.command);
+      
+      // commit command uses parameterized change-summary
+      const commitTemplate = cfg.command!["commit"].template;
+      // Should have replaced the parameter
+      assert.match(commitTemplate, /with `uncommitted: true` to get uncommitted changes only/);
+      // Should NOT have {{param:...}} placeholders
+      assert.doesNotMatch(commitTemplate, /\{\{param:[\w-]+\}\}/);
+    });
+
+    test("uses different parameter values for different commands", async () => {
+      delete process.env.CI;
+      const cfg: { command?: Record<string, { template: string }> } = {};
+
+      await applyCommandsConfig(cfg as never, process.cwd());
+
+      assert.ok(cfg.command);
+      
+      const commitTemplate = cfg.command!["commit"].template;
+      const prCreateTemplate = cfg.command!["pr/create"].template;
+      
+      // commit should mention uncommitted
+      assert.match(commitTemplate, /with `uncommitted: true`/);
+      // pr/create should mention base branch
+      assert.match(prCreateTemplate, /against the base branch/);
+    });
+
+    test("preserves {{param:...}} when parameter not provided", async () => {
+      delete process.env.CI;
+      const cfg: { command?: Record<string, { template: string }> } = {};
+
+      await applyCommandsConfig(cfg as never, process.cwd());
+
+      assert.ok(cfg.command);
+      // Commands without parameters should still work
+      assert.ok(cfg.command!["dev"]);
+      assert.ok(cfg.command!["pr/review"]);
+    });
+  });
 });

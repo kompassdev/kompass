@@ -23,12 +23,13 @@ const OUTPUT_DIR = path.resolve(PROJECT_ROOT, ".opencode.compiled");
 // Import the actual definitions from the plugin
 import { loadCompassConfig, mergeWithDefaults, type AgentDefinition } from "../lib/config.ts";
 import { loadProjectText } from "../lib/text.ts";
+import { embedComponents } from "../lib/components.ts";
 import { commandDefinitions } from "../commands/index.ts";
 import { getAgentDefinitions } from "../agents/index.ts";
 
 async function loadComponents(componentPaths: Record<string, string>): Promise<Record<string, string>> {
   const components: Record<string, string> = {};
-  
+
   for (const [name, componentPath] of Object.entries(componentPaths)) {
     try {
       components[name] = await loadProjectText(componentPath);
@@ -36,18 +37,8 @@ async function loadComponents(componentPaths: Record<string, string>): Promise<R
       console.warn(`Warning: Component not found: ${componentPath}`);
     }
   }
-  
-  return components;
-}
 
-function embedComponents(template: string, components: Record<string, string>): string {
-  return template.replace(/\{\{([\w-]+)\}\}/g, (match, name) => {
-    if (components[name]) {
-      return components[name];
-    }
-    console.warn(`Warning: Component not found: ${name}`);
-    return match;
-  });
+  return components;
 }
 
 async function compileCommands(

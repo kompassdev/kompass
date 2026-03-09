@@ -54,6 +54,23 @@ describe("applyCommandsConfig", () => {
   });
 
   describe("component replacement", () => {
+    test("rewrites Kompass tool names with opencode prefix", async () => {
+      delete process.env.CI;
+      const cfg: { command?: Record<string, { template: string }> } = {};
+
+      await applyCommandsConfig(cfg as never, process.cwd());
+
+      assert.ok(cfg.command);
+      const reviewTemplate = cfg.command!["pr/review"].template;
+
+      assert.match(reviewTemplate, /`kompass_pr_load`/);
+      assert.match(reviewTemplate, /`kompass_changes_load`/);
+      assert.match(reviewTemplate, /`kompass_ticket_load`/);
+      assert.doesNotMatch(reviewTemplate, /`pr_load`/);
+      assert.doesNotMatch(reviewTemplate, /`changes_load`/);
+      assert.doesNotMatch(reviewTemplate, /`ticket_load`/);
+    });
+
     test("replaces {{dev-flow}} placeholder with component content", async () => {
       delete process.env.CI;
       const cfg: { command?: Record<string, { template: string }> } = {};

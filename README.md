@@ -45,6 +45,7 @@ Use `@kompassdev/opencode` when you want Kompass workflows inside OpenCode.
 - install the plugin in your OpenCode config
 - optionally add `.opencode/kompass.json` or `kompass.json` to customize commands, agents, tools, and defaults
 - use commands like `/review`, `/pr/create`, or `/ticket/plan` inside OpenCode
+- for CLI session debugging, use `opencode session list` to find a session id and `opencode export <sessionID>` to dump the raw session JSON
 
 ### Claude Code
 

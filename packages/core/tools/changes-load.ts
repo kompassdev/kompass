@@ -42,6 +42,7 @@ export function createChangesLoadTool($: Shell) {
       args: { base?: string; head?: string; depthHint?: number; uncommitted?: boolean },
       ctx: ToolExecutionContext,
     ) {
+      const depthHint = normalizeDepthHint(args.depthHint);
       const branch = await loadCurrentBranch($, ctx.worktree);
       const implicitWorkspaceMode = !args.base?.trim() && !args.head?.trim();
       const forceWorkspaceMode = args.uncommitted === true;
@@ -62,10 +63,10 @@ export function createChangesLoadTool($: Shell) {
 
       const requestedBase = await resolveBaseRef($, ctx.worktree, args.base);
       const baseRef = await ensureGitRef($, ctx.worktree, requestedBase, {
-        depthHint: args.depthHint,
+        depthHint,
       });
       const headRef = args.head?.trim()
-        ? await resolveHeadRef($, ctx.worktree, args.head, args.depthHint)
+        ? await resolveHeadRef($, ctx.worktree, args.head, depthHint)
         : "HEAD";
 
       const files = implicitWorkspaceMode
@@ -107,6 +108,13 @@ export function createChangesLoadTool($: Shell) {
     depthHint?: number;
     uncommitted?: boolean;
   }>;
+}
+
+function normalizeDepthHint(depthHint?: number) {
+  const candidate = depthHint;
+  return typeof candidate === "number" && Number.isInteger(candidate) && candidate > 0
+    ? candidate
+    : undefined;
 }
 
 async function hasWorktreeChanges($: Shell, cwd: string) {

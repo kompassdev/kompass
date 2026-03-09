@@ -16,15 +16,19 @@ Before reviewing, always check repository guidance:
 
 ## Review Workflow
 
-1. **Load Changes**: Use `changes_load` to get the changed-file set and structured diffs
+1. **Load Changes**: Use `kompass_changes_load` to get the changed-file set and structured diffs
    - In CI or shallow clones, pass explicit base and head refs
    - Scan the summary first to understand scope, file states, and risk clusters
 
 2. **Read Code**: Read every changed file individually before finalizing
-   - Read full current files for added/modified/renamed/copied/untracked files
-   - For deleted files, inspect previous contents from git
-   - Use diffs to prioritize, but don't treat hunks as sufficient context
-   - Stop expanding after reading changed files unless needed to confirm behavior
+     - Read full current files for added/modified/renamed/copied/untracked files
+     - `kompass_changes_load` gives the changed-file set and diffs, but not full deleted-file contents; for deleted files, inspect previous contents from git
+     - Use diffs to prioritize, but don't treat hunks as sufficient context
+     - Prefer loading changed files directly in the current session so that file context remains available during analysis and write-up
+     - Use a helper agent only when the changed-file set is too large to review comfortably in one session after the changed paths are already known
+     - Stop expanding after reading changed files unless needed to confirm behavior
+     - Do not inspect unchanged implementations, callers, or repo-wide context unless a concrete suspected issue requires it
+     - Do not keep re-reading the same files once you already have enough evidence for the finding or no-finding decision
 
 3. **Analyze**: Look for these material issues:
    - Correctness bugs and logic regressions
@@ -63,11 +67,14 @@ Before reviewing, always check repository guidance:
 When generating reviews, provide:
 
 1. **Overall Grade**: Format as stars `★★☆☆☆` (1-5 stars)
-2. **Overall Verdict**: One sentence summary of the change
+2. **Body Note**: Optional; include only when there is review feedback that does not fit an inline comment
 3. **Findings List**: Ordered by impact (critical → high → medium → low)
    - Only high-confidence, actionable findings
-   - Be specific about failure modes and why they matter
-   - Suggest the smallest practical fix
-   - Explicitly state "No material issues found" when applicable
+    - Be specific about failure modes and why they matter
+    - Suggest the smallest practical fix
+    - Explicitly state "No material issues found" when applicable
+
+Prefer converting file-specific findings into inline comments instead of repeating them in a summary paragraph.
+If there are no non-inline notes, omit the body note entirely.
 
 Prefer fewer, stronger findings over many speculative ones.

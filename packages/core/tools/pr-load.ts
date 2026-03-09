@@ -30,7 +30,7 @@ function countPullRequestCommits(commits: unknown) {
     return (commits as any).nodes.length;
   }
 
-  return undefined;
+  return 0;
 }
 
 async function loadPaginatedArray($: Shell, cwd: string, endpoint: string) {
@@ -83,6 +83,12 @@ async function loadReviewThreads($: Shell, cwd: string, owner: string, repo: str
 }
 
 async function loadViewerLogin($: Shell, cwd: string) {
+  const isGitHubActions = process.env.GITHUB_ACTIONS?.trim() === "true";
+  const workflowToken = process.env.GITHUB_TOKEN?.trim();
+  if (isGitHubActions && workflowToken) {
+    return "github-actions[bot]";
+  }
+
   const actor = process.env.GITHUB_ACTOR?.trim();
   if (actor) {
     return actor;
@@ -146,7 +152,7 @@ function simplifyPullRequest(info: any) {
     baseRefName: info.baseRefName,
     headRefName: info.headRefName,
     headRefOid: info.headRefOid,
-    ...(typeof commitCount === "number" ? { commitCount } : {}),
+    commitCount,
     author: info.author?.login ?? info.author?.name ?? info.author,
   };
 }

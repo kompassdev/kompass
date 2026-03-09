@@ -18,7 +18,7 @@ Store `$ARGUMENTS` as `<arguments>`, then normalize it:
 
 ### Load Changes
 
-- Call `changes_load` to get the diff against `<base>` when defined, otherwise use the default comparison
+- Call `kompass_changes_load` to get the diff against `<base>` when defined, otherwise use the default comparison
 - Store the result as `<changes>`
 
 ### Identify Slop

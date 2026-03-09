@@ -18,7 +18,7 @@ Store `$ARGUMENTS` as `<arguments>`, then normalize it:
 
 ### Load Request Context
 
-- If `<request-source>` looks like a ticket reference or URL, use `ticket_load` and store the result as `<request-context>`
+- If `<request-source>` looks like a ticket reference or URL, use `kompass_ticket_load` and store the result as `<request-context>`
 - Otherwise, treat `<request-source>` as `<request-context>`
 
 ### Orient
@@ -36,7 +36,7 @@ Store `$ARGUMENTS` as `<arguments>`, then normalize it:
 
 ### Create Ticket
 
-- Only if `<create-ticket>` is explicitly requested, use `ticket_create` to open a GitHub issue
+- Only if `<create-ticket>` is explicitly requested, use `kompass_ticket_create` to open a GitHub issue
 - Include a clear title, description, and acceptance criteria
 - Store the new issue reference as `<ticket-ref>`
 

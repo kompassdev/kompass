@@ -32,3 +32,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         run: opencode run --model="${{ vars.OPENCODE_MODEL }}" --variant="${{ vars.OPENCODE_VARIANT }}" --thinking --command="pr/review" "${{ github.event.pull_request.html_url }}"
+
+      - name: Print review session
+        if: always()
+        run: |
+          session_id="$(opencode session list | awk 'NR > 2 && $1 ~ /^ses_/ { print $1; exit }')"
+          if [ -n "$session_id" ]; then
+            echo "OpenCode session: $session_id"
+            opencode export "$session_id"
+          else
+            echo "No OpenCode session found to export"
+          fi

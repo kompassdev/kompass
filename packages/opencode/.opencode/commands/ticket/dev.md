@@ -17,7 +17,7 @@ Store `$ARGUMENTS` as `<arguments>`, then normalize it:
 
 ### Load Ticket Context
 
-- Use `ticket_load` with `<ticket-source>` to understand the requirements
+- Use `kompass_ticket_load` with `<ticket-source>` to understand the requirements
 - Store the result as `<ticket-context>`
 
 ### Development Flow Navigation Guide

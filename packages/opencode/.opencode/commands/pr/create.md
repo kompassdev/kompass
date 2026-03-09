@@ -57,7 +57,12 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
 
 ### Push Branch
 
-If needed, push the current branch to origin
+Run `git push` and use its output as the source of truth.
+
+- Do not run extra git commands just to decide whether to push
+- If the branch was pushed during this run, report `Push: yes`
+- If `git push` reports no push was needed, report `Push: no`
+- If `Push: yes`, also report `Pushed: <current-branch> → origin/<current-branch>`
 
 ### Create PR
 
@@ -69,9 +74,9 @@ Use `gh pr create` to create the pull request:
 - Do NOT restate the full diff
 - Keep it compact and directional
 - Store the URL from the command output as `<pr-url>`
-- Do not proactively check whether a PR already exists; attempt `gh pr create` first
-- If `gh pr create` reports that a PR already exists for the branch, do not try to create another one
-- In that case, treat the response as an existing-PR result and use the returned URL as `<pr-url>`
+- Attempt `gh pr create` first; do not proactively check whether a PR already exists
+- Use the command output as the source of truth for whether the PR was created or already exists
+- If it reports that a PR already exists for the branch, do not try to create another one; treat the result as an existing PR and use the returned URL as `<pr-url>`
 - Track whether the branch was pushed during this run and report that status in the final response
 
 ## PR Body Guidelines

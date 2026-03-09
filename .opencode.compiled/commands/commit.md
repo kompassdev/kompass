@@ -11,9 +11,9 @@ Create a commit with an appropriate message summarizing the uncommitted changes.
 
 ### Interpret Arguments
 
-Store `$ARGUMENTS` as `<arguments>`, then derive semantic variables:
-- `<additional-context>` — if arguments provide guidance for the commit message
-- Reference `<additional-context>` throughout instead of `$ARGUMENTS`
+Store $ARGUMENTS as <arguments>:
+- if <arguments> provides guidance for the commit message, store it as <additional-context>
+- Reference <additional-context> throughout
 
 ### Load Changes
 

@@ -49,6 +49,14 @@ packages/opencode/.opencode/ # Generated OpenCode output for review
 - Use `## Output` to define the exact user-facing response shape, including placeholders for generated values
 - Command-specific extra sections are fine, but they should support this core structure rather than replace it
 
+## Component Authoring
+
+- Store reusable command fragments in `packages/core/components/`
+- Create a component only when the same structure or wording is needed in multiple commands; if a section is only used once, keep it inline in the command file
+- Keep components focused on repeatable building blocks, such as shared workflow steps, analysis patterns, or output scaffolding
+- Components should complement command docs, not hide the command's main intent; commands should still read clearly when expanded
+- When a reusable pattern emerges from existing inline text, extract it into a component rather than duplicating and drifting over time
+
 ## Testing
 
 ```bash

@@ -39,10 +39,13 @@ Store $ARGUMENTS as <arguments>:
 - Add body only if additional context is essential
 
 ### Commit Phase
-1. Check git status to confirm what will be committed
+1. Use the loaded change data as the source of truth for what will be committed
 2. Stage changes with `git add` (use `-A` for all, or specific files)
 3. Generate the commit message and store it as `<commit-message>`
 4. Create the commit with `<commit-message>` using `git commit -m`
+5. Only run `git status` if the commit fails and additional diagnosis is required
+
+Use `changes_load` as the source of truth for what will be committed; do not run `git status` separately unless the commit fails and additional diagnosis is required.
 
 Consider `<additional-context>` when analyzing changes and writing the commit message.
 

@@ -1,14 +1,14 @@
 # Kompass
 
-Kompass is a plugin toolkit for coding agents.
+Kompass helps coding agents navigate repositories with fewer wrong turns.
 
-It gives teams reusable workflows for planning work, reviewing changes, building from tickets, and preparing pull requests so AI-assisted development feels more consistent and more useful in real repositories.
+It packages reusable workflows, focused agents, and structured repository tools so planning, review, ticket work, and pull request prep stay grounded in real project context instead of broad repo guesswork.
 
 Why people use it:
 
-- get opinionated commands for common engineering tasks instead of rewriting prompts every time
+- help agents navigate codebases with more direction and less drift
 - load branch, PR, and ticket context into workflows built for real repository work
-- use one shared toolkit across coding agents instead of rebuilding the same system for each one
+- reuse one shared workflow system across coding agents instead of rebuilding the same prompts each time
 
 Today, Kompass supports OpenCode through `@kompassdev/opencode`.
 

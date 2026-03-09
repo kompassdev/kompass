@@ -39,8 +39,9 @@ export function createChangesLoadTool($: Shell) {
       const branch = await loadCurrentBranch($, ctx.worktree);
       const implicitWorkspaceMode = !args.base?.trim() && !args.head?.trim();
       const forceWorkspaceMode = args.uncommitted === true;
+      const useWorkspaceMode = forceWorkspaceMode || (implicitWorkspaceMode && (await hasWorktreeChanges($, ctx.worktree)));
 
-      if (forceWorkspaceMode || (implicitWorkspaceMode && (await hasWorktreeChanges($, ctx.worktree)))) {
+      if (useWorkspaceMode) {
         const filesWithDiff = await withTemporaryIndex($, ctx.worktree, async (indexPath) => {
           const files = await loadTemporaryIndexFiles($, ctx.worktree, indexPath);
           return await loadTemporaryIndexDiffs($, ctx.worktree, indexPath, files);
@@ -85,7 +86,7 @@ export function createChangesLoadTool($: Shell) {
       const filesWithDiff = implicitWorkspaceMode
         ? await loadWorkspaceFileDiffs($, ctx.worktree, baseRef, parsedFiles)
         : await loadFileDiffs($, ctx.worktree, baseRef, headRef, parsedFiles);
-      const commits = implicitWorkspaceMode ? [] : parseCommitList(log.text());
+      const commits = useWorkspaceMode ? [] : parseCommitList(log.text());
 
       return stringifyJson({
         comparison: `${baseRef}...${headRef}`,

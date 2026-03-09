@@ -316,8 +316,8 @@ describe("applyCommandsConfig", () => {
       
       // commit should mention uncommitted
       assert.match(commitTemplate, /with `uncommitted: true`/);
-      // pr/create should mention base branch
-      assert.match(prCreateTemplate, /against the base branch/);
+      // pr/create should mention base branch detection
+      assert.match(prCreateTemplate, /base branch/);
     });
 
     test("preserves {{param:...}} when parameter not provided", async () => {

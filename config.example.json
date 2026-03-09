@@ -32,11 +32,9 @@
   },
 
   "components": {
-    "enabled": ["change-summary", "code-review", "commit", "dev-flow", "pr-author", "pr-fix", "ticket-plan"],
+    "enabled": ["change-summary", "commit", "dev-flow"],
     "paths": {
-      "pr-author": "custom/path/to/pr-author.txt",
-      "dev-flow": "custom/path/to/dev-flow.txt",
-      "code-review": "custom/path/to/code-review.txt"
+      "dev-flow": "custom/path/to/dev-flow.txt"
     }
   },
 

@@ -94,12 +94,8 @@ const defaultAgentPlanner: AgentDefinition = {
 
 const defaultComponentPaths: Record<string, string> = {
   "change-summary": "components/change-summary.txt",
-  "code-review": "components/code-review.txt",
   "commit": "components/commit.txt",
   "dev-flow": "components/dev-flow.txt",
-  "pr-author": "components/pr-author.txt",
-  "pr-fix": "components/pr-fix.txt",
-  "ticket-plan": "components/ticket-plan.txt",
 };
 
 export function mergeWithDefaults(
@@ -138,12 +134,8 @@ export function mergeWithDefaults(
     components: {
       enabled: config?.components?.enabled ?? [
         "change-summary",
-        "code-review",
         "commit",
         "dev-flow",
-        "pr-author",
-        "pr-fix",
-        "ticket-plan",
       ],
       paths: { ...defaultComponentPaths, ...config?.components?.paths },
     },

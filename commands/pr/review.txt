@@ -4,43 +4,94 @@ Review a GitHub pull request and publish findings as a formal review with inline
 
 ## Workflow
 
-1. **Load PR Context**: 
-   - Call `pr_load` with `reviews`, `issueComments`, and `threads` enabled
-   - This loads PR metadata, prior reviews, comments, thread state, and your reviewer identity
-   - Interpret $ARGUMENTS as an optional PR number or URL
+### Interpret Arguments
 
-2. **Load Ticket Context**: If the PR body links to exactly one clear ticket, call `ticket_load` for additional context
+Store `$ARGUMENTS` as `<arguments>`:
+- If <arguments> looks like a PR number (e.g., "123") or URL, store it as `<pr-ref>`
+- If empty, use current branch's associated PR
 
-3. **Load Changes**: Call `changes_load` with `base=pr.baseRefName`, `head=pr.headOid`, and appropriate flags to get the changed-file set and diffs
+### Load PR Context
 
-4. **Review Changes**:
-   - Check `AGENTS.md` guidance for changed file paths
-   - Read every changed file individually (not just diff context)
-   - Look for:
-     - Accidental behavior changes
-     - Incorrect assumptions (null, empty, retry, timeout, ordering, permissions)
-     - Contract breakage (API shapes, return values, schemas, renamed exports)
-     - Partial updates across dependent paths
-     - Stale references from deleted/renamed files
-     - Risky generated/lockfile churn hiding real changes
+Call `pr_load` with `pr: <pr-ref>` (if provided).
 
-5. **Generate Review**:
-   - Overall grade formatted as `★★☆☆☆` (1-5 stars)
-   - Short overall verdict
-   - Concise list of findings ordered by impact (critical, high, medium, low)
-   - Only high-confidence, actionable findings
-   - Explicit mention when no material issues found
+Store from result:
+- PR number as `<pr-number>`
+- Base ref as `<base-ref>`
+- Head OID as `<head-oid>`
+- Viewer login as `<viewer-login>`
 
-6. **Publish Review**:
-   - Use `gh api` to POST to `/repos/{repo}/pulls/{pr}/reviews`
-   - Include actionable inline comments only
-   - Use `pr_load.viewerLogin` to avoid duplicating your own prior comments
-   - Create JSON payload and submit with `gh api --method POST ... --input <file>`
+### Load Ticket Context
 
-## Review Guidelines
+If the PR body links to exactly one clear ticket:
+- Call `ticket_load` with the ticket reference
+- Store context for consideration during review
 
-- Report findings only when you can name the likely failure mode
-- Follow `AGENTS.md` strictly for convention decisions
-- Don't report style/naming/cleanup unless it masks a real defect
-- Be concise—if it takes more than a few sentences, reconsider
-- Skip generated, lockfile, or bulk-format churn unless meaningful
+### Load Changes
+
+Call `changes_load` with:
+- `base: <base-ref>`
+- `head: <head-oid>`
+
+Store as `<changes>`.
+
+### Review Changes
+
+Following the reviewer agent guidance:
+1. Read each changed file for full context
+2. Use `<viewer-login>` to avoid duplicating your own prior comments
+3. Identify critical and high-impact findings for inline comments
+
+### Publish Review
+
+Create review JSON payload:
+
+```bash
+cat > /tmp/review.json << 'EOF'
+{
+  "commit_id": "<head-oid>",
+  "body": "<overall-verdict>",
+  "event": "COMMENT",
+  "comments": [
+    {
+      "path": "<file-path>",
+      "position": <diff-position>,
+      "body": "<comment-text>"
+    }
+  ]
+}
+EOF
+```
+
+Submit with:
+```bash
+gh api --method POST \
+  /repos/{owner}/{repo}/pulls/<pr-number>/reviews \
+  --input /tmp/review.json
+```
+
+**Single-line comments**: Use `position` (diff index, 1-based)
+
+**Multi-line comments**: Add `start_line` and `line` (file line numbers):
+```json
+{
+  "path": "<file-path>",
+  "position": <diff-position>,
+  "body": "<comment-text>",
+  "start_line": <start-line>,
+  "line": <end-line>
+}
+```
+
+Include only actionable inline comments (critical/high findings).
+
+## Output
+
+When the review is published, display:
+```
+Review submitted for PR #<pr-number>
+
+<details>
+- Grade: <star-rating>
+- Findings: <count> total (<critical> critical, <high> high, <medium> medium, <low> low)
+- Review URL: <review-url>
+```

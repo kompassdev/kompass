@@ -91,6 +91,7 @@ Components keep commands DRY by extracting reusable guidance:
 - Command-specific logic that won't be reused
 - Simple one-line instructions
 - Sections that need tight coupling with command context
+- **Guidance used in only ONE command** — inline it directly instead
 
 ## changes_load Tool
 

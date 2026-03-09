@@ -68,18 +68,6 @@ describe("applyCommandsConfig", () => {
       assert.doesNotMatch(cfg.command!["dev"].template, /\{\{dev-flow\}\}/);
     });
 
-    test("replaces {{pr-author}} placeholder with component content", async () => {
-      delete process.env.CI;
-      const cfg: { command?: Record<string, { template: string }> } = {};
-
-      await applyCommandsConfig(cfg as never, process.cwd());
-
-      assert.ok(cfg.command);
-      assert.ok(cfg.command!["pr/create"]);
-      // pr/create template should have {{pr-author}} replaced
-      assert.doesNotMatch(cfg.command!["pr/create"].template, /\{\{pr-author\}\}/);
-    });
-
     test("replaces multiple component placeholders in same template", async () => {
       delete process.env.CI;
       const cfg: { command?: Record<string, { template: string }> } = {};
@@ -88,23 +76,11 @@ describe("applyCommandsConfig", () => {
 
       assert.ok(cfg.command);
       assert.ok(cfg.command!["dev"]);
-      // dev.txt uses both {{dev-flow}} and {{pr-author}}
+      // dev.txt uses {{dev-flow}} component
       assert.doesNotMatch(cfg.command!["dev"].template, /\{\{dev-flow\}\}/);
-      assert.doesNotMatch(cfg.command!["dev"].template, /\{\{pr-author\}\}/);
     });
 
-    test("replaces ticket-plan component in ticket/plan command", async () => {
-      delete process.env.CI;
-      const cfg: { command?: Record<string, { template: string }> } = {};
-
-      await applyCommandsConfig(cfg as never, process.cwd());
-
-      assert.ok(cfg.command);
-      assert.ok(cfg.command!["ticket/plan"]);
-      assert.doesNotMatch(cfg.command!["ticket/plan"].template, /\{\{ticket-plan\}\}/);
-    });
-
-    test("replaces pr-fix component in pr/fix command", async () => {
+    test("pr/fix command does not use pr-fix component", async () => {
       delete process.env.CI;
       const cfg: { command?: Record<string, { template: string }> } = {};
 
@@ -112,10 +88,11 @@ describe("applyCommandsConfig", () => {
 
       assert.ok(cfg.command);
       assert.ok(cfg.command!["pr/fix"]);
+      // pr-fix guidance is now inline since it was only used in one place
       assert.doesNotMatch(cfg.command!["pr/fix"].template, /\{\{pr-fix\}\}/);
     });
 
-    test("replaces code-review component in review command", async () => {
+    test("review command does not use code-review component", async () => {
       delete process.env.CI;
       const cfg: { command?: Record<string, { template: string }> } = {};
 
@@ -123,10 +100,11 @@ describe("applyCommandsConfig", () => {
 
       assert.ok(cfg.command);
       assert.ok(cfg.command!["review"]);
+      // Review guidance is now in the reviewer agent, not a component
       assert.doesNotMatch(cfg.command!["review"].template, /\{\{code-review\}\}/);
     });
 
-    test("replaces code-review component in pr/review command", async () => {
+    test("pr/review command does not use code-review component", async () => {
       delete process.env.CI;
       const cfg: { command?: Record<string, { template: string }> } = {};
 
@@ -134,8 +112,8 @@ describe("applyCommandsConfig", () => {
 
       assert.ok(cfg.command);
       assert.ok(cfg.command!["pr/review"]);
+      // Review guidance is now in the reviewer agent, not a component
       assert.doesNotMatch(cfg.command!["pr/review"].template, /\{\{code-review\}\}/);
-      // Template now has inline workflow instead of embedded component
       assert.match(cfg.command!["pr/review"].template, /## Goal/);
       assert.match(cfg.command!["pr/review"].template, /Review a GitHub pull request/);
     });

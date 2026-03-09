@@ -4,41 +4,78 @@ Address feedback on a pull request by making fixes and responding to review thre
 
 ## Workflow
 
-1. **Load PR Context**:
-   - Call `pr_load` with `reviews` and `threads` enabled
-   - Interpret $ARGUMENTS as an optional PR number or URL
-   - Understand the current state: open threads, review feedback, and required changes
+### Interpret Arguments
 
-2. **Analyze Feedback**:
-   - Separate true course corrections from noise or already-resolved feedback
-   - Prioritize critical issues (bugs, security, broken contracts)
-   - Identify which files need changes
+Store `$ARGUMENTS` as `<arguments>`:
+- If <arguments> looks like a PR number (e.g., "123") or URL, store it as `<pr-ref>`
+- If empty, use current branch's associated PR
 
-3. **Implement Fixes**:
-   - Fix critical navigation issues first
-   - Follow existing code patterns and conventions
-   - Make focused, minimal changes
-   - When maintaining your current heading despite a suggestion, be prepared to explain why
+### Load PR Context
 
-4. **Validate Changes**:
-   - Run tests: `bun test` (or equivalent)
-   - Run type checking: `bun run typecheck` (or equivalent)
-   - Confirm fixes address the feedback
+Call `pr_load` with `pr: <pr-ref>` (if provided).
 
-5. **Push Updates**:
-   - Stage changes with `git add -A`
-   - Create a commit (use `commit` tool or `git commit`)
-   - Push the branch with `git push`
+Store from result:
+- PR number as `<pr-number>`
+- Reviews as `<reviews>`
+- Review threads as `<threads>`
+- Issue comments as `<issue-comments>`
 
-6. **Respond to Threads**:
-   - Reply with a concise signal for each addressed thread
-   - Keep replies short and factual—clear signals, no chatter
-   - Use `gh api` to post replies to review threads when needed
-   - Confirm which feedback was addressed and which was intentionally not followed
+### Analyze Feedback
 
-## Guidelines
+Separate true course corrections from noise or already-resolved feedback:
+1. Review `<threads>` for open, unresolved conversations
+2. Check `<reviews>` for state changes (CHANGES_REQUESTED, etc.)
+3. Prioritize critical issues (bugs, security, broken contracts)
+4. Identify which files need changes
 
-- Do not blindly follow every suggestion—some may lead you off course
-- Explain decisions clearly when deviating from reviewer suggestions
-- Focus on resolving blocking issues first
-- Keep responses professional and constructive
+Do not blindly follow every suggestion—some may lead you off course.
+
+### Implement Fixes
+
+1. Fix critical navigation issues first
+2. Follow existing code patterns and conventions
+3. Make focused, minimal changes
+4. When maintaining your current heading despite a suggestion, be prepared to explain why
+
+### Validate Changes
+
+Run validation commands:
+- Tests: `bun test` (or project equivalent)
+- Type checking: `bun run typecheck` (or project equivalent)
+- Confirm fixes address the feedback
+
+### Push Updates
+
+If validation passes:
+1. Stage changes: `git add -A`
+2. Create commit (use `commit` tool or `git commit`)
+3. Push branch: `git push`
+
+### Respond to Threads
+
+Reply to addressed threads:
+- Keep replies short and factual—clear signals, no chatter
+- Use `gh api` to post replies when needed:
+
+```bash
+# Reply to a review thread
+gh api --method POST \
+  /repos/{owner}/{repo}/pulls/<pr-number>/comments \
+  -f body="<reply-text>" \
+  -f in_reply_to=<comment-id>
+```
+
+Confirm which feedback was addressed and which was intentionally not followed.
+
+## Output
+
+When fixes are complete, display:
+```
+Addressed feedback on PR #<pr-number>
+
+<details>
+- Changes made: <count> files modified
+- Threads resolved: <count>
+- Tests passing: <yes/no>
+- Pushed: <yes/no>
+```

@@ -22,7 +22,7 @@
     "enabled": ["changes_load", "pr_load", "ticket_load", "ticket_create"]
   },
   "components": {
-    "enabled": ["pr-author", "dev-flow", "ticket-plan", "pr-fix", "code-review", "change-summary"]
+    "enabled": ["change-summary", "commit", "dev-flow"]
   },
   "defaults": {
     "baseBranch": "main",

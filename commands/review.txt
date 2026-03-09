@@ -4,30 +4,44 @@ Review code changes and provide actionable feedback with a grade and risk assess
 
 ## Workflow
 
-1. **Determine Review Scope** based on $ARGUMENTS:
-   - **No arguments**: Call `changes_load` without base/head. It auto-detects:
-     - Uncommitted changes present → Review uncommitted changes only
-     - Clean worktree → Review current branch vs default base branch
-   - **"uncommitted"**: Call `changes_load` without base/head to force uncommitted changes review
-   - **Branch name** (e.g., "main", "origin/main"): Call `changes_load` with explicit `base` argument
+### Interpret Arguments
 
-2. **Review Changes**:
-   - Read the changed files and understand the modifications
-   - Identify patterns, conventions, and potential issues
-   - Look for bugs, security issues, performance problems, and style violations
+Store `$ARGUMENTS` as `<arguments>`:
+- If <arguments> equals "uncommitted", store as `<scope>` = "uncommitted"
+- If <arguments> looks like a branch reference (e.g., "main", "origin/main"), store as `<base>`
+- If empty, no placeholder needed
 
-3. **Generate Review** with:
-   - Overall grade formatted as `★★☆☆☆` (1-5 stars)
-   - Short verdict on merge risk
-   - Concise list of high-confidence findings ordered by impact
-   - Explicit mention when no material issues were found
-   - Concise wording - only findings you are sure about
+### Load Changes
 
-4. **Return Result**: Output the review as chat text (do not publish PR comments)
+Call `changes_load`:
+- If `<base>` is defined: pass `base: <base>`
+- Otherwise: call with no parameters (auto-detects uncommitted vs branch comparison)
 
-## Review Guidelines
+Store the result as `<changes>`.
 
-- Focus on correctness, security, and maintainability
-- Be specific about issues and provide clear rationale
-- Suggest concrete improvements when possible
-- Balance thoroughness with conciseness
+If `<changes>.comparison` is "uncommitted":
+- Treat as reviewing uncommitted changes
+- Otherwise: reviewing branch changes
+
+### Review Changes
+
+Following the reviewer agent guidance:
+1. Read each changed file for full context
+2. Analyze for bugs, security issues, and correctness problems
+3. Formulate findings ordered by impact
+
+## Output
+
+When the review is complete, display:
+```
+Review complete for <scope-description>
+
+<details>
+- Grade: <star-rating>
+- Verdict: <short-verdict>
+- Findings: <count> total (<critical> critical, <high> high, <medium> medium, <low> low)
+```
+
+Where `<scope-description>` is either:
+- "uncommitted changes" if reviewing uncommitted changes
+- "<branch> → <base>" if reviewing branch comparison

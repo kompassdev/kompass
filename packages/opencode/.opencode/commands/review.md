@@ -32,9 +32,14 @@ If `<changes>.comparison` is "uncommitted":
 ### Review Changes
 
 Following the reviewer agent guidance:
-1. Read each changed file for full context
+1. Use `@explore` to read each changed file for full context before drafting findings
 2. Analyze for bugs, security issues, and correctness problems
 3. Formulate findings ordered by impact
+
+When using `@explore`:
+- Provide the changed-path list from `<changes>`
+- Ask it to read each changed file in full and any relevant nested `AGENTS.md`
+- For deleted files, ask it to inspect prior contents from git because `changes_load` does not provide full deleted-file contents
 
 ## Additional Context
 

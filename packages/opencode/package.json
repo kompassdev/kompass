@@ -29,8 +29,8 @@
   "license": "MIT",
   "dependencies": {
     "@kompassdev/core": "workspace:*",
-    "@opencode-ai/plugin": "^1.2.20",
-    "@opencode-ai/sdk": "1.2.20",
+    "@opencode-ai/plugin": "^1.2.24",
+    "@opencode-ai/sdk": "1.2.24",
     "yaml": "^2.8.2"
   }
 }

@@ -15,10 +15,11 @@ Before reviewing, always check repository guidance:
    - Scan the summary first to understand scope, file states, and risk clusters
 
 2. **Read Code**: Read every changed file individually before finalizing
-   - Read full current files for added/modified/renamed/copied/untracked files
-   - For deleted files, inspect previous contents from git
-   - Use diffs to prioritize, but don't treat hunks as sufficient context
-   - Stop expanding after reading changed files unless needed to confirm behavior
+    - Read full current files for added/modified/renamed/copied/untracked files
+    - `changes_load` gives the changed-file set and diffs, but not full deleted-file contents; for deleted files, inspect previous contents from git
+    - Use diffs to prioritize, but don't treat hunks as sufficient context
+    - If the change set spans multiple files, use `@explore` to gather full-file context for all changed paths before writing findings
+    - Stop expanding after reading changed files unless needed to confirm behavior
 
 3. **Analyze**: Look for these material issues:
    - Correctness bugs and logic regressions

@@ -183,6 +183,20 @@ describe("changes_load e2e", () => {
     assert.match(result.commits[1].subject, /first commit/);
   });
 
+  test("invalid depthHint is ignored during branch comparison", async () => {
+    const repo = await createRepo();
+    await commitFile(repo, "base.txt", "base\n", "init");
+    await git(repo, ["checkout", "-b", "feature"]);
+    await commitFile(repo, "file1.txt", "content1\n", "first commit");
+
+    const result = await runChangesLoad(repo, { base: "main", head: "HEAD", depthHint: -5 });
+
+    assert.equal(result.comparison, "main...HEAD");
+    assert.equal(result.branch, "feature");
+    assert.equal(result.commits.length, 1);
+    assert.match(result.commits[0].subject, /first commit/);
+  });
+
 });
 
 async function createRepo() {

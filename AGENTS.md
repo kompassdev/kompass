@@ -37,6 +37,18 @@ packages/opencode/.opencode/ # Generated OpenCode output for review
 - Put OpenCode-specific SDK wiring in `packages/opencode`
 - Do not make the workspace root a runtime package again
 
+## Command Authoring
+
+- Author command definitions in `packages/core/commands/`; treat `packages/opencode/.opencode/commands/` as generated output only
+- Use `packages/core/commands/pr/create.txt` as the canonical example for command structure and tone
+- Keep this section order in command docs unless a command has a strong reason not to: `## Goal`, `## Workflow`, `## Additional Context`, `## Output`
+- Start `## Workflow` with `### Interpret Arguments`, and normalize `$ARGUMENTS` into named placeholders before any execution steps
+- Use angle-bracket placeholders consistently for derived values and stored context, such as `<arguments>`, `<base>`, `<additional-context>`, `<pr-url>`, and define each placeholder before it is referenced later in the command
+- If arguments can mean different things, explicitly disambiguate them in `### Interpret Arguments` and store each interpretation in a separate placeholder
+- Use `## Additional Context` for instructions about how optional guidance, related tickets, focus areas, or other stored context should influence analysis and output
+- Use `## Output` to define the exact user-facing response shape, including placeholders for generated values
+- Command-specific extra sections are fine, but they should support this core structure rather than replace it
+
 ## Testing
 
 ```bash

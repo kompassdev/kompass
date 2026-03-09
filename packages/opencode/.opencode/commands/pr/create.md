@@ -74,7 +74,7 @@ Use `gh pr create` to create the pull request:
 - Testing section: mention commands run (tests, typecheck, etc.) or "No testing performed"
 - Uncommitted changes and being on base branch block PR creation entirely
 
-## Additional Guidance
+## Additional Context
 
 Consider `<additional-context>` when analyzing changes and writing the PR description.
 

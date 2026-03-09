@@ -4,6 +4,7 @@
       "pr/create",
       "pr/review",
       "pr/fix",
+      "ticket/create",
       "ticket/plan",
       "ticket/dev",
       "review",

@@ -110,6 +110,7 @@ const defaultComponentPaths: Record<string, string> = {
   "change-summary": "components/change-summary.txt",
   "commit": "components/commit.txt",
   "dev-flow": "components/dev-flow.txt",
+  "summarize-changes": "components/summarize-changes.txt",
 };
 
 export function mergeWithDefaults(
@@ -127,6 +128,7 @@ export function mergeWithDefaults(
         "pr/review",
         "review",
         "rmslop",
+        "ticket/create",
         "ticket/dev",
         "ticket/plan",
       ],
@@ -150,6 +152,7 @@ export function mergeWithDefaults(
         "change-summary",
         "commit",
         "dev-flow",
+        "summarize-changes",
       ],
       paths: { ...defaultComponentPaths, ...config?.components?.paths },
     },

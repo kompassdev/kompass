@@ -27,6 +27,7 @@ describe("applyCommandsConfig", () => {
         "pr/create",
         "pr/review",
         "pr/fix",
+        "ticket/create",
         "ticket/plan",
         "ticket/dev",
         "review",
@@ -46,6 +47,7 @@ describe("applyCommandsConfig", () => {
       assert.ok(cfg.command);
       assert.equal(cfg.command!["pr/review"]?.agent, "reviewer");
       assert.equal(cfg.command!["pr/create"]?.agent, "build");
+      assert.equal(cfg.command!["ticket/create"]?.agent, "build");
       assert.equal(cfg.command!["ticket/plan"]?.agent, "planner");
       assert.equal(cfg.command!["dev"]?.agent, "build");
       assert.ok(cfg.command!["pr/review"]?.description);
@@ -225,6 +227,7 @@ describe("applyCommandsConfig", () => {
       // All default commands should have templates loaded
       assert.ok(cfg.command!["dev"]?.template);
       assert.ok(cfg.command!["pr/create"]?.template);
+      assert.ok(cfg.command!["ticket/create"]?.template);
       assert.ok(cfg.command!["pr/review"]?.template);
       assert.ok(cfg.command!["ticket/plan"]?.template);
       assert.ok(cfg.command!["pr/fix"]?.template);
@@ -268,6 +271,22 @@ describe("applyCommandsConfig", () => {
       
       // Should not have any remaining placeholders
       assert.doesNotMatch(prCreateTemplate, /\{\{[\w-]+\}\}/);
+    });
+
+    test("embeds all expected components in ticket/create command", async () => {
+      delete process.env.CI;
+      const cfg: { command?: Record<string, { template: string }> } = {};
+
+      await applyCommandsConfig(cfg as never, process.cwd());
+
+      assert.ok(cfg.command);
+      const ticketCreateTemplate = cfg.command!["ticket/create"].template;
+
+      assert.match(ticketCreateTemplate, /## Goal/);
+      assert.match(ticketCreateTemplate, /Create a GitHub ticket/);
+      assert.match(ticketCreateTemplate, /Load & Analyze Changes/);
+
+      assert.doesNotMatch(ticketCreateTemplate, /\{\{[\w-]+\}\}/);
     });
 
     test("embeds all expected components in ticket/dev command", async () => {

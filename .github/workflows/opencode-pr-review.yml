@@ -27,7 +27,6 @@ jobs:
 
       - name: Run PR Review
         env:
-          OPENCODE_MODEL: ${{ vars.OPENCODE_MODEL }}
-          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: opencode run --command="pr/review"
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        run: opencode run --command="pr/review" --model="${{ vars.OPENCODE_MODEL }}" --variant="${{ vars.OPENCODE_VARIANT }}" --show-thinking

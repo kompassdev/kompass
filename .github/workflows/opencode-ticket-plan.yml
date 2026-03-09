@@ -31,7 +31,6 @@ jobs:
 
       - name: Run Ticket Plan
         env:
-          OPENCODE_MODEL: ${{ vars.OPENCODE_MODEL }}
-          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: opencode run --command="ticket/plan"
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        run: opencode run --command="ticket/plan" --model="${{ vars.OPENCODE_MODEL }}" --variant="${{ vars.OPENCODE_VARIANT }}" --show-thinking

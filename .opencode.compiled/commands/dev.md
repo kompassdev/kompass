@@ -36,7 +36,7 @@ When creating a pull request, follow this compass:
 ### Guidelines
 - Keep the summary compact—signal the direction, don't detail every step
 - Do not restate the full diff
-- If there are uncommitted changes, either include them intentionally or call them out clearly
+- Uncommitted changes are checked and blocked before PR creation
 
 Interpret $ARGUMENTS as the destination to reach.
 Follow the Development Flow and PR Author guides above to plot the course, validate the path, and arrive at a PR.

@@ -1,6 +1,9 @@
-1. Call `changes_load` to survey the current branch against the base branch:
+1. Call `changes_load` to survey the current branch:
    - If $ARGUMENTS is provided, pass it as the `base` parameter
    - If $ARGUMENTS is empty, call changes_load with no arguments (uses default base branch detection)
+2. Check the result:
+   - If `comparison` is "uncommitted", STOP and tell the user: "There are uncommitted changes. Please commit or stash them before creating a PR." - then list the files and DO NOT proceed
+   - Otherwise, proceed with PR creation using the result
 
 {{pr-author}}
 

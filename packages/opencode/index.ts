@@ -1,5 +1,4 @@
-import type { Plugin, PluginInput } from "@opencode-ai/plugin";
-import { tool } from "@opencode-ai/plugin/tool";
+import { tool, type Plugin, type PluginInput } from "@opencode-ai/plugin";
 
 import { createTools, type ToolArgDefinition, type ToolDefinition } from "@kompassdev/core";
 import { applyAgentsConfig, applyCommandsConfig } from "./config.ts";
@@ -7,7 +6,6 @@ import { applyAgentsConfig, applyCommandsConfig } from "./config.ts";
 function createArgSchema(definition: ToolArgDefinition) {
   let schema: any;
 
-  // what a useless comment
   switch (definition.type) {
     case "string":
       schema = tool.schema.string();
@@ -33,15 +31,16 @@ function createArgSchema(definition: ToolArgDefinition) {
   return schema.describe(definition.description);
 }
 
+function createToolArgs(definitions: Record<string, ToolArgDefinition>) {
+  return Object.fromEntries(
+    Object.entries(definitions).map(([name, definition]) => [name, createArgSchema(definition)]),
+  );
+}
+
 function wrapTool(definition: ToolDefinition) {
   return tool({
     description: definition.description,
-    args: Object.fromEntries(
-      Object.entries(definition.args).map(([name, argDefinition]) => [
-        name,
-        createArgSchema(argDefinition),
-      ]),
-    ),
+    args: createToolArgs(definition.args),
     execute: definition.execute,
   });
 }

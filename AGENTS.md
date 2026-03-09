@@ -42,7 +42,6 @@ What this command does in one sentence.
 Store $ARGUMENTS as <arguments>:
 - if <arguments> looks like a branch reference, store it as <base>
 - if <arguments> provides guidance, store it as <additional-context>
-- Reference the semantic variables throughout
 
 ### [Section Name]
 Action-oriented instructions using the derived variables.

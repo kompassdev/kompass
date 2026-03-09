@@ -13,7 +13,6 @@ Create a commit and immediately push it to the remote repository.
 
 Store $ARGUMENTS as <arguments>:
 - if <arguments> provides guidance for the commit message, store it as <additional-context>
-- Reference <additional-context> throughout
 
 ### Load Changes
 

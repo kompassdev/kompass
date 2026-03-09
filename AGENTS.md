@@ -46,6 +46,20 @@ Store `$ARGUMENTS` as `<arguments>`, then derive semantic variables:
 
 ### [Section Name]
 Action-oriented instructions using the derived variables.
+
+## Output
+
+When the subagent completes its task, it must clearly display:
+- What was created/modified (with identifiers like commit hash, PR number, etc.)
+- Key details that should be visible to the user
+
+Format:
+```
+<summary line of what was done>
+
+<details>
+- Identifier: <value>
+- Relevant detail: <value>
 ```
 
 ## Components System

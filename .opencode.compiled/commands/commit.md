@@ -41,7 +41,16 @@ Store `$ARGUMENTS` as `<arguments>`, then derive semantic variables:
 ### Commit Phase
 1. Check git status to confirm what will be committed
 2. Stage changes with `git add` (use `-A` for all, or specific files)
-3. Create the commit with the generated message
-4. Use `git diff --cached` to review staged changes before committing if unsure
+3. Generate the commit message and store it as `<commit-message>`
+4. Create the commit with `<commit-message>` using `git commit -m`
 
 Consider `<additional-context>` when analyzing changes and writing the commit message.
+
+## Output
+
+When the commit is created, display:
+```
+Created commit `<hash>`:
+
+<commit-message>
+```

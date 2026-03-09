@@ -25,4 +25,14 @@ Consider `<additional-context>` when analyzing changes and writing the commit me
 - Push the branch with `git push`
 - Use `-u` flag if the branch has no upstream set
 - Handle any merge conflicts if they arise
-- Confirm success and report the result
+
+## Output
+
+When complete, display:
+```
+Created commit `<hash>`:
+
+<commit-message>
+
+Pushed to <remote>/<branch>
+```

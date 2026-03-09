@@ -66,9 +66,15 @@ Use `gh pr create` to create the pull request:
 - Do NOT restate the full diff
 - Keep it compact and directional
 
-### Return Result
+## Output
 
-Output the PR URL or any errors encountered
+When the PR is created, display:
+```
+Created PR #<number>: <title>
+
+URL: <pr-url>
+Branch: <current-branch> → <base-branch>
+```
 
 ## PR Body Guidelines
 

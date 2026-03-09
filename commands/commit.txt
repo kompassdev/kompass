@@ -19,3 +19,12 @@ Store `$ARGUMENTS` as `<arguments>`, then derive semantic variables:
 {{commit}}
 
 Consider `<additional-context>` when analyzing changes and writing the commit message.
+
+## Output
+
+When the commit is created, display:
+```
+Created commit `<hash>`:
+
+<commit-message>
+```

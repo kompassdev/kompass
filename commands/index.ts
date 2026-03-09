@@ -45,6 +45,26 @@ const commandDefinitions: Record<string, CommandDefinition> = {
     agent: "build",
     templatePath: "commands/dev.txt",
   },
+  commit: {
+    description: "Commit current changes with a message",
+    agent: "build",
+    templatePath: "commands/commit.txt",
+  },
+  "commit-and-push": {
+    description: "Commit and push current changes",
+    agent: "build",
+    templatePath: "commands/commit-and-push.txt",
+  },
+  learn: {
+    description: "Extract learnings from session to AGENTS.md files",
+    agent: "build",
+    templatePath: "commands/learn.txt",
+  },
+  rmslop: {
+    description: "Remove AI code slop from current branch",
+    agent: "build",
+    templatePath: "commands/rmslop.txt",
+  },
 };
 
 async function loadComponents(

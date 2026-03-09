@@ -1,0 +1,28 @@
+# pr/fix
+
+**Agent:** build
+
+**Description:** Fix PR feedback, push updates, and reply
+
+---
+
+## PR Fix Navigation Guide
+
+When addressing PR feedback, follow this compass:
+
+### Workflow
+1. Use `pr_load` with reviews and threads enabled to see where to steer
+2. Separate true course corrections from noise or already-resolved feedback
+3. Fix the critical navigation issues first
+4. Run the most relevant validation to confirm you're on track
+5. Push the branch to update your position
+6. Reply with a concise signal for each addressed thread when the workflow asks for it
+
+### Guidelines
+- Do not blindly follow every suggestion—some may lead you off course
+- Explain when you're maintaining your current heading despite a suggestion
+- Keep replies short and factual—clear signals, no chatter
+
+Use pr_load with reviews and threads enabled to see where to steer.
+Interpret $ARGUMENTS as an optional PR number or URL.
+Follow the PR Fix guide above to adjust the heading, validate the route, push forward, and signal your arrival on the PR.

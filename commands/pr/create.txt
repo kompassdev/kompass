@@ -1,4 +1,5 @@
 {{pr-author}}
+{{change-summary}}
 
 Interpret $ARGUMENTS as optional base-branch or extra context for the journey.
-Follow the PR Author Navigation Guide above to create the pull request.
+Follow the PR Author Navigation Guide and Change Summary Guide above to create the pull request.

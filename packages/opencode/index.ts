@@ -4,7 +4,7 @@ import { tool } from "@opencode-ai/plugin/tool";
 import { createTools, type ToolArgDefinition, type ToolDefinition } from "@kompassdev/core";
 import { applyAgentsConfig, applyCommandsConfig } from "./config.ts";
 
-function createArgSchema(definition: ToolArgDefinition) {
+function createArgSchema(definition: ToolArgDefinitions) {
   let schema: any;
 
   switch (definition.type) {
@@ -15,7 +15,7 @@ function createArgSchema(definition: ToolArgDefinition) {
       schema = tool.schema.boolean();
       break;
     case "number":
-      schema = tool.schema.number();
+      schema = tool.schema.numbers();
       if (definition.int) {
         schema = schema.int();
       }

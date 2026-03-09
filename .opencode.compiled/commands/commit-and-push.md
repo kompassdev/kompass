@@ -3,9 +3,7 @@ description: Commit and push current changes
 agent: build
 ---
 
-## Change Summary & Commit Navigation Guide
-
-When creating commits, follow this compass:
+## Change Analysis Guide
 
 ### Analysis Phase
 1. Call `changes_load` with `uncommitted: true` to get uncommitted changes only
@@ -16,9 +14,11 @@ When creating commits, follow this compass:
 3. Group related changes into logical themes
 4. Summarize the "what" and "why" (not the "how")
 
-### Commit Message Format
+## Commit Navigation Guide
+
+### Message Format
 - Start with a high-level overview (1 sentence)
-- For commits: One line if possible, max 72 characters
+- One line if possible, max 72 characters
 - Use conventional commit format: "feat:", "fix:", "refactor:", "docs:", etc.
 - Add body only if additional context is essential
 
@@ -29,6 +29,6 @@ When creating commits, follow this compass:
 4. Use `git diff --cached` to review staged changes before committing if unsure
 
 Interpret $ARGUMENTS as the commit message.
-If no message is provided, follow the Change Summary & Commit Navigation Guide above to analyze changes and generate an appropriate commit message.
+If no message is provided, follow the guides above to analyze changes and generate an appropriate commit message.
 Then stage all changes with `git add -A`, create the commit, and push to the remote repository.
 Handle any merge conflicts if they arise, and use `-u` flag if the branch has no upstream set.

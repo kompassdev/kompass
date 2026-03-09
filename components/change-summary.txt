@@ -1,6 +1,4 @@
-## Change Summary & Commit Navigation Guide
-
-When creating commits, follow this compass:
+## Change Analysis Guide
 
 ### Analysis Phase
 1. Call `changes_load`{{param:changesLoadArgs}}
@@ -10,15 +8,3 @@ When creating commits, follow this compass:
    - Lines added/removed per file
 3. Group related changes into logical themes
 4. Summarize the "what" and "why" (not the "how")
-
-### Commit Message Format
-- Start with a high-level overview (1 sentence)
-- For commits: One line if possible, max 72 characters
-- Use conventional commit format: "feat:", "fix:", "refactor:", "docs:", etc.
-- Add body only if additional context is essential
-
-### Commit Phase
-1. Check git status to confirm what will be committed
-2. Stage changes with `git add` (use `-A` for all, or specific files)
-3. Create the commit with the generated message
-4. Use `git diff --cached` to review staged changes before committing if unsure

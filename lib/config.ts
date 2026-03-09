@@ -99,6 +99,7 @@ const defaultComponentPaths: Record<string, string> = {
   "pr-fix": "components/pr-fix.txt",
   "code-review": "components/code-review.txt",
   "change-summary": "components/change-summary.txt",
+  "commit": "components/commit.txt",
 };
 
 export function mergeWithDefaults(
@@ -142,6 +143,7 @@ export function mergeWithDefaults(
         "pr-fix",
         "code-review",
         "change-summary",
+        "commit",
       ],
       paths: { ...defaultComponentPaths, ...config?.components?.paths },
     },

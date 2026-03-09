@@ -5,7 +5,7 @@ agent: build
 
 ## Goal
 
-Bump `@kompassdev/opencode` to a new version, validate the workspace, and publish the package to npm.
+Bump `@kompassdev/opencode` to a new version, validate the workspace, and prepare the exact npm publish command for the user to run manually.
 
 ## Workflow
 
@@ -35,17 +35,16 @@ bun run test
 - If validation fails, stop and report the failing command
 - Do not publish if validation fails
 
-### Publish
+### Prepare Publish Command
 
-Publish the package from the workspace root:
+Do not run the publish command. Instead, prepare the package for publish and then tell the user to run this command from the workspace root:
 
 ```bash
 npm publish ./packages/opencode --access public
 ```
 
-- Use the command output as the source of truth
-- If npm reports the version already exists, stop and report that `packages/opencode/package.json` needs a new version
-- If npm requires browser auth or OTP confirmation, stop and report exactly that
+- Do not attempt npm auth, browser auth, or OTP flows in this command
+- Do not publish on the user's behalf
 
 ## Additional Context
 
@@ -53,15 +52,18 @@ Consider `<additional-context>` when choosing the release framing, but keep the 
 
 ## Output
 
-When publish succeeds, display:
+When validation succeeds, display:
 
 ```
-Published `@kompassdev/opencode@<target-version>`
+Prepared `@kompassdev/opencode@<target-version>` for publish
 
 Validation:
 - bun run compile
 - bun run typecheck
 - bun run test
+
+Run:
+- npm publish ./packages/opencode --access public
 ```
 
-If publish is blocked, display the blocker, the attempted version, and the next action needed.
+If validation is blocked, display the blocker, the attempted version, and the next action needed.

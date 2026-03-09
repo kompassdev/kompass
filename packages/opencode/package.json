@@ -1,21 +1,25 @@
 {
   "name": "@kompassdev/opencode",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "OpenCode plugin for navigating repos with fewer wrong turns",
   "type": "module",
-  "main": "./index.ts",
+  "main": "./dist/index.js",
   "exports": {
-    ".": "./index.ts"
+    ".": "./dist/index.js"
   },
   "files": [
-    "index.ts",
-    "config.ts",
+    "agents",
+    "commands",
+    "components",
+    "dist",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
+    "build": "bun run ./scripts/build.ts",
     "check": "bun --eval \"await import('./index.ts')\"",
     "compile": "bun run ./scripts/compile.ts",
+    "prepack": "bun run build",
     "test": "bun test test",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
@@ -33,9 +37,11 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@kompassdev/core": "workspace:*",
     "@opencode-ai/plugin": "^1.2.24",
     "@opencode-ai/sdk": "1.2.24",
     "yaml": "^2.8.2"
+  },
+  "devDependencies": {
+    "@kompassdev/core": "workspace:*"
   }
 }

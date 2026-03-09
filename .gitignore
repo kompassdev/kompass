@@ -17,6 +17,9 @@ logs/
 dist/
 build/
 *.tsbuildinfo
+packages/opencode/agents/
+packages/opencode/commands/
+packages/opencode/components/
 
 # IDE
 .vscode/

@@ -2,24 +2,23 @@
   "name": "@kompassdev/core",
   "version": "0.0.3",
   "description": "Shared Kompass workflows, prompts, components, and tool definitions",
+  "private": true,
   "type": "module",
-  "main": "./index.ts",
+  "main": "./dist/index.js",
   "exports": {
-    ".": "./index.ts"
+    ".": "./dist/index.js"
   },
   "files": [
-    "index.ts",
     "agents",
-    "assets",
     "commands",
     "components",
-    "lib",
-    "tools",
-    "scripts",
+    "dist",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
+    "build": "bun build ./index.ts --outdir ./dist --target node --format esm --packages external",
+    "prepack": "bun run build",
     "test": "bun test test",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

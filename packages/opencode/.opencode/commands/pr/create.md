@@ -22,10 +22,10 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
 - call `changes_load`
 - If <base> is defined: pass it as the `base` parameter
 - Otherwise: call with no parameters
-- Use the `changes_load` result as the source of truth for analyzing and summarizing the pending work
+- Use `changes_load` as the source of truth; no additional git analysis commands are needed
 
 #### Step 2: Analyze Files
-- Review file paths and their purposes
+- Review the paths, statuses, and diffs from `changes_load`
 - Identify the nature of changes (added, modified, deleted)
 - Note lines added/removed per file
 

@@ -31,6 +31,7 @@ const opencodeToolCreators = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
+  // another useless comment
   pr_load($: PluginInput["$"]) {
     const definition = createPrLoadTool($);
     return tool({

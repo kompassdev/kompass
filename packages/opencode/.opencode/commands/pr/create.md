@@ -69,6 +69,10 @@ Use `gh pr create` to create the pull request:
 - Do NOT restate the full diff
 - Keep it compact and directional
 - Store the URL from the command output as `<pr-url>`
+- Do not proactively check whether a PR already exists; attempt `gh pr create` first
+- If `gh pr create` reports that a PR already exists for the branch, do not try to create another one
+- In that case, treat the response as an existing-PR result and use the returned URL as `<pr-url>`
+- Track whether the branch was pushed during this run and report that status in the final response
 
 ## PR Body Guidelines
 
@@ -82,10 +86,33 @@ Consider `<additional-context>` when analyzing changes and writing the PR descri
 
 ## Output
 
-When the PR is created, display:
+When a new PR is created, display:
 ```
 Created PR: <title>
 
 URL: <pr-url>
 Branch: <current-branch> → <base-branch>
+```
+
+If a PR already exists for the branch, display:
+```
+PR already exists
+
+URL: <pr-url>
+Branch: <current-branch> → <base-branch>
+```
+
+After the branch line, always include one additional line reporting push status:
+```
+Push: yes
+```
+
+If `Push: yes`, include one more line:
+```
+Pushed: <current-branch> → origin/<current-branch>
+```
+
+If the branch did not need pushing, use:
+```
+Push: no
 ```

@@ -140,6 +140,7 @@ const defaultComponentPaths: Record<string, string> = {
   "commit": "components/commit.txt",
   "dev-flow": "components/dev-flow.txt",
   "summarize-changes": "components/summarize-changes.txt",
+  "ticket-summary": "components/ticket-summary.txt",
 };
 
 const defaultToolConfig: Record<ToolName, ToolConfig> = {
@@ -205,6 +206,7 @@ export function mergeWithDefaults(
         "commit",
         "dev-flow",
         "summarize-changes",
+        "ticket-summary",
       ],
       paths: { ...defaultComponentPaths, ...config?.components?.paths },
     },

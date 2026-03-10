@@ -4,6 +4,7 @@
       "pr/create",
       "pr/review",
       "pr/fix",
+      "reload",
       "ticket/create",
       "ticket/plan",
       "ticket/dev",
@@ -32,6 +33,9 @@
       "enabled": true
     },
     "kompass_ticket_load": {
+      "enabled": true
+    },
+    "kompass_reload": {
       "enabled": true
     }
   },

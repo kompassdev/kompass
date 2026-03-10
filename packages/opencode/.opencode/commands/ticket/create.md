@@ -3,7 +3,7 @@ description: Summarize completed work and create a ticket
 agent: build
 ---
 
-## Goal
+## Goal 1234
 
 Create a ticket that summarizes the work returned by the current change comparison.
 

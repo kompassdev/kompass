@@ -5,6 +5,7 @@
       "pr/create",
       "pr/review",
       "pr/fix",
+      "reload",
       "ticket/create",
       "ticket/plan",
       "ticket/dev",
@@ -30,6 +31,9 @@
       "enabled": true
     },
     "ticket_sync": {
+      "enabled": true
+    },
+    "reload": {
       "enabled": true
     }
   },

@@ -13,6 +13,25 @@ import {
 import { applyAgentsConfig, applyCommandsConfig } from "./config.ts";
 import { getConfiguredOpenCodeToolName } from "./tool-names.ts";
 
+function createReloadTool(client: PluginInput["client"]) {
+  return tool({
+    description: "Reload the current OpenCode project cache",
+    args: {},
+    async execute(_, context) {
+      // Defer dispose so the tool returns before the session is torn down
+      setTimeout(() => {
+        void client.instance.dispose({ query: { directory: context.directory } });
+      }, 500);
+      return JSON.stringify({
+        scope: "project",
+        directory: context.directory,
+        status: "reload-requested",
+        nextLoad: "config, commands, agents, custom tools, and plugins rebuild on next access",
+      }, null, 2);
+    },
+  });
+}
+
 const opencodeToolCreators = {
   changes_load($: PluginInput["$"]) {
     const definition = createChangesLoadTool($);
@@ -64,10 +83,14 @@ const opencodeToolCreators = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
+  reload(_: PluginInput["$"], client: PluginInput["client"]) {
+    return createReloadTool(client);
+  },
 } as const;
 
 export async function createOpenCodeTools(
   $: PluginInput["$"],
+  client: PluginInput["client"],
   projectRoot: string,
 ): Promise<Record<string, ToolDefinition>> {
   const userConfig = await loadKompassConfig(projectRoot);
@@ -77,16 +100,16 @@ export async function createOpenCodeTools(
   for (const toolName of getEnabledToolNames(config.tools)) {
     const creator = opencodeToolCreators[toolName as keyof typeof opencodeToolCreators];
     if (creator) {
-      tools[getConfiguredOpenCodeToolName(toolName, config.tools[toolName].name)] = creator($);
+      tools[getConfiguredOpenCodeToolName(toolName, config.tools[toolName].name)] = creator($, client);
     }
   }
 
   return tools;
 }
 
-export const OpenCodeCompassPlugin: Plugin = async ({ $, worktree }: PluginInput) => {
+export const OpenCodeCompassPlugin: Plugin = async ({ $, client, worktree }: PluginInput) => {
   return {
-    tool: await createOpenCodeTools($, worktree),
+    tool: await createOpenCodeTools($, client, worktree),
     async config(cfg) {
       await applyAgentsConfig(cfg, worktree);
       await applyCommandsConfig(cfg, worktree);

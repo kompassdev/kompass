@@ -6,18 +6,28 @@ import path from "node:path";
 
 import { createOpenCodeTools } from "../index.ts";
 
+function createMockClient() {
+  return {
+    instance: {
+      dispose: async () => true,
+    },
+  } as never;
+}
+
 describe("createOpenCodeTools", () => {
   test("registers Kompass tools with prefixed names", async () => {
     const tools = await createOpenCodeTools((() => {
       throw new Error("not implemented");
-    }) as never, process.cwd());
+    }) as never, createMockClient(), process.cwd());
 
     assert.ok(tools.kompass_changes_load);
     assert.ok(tools.kompass_pr_load);
+    assert.ok(tools.kompass_reload);
     assert.ok(tools.kompass_ticket_load);
     assert.ok(tools.kompass_ticket_sync);
     assert.equal(tools.changes_load, undefined);
     assert.equal(tools.pr_load, undefined);
+    assert.equal(tools.reload, undefined);
     assert.equal(tools.ticket_load, undefined);
     assert.equal(tools.ticket_sync, undefined);
   });
@@ -41,15 +51,16 @@ describe("createOpenCodeTools", () => {
         }),
       );
 
-      const tools = await createOpenCodeTools((() => {
-        throw new Error("not implemented");
-      }) as never, tempDir);
+        const tools = await createOpenCodeTools((() => {
+          throw new Error("not implemented");
+        }) as never, createMockClient(), tempDir);
 
-      assert.ok(tools.custom_ticket_name);
-      assert.equal(tools.kompass_ticket_sync, undefined);
-      assert.deepEqual(Object.keys(tools), ["custom_ticket_name"]);
-    } finally {
-      await rm(tempDir, { recursive: true, force: true });
-    }
+        assert.ok(tools.custom_ticket_name);
+        assert.ok(tools.kompass_reload);
+        assert.equal(tools.kompass_ticket_sync, undefined);
+        assert.deepEqual(Object.keys(tools).sort(), ["custom_ticket_name", "kompass_reload"]);
+      } finally {
+        await rm(tempDir, { recursive: true, force: true });
+      }
   });
 });

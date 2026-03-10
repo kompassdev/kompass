@@ -31,6 +31,12 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     templatePath: "commands/learn.txt",
     subtask: false,
   },
+  reload: {
+    description: "Reload the current OpenCode project configuration",
+    agent: "build",
+    templatePath: "commands/reload.txt",
+    subtask: false,
+  },
   "pr/create": {
     description: "Summarize branch work and create a PR",
     agent: "build",

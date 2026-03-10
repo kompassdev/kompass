@@ -12,6 +12,7 @@ export const DEFAULT_TOOL_NAMES = [
   "pr_load",
   "ticket_sync",
   "ticket_load",
+  "reload",
 ] as const;
 
 export type ToolName = (typeof DEFAULT_TOOL_NAMES)[number];
@@ -36,6 +37,7 @@ export interface KompassConfig {
     pr_load?: ToolConfig;
     ticket_sync?: ToolConfig;
     ticket_load?: ToolConfig;
+    reload?: ToolConfig;
   };
   components?: {
     enabled?: string[];
@@ -68,6 +70,7 @@ export interface MergedKompassConfig {
     pr_load: ToolConfig;
     ticket_sync: ToolConfig;
     ticket_load: ToolConfig;
+    reload: ToolConfig;
   };
   components: {
     enabled: string[];
@@ -138,6 +141,7 @@ const defaultToolConfig: Record<ToolName, ToolConfig> = {
   pr_load: { enabled: true },
   ticket_sync: { enabled: true },
   ticket_load: { enabled: true },
+  reload: { enabled: true },
 };
 
 export function getEnabledToolNames(tools: MergedKompassConfig["tools"]): ToolName[] {
@@ -164,6 +168,7 @@ export function mergeWithDefaults(
         "pr/create",
         "pr/fix",
         "pr/review",
+        "reload",
         "review",
         "rmslop",
         "ticket/create",
@@ -182,6 +187,7 @@ export function mergeWithDefaults(
       pr_load: { ...defaultToolConfig.pr_load, ...config?.tools?.pr_load },
       ticket_sync: { ...defaultToolConfig.ticket_sync, ...config?.tools?.ticket_sync },
       ticket_load: { ...defaultToolConfig.ticket_load, ...config?.tools?.ticket_load },
+      reload: { ...defaultToolConfig.reload, ...config?.tools?.reload },
     },
     components: {
       enabled: config?.components?.enabled ?? [

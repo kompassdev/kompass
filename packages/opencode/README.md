@@ -80,8 +80,10 @@ Current command workflows include:
 - `/pr/create`
 - `/pr/fix`
 - `/pr/review`
+- `/reload`
 - `/review`
 - `/rmslop`
+- `/ticket/create`
 - `/ticket/dev`
 - `/ticket/plan`
 
@@ -91,8 +93,11 @@ Current command workflows include:
 
 - `changes_load`: load branch changes against a base branch
 - `pr_load`: load PR metadata and review history
+- `pr_review`: add PR comments (general, inline, or reply to threads)
+- `pr_sync`: create or update a pull request with checklists
 - `ticket_load`: load a ticket from GitHub, file, or text
-- `ticket_sync`: create or update a GitHub issue
+- `ticket_sync`: create or update a GitHub issue with checklists
+- `reload`: refresh the OpenCode project cache
 
 <details>
 <summary><strong>`changes_load` details</strong></summary>
@@ -165,6 +170,66 @@ Why it helps:
 
 - lets ticket flows create a new issue or update an existing one with one tool
 - avoids making the agent handcraft raw `gh` issue commands each time
+
+</details>
+
+<details>
+<summary><strong>`pr_review` details</strong></summary>
+
+Add comments to a PR: general PR comment, inline review comment on specific lines, or reply to existing review threads.
+
+Parameters:
+
+- `comment_type` (required): type of comment - "general", "inline", or "reply"
+- `body` (required): comment text
+- `pr` (optional): PR number or URL (uses current PR if not provided)
+- `commit_id` (optional): commit SHA for inline comments
+- `path` (optional): file path for inline comments
+- `line` (optional): line number for inline comments
+- `in_reply_to` (optional): comment ID to reply to
+
+Why it helps:
+
+- handles all PR comment scenarios in one tool
+- no shell escaping issues with backticks or quotes
+- replies automatically fetch parent comment context
+
+</details>
+
+<details>
+<summary><strong>`pr_sync` details</strong></summary>
+
+Create or update a GitHub pull request with structured checklists.
+
+Parameters:
+
+- `title` (required): PR title
+- `body` (optional): raw PR body override
+- `description` (optional): short PR description rendered above checklist sections
+- `base` (optional): base branch to merge into
+- `checklists` (optional): structured checklist sections (e.g., Testing, Summary)
+- `draft` (optional): create as draft PR
+- `refUrl` (optional): PR URL to update instead of creating new
+
+Why it helps:
+
+- consistent PR creation with checklist support
+- create or update with one tool
+- no shell escaping issues
+
+</details>
+
+<details>
+<summary><strong>`reload` details</strong></summary>
+
+Reload the OpenCode project cache.
+
+Parameters: none
+
+Why it helps:
+
+- refresh config, commands, and tools without restarting
+- useful after making changes to kompass.json
 
 </details>
 

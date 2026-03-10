@@ -7,16 +7,86 @@ import {
 
 type TicketSyncArgs = {
   title: string;
-  body: string;
+  body?: string;
+  description?: string;
+  labels?: string[];
+  checklists?: Array<{
+    name: string;
+    items: Array<{
+      name: string;
+      completed: boolean;
+    }>;
+  }>;
   refUrl?: string;
 };
+
+function quote(value: string) {
+  return `'${value.replace(/'/g, `'\\''`)}'`;
+}
+
+function renderTicketBody(args: TicketSyncArgs) {
+  if (args.body?.trim()) {
+    return args.body.trim();
+  }
+
+  const sections: string[] = [];
+
+  if (args.description?.trim()) {
+    sections.push(args.description.trim());
+  }
+
+  for (const checklist of args.checklists ?? []) {
+    const items = checklist.items
+      .map((item) => `- [${item.completed ? "x" : " "}] ${item.name}`)
+      .join("\n");
+
+    if (!items) {
+      continue;
+    }
+
+    sections.push(`### ${checklist.name}\n\n${items}`);
+  }
+
+  const body = sections.join("\n\n").trim();
+  if (!body) {
+    throw new Error("ticket_sync requires body, description, or checklist content");
+  }
+
+  return body;
+}
+
+function renderLabelFlags(flagName: string, labels?: string[]) {
+  return (labels ?? [])
+    .filter((label) => label.trim())
+    .map((label) => `${flagName} ${quote(label.trim())}`)
+    .join(" ");
+}
 
 export function createTicketSyncTool($: Shell) {
   return {
     description: "Create or update a GitHub issue",
     args: {
       title: { type: "string", description: "Issue title" },
-      body: { type: "string", description: "Issue body" },
+      body: {
+        type: "string",
+        optional: true,
+        description: "Issue body override; optional when using description/checklists",
+      },
+      description: {
+        type: "string",
+        optional: true,
+        description: "Short issue description rendered above checklist sections",
+      },
+      labels: {
+        type: "string[]",
+        optional: true,
+        description: "Labels to apply to the issue",
+      },
+      checklists: {
+        type: "json",
+        optional: true,
+        description: "Checklist sections rendered as markdown checklists",
+      },
       refUrl: {
         type: "string",
         optional: true,
@@ -24,8 +94,22 @@ export function createTicketSyncTool($: Shell) {
       },
     },
     async execute(args: TicketSyncArgs, ctx: ToolExecutionContext) {
+      const body = renderTicketBody(args);
+
       if (args.refUrl) {
-        const proc = await $`gh issue edit ${args.refUrl} --title ${args.title} --body ${args.body}`
+        const addLabelFlags = renderLabelFlags("--add-label", args.labels);
+        const command = [
+          "gh issue edit",
+          quote(args.refUrl),
+          "--title",
+          quote(args.title),
+          "--body",
+          quote(body),
+          addLabelFlags,
+        ]
+          .filter(Boolean)
+          .join(" ");
+        const proc = await $`${command}`
           .cwd(ctx.worktree)
           .quiet()
           .nothrow();
@@ -39,7 +123,18 @@ export function createTicketSyncTool($: Shell) {
         });
       }
 
-      const proc = await $`gh issue create --title ${args.title} --body ${args.body}`
+      const labelFlags = renderLabelFlags("--label", args.labels);
+      const command = [
+        "gh issue create",
+        "--title",
+        quote(args.title),
+        "--body",
+        quote(body),
+        labelFlags,
+      ]
+        .filter(Boolean)
+        .join(" ");
+      const proc = await $`${command}`
         .cwd(ctx.worktree)
         .quiet()
         .nothrow();

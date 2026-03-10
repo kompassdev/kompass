@@ -19,24 +19,29 @@ Store `$ARGUMENTS` as `<arguments>`, then normalize it:
 
 ### Shape the Plan
 
-- Turn `<planning-context>` and `<additional-context>` into `<plan-payload>`
-- Ensure `<plan-payload>` includes:
-  - a short title
-  - a brief description
-  - outcome-focused requirement items
-  - outcome-focused validation items
+- Turn `<planning-context>` and `<additional-context>` into:
+  - `<plan-title>` - a short, outcome-focused title for the ticket
+  - `<plan-description>` - a brief description of the intended outcome and scope
+  - `<requirement-items>` - concise, outcome-focused requirement checklist items
+  - `<validation-items>` - concise validation checklist items
 - Keep the plan concise, human-friendly, and centered on scope, constraints, and expected outcomes
+- Avoid placeholder-like labels or awkward title formats such as `Ticket`, `Description`, or `Ticket : Description`
 
 ### Sync Ticket
 
-- Use `ticket_sync` to store `<plan-payload>` in the ticket flow:
+- Use `ticket_sync` to store the plan in the ticket flow:
+  - set `title` to `<plan-title>`
+  - set `description` to `<plan-description>`
+  - set `checklists` to two sections:
+    - `Requirement` with `<requirement-items>`
+    - `Validation` with `<validation-items>`
   - set `refUrl` to `<ticket-url>` when updating an existing ticket
   - leave `refUrl` unset when creating a new ticket from the request
 - Store the returned ticket reference or URL as `<ticket-ref>`
 
 ### Present Plan
 
-- Return the ticket reference, a one-sentence summary of the work, and the generated plan payload
+- Return the ticket reference, a one-sentence summary of the work, and the generated plan
 - Call out assumptions, risks, or blockers only when they materially matter
 
 ## Additional Context
@@ -54,6 +59,14 @@ Ticket: <ticket-ref>
 
 Covers: <one-sentence summary>
 
-Plan:
-<plan-payload>
+Title: <plan-title>
+
+Description:
+<plan-description>
+
+Requirements:
+- <requirement item>
+
+Validation:
+- <validation item>
 ```

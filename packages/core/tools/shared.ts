@@ -36,6 +36,16 @@ export type ToolArgDefinition =
       optional?: boolean;
       int?: boolean;
       positive?: boolean;
+    }
+  | {
+      type: "string[]";
+      description: string;
+      optional?: boolean;
+    }
+  | {
+      type: "json";
+      description: string;
+      optional?: boolean;
     };
 
 export interface ToolDefinition<Args = Record<string, unknown>> {

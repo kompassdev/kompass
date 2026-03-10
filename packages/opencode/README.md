@@ -155,7 +155,10 @@ Create or update a GitHub issue.
 Parameters:
 
 - `title` (required): issue title
-- `body` (required): issue body
+- `body` (optional): raw issue body override
+- `description` (optional): short issue description rendered above checklist sections
+- `labels` (optional): labels to apply when creating or updating the issue
+- `checklists` (optional): structured checklist sections rendered as markdown, for example `### Requirement` followed by `- [ ] Item 1`
 - `refUrl` (optional): issue URL to update instead of creating a new issue
 
 Why it helps:
@@ -167,7 +170,7 @@ Why it helps:
 
 ## Local Development
 
-This package lives in the Kompass workspace and is powered by shared logic from `@kompassdev/core`.
+This package lives in the Kompass workspace and loads shared logic directly from `packages/core` during local development.
 
 From the workspace root, run:
 
@@ -177,4 +180,4 @@ bun run typecheck
 bun run test
 ```
 
-`bun run compile` regenerates `packages/opencode/.opencode/` from the OpenCode package sources.
+`bun run compile` regenerates `packages/opencode/.opencode/` from the current workspace sources.

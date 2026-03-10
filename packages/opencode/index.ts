@@ -9,7 +9,7 @@ import {
   getEnabledToolNames,
   loadKompassConfig,
   mergeWithDefaults,
-} from "@kompassdev/core";
+} from "../core/index.ts";
 import { applyAgentsConfig, applyCommandsConfig } from "./config.ts";
 import { getConfiguredOpenCodeToolName } from "./tool-names.ts";
 
@@ -66,7 +66,16 @@ const opencodeToolCreators = {
       description: definition.description,
       args: {
         title: tool.schema.string().describe("Issue title"),
-        body: tool.schema.string().describe("Issue body"),
+        body: tool.schema.string().describe("Issue body override").optional(),
+        description: tool.schema.string().describe("Issue description rendered above checklist sections").optional(),
+        labels: tool.schema.array(tool.schema.string()).describe("Labels to apply to the issue").optional(),
+        checklists: tool.schema.array(tool.schema.object({
+          name: tool.schema.string().describe("Checklist section name"),
+          items: tool.schema.array(tool.schema.object({
+            name: tool.schema.string().describe("Checklist item name"),
+            completed: tool.schema.boolean().describe("Whether the item is completed"),
+          })).describe("Checklist items"),
+        })).describe("Checklist sections rendered as markdown").optional(),
         refUrl: tool.schema.string().describe("Optional issue URL to update").optional(),
       },
       execute: (args, context) => definition.execute(args, context),

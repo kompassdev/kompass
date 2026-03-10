@@ -23,7 +23,7 @@ import {
   mergeWithDefaults,
   resolveAgents,
   resolveCommands,
-} from "@kompassdev/core";
+} from "../../core/index.ts";
 import {
   getConfiguredOpenCodeToolName,
   prefixKompassToolReferences,

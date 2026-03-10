@@ -102,10 +102,15 @@ describe("applyCommandsConfig", () => {
 
         assert.ok(cfg.command);
         const ticketCreateTemplate = cfg.command!["ticket/create"].template;
+        const ticketPlanTemplate = cfg.command!["ticket/plan"].template;
 
         assert.match(ticketCreateTemplate, /`custom_ticket_name`/);
         assert.doesNotMatch(ticketCreateTemplate, /`kompass_ticket_sync`/);
         assert.doesNotMatch(ticketCreateTemplate, /`ticket_sync`/);
+
+        assert.match(ticketPlanTemplate, /`custom_ticket_name`/);
+        assert.doesNotMatch(ticketPlanTemplate, /`kompass_ticket_sync`/);
+        assert.doesNotMatch(ticketPlanTemplate, /`ticket_sync`/);
       } finally {
         await rm(tempDir, { recursive: true, force: true });
       }

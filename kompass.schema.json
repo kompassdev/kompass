@@ -92,6 +92,9 @@
         "pr_load": {
           "$ref": "#/$defs/toolConfig"
         },
+        "pr_review": {
+          "$ref": "#/$defs/toolConfig"
+        },
         "ticket_sync": {
           "$ref": "#/$defs/toolConfig"
         },
@@ -194,6 +197,7 @@
       "enum": [
         "changes_load",
         "pr_load",
+        "pr_review",
         "ticket_sync",
         "ticket_load",
         "reload"

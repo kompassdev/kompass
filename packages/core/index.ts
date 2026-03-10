@@ -12,6 +12,7 @@ export type { AgentDefinition, KompassConfig, MergedKompassConfig, ToolConfig, T
 export { createTools } from "./tools/index.ts";
 export { createChangesLoadTool } from "./tools/changes-load.ts";
 export { createPrLoadTool } from "./tools/pr-load.ts";
+export { createPrReviewTool } from "./tools/pr-review.ts";
 export { createTicketLoadTool } from "./tools/ticket-load.ts";
 export { createTicketSyncTool } from "./tools/ticket-sync.ts";
 export type {

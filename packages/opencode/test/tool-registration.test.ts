@@ -22,11 +22,13 @@ describe("createOpenCodeTools", () => {
 
     assert.ok(tools.kompass_changes_load);
     assert.ok(tools.kompass_pr_load);
+    assert.ok(tools.kompass_pr_review);
     assert.ok(tools.kompass_reload);
     assert.ok(tools.kompass_ticket_load);
     assert.ok(tools.kompass_ticket_sync);
     assert.equal(tools.changes_load, undefined);
     assert.equal(tools.pr_load, undefined);
+    assert.equal(tools.pr_review, undefined);
     assert.equal(tools.reload, undefined);
     assert.equal(tools.ticket_load, undefined);
     assert.equal(tools.ticket_sync, undefined);
@@ -42,6 +44,7 @@ describe("createOpenCodeTools", () => {
           tools: {
             changes_load: { enabled: false },
             pr_load: { enabled: false },
+            pr_review: { enabled: false },
             ticket_sync: {
               enabled: true,
               name: "custom_ticket_name",
@@ -51,14 +54,14 @@ describe("createOpenCodeTools", () => {
         }),
       );
 
-        const tools = await createOpenCodeTools((() => {
-          throw new Error("not implemented");
-        }) as never, createMockClient(), tempDir);
+      const tools = await createOpenCodeTools((() => {
+        throw new Error("not implemented");
+      }) as never, createMockClient(), tempDir);
 
-        assert.ok(tools.custom_ticket_name);
-        assert.ok(tools.kompass_reload);
-        assert.equal(tools.kompass_ticket_sync, undefined);
-        assert.deepEqual(Object.keys(tools).sort(), ["custom_ticket_name", "kompass_reload"]);
+      assert.ok(tools.custom_ticket_name);
+      assert.ok(tools.kompass_reload);
+      assert.equal(tools.kompass_ticket_sync, undefined);
+      assert.deepEqual(Object.keys(tools).sort(), ["custom_ticket_name", "kompass_reload"]);
       } finally {
         await rm(tempDir, { recursive: true, force: true });
       }

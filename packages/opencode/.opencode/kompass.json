@@ -29,6 +29,9 @@
     "kompass_pr_load": {
       "enabled": true
     },
+    "kompass_pr_review": {
+      "enabled": true
+    },
     "kompass_ticket_sync": {
       "enabled": true
     },

@@ -23,12 +23,14 @@ describe("createOpenCodeTools", () => {
     assert.ok(tools.kompass_changes_load);
     assert.ok(tools.kompass_pr_load);
     assert.ok(tools.kompass_pr_review);
+    assert.ok(tools.kompass_pr_sync);
     assert.ok(tools.kompass_reload);
     assert.ok(tools.kompass_ticket_load);
     assert.ok(tools.kompass_ticket_sync);
     assert.equal(tools.changes_load, undefined);
     assert.equal(tools.pr_load, undefined);
     assert.equal(tools.pr_review, undefined);
+    assert.equal(tools.pr_sync, undefined);
     assert.equal(tools.reload, undefined);
     assert.equal(tools.ticket_load, undefined);
     assert.equal(tools.ticket_sync, undefined);
@@ -45,6 +47,7 @@ describe("createOpenCodeTools", () => {
             changes_load: { enabled: false },
             pr_load: { enabled: false },
             pr_review: { enabled: false },
+            pr_sync: { enabled: false },
             ticket_sync: {
               enabled: true,
               name: "custom_ticket_name",

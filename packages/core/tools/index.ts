@@ -7,6 +7,7 @@ import {
 import { createChangesLoadTool } from "./changes-load.ts";
 import { createPrLoadTool } from "./pr-load.ts";
 import { createPrReviewTool } from "./pr-review.ts";
+import { createPrSyncTool } from "./pr-sync.ts";
 import { createTicketLoadTool } from "./ticket-load.ts";
 import { createTicketSyncTool } from "./ticket-sync.ts";
 import type { Shell, ToolDefinition } from "./shared.ts";
@@ -15,6 +16,7 @@ const toolCreators: Record<string, ($: Shell) => ToolDefinition> = {
   changes_load: createChangesLoadTool,
   pr_load: createPrLoadTool,
   pr_review: createPrReviewTool,
+  pr_sync: createPrSyncTool,
   ticket_sync: createTicketSyncTool,
   ticket_load: createTicketLoadTool,
 };

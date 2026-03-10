@@ -11,6 +11,7 @@ export const DEFAULT_TOOL_NAMES = [
   "changes_load",
   "pr_load",
   "pr_review",
+  "pr_sync",
   "ticket_sync",
   "ticket_load",
   "reload",
@@ -37,6 +38,7 @@ export interface KompassConfig {
     changes_load?: ToolConfig;
     pr_load?: ToolConfig;
     pr_review?: ToolConfig;
+    pr_sync?: ToolConfig;
     ticket_sync?: ToolConfig;
     ticket_load?: ToolConfig;
     reload?: ToolConfig;
@@ -71,6 +73,7 @@ export interface MergedKompassConfig {
     changes_load: ToolConfig;
     pr_load: ToolConfig;
     pr_review: ToolConfig;
+    pr_sync: ToolConfig;
     ticket_sync: ToolConfig;
     ticket_load: ToolConfig;
     reload: ToolConfig;
@@ -143,6 +146,7 @@ const defaultToolConfig: Record<ToolName, ToolConfig> = {
   changes_load: { enabled: true },
   pr_load: { enabled: true },
   pr_review: { enabled: true },
+  pr_sync: { enabled: true },
   ticket_sync: { enabled: true },
   ticket_load: { enabled: true },
   reload: { enabled: true },
@@ -190,6 +194,7 @@ export function mergeWithDefaults(
       changes_load: { ...defaultToolConfig.changes_load, ...config?.tools?.changes_load },
       pr_load: { ...defaultToolConfig.pr_load, ...config?.tools?.pr_load },
       pr_review: { ...defaultToolConfig.pr_review, ...config?.tools?.pr_review },
+      pr_sync: { ...defaultToolConfig.pr_sync, ...config?.tools?.pr_sync },
       ticket_sync: { ...defaultToolConfig.ticket_sync, ...config?.tools?.ticket_sync },
       ticket_load: { ...defaultToolConfig.ticket_load, ...config?.tools?.ticket_load },
       reload: { ...defaultToolConfig.reload, ...config?.tools?.reload },

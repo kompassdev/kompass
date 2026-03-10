@@ -95,6 +95,9 @@
         "pr_review": {
           "$ref": "#/$defs/toolConfig"
         },
+        "pr_sync": {
+          "$ref": "#/$defs/toolConfig"
+        },
         "ticket_sync": {
           "$ref": "#/$defs/toolConfig"
         },
@@ -198,6 +201,7 @@
         "changes_load",
         "pr_load",
         "pr_review",
+        "pr_sync",
         "ticket_sync",
         "ticket_load",
         "reload"

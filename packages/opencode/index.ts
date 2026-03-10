@@ -5,6 +5,7 @@ import {
   createChangesLoadTool,
   createPrLoadTool,
   createPrReviewTool,
+  createPrSyncTool,
   createTicketLoadTool,
   createTicketSyncTool,
   getEnabledToolNames,
@@ -73,6 +74,28 @@ const opencodeToolCreators = {
         path: tool.schema.string().describe("File path for inline comments").optional(),
         line: tool.schema.number().int().positive().describe("Line number for inline comments").optional(),
         in_reply_to: tool.schema.number().int().positive().describe("Comment ID to reply to").optional(),
+      },
+      execute: (args, context) => definition.execute(args, context),
+    });
+  },
+  pr_sync($: PluginInput["$"]) {
+    const definition = createPrSyncTool($);
+    return tool({
+      description: definition.description,
+      args: {
+        title: tool.schema.string().describe("PR title"),
+        body: tool.schema.string().describe("PR body override").optional(),
+        description: tool.schema.string().describe("Short PR description rendered above checklist sections").optional(),
+        base: tool.schema.string().describe("Base branch to merge into").optional(),
+        checklists: tool.schema.array(tool.schema.object({
+          name: tool.schema.string().describe("Checklist section name"),
+          items: tool.schema.array(tool.schema.object({
+            name: tool.schema.string().describe("Checklist item name"),
+            completed: tool.schema.boolean().describe("Whether the item is completed"),
+          })).describe("Checklist items"),
+        })).describe("Checklist sections rendered as markdown").optional(),
+        draft: tool.schema.boolean().describe("Create as draft PR").optional(),
+        refUrl: tool.schema.string().describe("Optional PR URL to update").optional(),
       },
       execute: (args, context) => definition.execute(args, context),
     });

@@ -13,6 +13,7 @@ export { createTools } from "./tools/index.ts";
 export { createChangesLoadTool } from "./tools/changes-load.ts";
 export { createPrLoadTool } from "./tools/pr-load.ts";
 export { createPrReviewTool } from "./tools/pr-review.ts";
+export { createPrSyncTool } from "./tools/pr-sync.ts";
 export { createTicketLoadTool } from "./tools/ticket-load.ts";
 export { createTicketSyncTool } from "./tools/ticket-sync.ts";
 export type {

@@ -27,8 +27,10 @@
               "pr/create",
               "pr/fix",
               "pr/review",
+              "reload",
               "review",
               "rmslop",
+              "ticket/create",
               "ticket/dev",
               "ticket/plan"
             ]
@@ -46,8 +48,10 @@
               "pr/create",
               "pr/fix",
               "pr/review",
+              "reload",
               "review",
               "rmslop",
+              "ticket/create",
               "ticket/dev",
               "ticket/plan"
             ]
@@ -93,6 +97,9 @@
         },
         "ticket_load": {
           "$ref": "#/$defs/toolConfig"
+        },
+        "reload": {
+          "$ref": "#/$defs/toolConfig"
         }
       }
     },
@@ -104,14 +111,14 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["change-summary", "commit", "dev-flow"]
+            "enum": ["change-summary", "commit", "dev-flow", "summarize-changes"]
           },
           "uniqueItems": true
         },
         "paths": {
           "type": "object",
           "propertyNames": {
-            "enum": ["change-summary", "commit", "dev-flow"]
+            "enum": ["change-summary", "commit", "dev-flow", "summarize-changes"]
           },
           "additionalProperties": {
             "type": "string"
@@ -187,9 +194,10 @@
       "enum": [
         "changes_load",
         "pr_load",
-            "ticket_sync",
-            "ticket_load"
-          ]
+        "ticket_sync",
+        "ticket_load",
+        "reload"
+      ]
     }
   }
 }

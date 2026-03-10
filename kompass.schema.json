@@ -82,18 +82,17 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "enabled": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": [
-              "changes_load",
-              "pr_load",
-              "ticket_create",
-              "ticket_load"
-            ]
-          },
-          "uniqueItems": true
+        "changes_load": {
+          "$ref": "#/$defs/toolConfig"
+        },
+        "pr_load": {
+          "$ref": "#/$defs/toolConfig"
+        },
+        "ticket_sync": {
+          "$ref": "#/$defs/toolConfig"
+        },
+        "ticket_load": {
+          "$ref": "#/$defs/toolConfig"
         }
       }
     },
@@ -169,6 +168,28 @@
           }
         }
       }
+    },
+    "toolConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "toolName": {
+      "type": "string",
+      "enum": [
+        "changes_load",
+        "pr_load",
+            "ticket_sync",
+            "ticket_load"
+          ]
     }
   }
 }

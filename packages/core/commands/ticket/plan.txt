@@ -1,59 +1,59 @@
 ## Goal
 
-Create a development plan from a request or ticket, mapping out scope and implementation approach.
+Create a scoped implementation plan from a request or ticket, then capture that plan in the relevant ticket flow.
 
 ## Workflow
 
 ### Interpret Arguments
 
 Store `$ARGUMENTS` as `<arguments>`, then normalize it:
-- Interpret `<arguments>` as `<request-source>` (ticket reference, URL, file path, or raw request)
-- If `<arguments>` explicitly asks to create a new GitHub issue, store that intent as `<create-ticket>`
-- If `<arguments>` includes planning focus areas, constraints, or notes, store them as `<additional-context>`
+- If `<arguments>` looks like a ticket reference or URL, store it as `<ticket-url>`
+- Otherwise, treat `<arguments>` as `<request>`
+- If `<arguments>` includes planning focus areas, constraints, or notes beyond the main request, store them as `<additional-context>`
+- If no `<arguments>` are provided, derive the request from the conversation and store it as `<request>`
 
-### Load Request Context
+### Load Planning Context
 
-- If `<request-source>` looks like a ticket reference or URL, use `ticket_load` and store the result as `<request-context>`
-- Otherwise, treat `<request-source>` as `<request-context>`
+- If `<ticket-url>` is defined, use `ticket_load` with `<ticket-url>` and treat the result as `<planning-context>`
+- Otherwise, treat `<request>` as `<planning-context>`
 
-### Orient
+### Shape the Plan
 
-- Normalize `<request-context>` into a clear problem statement
-- Identify what needs to be built, what is out of scope, and what assumptions might send the work off course
+- Turn `<planning-context>` and `<additional-context>` into `<plan-payload>`
+- Ensure `<plan-payload>` includes:
+  - a short title
+  - a brief description
+  - outcome-focused requirement items
+  - outcome-focused validation items
+- Keep the plan concise, human-friendly, and centered on scope, constraints, and expected outcomes
 
-### Map the Plan
+### Sync Ticket
 
-- Define scope and boundaries
-- Identify constraints and limitations
-- Note unknowns that still need investigation
-- Define acceptance criteria
-- Outline implementation waypoints and sequencing
-
-### Create Ticket
-
-- Only if `<create-ticket>` is explicitly requested, use `ticket_create` to open a GitHub issue
-- Include a clear title, description, and acceptance criteria
-- Store the new issue reference as `<ticket-ref>`
+- Use `ticket_sync` to store `<plan-payload>` in the ticket flow:
+  - set `refUrl` to `<ticket-url>` when updating an existing ticket
+  - leave `refUrl` unset when creating a new ticket from the request
+- Store the returned ticket reference or URL as `<ticket-ref>`
 
 ### Present Plan
 
-- Use clear headings and structure
-- Call out assumptions, risks, and blockers early
-- Ask for clarification only when truly blocked by missing product intent
+- Return the ticket reference, a one-sentence summary of the work, and the generated plan payload
+- Call out assumptions, risks, or blockers only when they materially matter
 
 ## Additional Context
 
-- Keep the plan navigation-ready with clear headings and no ambiguity
-- Use `<additional-context>` to emphasize the most important constraints, dependencies, or focus areas
-- Only create tickets when `<create-ticket>` is explicitly set
+- Treat ticket systems generically. Do not assume GitHub or any specific provider unless the provided context makes it relevant.
+- Use `<additional-context>` to emphasize the most important constraints, dependencies, or focus areas.
+- For existing tickets, update the same ticket instead of creating a replacement, and keep checklist items and descriptions outcome-focused rather than implementation-focused.
+- Ask only when blocked by a missing or invalid ticket source, or by ambiguity that prevents a reliable plan.
 
 ## Output
 
 When the plan is ready, display:
 ```
-Plan ready: <request-summary>
+Ticket: <ticket-ref>
 
-Scope: <scope-summary>
-Waypoints: <waypoint-summary>
-Ticket: <ticket-ref-or-none>
+Covers: <one-sentence summary>
+
+Plan:
+<plan-payload>
 ```

@@ -22,12 +22,18 @@
     ]
   },
   "tools": {
-    "enabled": [
-      "kompass_changes_load",
-      "kompass_pr_load",
-      "kompass_ticket_load",
-      "kompass_ticket_create"
-    ]
+    "kompass_changes_load": {
+      "enabled": true
+    },
+    "kompass_pr_load": {
+      "enabled": true
+    },
+    "kompass_ticket_sync": {
+      "enabled": true
+    },
+    "kompass_ticket_load": {
+      "enabled": true
+    }
   },
   "defaults": {
     "baseBranch": "main"

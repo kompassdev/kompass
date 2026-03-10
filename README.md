@@ -89,7 +89,7 @@ Kompass includes handcrafted tools that return focused, structured data for spec
 - `changes_load`: load branch changes against a base branch
 - `pr_load`: load PR metadata and review history
 - `ticket_load`: load a ticket from GitHub, file, or text
-- `ticket_create`: create a GitHub issue
+- `ticket_sync`: create or update a GitHub issue
 
 <details>
 <summary><strong>`changes_load` details</strong></summary>
@@ -145,19 +145,19 @@ Why it helps:
 </details>
 
 <details>
-<summary><strong>`ticket_create` details</strong></summary>
+<summary><strong>`ticket_sync` details</strong></summary>
 
-Create a GitHub issue.
+Create or update a GitHub issue.
 
 Parameters:
 
 - `title` (required): issue title
 - `body` (required): issue body
-- `repo` (optional): owner/repo override
+- `refUrl` (optional): issue URL to update instead of creating a new issue
 
 Why it helps:
 
-- makes ticket planning flows able to end in a real issue
+- lets ticket flows create a new issue or update an existing one with one tool
 - avoids making the agent handcraft raw `gh` issue commands each time
 
 </details>
@@ -172,6 +172,19 @@ If you want to customize Kompass, use one of these preferred locations in the co
 - `kompass.json`
 
 See `kompass.json` for the root example, `.opencode/kompass.json` for the OpenCode-scoped example, and `kompass.schema.json` for the schema.
+
+Tool names can also be remapped per adapter. For example, this keeps `ticket_sync` enabled but exposes it as `custom_ticket_name`, and Kompass command or agent references are rewritten to match:
+
+```json
+{
+  "tools": {
+    "ticket_sync": {
+      "enabled": true,
+      "name": "custom_ticket_name"
+    }
+  }
+}
+```
 
 ## Workspace
 

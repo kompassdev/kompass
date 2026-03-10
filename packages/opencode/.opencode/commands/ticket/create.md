@@ -5,7 +5,7 @@ agent: build
 
 ## Goal
 
-Create a GitHub ticket that summarizes the work completed in the current branch or working tree.
+Create a ticket that summarizes the work completed in the current branch or working tree.
 
 ## Workflow
 
@@ -42,7 +42,7 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
 
 ### Create Ticket
 
-Use `kompass_ticket_create` to open the GitHub issue:
+Use `kompass_ticket_sync` with `refUrl` unset to create the ticket:
 - Generate a concise title (max 70 chars) that reflects the delivered outcome
 - Generate a body with:
   - `## Summary` - 1-3 bullets focused on what was accomplished and why it matters

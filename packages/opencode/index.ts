@@ -4,13 +4,14 @@ import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool";
 import {
   createChangesLoadTool,
   createPrLoadTool,
-  createTicketCreateTool,
   createTicketLoadTool,
+  createTicketSyncTool,
+  getEnabledToolNames,
   loadKompassConfig,
   mergeWithDefaults,
 } from "@kompassdev/core";
 import { applyAgentsConfig, applyCommandsConfig } from "./config.ts";
-import { getOpenCodeToolName } from "./tool-names.ts";
+import { getConfiguredOpenCodeToolName } from "./tool-names.ts";
 
 const opencodeToolCreators = {
   changes_load($: PluginInput["$"]) {
@@ -40,14 +41,14 @@ const opencodeToolCreators = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
-  ticket_create($: PluginInput["$"]) {
-    const definition = createTicketCreateTool($);
+  ticket_sync($: PluginInput["$"]) {
+    const definition = createTicketSyncTool($);
     return tool({
       description: definition.description,
       args: {
         title: tool.schema.string().describe("Issue title"),
         body: tool.schema.string().describe("Issue body"),
-        repo: tool.schema.string().describe("Optional owner/repo override").optional(),
+        refUrl: tool.schema.string().describe("Optional issue URL to update").optional(),
       },
       execute: (args, context) => definition.execute(args, context),
     });
@@ -73,10 +74,10 @@ export async function createOpenCodeTools(
   const config = mergeWithDefaults(userConfig);
   const tools: Record<string, ToolDefinition> = {};
 
-  for (const toolName of config.tools.enabled) {
+  for (const toolName of getEnabledToolNames(config.tools)) {
     const creator = opencodeToolCreators[toolName as keyof typeof opencodeToolCreators];
     if (creator) {
-      tools[getOpenCodeToolName(toolName)] = creator($);
+      tools[getConfiguredOpenCodeToolName(toolName, config.tools[toolName].name)] = creator($);
     }
   }
 

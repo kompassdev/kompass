@@ -47,6 +47,21 @@ Use `@kompassdev/opencode` when you want Kompass workflows available directly in
 - run commands like `/review`, `/pr/create`, or `/ticket/plan` inside OpenCode
 - for session debugging, use `opencode session list` to find a session id and `opencode export <session-id>` to inspect the raw session output
 
+If you want OpenCode to see a Kompass tool under a custom name, set it directly on that tool entry:
+
+```json
+{
+  "tools": {
+    "ticket_sync": {
+      "enabled": true,
+      "name": "custom_ticket_name"
+    }
+  }
+}
+```
+
+That registers `custom_ticket_name` instead of `kompass_ticket_sync`, and command or agent prompts are rewritten to use the custom name.
+
 ## Agents
 
 This package currently exposes two focused agents through OpenCode:
@@ -77,7 +92,7 @@ Current command workflows include:
 - `changes_load`: load branch changes against a base branch
 - `pr_load`: load PR metadata and review history
 - `ticket_load`: load a ticket from GitHub, file, or text
-- `ticket_create`: create a GitHub issue
+- `ticket_sync`: create or update a GitHub issue
 
 <details>
 <summary><strong>`changes_load` details</strong></summary>
@@ -133,19 +148,19 @@ Why it helps:
 </details>
 
 <details>
-<summary><strong>`ticket_create` details</strong></summary>
+<summary><strong>`ticket_sync` details</strong></summary>
 
-Create a GitHub issue.
+Create or update a GitHub issue.
 
 Parameters:
 
 - `title` (required): issue title
 - `body` (required): issue body
-- `repo` (optional): owner/repo override
+- `refUrl` (optional): issue URL to update instead of creating a new issue
 
 Why it helps:
 
-- makes ticket planning flows able to end in a real issue
+- lets ticket flows create a new issue or update an existing one with one tool
 - avoids making the agent handcraft raw `gh` issue commands each time
 
 </details>

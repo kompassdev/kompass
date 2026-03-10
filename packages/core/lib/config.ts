@@ -7,6 +7,20 @@ export interface AgentDefinition {
   permission: Record<string, string>;
 }
 
+export const DEFAULT_TOOL_NAMES = [
+  "changes_load",
+  "pr_load",
+  "ticket_sync",
+  "ticket_load",
+] as const;
+
+export type ToolName = (typeof DEFAULT_TOOL_NAMES)[number];
+
+export interface ToolConfig {
+  enabled?: boolean;
+  name?: string;
+}
+
 export interface KompassConfig {
   commands?: {
     enabled?: string[];
@@ -18,7 +32,10 @@ export interface KompassConfig {
     planner?: Partial<AgentDefinition>;
   };
   tools?: {
-    enabled?: string[];
+    changes_load?: ToolConfig;
+    pr_load?: ToolConfig;
+    ticket_sync?: ToolConfig;
+    ticket_load?: ToolConfig;
   };
   components?: {
     enabled?: string[];
@@ -47,7 +64,10 @@ export interface MergedKompassConfig {
     planner: AgentDefinition;
   };
   tools: {
-    enabled: string[];
+    changes_load: ToolConfig;
+    pr_load: ToolConfig;
+    ticket_sync: ToolConfig;
+    ticket_load: ToolConfig;
   };
   components: {
     enabled: string[];
@@ -113,6 +133,24 @@ const defaultComponentPaths: Record<string, string> = {
   "summarize-changes": "components/summarize-changes.txt",
 };
 
+const defaultToolConfig: Record<ToolName, ToolConfig> = {
+  changes_load: { enabled: true },
+  pr_load: { enabled: true },
+  ticket_sync: { enabled: true },
+  ticket_load: { enabled: true },
+};
+
+export function getEnabledToolNames(tools: MergedKompassConfig["tools"]): ToolName[] {
+  return DEFAULT_TOOL_NAMES.filter((toolName) => tools[toolName].enabled !== false);
+}
+
+export function getConfiguredToolName(
+  tools: MergedKompassConfig["tools"],
+  toolName: ToolName,
+): string {
+  return tools[toolName].name ?? toolName;
+}
+
 export function mergeWithDefaults(
   config: KompassConfig | null,
 ): MergedKompassConfig {
@@ -140,12 +178,10 @@ export function mergeWithDefaults(
       planner: { ...defaultAgentPlanner, ...config?.agents?.planner },
     },
     tools: {
-      enabled: config?.tools?.enabled ?? [
-        "changes_load",
-        "pr_load",
-        "ticket_create",
-        "ticket_load",
-      ],
+      changes_load: { ...defaultToolConfig.changes_load, ...config?.tools?.changes_load },
+      pr_load: { ...defaultToolConfig.pr_load, ...config?.tools?.pr_load },
+      ticket_sync: { ...defaultToolConfig.ticket_sync, ...config?.tools?.ticket_sync },
+      ticket_load: { ...defaultToolConfig.ticket_load, ...config?.tools?.ticket_load },
     },
     components: {
       enabled: config?.components?.enabled ?? [

@@ -67,7 +67,7 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     templatePath: "commands/ticket/create.txt",
   },
   "ticket/plan": {
-    description: "Plan work from a request and create a ticket",
+    description: "Plan work from a request or ticket and sync the result",
     agent: "planner",
     templatePath: "commands/ticket/plan.txt",
   },

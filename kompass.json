@@ -20,7 +20,18 @@
     "enabled": ["reviewer", "planner"]
   },
   "tools": {
-    "enabled": ["changes_load", "pr_load", "ticket_load", "ticket_create"]
+    "changes_load": {
+      "enabled": true
+    },
+    "pr_load": {
+      "enabled": true
+    },
+    "ticket_load": {
+      "enabled": true
+    },
+    "ticket_sync": {
+      "enabled": true
+    }
   },
   "components": {
     "enabled": ["change-summary", "commit", "dev-flow"]

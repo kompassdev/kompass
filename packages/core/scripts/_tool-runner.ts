@@ -137,7 +137,11 @@ export function createShellForDirectory(defaultDirectory: string): Shell {
     let command = strings[0] ?? "";
 
     expressions.forEach((expression, index) => {
-      command += shellEscape(expression) + (strings[index + 1] ?? "");
+      if (Array.isArray(expression)) {
+        command += expression.map((arg) => shellEscape(arg)).join(" ") + (strings[index + 1] ?? "");
+      } else {
+        command += shellEscape(expression) + (strings[index + 1] ?? "");
+      }
     });
 
     const runner = new Command(command);

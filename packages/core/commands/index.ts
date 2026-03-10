@@ -31,6 +31,12 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     templatePath: "commands/learn.txt",
     subtask: false,
   },
+  reload: {
+    description: "Reload the current OpenCode project configuration",
+    agent: "build",
+    templatePath: "commands/reload.txt",
+    subtask: false,
+  },
   "pr/create": {
     description: "Summarize branch work and create a PR",
     agent: "build",
@@ -61,8 +67,13 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     agent: "build",
     templatePath: "commands/ticket/dev.txt",
   },
+  "ticket/create": {
+    description: "Summarize completed work and create a ticket",
+    agent: "build",
+    templatePath: "commands/ticket/create.txt",
+  },
   "ticket/plan": {
-    description: "Plan work from a request and create a ticket",
+    description: "Plan work from a request or ticket and sync the result",
     agent: "planner",
     templatePath: "commands/ticket/plan.txt",
   },

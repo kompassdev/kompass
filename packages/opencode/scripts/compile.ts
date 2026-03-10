@@ -18,12 +18,16 @@ const WORKSPACE_ROOT = path.resolve(PACKAGE_ROOT, "..", "..");
 const OUTPUT_DIR = path.resolve(PACKAGE_ROOT, ".opencode");
 
 import {
+  getEnabledToolNames,
   loadKompassConfig,
   mergeWithDefaults,
   resolveAgents,
   resolveCommands,
-} from "@kompassdev/core";
-import { getOpenCodeToolName, prefixKompassToolReferences } from "../tool-names.ts";
+} from "../../core/index.ts";
+import {
+  getConfiguredOpenCodeToolName,
+  prefixKompassToolReferences,
+} from "../tool-names.ts";
 
 async function cleanOutputDirectory() {
   try {
@@ -44,7 +48,14 @@ async function main() {
   // Load configuration
   const userConfig = await loadKompassConfig(WORKSPACE_ROOT);
   const config = mergeWithDefaults(userConfig);
-  const rewriteToolNames = (input: string) => prefixKompassToolReferences(input, config.tools.enabled);
+  const enabledTools = getEnabledToolNames(config.tools);
+  const configuredToolNames = Object.fromEntries(
+    enabledTools.map((toolName) => [
+      toolName,
+      getConfiguredOpenCodeToolName(toolName, config.tools[toolName].name),
+    ]),
+  );
+  const rewriteToolNames = (input: string) => prefixKompassToolReferences(input, configuredToolNames);
 
   // Compile commands
   console.log("\nCompiling commands...");
@@ -112,9 +123,12 @@ async function main() {
     agents: {
       enabled: config.agents.enabled,
     },
-    tools: {
-      enabled: config.tools.enabled.map(getOpenCodeToolName),
-    },
+    tools: Object.fromEntries(
+      enabledTools.map((toolName) => [
+        configuredToolNames[toolName],
+        { enabled: true },
+      ]),
+    ),
     defaults: config.defaults,
     adapters: config.adapters,
   };

@@ -11,26 +11,21 @@ const workspaceRoot = path.resolve(packageRoot, "..", "..");
 const coreRoot = path.join(workspaceRoot, "packages", "core");
 
 const runtimeDirs = ["agents", "commands", "components"] as const;
+const bundleExternals = ["@opencode-ai/plugin", "@opencode-ai/plugin/tool"] as const;
+const bundleArgs = [
+  "build",
+  "./index.ts",
+  "--outdir",
+  "./dist",
+  "--target",
+  "node",
+  "--format",
+  "esm",
+  ...bundleExternals.flatMap((pkg) => ["--external", pkg]),
+];
 
 async function buildBundle() {
-  const child = spawn("bun", [
-    "build",
-    "./index.ts",
-    "--outdir",
-    "./dist",
-    "--target",
-    "node",
-    "--format",
-    "esm",
-    "--external",
-    "@opencode-ai/plugin",
-    "--external",
-    "@opencode-ai/plugin/tool",
-    "--external",
-    "@opencode-ai/sdk",
-    "--external",
-    "yaml",
-  ], {
+  const child = spawn("bun", bundleArgs, {
     cwd: packageRoot,
     stdio: "inherit",
   });

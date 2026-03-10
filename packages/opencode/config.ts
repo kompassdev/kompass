@@ -1,18 +1,28 @@
 import type { AgentConfig, Config } from "@opencode-ai/sdk";
 
 import {
+  getEnabledToolNames,
   loadKompassConfig,
   mergeWithDefaults,
   resolveAgents,
   resolveCommands,
-} from "@kompassdev/core";
-import { prefixKompassToolReferences } from "./tool-names.ts";
+} from "../core/index.ts";
+import {
+  getConfiguredOpenCodeToolName,
+  prefixKompassToolReferences,
+} from "./tool-names.ts";
 
 export async function applyAgentsConfig(cfg: Config, projectRoot: string) {
   const userConfig = await loadKompassConfig(projectRoot);
   const config = mergeWithDefaults(userConfig);
   const agents = await resolveAgents(projectRoot);
-  const rewriteToolNames = (input: string) => prefixKompassToolReferences(input, config.tools.enabled);
+  const configuredToolNames = Object.fromEntries(
+    getEnabledToolNames(config.tools).map((toolName) => [
+      toolName,
+      getConfiguredOpenCodeToolName(toolName, config.tools[toolName].name),
+    ]),
+  );
+  const rewriteToolNames = (input: string) => prefixKompassToolReferences(input, configuredToolNames);
 
   cfg.agent ??= {};
 
@@ -31,7 +41,13 @@ export async function applyCommandsConfig(cfg: Config, projectRoot: string) {
   const userConfig = await loadKompassConfig(projectRoot);
   const config = mergeWithDefaults(userConfig);
   const commands = await resolveCommands(projectRoot);
-  const rewriteToolNames = (input: string) => prefixKompassToolReferences(input, config.tools.enabled);
+  const configuredToolNames = Object.fromEntries(
+    getEnabledToolNames(config.tools).map((toolName) => [
+      toolName,
+      getConfiguredOpenCodeToolName(toolName, config.tools[toolName].name),
+    ]),
+  );
+  const rewriteToolNames = (input: string) => prefixKompassToolReferences(input, configuredToolNames);
 
   cfg.command ??= {};
 

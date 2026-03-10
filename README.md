@@ -61,49 +61,188 @@ Kompass is being structured as a shared core toolkit with adapter-specific packa
 
 ## Agents
 
-Kompass currently includes two focused agents:
+### `planner`
 
-- `planner`: turns a request or ticket into a scoped implementation plan
-- `reviewer`: reviews branch or PR changes without editing files
+Turns a request or ticket into a scoped implementation plan.
+
+### `reviewer`
+
+Reviews branch or PR changes without editing files.
 
 ## Commands
 
-Kompass currently ships these command workflows:
+### `/commit`
 
-- `/commit`
-- `/commit-and-push`
-- `/dev`
-- `/learn`
-- `/pr/create`
-- `/pr/fix`
-- `/pr/review`
-- `/review`
-- `/rmslop`
-- `/ticket/dev`
-- `/ticket/plan`
+Stages and commits changes with a generated message.
+
+<details>
+
+**Usage:** `/commit [message]`
+
+If a message is provided, commits with that message. Otherwise, generates an appropriate commit message based on the staged changes.
+
+</details>
+
+### `/commit-and-push`
+
+Stages, commits, and pushes changes in one workflow.
+
+<details>
+
+**Usage:** `/commit-and-push [message]`
+
+Commits changes (generating a message if not provided) and pushes to the remote repository.
+
+</details>
+
+### `/dev`
+
+Implementation mode for focused development work.
+
+<details>
+
+**Usage:** `/dev <description>`
+
+Use for active development tasks. The agent implements the described changes while staying focused on the task.
+
+</details>
+
+### `/learn`
+
+Learns patterns and conventions from existing code.
+
+<details>
+
+**Usage:** `/learn <what-to-learn>`
+
+Analyzes the codebase to understand patterns, conventions, or specific implementations. Useful for understanding how things work before making changes.
+
+</details>
+
+### `/pr/create`
+
+Creates a pull request with structured checklists.
+
+<details>
+
+**Usage:** `/pr/create [title]`
+
+Creates a PR from the current branch. Generates a title if not provided. Includes checklist sections for consistent PR structure.
+
+</details>
+
+### `/pr/fix`
+
+Fixes issues found during PR review.
+
+<details>
+
+**Usage:** `/pr/fix [context]`
+
+Addresses review comments and feedback on an open PR. Loads the PR context and works through requested changes.
+
+</details>
+
+### `/pr/review`
+
+Reviews a pull request and adds structured feedback.
+
+<details>
+
+**Usage:** `/pr/review [pr]`
+
+Reviews the specified PR (or current PR if not specified) and provides feedback using inline comments and review threads.
+
+</details>
+
+### `/reload`
+
+Reloads the OpenCode project cache.
+
+<details>
+
+**Usage:** `/reload`
+
+Refreshes config, commands, agents, and tools without restarting OpenCode. Useful after making changes to `kompass.json`.
+
+</details>
+
+### `/review`
+
+Reviews branch changes for issues and improvements.
+
+<details>
+
+**Usage:** `/review [base]`
+
+Reviews uncommitted changes or changes against a base branch (default: main). Provides feedback on code quality, patterns, and potential issues.
+
+</details>
+
+### `/rmslop`
+
+Removes unnecessary code and simplifies.
+
+<details>
+
+**Usage:** `/rmslop`
+
+Analyzes the codebase for unnecessary complexity, unused code, and opportunities for simplification.
+
+</details>
+
+### `/ticket/create`
+
+Creates a GitHub issue from a description.
+
+<details>
+
+**Usage:** `/ticket/create <description>`
+
+Creates a new GitHub issue with the provided description, generating a title and structured body with checklists.
+
+</details>
+
+### `/ticket/dev`
+
+Implements a ticket with planning and execution.
+
+<details>
+
+**Usage:** `/ticket/dev <ticket-reference>`
+
+Loads the specified ticket (URL, #id, or file path), creates an implementation plan, and executes the work.
+
+</details>
+
+### `/ticket/plan`
+
+Creates an implementation plan for a ticket.
+
+<details>
+
+**Usage:** `/ticket/plan <ticket-reference>`
+
+Loads the specified ticket and creates a detailed implementation plan without executing changes.
+
+</details>
 
 ## Tools
 
-Kompass includes handcrafted tools that return focused, structured data for specific workflows instead of forcing the agent to rediscover everything through broad repo exploration.
-
-- `changes_load`: load branch changes against a base branch
-- `pr_load`: load PR metadata and review history
-- `ticket_load`: load a ticket from GitHub, file, or text
-- `ticket_create`: create a GitHub issue
-
-<details>
-<summary><strong>`changes_load` details</strong></summary>
+### `changes_load`
 
 Load branch changes against a base branch.
 
-Parameters:
+<details>
+
+**Parameters:**
 
 - `base` (optional): base branch or ref
 - `head` (optional): head branch, commit, or ref override
 - `depthHint` (optional): shallow-fetch hint such as PR commit count
-- `uncommitted` (optional): include uncommitted workspace changes
+- `uncommitted` (optional): only load uncommitted changes (staged and unstaged), never fall back to branch comparison
 
-Why it helps:
+**Why it helps:**
 
 - keeps branch diff loading focused
 - works well for review and PR workflows
@@ -111,54 +250,123 @@ Why it helps:
 
 </details>
 
-<details>
-<summary><strong>`pr_load` details</strong></summary>
+### `pr_load`
 
 Load PR metadata and review history.
 
-Parameters:
+<details>
+
+**Parameters:**
 
 - `pr` (optional): PR number or URL
 
-Why it helps:
+**Why it helps:**
 
 - gives agents normalized PR context before they start reviewing or summarizing
 - keeps review workflows grounded in actual PR state instead of inferred context
 
 </details>
 
+### `pr_review`
+
+Add comments to a PR: general PR comment, inline review comment on specific lines, or reply to existing review threads.
+
 <details>
-<summary><strong>`ticket_load` details</strong></summary>
+
+**Parameters:**
+
+- `comment_type` (required): type of comment - "general", "inline", or "reply"
+- `body` (required): comment text
+- `pr` (optional): PR number or URL (uses current PR if not provided)
+- `commit_id` (optional): commit SHA for inline comments
+- `path` (optional): file path for inline comments
+- `line` (optional): line number for inline comments
+- `in_reply_to` (optional): comment ID to reply to
+
+**Why it helps:**
+
+- handles all PR comment scenarios in one tool
+- no shell escaping issues with backticks or quotes
+- replies automatically fetch parent comment context
+
+</details>
+
+### `pr_sync`
+
+Create or update a GitHub pull request with structured checklists.
+
+<details>
+
+**Parameters:**
+
+- `title` (required): PR title
+- `body` (optional): raw PR body override
+- `description` (optional): short PR description rendered above checklist sections
+- `base` (optional): base branch to merge into
+- `checklists` (optional): structured checklist sections (e.g., Testing, Summary)
+- `draft` (optional): create as draft PR
+- `refUrl` (optional): PR URL to update instead of creating new
+
+**Why it helps:**
+
+- consistent PR creation with checklist support
+- create or update with one tool
+- no shell escaping issues
+
+</details>
+
+### `ticket_load`
 
 Load a ticket from GitHub, file, or text.
 
-Parameters:
+<details>
+
+**Parameters:**
 
 - `source` (required): issue URL, repo#id, #id, file path, or raw text
 - `comments` (optional): include issue comments
 
-Why it helps:
+**Why it helps:**
 
 - lets the same workflow start from GitHub, a local file, or pasted text
 - gives planning and implementation flows a consistent input format
 
 </details>
 
+### `ticket_sync`
+
+Create or update a GitHub issue with checklists.
+
 <details>
-<summary><strong>`ticket_create` details</strong></summary>
 
-Create a GitHub issue.
-
-Parameters:
+**Parameters:**
 
 - `title` (required): issue title
-- `body` (required): issue body
-- `repo` (optional): owner/repo override
+- `body` (optional): raw issue body override
+- `description` (optional): short issue description rendered above checklist sections
+- `labels` (optional): labels to apply when creating or updating the issue
+- `checklists` (optional): structured checklist sections rendered as markdown
+- `refUrl` (optional): issue URL to update instead of creating a new issue
 
-Why it helps:
+**Why it helps:**
 
-- makes ticket planning flows able to end in a real issue
+- lets ticket flows create a new issue or update an existing one with one tool
 - avoids making the agent handcraft raw `gh` issue commands each time
+
+</details>
+
+### `reload`
+
+Refresh the OpenCode project cache.
+
+<details>
+
+**Parameters:** none
+
+**Why it helps:**
+
+- refresh config, commands, and tools without restarting
+- useful after making changes to kompass.json
 
 </details>
 
@@ -172,6 +380,19 @@ If you want to customize Kompass, use one of these preferred locations in the co
 - `kompass.json`
 
 See `kompass.json` for the root example, `.opencode/kompass.json` for the OpenCode-scoped example, and `kompass.schema.json` for the schema.
+
+Tool names can also be remapped per adapter. For example, this keeps `ticket_sync` enabled but exposes it as `custom_ticket_name`, and Kompass command or agent references are rewritten to match:
+
+```json
+{
+  "tools": {
+    "ticket_sync": {
+      "enabled": true,
+      "name": "custom_ticket_name"
+    }
+  }
+}
+```
 
 ## Workspace
 

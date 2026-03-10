@@ -48,12 +48,12 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
   - Suggest: `git checkout -b <feature-name>`
   - Do NOT proceed further
 
-### Review Commits and Files
+### Summarize Changes
 
-- Note the base branch and current branch from the result
-- Review commit messages to understand the narrative
+- Note the comparison mode, base branch, and current branch from the result
+- Review commit messages when they are available to understand the delivery narrative
 - Read the most relevant changed source files to understand the changes
-- Group related changes into themes for the PR summary
+- Group related changes into themes for the final summary
 
 ### Push Branch
 
@@ -66,23 +66,23 @@ Run `git push` and use its output as the source of truth.
 
 ### Create PR
 
-Use `gh pr create` to create the pull request:
+Use `kompass_pr_sync` to create the pull request:
 - Generate a concise title (max 70 chars) summarizing the change
-- Generate a body with:
-  - `## Summary` - 1-3 bullets focused on WHY the change exists
-  - `## Testing` - concrete validation steps or note if not tested
+- Generate a description that briefly describes the intent and scope
+- Generate checklists with:
+  - `Summary` section with 1-3 bullets focused on WHY the change exists
+  - `Testing` section with concrete validation steps (mark completed items as appropriate)
+- Use `<base>` as the base branch if defined, otherwise leave it to use repo default
 - Do NOT restate the full diff
 - Keep it compact and directional
-- Store the URL from the command output as `<pr-url>`
-- Attempt `gh pr create` first; do not proactively check whether a PR already exists
-- Use the command output as the source of truth for whether the PR was created or already exists
-- If it reports that a PR already exists for the branch, do not try to create another one; treat the result as an existing PR and use the returned URL as `<pr-url>`
+- Store the returned URL as `<pr-url>`
+- If `kompass_pr_sync` reports that a PR already exists for the branch, treat the result as an existing PR
 - Track whether the branch was pushed during this run and report that status in the final response
 
 ## PR Body Guidelines
 
 - Keep summary focused on intent, not implementation details
-- Testing section: mention commands run (tests, typecheck, etc.) or "No testing performed"
+- Testing checklist: mark items as completed if validation was performed
 - Uncommitted changes and being on base branch block PR creation entirely
 
 ## Additional Context

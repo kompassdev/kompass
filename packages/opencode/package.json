@@ -40,8 +40,5 @@
     "@opencode-ai/plugin": "^1.2.24",
     "@opencode-ai/sdk": "1.2.24",
     "yaml": "^2.8.2"
-  },
-  "devDependencies": {
-    "@kompassdev/core": "workspace:*"
   }
 }

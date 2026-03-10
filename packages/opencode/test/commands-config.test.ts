@@ -1,5 +1,8 @@
 import { afterEach, describe, test } from "node:test";
 import assert from "node:assert/strict";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 
 import { applyCommandsConfig } from "../config.ts";
 
@@ -24,9 +27,11 @@ describe("applyCommandsConfig", () => {
 
       assert.ok(cfg.command);
       const expectedCommands = [
+        "reload",
         "pr/create",
         "pr/review",
         "pr/fix",
+        "ticket/create",
         "ticket/plan",
         "ticket/dev",
         "review",
@@ -45,10 +50,13 @@ describe("applyCommandsConfig", () => {
 
       assert.ok(cfg.command);
       assert.equal(cfg.command!["pr/review"]?.agent, "reviewer");
+      assert.equal(cfg.command!["reload"]?.agent, "build");
       assert.equal(cfg.command!["pr/create"]?.agent, "build");
+      assert.equal(cfg.command!["ticket/create"]?.agent, "build");
       assert.equal(cfg.command!["ticket/plan"]?.agent, "planner");
       assert.equal(cfg.command!["dev"]?.agent, "build");
       assert.ok(cfg.command!["pr/review"]?.description);
+      assert.ok(cfg.command!["reload"]?.template);
       assert.ok(cfg.command!["dev"]?.template);
     });
   });
@@ -69,6 +77,59 @@ describe("applyCommandsConfig", () => {
       assert.doesNotMatch(reviewTemplate, /`pr_load`/);
       assert.doesNotMatch(reviewTemplate, /`changes_load`/);
       assert.doesNotMatch(reviewTemplate, /`ticket_load`/);
+    });
+
+    test("rewrites project reload tool name with opencode prefix", async () => {
+      delete process.env.CI;
+      const cfg: { command?: Record<string, { template: string }> } = {};
+
+      await applyCommandsConfig(cfg as never, process.cwd());
+
+      assert.ok(cfg.command);
+      const reloadTemplate = cfg.command!["reload"].template;
+
+      assert.match(reloadTemplate, /`kompass_reload`/);
+      assert.doesNotMatch(reloadTemplate, /Call `reload` with no parameters\./);
+    });
+
+    test("rewrites tool references with configured aliases", async () => {
+      delete process.env.CI;
+      const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-commands-"));
+
+      try {
+        await writeFile(
+          path.join(tempDir, "kompass.json"),
+          JSON.stringify({
+            tools: {
+              changes_load: { enabled: false },
+              pr_load: { enabled: false },
+              ticket_sync: {
+                enabled: true,
+                name: "custom_ticket_name",
+              },
+              ticket_load: { enabled: false },
+            },
+          }),
+        );
+
+        const cfg: { command?: Record<string, { template: string }> } = {};
+
+        await applyCommandsConfig(cfg as never, tempDir);
+
+        assert.ok(cfg.command);
+        const ticketCreateTemplate = cfg.command!["ticket/create"].template;
+        const ticketPlanTemplate = cfg.command!["ticket/plan"].template;
+
+        assert.match(ticketCreateTemplate, /`custom_ticket_name`/);
+        assert.doesNotMatch(ticketCreateTemplate, /`kompass_ticket_sync`/);
+        assert.doesNotMatch(ticketCreateTemplate, /`ticket_sync`/);
+
+        assert.match(ticketPlanTemplate, /`custom_ticket_name`/);
+        assert.doesNotMatch(ticketPlanTemplate, /`kompass_ticket_sync`/);
+        assert.doesNotMatch(ticketPlanTemplate, /`ticket_sync`/);
+      } finally {
+        await rm(tempDir, { recursive: true, force: true });
+      }
     });
 
     test("replaces {{dev-flow}} placeholder with component content", async () => {
@@ -225,6 +286,7 @@ describe("applyCommandsConfig", () => {
       // All default commands should have templates loaded
       assert.ok(cfg.command!["dev"]?.template);
       assert.ok(cfg.command!["pr/create"]?.template);
+      assert.ok(cfg.command!["ticket/create"]?.template);
       assert.ok(cfg.command!["pr/review"]?.template);
       assert.ok(cfg.command!["ticket/plan"]?.template);
       assert.ok(cfg.command!["pr/fix"]?.template);
@@ -268,6 +330,22 @@ describe("applyCommandsConfig", () => {
       
       // Should not have any remaining placeholders
       assert.doesNotMatch(prCreateTemplate, /\{\{[\w-]+\}\}/);
+    });
+
+    test("embeds all expected components in ticket/create command", async () => {
+      delete process.env.CI;
+      const cfg: { command?: Record<string, { template: string }> } = {};
+
+      await applyCommandsConfig(cfg as never, process.cwd());
+
+      assert.ok(cfg.command);
+      const ticketCreateTemplate = cfg.command!["ticket/create"].template;
+
+      assert.match(ticketCreateTemplate, /## Goal/);
+      assert.match(ticketCreateTemplate, /Create a ticket that summarizes the work returned by the current change comparison/);
+      assert.match(ticketCreateTemplate, /Load & Analyze Changes/);
+
+      assert.doesNotMatch(ticketCreateTemplate, /\{\{[\w-]+\}\}/);
     });
 
     test("embeds all expected components in ticket/dev command", async () => {

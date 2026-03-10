@@ -27,8 +27,10 @@
               "pr/create",
               "pr/fix",
               "pr/review",
+              "reload",
               "review",
               "rmslop",
+              "ticket/create",
               "ticket/dev",
               "ticket/plan"
             ]
@@ -46,8 +48,10 @@
               "pr/create",
               "pr/fix",
               "pr/review",
+              "reload",
               "review",
               "rmslop",
+              "ticket/create",
               "ticket/dev",
               "ticket/plan"
             ]
@@ -82,18 +86,26 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "enabled": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": [
-              "changes_load",
-              "pr_load",
-              "ticket_create",
-              "ticket_load"
-            ]
-          },
-          "uniqueItems": true
+        "changes_load": {
+          "$ref": "#/$defs/toolConfig"
+        },
+        "pr_load": {
+          "$ref": "#/$defs/toolConfig"
+        },
+        "pr_review": {
+          "$ref": "#/$defs/toolConfig"
+        },
+        "pr_sync": {
+          "$ref": "#/$defs/toolConfig"
+        },
+        "ticket_sync": {
+          "$ref": "#/$defs/toolConfig"
+        },
+        "ticket_load": {
+          "$ref": "#/$defs/toolConfig"
+        },
+        "reload": {
+          "$ref": "#/$defs/toolConfig"
         }
       }
     },
@@ -105,14 +117,14 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["change-summary", "commit", "dev-flow"]
+            "enum": ["change-summary", "commit", "dev-flow", "summarize-changes"]
           },
           "uniqueItems": true
         },
         "paths": {
           "type": "object",
           "propertyNames": {
-            "enum": ["change-summary", "commit", "dev-flow"]
+            "enum": ["change-summary", "commit", "dev-flow", "summarize-changes"]
           },
           "additionalProperties": {
             "type": "string"
@@ -169,6 +181,31 @@
           }
         }
       }
+    },
+    "toolConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "toolName": {
+      "type": "string",
+      "enum": [
+        "changes_load",
+        "pr_load",
+        "pr_review",
+        "pr_sync",
+        "ticket_sync",
+        "ticket_load",
+        "reload"
+      ]
     }
   }
 }

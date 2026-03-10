@@ -47,6 +47,21 @@ Use `@kompassdev/opencode` when you want Kompass workflows available directly in
 - run commands like `/review`, `/pr/create`, or `/ticket/plan` inside OpenCode
 - for session debugging, use `opencode session list` to find a session id and `opencode export <session-id>` to inspect the raw session output
 
+If you want OpenCode to see a Kompass tool under a custom name, set it directly on that tool entry:
+
+```json
+{
+  "tools": {
+    "ticket_sync": {
+      "enabled": true,
+      "name": "custom_ticket_name"
+    }
+  }
+}
+```
+
+That registers `custom_ticket_name` instead of `kompass_ticket_sync`, and command or agent prompts are rewritten to use the custom name.
+
 ## Agents
 
 This package currently exposes two focused agents through OpenCode:
@@ -65,8 +80,10 @@ Current command workflows include:
 - `/pr/create`
 - `/pr/fix`
 - `/pr/review`
+- `/reload`
 - `/review`
 - `/rmslop`
+- `/ticket/create`
 - `/ticket/dev`
 - `/ticket/plan`
 
@@ -76,8 +93,11 @@ Current command workflows include:
 
 - `changes_load`: load branch changes against a base branch
 - `pr_load`: load PR metadata and review history
+- `pr_review`: add PR comments (general, inline, or reply to threads)
+- `pr_sync`: create or update a pull request with checklists
 - `ticket_load`: load a ticket from GitHub, file, or text
-- `ticket_create`: create a GitHub issue
+- `ticket_sync`: create or update a GitHub issue with checklists
+- `reload`: refresh the OpenCode project cache
 
 <details>
 <summary><strong>`changes_load` details</strong></summary>
@@ -133,26 +153,89 @@ Why it helps:
 </details>
 
 <details>
-<summary><strong>`ticket_create` details</strong></summary>
+<summary><strong>`ticket_sync` details</strong></summary>
 
-Create a GitHub issue.
+Create or update a GitHub issue.
 
 Parameters:
 
 - `title` (required): issue title
-- `body` (required): issue body
-- `repo` (optional): owner/repo override
+- `body` (optional): raw issue body override
+- `description` (optional): short issue description rendered above checklist sections
+- `labels` (optional): labels to apply when creating or updating the issue
+- `checklists` (optional): structured checklist sections rendered as markdown, for example `### Requirement` followed by `- [ ] Item 1`
+- `refUrl` (optional): issue URL to update instead of creating a new issue
 
 Why it helps:
 
-- makes ticket planning flows able to end in a real issue
+- lets ticket flows create a new issue or update an existing one with one tool
 - avoids making the agent handcraft raw `gh` issue commands each time
+
+</details>
+
+<details>
+<summary><strong>`pr_review` details</strong></summary>
+
+Add comments to a PR: general PR comment, inline review comment on specific lines, or reply to existing review threads.
+
+Parameters:
+
+- `comment_type` (required): type of comment - "general", "inline", or "reply"
+- `body` (required): comment text
+- `pr` (optional): PR number or URL (uses current PR if not provided)
+- `commit_id` (optional): commit SHA for inline comments
+- `path` (optional): file path for inline comments
+- `line` (optional): line number for inline comments
+- `in_reply_to` (optional): comment ID to reply to
+
+Why it helps:
+
+- handles all PR comment scenarios in one tool
+- no shell escaping issues with backticks or quotes
+- replies automatically fetch parent comment context
+
+</details>
+
+<details>
+<summary><strong>`pr_sync` details</strong></summary>
+
+Create or update a GitHub pull request with structured checklists.
+
+Parameters:
+
+- `title` (required): PR title
+- `body` (optional): raw PR body override
+- `description` (optional): short PR description rendered above checklist sections
+- `base` (optional): base branch to merge into
+- `checklists` (optional): structured checklist sections (e.g., Testing, Summary)
+- `draft` (optional): create as draft PR
+- `refUrl` (optional): PR URL to update instead of creating new
+
+Why it helps:
+
+- consistent PR creation with checklist support
+- create or update with one tool
+- no shell escaping issues
+
+</details>
+
+<details>
+<summary><strong>`reload` details</strong></summary>
+
+Reload the OpenCode project cache.
+
+Parameters: none
+
+Why it helps:
+
+- refresh config, commands, and tools without restarting
+- useful after making changes to kompass.json
 
 </details>
 
 ## Local Development
 
-This package lives in the Kompass workspace and is powered by shared logic from `@kompassdev/core`.
+This package lives in the Kompass workspace and loads shared logic directly from `packages/core` during local development.
 
 From the workspace root, run:
 
@@ -162,4 +245,4 @@ bun run typecheck
 bun run test
 ```
 
-`bun run compile` regenerates `packages/opencode/.opencode/` from the OpenCode package sources.
+`bun run compile` regenerates `packages/opencode/.opencode/` from the current workspace sources.

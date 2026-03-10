@@ -60,14 +60,17 @@ If validation passes:
 
 Reply to addressed threads:
 - Keep replies short and factual—clear signals, no chatter
-- Use `gh api` to post replies when needed:
+- Use `kompass_pr_review` tool to post comments:
 
-```bash
-# Reply to a review thread
-gh api --method POST \
-  /repos/{owner}/{repo}/pulls/<pr-context.pr.number>/comments \
-  -f body="<reply-text>" \
-  -f in_reply_to=<comment-id>
+```
+# General PR comment
+kompass_pr_review comment_type="general" body="<reply-text>"
+
+# Reply to a specific review thread
+kompass_pr_review comment_type="reply" in_reply_to=<comment-id> body="<reply-text>"
+
+# Inline comment on specific line
+kompass_pr_review comment_type="inline" path="<file-path>" line=<line-number> commit_id="<commit-sha>" body="<reply-text>"
 ```
 
 Confirm which feedback was addressed and which was intentionally not followed.

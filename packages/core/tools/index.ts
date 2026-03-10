@@ -1,14 +1,23 @@
-import { loadKompassConfig, mergeWithDefaults } from "../lib/config.ts";
+import {
+  getConfiguredToolName,
+  getEnabledToolNames,
+  loadKompassConfig,
+  mergeWithDefaults,
+} from "../lib/config.ts";
 import { createChangesLoadTool } from "./changes-load.ts";
 import { createPrLoadTool } from "./pr-load.ts";
-import { createTicketCreateTool } from "./ticket-create.ts";
+import { createPrReviewTool } from "./pr-review.ts";
+import { createPrSyncTool } from "./pr-sync.ts";
 import { createTicketLoadTool } from "./ticket-load.ts";
+import { createTicketSyncTool } from "./ticket-sync.ts";
 import type { Shell, ToolDefinition } from "./shared.ts";
 
 const toolCreators: Record<string, ($: Shell) => ToolDefinition> = {
   changes_load: createChangesLoadTool,
   pr_load: createPrLoadTool,
-  ticket_create: createTicketCreateTool,
+  pr_review: createPrReviewTool,
+  pr_sync: createPrSyncTool,
+  ticket_sync: createTicketSyncTool,
   ticket_load: createTicketLoadTool,
 };
 
@@ -18,10 +27,10 @@ export async function createTools($: Shell, projectRoot: string) {
 
   const tools: Record<string, ToolDefinition> = {};
 
-  for (const toolName of config.tools.enabled) {
+  for (const toolName of getEnabledToolNames(config.tools)) {
     const creator = toolCreators[toolName];
     if (creator) {
-      tools[toolName] = creator($);
+      tools[getConfiguredToolName(config.tools, toolName)] = creator($);
     }
   }
 

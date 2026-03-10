@@ -1,0 +1,44 @@
+## Goal
+
+Create a ticket that summarizes the work returned by the current change comparison.
+
+## Workflow
+
+### Interpret Arguments
+
+Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed:
+- **Branch name**: If `<arguments>` looks like a branch reference (e.g., "main", "origin/develop"), store it as `<base>`
+- **Additional context**: If `<arguments>` provides guidance (audience, focus areas, related issues, notes), store it as `<additional-context>`
+- **Empty**: If no `<arguments>` are provided, proceed with defaults and rely on `changes_load` to decide the comparison mode
+
+### Load & Analyze Changes
+
+{{change-summary rules="- If `<base>` is defined: call `changes_load` with the `base` parameter set to `<base>`
+- Otherwise: call `changes_load` with no parameters"}}
+
+{{summarize-changes}}
+
+### Create Ticket
+
+Use `ticket_sync` with `refUrl` unset to create the ticket:
+- Generate a concise title (max 70 chars) that reflects the delivered outcome
+- Generate a `description` that briefly describes what was accomplished and why it matters
+- Generate checklists with:
+  - `Changes` section listing the key changes made (concise, outcome-focused items)
+  - `Validation` section with concrete validation steps or confirmation that validation was performed
+- Keep items concise and outcome-focused
+- Do not restate the full diff
+- If `changes_load` reports uncommitted work, make that clear in the ticket wording
+- Store the created issue reference or URL as `<ticket-ref>`
+
+## Additional Context
+
+Consider `<additional-context>` when analyzing the work and writing the ticket title and body.
+
+## Output
+
+When the ticket is created, display:
+```
+Title: `<ticket-title>`
+URL: `<ticket-url>`
+```

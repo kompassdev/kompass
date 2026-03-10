@@ -326,7 +326,7 @@ describe("applyCommandsConfig", () => {
       const ticketCreateTemplate = cfg.command!["ticket/create"].template;
 
       assert.match(ticketCreateTemplate, /## Goal/);
-      assert.match(ticketCreateTemplate, /Create a ticket that summarizes the work completed/);
+      assert.match(ticketCreateTemplate, /Create a ticket that summarizes the work returned by the current change comparison/);
       assert.match(ticketCreateTemplate, /Load & Analyze Changes/);
 
       assert.doesNotMatch(ticketCreateTemplate, /\{\{[\w-]+\}\}/);

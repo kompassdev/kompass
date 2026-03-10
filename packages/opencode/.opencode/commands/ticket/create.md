@@ -5,7 +5,7 @@ agent: build
 
 ## Goal
 
-Create a ticket that summarizes the work completed in the current branch or working tree.
+Create a ticket that summarizes the work returned by the current change comparison.
 
 ## Workflow
 
@@ -14,7 +14,7 @@ Create a ticket that summarizes the work completed in the current branch or work
 Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed:
 - **Branch name**: If `<arguments>` looks like a branch reference (e.g., "main", "origin/develop"), store it as `<base>`
 - **Additional context**: If `<arguments>` provides guidance (audience, focus areas, related issues, notes), store it as `<additional-context>`
-- **Empty**: If no `<arguments>` are provided, proceed with defaults
+- **Empty**: If no `<arguments>` are provided, proceed with defaults and rely on `kompass_changes_load` to decide the comparison mode
 
 ### Load & Analyze Changes
 
@@ -49,7 +49,7 @@ Use `kompass_ticket_sync` with `refUrl` unset to create the ticket:
   - `## Validation` - concrete validation steps or `No validation performed`
 - Keep the body compact and directional
 - Do not restate the full diff
-- If the work is uncommitted, make that clear in the ticket wording
+- If `kompass_changes_load` reports uncommitted work, make that clear in the ticket wording
 - Store the created issue reference or URL as `<ticket-ref>`
 
 ## Additional Context

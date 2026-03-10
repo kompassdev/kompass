@@ -394,7 +394,11 @@ function createMockShell(
   return (strings: TemplateStringsArray, ...expressions: unknown[]) => {
     let command = strings[0] ?? "";
     expressions.forEach((expression, index) => {
-      command += String(expression) + (strings[index + 1] ?? "");
+      if (Array.isArray(expression)) {
+        command += expression.join(" ") + (strings[index + 1] ?? "");
+      } else {
+        command += String(expression) + (strings[index + 1] ?? "");
+      }
     });
 
     const fixture = fixtures.find((item) => command.includes(item.contains));

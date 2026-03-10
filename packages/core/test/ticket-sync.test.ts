@@ -37,8 +37,8 @@ describe("ticket_sync", () => {
     const result = JSON.parse(output);
     assert.equal(result.url, "https://github.com/acme/repo/issues/9");
     assert.match(executedCommand, /gh issue create/);
-    assert.match(executedCommand, /--label 'planning'/);
-    assert.match(executedCommand, /--label 'tickets'/);
+    assert.match(executedCommand, /--label planning/);
+    assert.match(executedCommand, /--label tickets/);
     assert.match(executedCommand, /Capture planning output with clearer ticket formatting\./);
     assert.match(executedCommand, /### Requirement/);
     assert.match(executedCommand, /- \[ \] Improve the ticket plan prompt/);
@@ -68,8 +68,8 @@ describe("ticket_sync", () => {
     const result = JSON.parse(output);
     assert.equal(result.url, "https://github.com/acme/repo/issues/9");
     assert.match(executedCommand, /gh issue edit/);
-    assert.match(executedCommand, /--add-label 'triage'/);
-    assert.match(executedCommand, /--body 'Updated body'/);
+    assert.match(executedCommand, /--add-label triage/);
+    assert.match(executedCommand, /--body Updated body/);
   });
 });
 
@@ -79,7 +79,11 @@ function createMockShell(
   return (strings: TemplateStringsArray, ...expressions: unknown[]) => {
     let command = strings[0] ?? "";
     expressions.forEach((expression, index) => {
-      command += String(expression) + (strings[index + 1] ?? "");
+      if (Array.isArray(expression)) {
+        command += expression.join(" ") + (strings[index + 1] ?? "");
+      } else {
+        command += String(expression) + (strings[index + 1] ?? "");
+      }
     });
 
     const result = handler(command);

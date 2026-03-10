@@ -46,7 +46,7 @@ Store `$ARGUMENTS` as `<arguments>`, then normalize it:
 
 ### Present Plan
 
-- Return the ticket reference, a one-sentence summary of the work, and the generated plan
+- Return only the generated title and the ticket reference or URL
 - Call out assumptions, risks, or blockers only when they materially matter
 
 ## Additional Context
@@ -60,18 +60,6 @@ Store `$ARGUMENTS` as `<arguments>`, then normalize it:
 
 When the plan is ready, display:
 ```
-Ticket: <ticket-ref>
-
-Covers: <one-sentence summary>
-
-Title: <plan-title>
-
-Description:
-<plan-description>
-
-Requirements:
-- <requirement item>
-
-Validation:
-- <validation item>
+<plan-title>
+<ticket-ref>
 ```

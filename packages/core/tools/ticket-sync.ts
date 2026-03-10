@@ -20,10 +20,6 @@ type TicketSyncArgs = {
   refUrl?: string;
 };
 
-function quote(value: string) {
-  return `'${value.replace(/'/g, `'\\''`)}'`;
-}
-
 function renderTicketBody(args: TicketSyncArgs) {
   if (args.body?.trim()) {
     return args.body.trim();
@@ -55,11 +51,10 @@ function renderTicketBody(args: TicketSyncArgs) {
   return body;
 }
 
-function renderLabelFlags(flagName: string, labels?: string[]) {
+function collectLabels(labels?: string[]): string[] {
   return (labels ?? [])
     .filter((label) => label.trim())
-    .map((label) => `${flagName} ${quote(label.trim())}`)
-    .join(" ");
+    .map((label) => label.trim());
 }
 
 export function createTicketSyncTool($: Shell) {
@@ -97,19 +92,9 @@ export function createTicketSyncTool($: Shell) {
       const body = renderTicketBody(args);
 
       if (args.refUrl) {
-        const addLabelFlags = renderLabelFlags("--add-label", args.labels);
-        const command = [
-          "gh issue edit",
-          quote(args.refUrl),
-          "--title",
-          quote(args.title),
-          "--body",
-          quote(body),
-          addLabelFlags,
-        ]
-          .filter(Boolean)
-          .join(" ");
-        const proc = await $`${command}`
+        const labels = collectLabels(args.labels);
+        const labelArgs = labels.flatMap((label) => ["--add-label", label]);
+        const proc = await $`gh issue edit ${args.refUrl} --title ${args.title} --body ${body} ${labelArgs}`
           .cwd(ctx.worktree)
           .quiet()
           .nothrow();
@@ -123,18 +108,9 @@ export function createTicketSyncTool($: Shell) {
         });
       }
 
-      const labelFlags = renderLabelFlags("--label", args.labels);
-      const command = [
-        "gh issue create",
-        "--title",
-        quote(args.title),
-        "--body",
-        quote(body),
-        labelFlags,
-      ]
-        .filter(Boolean)
-        .join(" ");
-      const proc = await $`${command}`
+      const labels = collectLabels(args.labels);
+      const labelArgs = labels.flatMap((label) => ["--label", label]);
+      const proc = await $`gh issue create --title ${args.title} --body ${body} ${labelArgs}`
         .cwd(ctx.worktree)
         .quiet()
         .nothrow();

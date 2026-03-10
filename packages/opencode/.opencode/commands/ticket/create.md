@@ -3,7 +3,7 @@ description: Summarize completed work and create a ticket
 agent: build
 ---
 
-## Goal 1234
+## Goal
 
 Create a ticket that summarizes the work returned by the current change comparison.
 
@@ -60,7 +60,6 @@ Consider `<additional-context>` when analyzing the work and writing the ticket t
 
 When the ticket is created, display:
 ```
-Created ticket: <title>
-
-Ticket: <ticket-ref>
+<title>
+<ticket-ref>
 ```

@@ -22,10 +22,11 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
 
 Use `ticket_sync` with `refUrl` unset to create the ticket:
 - Generate a concise title (max 70 chars) that reflects the delivered outcome
-- Generate a body with:
-  - `## Summary` - 1-3 bullets focused on what was accomplished and why it matters
-  - `## Validation` - concrete validation steps or `No validation performed`
-- Keep the body compact and directional
+- Generate a `description` that briefly describes what was accomplished and why it matters
+- Generate checklists with:
+  - `Changes` section listing the key changes made (concise, outcome-focused items)
+  - `Validation` section with concrete validation steps or confirmation that validation was performed
+- Keep items concise and outcome-focused
 - Do not restate the full diff
 - If `changes_load` reports uncommitted work, make that clear in the ticket wording
 - Store the created issue reference or URL as `<ticket-ref>`

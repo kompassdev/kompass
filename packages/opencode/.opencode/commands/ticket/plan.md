@@ -60,6 +60,6 @@ Store `$ARGUMENTS` as `<arguments>`, then normalize it:
 
 When the plan is ready, display:
 ```
-<plan-title>
-<ticket-ref>
+Title: `<ticket-title>`
+URL: `<ticket-url>`
 ```

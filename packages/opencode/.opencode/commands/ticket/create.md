@@ -60,6 +60,6 @@ Consider `<additional-context>` when analyzing the work and writing the ticket t
 
 When the ticket is created, display:
 ```
-<title>
-<ticket-ref>
+Title: `<ticket-title>`
+URL: `<ticket-url>`
 ```

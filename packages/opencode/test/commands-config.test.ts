@@ -76,10 +76,26 @@ describe("applyCommandsConfig", () => {
 
       assert.match(reviewTemplate, /`kompass_pr_load`/);
       assert.match(reviewTemplate, /`kompass_changes_load`/);
+      assert.match(reviewTemplate, /`kompass_pr_sync`/);
       assert.match(reviewTemplate, /`kompass_ticket_load`/);
       assert.doesNotMatch(reviewTemplate, /`pr_load`/);
       assert.doesNotMatch(reviewTemplate, /`changes_load`/);
+      assert.doesNotMatch(reviewTemplate, /`pr_sync`/);
       assert.doesNotMatch(reviewTemplate, /`ticket_load`/);
+    });
+
+    test("pr/fix template prefers pr_sync over pr_review", async () => {
+      delete process.env.CI;
+      const cfg: { command?: Record<string, { template: string }> } = {};
+
+      await applyCommandsConfig(cfg as never, process.cwd());
+
+      assert.ok(cfg.command);
+      const fixTemplate = cfg.command!["pr/fix"].template;
+
+      assert.match(fixTemplate, /`kompass_pr_sync`/);
+      assert.doesNotMatch(fixTemplate, /`kompass_pr_review`/);
+      assert.doesNotMatch(fixTemplate, /`pr_review`/);
     });
 
     test("rewrites project reload tool name with opencode prefix", async () => {
@@ -250,6 +266,8 @@ describe("applyCommandsConfig", () => {
       assert.ok(cfg.command);
       assert.equal(cfg.command!["pr/review"]?.subtask, true);
       assert.equal(cfg.command!["dev"]?.subtask, true);
+      assert.equal(cfg.command!["ship"]?.subtask, true);
+      assert.equal(cfg.command!["todo"]?.subtask, true);
     });
 
     test("disables subtask mode in CI", async () => {
@@ -261,6 +279,8 @@ describe("applyCommandsConfig", () => {
       assert.ok(cfg.command);
       assert.equal(cfg.command!["pr/review"]?.subtask, false);
       assert.equal(cfg.command!["dev"]?.subtask, false);
+      assert.equal(cfg.command!["ship"]?.subtask, false);
+      assert.equal(cfg.command!["todo"]?.subtask, false);
     });
   });
 

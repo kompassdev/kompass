@@ -60,17 +60,17 @@ If validation passes:
 
 Reply to addressed threads:
 - Keep replies short and factual—clear signals, no chatter
-- Use `kompass_pr_review` tool to post comments:
+- Use `kompass_pr_sync` to post comments or replies:
 
 ```
 # General PR comment
-kompass_pr_review comment_type="general" body="<reply-text>"
+kompass_pr_sync refUrl="<pr-context.pr.url>" commentBody="<reply-text>"
 
 # Reply to a specific review thread
-kompass_pr_review comment_type="reply" in_reply_to=<comment-id> body="<reply-text>"
+kompass_pr_sync refUrl="<pr-context.pr.url>" replies=[{"inReplyTo": <comment-id>, "body": "<reply-text>"}]
 
-# Inline comment on specific line
-kompass_pr_review comment_type="inline" path="<file-path>" line=<line-number> commit_id="<commit-sha>" body="<reply-text>"
+# Follow-up inline review comment on a specific line
+kompass_pr_sync refUrl="<pr-context.pr.url>" review={"event": "COMMENT", "commitId": "<commit-sha>", "comments": [{"path": "<file-path>", "line": <line-number>, "body": "<reply-text>"}]}
 ```
 
 Confirm which feedback was addressed and which was intentionally not followed.

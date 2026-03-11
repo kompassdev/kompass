@@ -47,7 +47,7 @@ describe("pr_load", () => {
             },
             {
               id: 2,
-              state: "COMMENTED",
+              state: "APPROVED",
               body: "",
               submitted_at: "2026-03-07T00:00:01Z",
               commit_id: "abc123",
@@ -131,6 +131,13 @@ describe("pr_load", () => {
         author: "review-bot",
         body: "Looks good",
         submittedAt: "2026-03-07T00:00:00Z",
+        commitId: "abc123",
+      },
+      {
+        id: 2,
+        state: "APPROVED",
+        author: "review-bot",
+        submittedAt: "2026-03-07T00:00:01Z",
         commitId: "abc123",
       },
     ]);

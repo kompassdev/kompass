@@ -286,7 +286,7 @@ Load PR metadata and review history.
 
 ### `pr_review`
 
-Add comments to a PR: general PR comment, inline review comment on specific lines, or reply to existing review threads.
+Legacy PR comment helper for general comments, inline comments, or thread replies. Prefer `pr_sync` for new workflows.
 
 <details>
 
@@ -302,7 +302,7 @@ Add comments to a PR: general PR comment, inline review comment on specific line
 
 **Why it helps:**
 
-- handles all PR comment scenarios in one tool
+- kept for backwards compatibility with existing automations
 - no shell escaping issues with backticks or quotes
 - replies automatically fetch parent comment context
 
@@ -310,24 +310,28 @@ Add comments to a PR: general PR comment, inline review comment on specific line
 
 ### `pr_sync`
 
-Create or update a GitHub pull request with structured checklists.
+Create, update, or review a GitHub pull request with structured checklists.
 
 <details>
 
 **Parameters:**
 
-- `title` (required): PR title
+- `title` (optional): PR title; required when creating a PR or renaming one
 - `body` (optional): raw PR body override
 - `description` (optional): short PR description rendered above checklist sections
 - `base` (optional): base branch to merge into
 - `checklists` (optional): structured checklist sections (e.g., Testing, Summary)
 - `draft` (optional): create as draft PR
 - `refUrl` (optional): PR URL to update instead of creating new
+- `approve` (optional): approve the referenced PR without posting a comment body
+- `review` (optional): structured review submission with `event`, optional `body`, optional `commitId`, and inline `comments`
+- `replies` (optional): replies to existing review comments
+- `commentBody` (optional): general PR comment body
 
 **Why it helps:**
 
 - consistent PR creation with checklist support
-- create or update with one tool
+- create, update, review, approve, and reply with one tool
 - no shell escaping issues
 
 </details>

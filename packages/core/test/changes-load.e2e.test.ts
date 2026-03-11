@@ -197,6 +197,29 @@ describe("changes_load e2e", () => {
     assert.match(result.commits[0].subject, /first commit/);
   });
 
+  test("explicit comparison deepens shallow refs before diffing", async () => {
+    const remote = await createRepo();
+    await commitFile(remote, "base.txt", "base\n", "init");
+    await git(remote, ["checkout", "-b", "feature/misc"]);
+    await commitFile(remote, "feature.txt", "feature\n", "feature commit");
+    await git(remote, ["checkout", "main"]);
+    await commitFile(remote, "main.txt", "main\n", "main commit");
+
+    const bare = await cloneBare(remote);
+    const clone = await cloneShallowBranch(bare, "feature/misc");
+    await git(clone, ["fetch", "--depth=1", "origin", "main:refs/remotes/origin/main"]);
+
+    const result = await runChangesLoad(clone, { base: "main", head: "feature/misc", depthHint: 1 });
+
+    assert.equal(result.comparison, "origin/main...feature/misc");
+    assert.equal(result.branch, "feature/misc");
+    assert.equal(result.files.length, 1);
+    assert.equal(result.files[0].path, "feature.txt");
+    assert.equal(result.files[0].status, "added");
+    assert.equal(result.commits.length, 1);
+    assert.match(result.commits[0].subject, /feature commit/);
+  });
+
 });
 
 async function createRepo() {
@@ -213,6 +236,29 @@ async function commitFile(repo: string, relativePath: string, contents: string, 
   await writeFile(path.join(repo, relativePath), contents, "utf8");
   await git(repo, ["add", relativePath]);
   await git(repo, ["commit", "-m", message]);
+}
+
+async function cloneBare(repo: string) {
+  const bare = await mkdtemp(path.join(os.tmpdir(), "kompass-remote-"));
+  tempDirs.push(bare);
+  await git(path.dirname(repo), ["clone", "--bare", repo, bare]);
+  return bare;
+}
+
+async function cloneShallowBranch(remote: string, branch: string) {
+  const clone = await mkdtemp(path.join(os.tmpdir(), "kompass-clone-"));
+  tempDirs.push(clone);
+  await rm(clone, { recursive: true, force: true });
+  await git(path.dirname(remote), [
+    "clone",
+    "--depth",
+    "1",
+    "--branch",
+    branch,
+    `file://${remote}`,
+    clone,
+  ]);
+  return clone;
 }
 
 async function git(cwd: string, args: string[]) {

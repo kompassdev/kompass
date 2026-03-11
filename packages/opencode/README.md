@@ -118,8 +118,8 @@ Current command workflows include:
 
 - `changes_load`: load branch changes against a base branch
 - `pr_load`: load PR metadata and review history
-- `pr_review`: add PR comments (general, inline, or reply to threads)
-- `pr_sync`: create or update a pull request with checklists
+- `pr_review`: legacy PR comment helper kept for compatibility
+- `pr_sync`: create, update, or review a pull request with checklists
 - `ticket_load`: load a ticket from GitHub, file, or text
 - `ticket_sync`: create or update a GitHub issue with checklists
 - `reload`: refresh the OpenCode project cache
@@ -201,7 +201,7 @@ Why it helps:
 <details>
 <summary><strong>`pr_review` details</strong></summary>
 
-Add comments to a PR: general PR comment, inline review comment on specific lines, or reply to existing review threads.
+Legacy PR comment helper for general comments, inline comments, or thread replies. Prefer `pr_sync` for new workflows.
 
 Parameters:
 
@@ -215,7 +215,7 @@ Parameters:
 
 Why it helps:
 
-- handles all PR comment scenarios in one tool
+- kept for backwards compatibility with existing automations
 - no shell escaping issues with backticks or quotes
 - replies automatically fetch parent comment context
 
@@ -224,22 +224,26 @@ Why it helps:
 <details>
 <summary><strong>`pr_sync` details</strong></summary>
 
-Create or update a GitHub pull request with structured checklists.
+Create, update, or review a GitHub pull request with structured checklists.
 
 Parameters:
 
-- `title` (required): PR title
+- `title` (optional): PR title; required when creating a PR or renaming one
 - `body` (optional): raw PR body override
 - `description` (optional): short PR description rendered above checklist sections
 - `base` (optional): base branch to merge into
 - `checklists` (optional): structured checklist sections (e.g., Testing, Summary)
 - `draft` (optional): create as draft PR
 - `refUrl` (optional): PR URL to update instead of creating new
+- `approve` (optional): approve the referenced PR without posting a comment body
+- `review` (optional): structured review submission with `event`, optional `body`, optional `commitId`, and inline `comments`
+- `replies` (optional): replies to existing review comments
+- `commentBody` (optional): general PR comment body
 
 Why it helps:
 
 - consistent PR creation with checklist support
-- create or update with one tool
+- create, update, review, approve, and reply with one tool
 - no shell escaping issues
 
 </details>

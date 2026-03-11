@@ -15,6 +15,45 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "commit": {
+          "$ref": "#/$defs/commandConfig"
+        },
+        "commit-and-push": {
+          "$ref": "#/$defs/commandConfig"
+        },
+        "dev": {
+          "$ref": "#/$defs/commandConfig"
+        },
+        "learn": {
+          "$ref": "#/$defs/commandConfig"
+        },
+        "pr/create": {
+          "$ref": "#/$defs/commandConfig"
+        },
+        "pr/fix": {
+          "$ref": "#/$defs/commandConfig"
+        },
+        "pr/review": {
+          "$ref": "#/$defs/commandConfig"
+        },
+        "reload": {
+          "$ref": "#/$defs/commandConfig"
+        },
+        "review": {
+          "$ref": "#/$defs/commandConfig"
+        },
+        "rmslop": {
+          "$ref": "#/$defs/commandConfig"
+        },
+        "ticket/create": {
+          "$ref": "#/$defs/commandConfig"
+        },
+        "ticket/dev": {
+          "$ref": "#/$defs/commandConfig"
+        },
+        "ticket/plan": {
+          "$ref": "#/$defs/commandConfig"
+        },
         "enabled": {
           "type": "array",
           "items": {
@@ -35,7 +74,8 @@
               "ticket/plan"
             ]
           },
-          "uniqueItems": true
+          "uniqueItems": true,
+          "deprecated": true
         },
         "templates": {
           "type": "object",
@@ -58,7 +98,8 @@
           },
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "deprecated": true
         }
       }
     },
@@ -66,19 +107,20 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "planner": {
+          "$ref": "#/$defs/agentConfig"
+        },
+        "reviewer": {
+          "$ref": "#/$defs/agentConfig"
+        },
         "enabled": {
           "type": "array",
           "items": {
             "type": "string",
             "enum": ["planner", "reviewer"]
           },
-          "uniqueItems": true
-        },
-        "planner": {
-          "$ref": "#/$defs/agentDefinition"
-        },
-        "reviewer": {
-          "$ref": "#/$defs/agentDefinition"
+          "uniqueItems": true,
+          "deprecated": true
         }
       }
     },
@@ -113,21 +155,98 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "change-summary": {
+          "$ref": "#/$defs/componentConfig"
+        },
+        "commit": {
+          "$ref": "#/$defs/componentConfig"
+        },
+        "dev-flow": {
+          "$ref": "#/$defs/componentConfig"
+        },
+        "summarize-changes": {
+          "$ref": "#/$defs/componentConfig"
+        },
+        "ticket-summary": {
+          "$ref": "#/$defs/componentConfig"
+        },
         "enabled": {
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["change-summary", "commit", "dev-flow", "summarize-changes"]
+            "enum": ["change-summary", "commit", "dev-flow", "summarize-changes", "ticket-summary"]
           },
-          "uniqueItems": true
+          "uniqueItems": true,
+          "deprecated": true
         },
         "paths": {
           "type": "object",
           "propertyNames": {
-            "enum": ["change-summary", "commit", "dev-flow", "summarize-changes"]
+            "enum": ["change-summary", "commit", "dev-flow", "summarize-changes", "ticket-summary"]
           },
           "additionalProperties": {
             "type": "string"
+          },
+          "deprecated": true
+        }
+      }
+    },
+    "skills": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "entries": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/skillEntryConfig"
+          }
+        },
+        "enabled": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true,
+          "deprecated": true
+        },
+        "disabled": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true,
+          "deprecated": true
+        },
+        "plugins": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "entries": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/$defs/skillEntryConfig"
+              }
+            },
+            "include": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true,
+              "deprecated": true
+            },
+            "exclude": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true,
+              "deprecated": true
+            }
           }
         }
       }
@@ -179,6 +298,62 @@
           "additionalProperties": {
             "type": "string"
           }
+        }
+      }
+    },
+    "agentConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        },
+        "promptPath": {
+          "type": "string"
+        },
+        "permission": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "commandConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "template": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "componentConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "skillEntryConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
         }
       }
     },

@@ -1,0 +1,89 @@
+{
+  "commands": {
+    "commit": {
+      "enabled": true
+    },
+    "commit-and-push": {
+      "enabled": true
+    },
+    "dev": {
+      "enabled": true
+    },
+    "learn": {
+      "enabled": true
+    },
+    "pr/create": {
+      "enabled": true
+    },
+    "pr/fix": {
+      "enabled": true
+    },
+    "pr/review": {
+      "enabled": true
+    },
+    "reload": {
+      "enabled": true
+    },
+    "review": {
+      "enabled": true
+    },
+    "rmslop": {
+      "enabled": true
+    },
+    "ticket/create": {
+      "enabled": true
+    },
+    "ticket/dev": {
+      "enabled": true
+    },
+    "ticket/plan": {
+      "enabled": true
+    }
+  },
+  "agents": {
+    "planner": {
+      "enabled": true
+    },
+    "reviewer": {
+      "enabled": true
+    }
+  },
+  "tools": {
+    "changes_load": {
+      "enabled": true
+    },
+    "pr_load": {
+      "enabled": true
+    },
+    "pr_review": {
+      "enabled": true
+    },
+    "pr_sync": {
+      "enabled": true
+    },
+    "ticket_sync": {
+      "enabled": true
+    },
+    "ticket_load": {
+      "enabled": true
+    },
+    "reload": {
+      "enabled": true
+    }
+  },
+  "skills": {
+    "entries": {
+      "kompass-workflows": {
+        "enabled": true
+      }
+    }
+  },
+  "defaults": {
+    "baseBranch": "main"
+  },
+  "adapters": {
+    "opencode": {
+      "agentMode": "all"
+    }
+  }
+}

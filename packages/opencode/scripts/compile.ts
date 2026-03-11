@@ -7,7 +7,7 @@
  * package at runtime.
  */
 
-import { mkdir, writeFile, rm, access } from "node:fs/promises";
+import { mkdir, writeFile, rm, access, cp } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import YAML from "yaml";
@@ -16,6 +16,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PACKAGE_ROOT = path.resolve(__dirname, "..");
 const WORKSPACE_ROOT = path.resolve(PACKAGE_ROOT, "..", "..");
 const OUTPUT_DIR = path.resolve(PACKAGE_ROOT, ".opencode");
+const CORE_SKILLS_DIR = path.resolve(WORKSPACE_ROOT, "packages", "core", "skills");
 
 import {
   getEnabledToolNames,
@@ -65,6 +66,7 @@ async function main() {
   // Create output directories
   await mkdir(path.join(OUTPUT_DIR, "commands"), { recursive: true });
   await mkdir(path.join(OUTPUT_DIR, "agents"), { recursive: true });
+  await mkdir(path.join(OUTPUT_DIR, "skills"), { recursive: true });
 
   // Write compiled commands
   console.log("\nWriting compiled commands...");
@@ -116,34 +118,67 @@ async function main() {
 
   // Write configuration
   console.log("\nWriting configuration...");
+  const compiledSkillEntries = Object.fromEntries(
+    [
+      ...(config.skills.enabled ?? []).map((name) => [name, { enabled: true }] as const),
+      ...config.skills.disabled.map((name) => [name, { enabled: false }] as const),
+    ],
+  );
+  const compiledSkillPluginEntries = Object.fromEntries(
+    [
+      ...(config.skills.plugins.include ?? []).map((name) => [name, { enabled: true }] as const),
+      ...config.skills.plugins.exclude.map((name) => [name, { enabled: false }] as const),
+    ],
+  );
+  const compiledSkills = {
+    ...(Object.keys(compiledSkillEntries).length > 0 ? { entries: compiledSkillEntries } : {}),
+    ...(Object.keys(compiledSkillPluginEntries).length > 0
+      ? {
+          plugins: {
+            entries: compiledSkillPluginEntries,
+          },
+        }
+      : {}),
+  };
   const configOutput = {
-    commands: {
-      enabled: config.commands.enabled,
-    },
-    agents: {
-      enabled: config.agents.enabled,
-    },
+    commands: Object.fromEntries(
+      Object.keys(compiledCommands).map((name) => [name, { enabled: true }]),
+    ),
+    agents: Object.fromEntries(
+      Object.keys(resolvedAgents).map((name) => [name, { enabled: true }]),
+    ),
     tools: Object.fromEntries(
       enabledTools.map((toolName) => [
-        configuredToolNames[toolName],
-        { enabled: true },
+        toolName,
+        {
+          enabled: true,
+          ...(config.tools[toolName].name ? { name: config.tools[toolName].name } : {}),
+        },
       ]),
     ),
+    ...(Object.keys(compiledSkills).length > 0 ? { skills: compiledSkills } : {}),
     defaults: config.defaults,
     adapters: config.adapters,
   };
   await writeFile(
-    path.join(OUTPUT_DIR, "kompass.json"),
+    path.join(OUTPUT_DIR, "kompass.jsonc"),
     JSON.stringify(configOutput, null, 2)
   );
-  console.log("  kompass.json");
+  console.log("  kompass.jsonc");
+
+  try {
+    await cp(CORE_SKILLS_DIR, path.join(OUTPUT_DIR, "skills"), { recursive: true });
+    console.log("  skills/");
+  } catch {
+    console.warn("  Warning: Could not copy bundled skills");
+  }
 
   console.log("\n✓ Compilation complete!");
   console.log(`\nOutput directory: ${OUTPUT_DIR}`);
   console.log("\nTo use the compiled OpenCode adapter:");
   console.log("  1. Copy files from packages/opencode/.opencode/commands/ to your .opencode/commands/");
   console.log("  2. Copy files from packages/opencode/.opencode/agents/ to your .opencode/agents/");
-  console.log("  3. Reference packages/opencode/.opencode/kompass.json for the configuration");
+  console.log("  3. Reference packages/opencode/.opencode/kompass.jsonc for the configuration");
 }
 
 main().catch((error) => {

@@ -30,26 +30,27 @@ Config is optional. To add a Kompass config file to your project:
 
 ```bash
 # Inside .opencode folder
-curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/.opencode/kompass.json -o .opencode/kompass.json
+curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/.opencode/kompass.jsonc -o .opencode/kompass.jsonc
 
 # Project root
-curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/kompass.json -o kompass.json
+curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/kompass.jsonc -o kompass.jsonc
 ```
 
-Kompass looks for `.opencode/kompass.json` first, then `kompass.json`.
+Kompass prefers `.opencode/kompass.jsonc`, then `kompass.jsonc`, and still accepts the legacy `.json` filenames.
 
 ## How To Use
 
 Use `@kompassdev/opencode` when you want Kompass workflows available directly inside OpenCode.
 
 - install the plugin in your OpenCode config
-- optionally add `.opencode/kompass.json` or `kompass.json` to customize commands, agents, tools, and defaults
+- optionally add `.opencode/kompass.jsonc` or `kompass.jsonc` to customize commands, agents, tools, skills, and defaults
+- bundled Kompass skills are registered automatically when the plugin loads; users do not need to copy skill files manually
 - run commands like `/review`, `/pr/create`, or `/ticket/plan` inside OpenCode
 - for session debugging, use `opencode session list` to find a session id and `opencode export <session-id>` to inspect the raw session output
 
 If you want OpenCode to see a Kompass tool under a custom name, set it directly on that tool entry:
 
-```json
+```jsonc
 {
   "tools": {
     "ticket_sync": {
@@ -61,6 +62,29 @@ If you want OpenCode to see a Kompass tool under a custom name, set it directly 
 ```
 
 That registers `custom_ticket_name` instead of `kompass_ticket_sync`, and command or agent prompts are rewritten to use the custom name.
+
+You can also control discovered skills through `kompass.jsonc`:
+
+```jsonc
+{
+  "skills": {
+    "entries": {
+      "release-checklist": { "enabled": true },
+      "@acme/opencode-release/hotfix-triage": { "enabled": true },
+      "legacy-release-flow": { "enabled": false }
+    },
+    "plugins": {
+      "entries": {
+        "@acme/opencode-experimental": { "enabled": false }
+      }
+    }
+  }
+}
+```
+
+- omit `skills.entries` to allow all discovered skills by default
+- set a skill entry to `{ "enabled": false }` to disable it by short name or fully-qualified id
+- set a plugin entry to `{ "enabled": false }` to disable all skills from that plugin without disabling the plugin itself
 
 ## Agents
 
@@ -229,7 +253,7 @@ Parameters: none
 Why it helps:
 
 - refresh config, commands, and tools without restarting
-- useful after making changes to kompass.json
+- useful after making changes to `kompass.jsonc`
 
 </details>
 

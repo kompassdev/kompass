@@ -1,4 +1,4 @@
-import type { Plugin, PluginInput } from "@opencode-ai/plugin";
+import type { Hooks, Plugin, PluginInput } from "@opencode-ai/plugin";
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool";
 
 import {
@@ -11,9 +11,152 @@ import {
   getEnabledToolNames,
   loadKompassConfig,
   mergeWithDefaults,
+  resolveCommands,
 } from "../core/index.ts";
-import { applyAgentsConfig, applyCommandsConfig } from "./config.ts";
-import { getConfiguredOpenCodeToolName } from "./tool-names.ts";
+import { applyAgentsConfig, applyCommandsConfig, applySkillsConfig } from "./config.ts";
+import { createPluginLogger } from "./logging.ts";
+import {
+  getConfiguredOpenCodeToolName,
+  prefixKompassToolReferences,
+} from "./tool-names.ts";
+
+type ToolExecuteBeforeHook = NonNullable<Hooks["tool.execute.before"]>;
+type ToolExecuteBeforeInput = Parameters<ToolExecuteBeforeHook>[0];
+type ToolExecuteBeforeOutput = Parameters<ToolExecuteBeforeHook>[1];
+type CommandExecuteBeforeHook = NonNullable<Hooks["command.execute.before"]>;
+type CommandExecuteBeforeInput = Parameters<CommandExecuteBeforeHook>[0];
+type CommandExecuteBeforeOutput = Parameters<CommandExecuteBeforeHook>[1];
+
+export type TaskToolExecution = {
+  prompt: string;
+  raw_prompt?: string;
+  description?: string;
+  subagent_type?: string;
+  command?: string;
+  command_name?: string;
+  command_arguments?: string;
+};
+
+export type CommandExecution = {
+  command: string;
+  arguments: string;
+  prompt: string;
+};
+
+type ParsedSlashCommand = {
+  command: string;
+  arguments: string;
+};
+
+function getString(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
+function parseSlashCommand(value: string): ParsedSlashCommand | undefined {
+  const match = value.trim().match(/^(?:@\S+\s+)?\/([^\s]+)(?:\s+([\s\S]*))?$/);
+
+  if (!match) return;
+
+  return {
+    command: match[1],
+    arguments: match[2]?.trim() ?? "",
+  };
+}
+
+function expandCommandTemplate(template: string, commandArguments: string) {
+  const trimmedArguments = commandArguments.trim();
+  const positionalArguments = trimmedArguments ? trimmedArguments.split(/\s+/) : [];
+
+  let expandedTemplate = template.replaceAll("$ARGUMENTS", trimmedArguments);
+
+  for (const [index, argument] of positionalArguments.entries()) {
+    expandedTemplate = expandedTemplate.replaceAll(`$${index + 1}`, argument);
+  }
+
+  return expandedTemplate;
+}
+
+export async function expandSlashCommandPrompt(
+  projectRoot: string,
+  value: string,
+): Promise<CommandExecution | undefined> {
+  const parsedCommand = parseSlashCommand(value);
+
+  if (!parsedCommand) return;
+
+  const userConfig = await loadKompassConfig(projectRoot);
+  const config = mergeWithDefaults(userConfig);
+  const commands = await resolveCommands(projectRoot);
+  const definition = commands[parsedCommand.command];
+
+  if (!definition) return;
+
+  const configuredToolNames = Object.fromEntries(
+    getEnabledToolNames(config.tools).map((toolName) => [
+      toolName,
+      getConfiguredOpenCodeToolName(toolName, config.tools[toolName].name),
+    ]),
+  );
+  const template = prefixKompassToolReferences(definition.template, configuredToolNames);
+
+  return {
+    command: parsedCommand.command,
+    arguments: parsedCommand.arguments,
+    prompt: expandCommandTemplate(template, parsedCommand.arguments),
+  };
+}
+
+export async function getTaskToolExecution(
+  input: ToolExecuteBeforeInput,
+  output: ToolExecuteBeforeOutput,
+  projectRoot: string,
+): Promise<TaskToolExecution | undefined> {
+  if (input.tool !== "task") return;
+  if (!output.args || typeof output.args !== "object") return;
+
+  const args = output.args as Record<string, unknown>;
+  const prompt = getString(args.prompt);
+  const command = getString(args.command);
+
+  if (!prompt && !command) return;
+
+  const expandedCommand = command
+    ? await expandSlashCommandPrompt(projectRoot, command)
+    : prompt
+      ? await expandSlashCommandPrompt(projectRoot, prompt)
+      : undefined;
+  const finalPrompt = expandedCommand?.prompt ?? prompt ?? command ?? "";
+
+  args.prompt = finalPrompt;
+
+  return {
+    prompt: finalPrompt,
+    raw_prompt: prompt,
+    description: getString(args.description),
+    subagent_type: getString(args.subagent_type),
+    command,
+    command_name: expandedCommand?.command,
+    command_arguments: expandedCommand?.arguments,
+  };
+}
+
+export function getCommandExecution(
+  input: CommandExecuteBeforeInput,
+  output: CommandExecuteBeforeOutput,
+): CommandExecution | undefined {
+  const prompt = output.parts
+    .flatMap((part) => part.type === "text" ? [part.text] : [])
+    .join("\n")
+    .trim();
+
+  if (!prompt) return;
+
+  return {
+    command: input.command,
+    arguments: input.arguments,
+    prompt,
+  };
+}
 
 function createReloadTool(client: PluginInput["client"]) {
   return tool({
@@ -145,11 +288,17 @@ export async function createOpenCodeTools(
   const userConfig = await loadKompassConfig(projectRoot);
   const config = mergeWithDefaults(userConfig);
   const tools: Record<string, ToolDefinition> = {};
+  const logger = createPluginLogger(client, projectRoot);
 
   for (const toolName of getEnabledToolNames(config.tools)) {
     const creator = opencodeToolCreators[toolName as keyof typeof opencodeToolCreators];
     if (creator) {
-      tools[getConfiguredOpenCodeToolName(toolName, config.tools[toolName].name)] = creator($, client);
+      const registeredName = getConfiguredOpenCodeToolName(toolName, config.tools[toolName].name);
+      tools[registeredName] = creator($, client);
+      await logger.info("Loaded Kompass tool", {
+        tool: toolName,
+        registeredName,
+      });
     }
   }
 
@@ -157,14 +306,31 @@ export async function createOpenCodeTools(
 }
 
 export const OpenCodeCompassPlugin: Plugin = async ({ $, client, worktree }: PluginInput) => {
+  const logger = createPluginLogger(client, worktree);
+
   return {
     tool: await createOpenCodeTools($, client, worktree),
     async config(cfg) {
-      await applyAgentsConfig(cfg, worktree);
-      await applyCommandsConfig(cfg, worktree);
+      await applyAgentsConfig(cfg, worktree, { logger });
+      await applyCommandsConfig(cfg, worktree, { logger });
+      await applySkillsConfig(cfg, { logger });
+    },
+    async "command.execute.before"(input, output) {
+      const commandExecution = getCommandExecution(input, output);
+
+      if (!commandExecution) return;
+
+      await logger.info("Executing Kompass command", commandExecution as Record<string, unknown>);
+    },
+    async "tool.execute.before"(input, output) {
+      const taskExecution = await getTaskToolExecution(input, output, worktree);
+
+      if (!taskExecution) return;
+
+      await logger.info("Executing Kompass task tool", taskExecution as Record<string, unknown>);
     },
   };
 };
 
-export { applyAgentsConfig, applyCommandsConfig };
+export { applyAgentsConfig, applyCommandsConfig, applySkillsConfig };
 export default OpenCodeCompassPlugin;

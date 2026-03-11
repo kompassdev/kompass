@@ -10,7 +10,7 @@ const packageRoot = path.resolve(__dirname, "..");
 const workspaceRoot = path.resolve(packageRoot, "..", "..");
 const coreRoot = path.join(workspaceRoot, "packages", "core");
 
-const runtimeDirs = ["agents", "commands", "components"] as const;
+const runtimeDirs = ["agents", "commands", "components", "skills"] as const;
 const bundleExternals = ["@opencode-ai/plugin", "@opencode-ai/plugin/tool"] as const;
 const bundleArgs = [
   "build",

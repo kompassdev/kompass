@@ -43,6 +43,7 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
 ### Create Ticket
 
 Use `kompass_ticket_sync` with `refUrl` unset to create the ticket:
+- Reuse the same change themes, rationale, and validation notes from the current summary work
 - Generate a concise title (max 70 chars) that reflects the delivered outcome
 - Generate a `description` that briefly describes what was accomplished and why it matters
 - Generate checklists with:

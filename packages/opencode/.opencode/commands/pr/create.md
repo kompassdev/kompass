@@ -13,6 +13,9 @@ Create a pull request for the current branch, handling the entire workflow from 
 
 Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed:
 - **Branch name**: If `<arguments>` looks like a branch reference (e.g., "main", "origin/develop"), store it as `<base>`
+- **Ticket directive**: If `<arguments>` clearly requests ticket auto-creation, store `<ticket-mode>` as `auto`
+- **Ticket reference**: If `<arguments>` includes a ticket URL or clear ticket reference, store it as `<ticket-url>` and store `<ticket-mode>` as `provided`
+- **Skip ticket**: If `<arguments>` clearly says to skip ticket mention, store `<ticket-mode>` as `skip`
 - **Additional context**: If `<arguments>` provides guidance (focus areas, related issues, notes), store it as `<additional-context>`
 - **Empty**: If no `<arguments>` provided, proceed with defaults
 
@@ -55,6 +58,40 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
 - Read the most relevant changed source files to understand the changes
 - Group related changes into themes for the final summary
 
+### Resolve Ticket
+
+- If `<ticket-mode>` is already `auto`, `provided`, or `skip`, do not ask a follow-up question
+- Otherwise, ask one `question` with:
+  - header `Provide Ticket`
+  - question `Provide Ticket`
+  - options:
+    - `Automatically Create` - create a fresh ticket from the summarized branch work
+    - `Skip` - mention `SKIPPED` in the PR body
+  - custom answers enabled so the user can paste a ticket URL or ticket reference directly
+- Normalize the result into one of these paths:
+  - `Automatically Create` => `<ticket-mode>` = `auto`
+  - custom ticket URL or reference => `<ticket-mode>` = `provided` and store the answer as `<ticket-url>`
+  - `Skip` => `<ticket-mode>` = `skip`
+
+### Prepare Ticket Reference
+
+When `<ticket-mode>` is `auto`, create the ticket before creating the PR:
+- Reuse the same change themes, rationale, and validation notes from the current summary work
+- Generate a concise title (max 70 chars) that reflects the delivered outcome
+- Generate a `description` that briefly describes what was accomplished and why it matters
+- Generate checklists with:
+  - `Changes` section listing the key changes made (concise, outcome-focused items)
+  - `Validation` section with concrete validation steps or confirmation that validation was performed
+- Keep items concise and outcome-focused
+- Do not restate the full diff
+- If `kompass_changes_load` reports uncommitted work, make that clear in the ticket wording
+- Use `kompass_ticket_sync` with `refUrl` unset
+- Store the created issue reference or URL as `<ticket-url>`
+
+Otherwise:
+- If `<ticket-mode>` is `provided`, use the provided ticket value as `<ticket-url>`
+- If `<ticket-mode>` is `skip`, store the literal `SKIPPED` as `<ticket-url>`
+
 ### Push Branch
 
 Run `git push` and use its output as the source of truth.
@@ -68,10 +105,12 @@ Run `git push` and use its output as the source of truth.
 
 Use `kompass_pr_sync` to create the pull request:
 - Generate a concise title (max 70 chars) summarizing the change
-- Generate a description that briefly describes the intent and scope
-- Generate checklists with:
-  - `Summary` section with 1-3 bullets focused on WHY the change exists
-  - `Testing` section with concrete validation steps (mark completed items as appropriate)
+- Generate a short description that briefly describes the intent and scope
+- Generate a compact checklist with concrete validation items and any remaining follow-ups; mark completed items as appropriate
+- Render the PR body with this exact structure by setting `body` directly:
+  - `## Ticket`, followed by `<ticket-url>` on the next line
+  - `## Description`, followed by the short description
+  - `## Checklist`, followed by the checklist items
 - Use `<base>` as the base branch if defined, otherwise leave it to use repo default
 - Do NOT restate the full diff
 - Keep it compact and directional
@@ -81,8 +120,10 @@ Use `kompass_pr_sync` to create the pull request:
 
 ## PR Body Guidelines
 
-- Keep summary focused on intent, not implementation details
-- Testing checklist: mark items as completed if validation was performed
+- Always include the `Ticket`, `Description`, and `Checklist` sections in that order
+- Use the literal `SKIPPED` when ticket mention was skipped
+- Keep description focused on intent, not implementation details
+- Mark checklist validation items as completed if validation was performed
 - Uncommitted changes and being on base branch block PR creation entirely
 
 ## Additional Context
@@ -97,6 +138,7 @@ Created PR: <title>
 
 URL: <pr-url>
 Branch: <current-branch> → <base-branch>
+Ticket: <ticket-url>
 ```
 
 If a PR already exists for the branch, display:
@@ -105,9 +147,10 @@ PR already exists
 
 URL: <pr-url>
 Branch: <current-branch> → <base-branch>
+Ticket: <ticket-url>
 ```
 
-After the branch line, always include one additional line reporting push status:
+After the ticket line, always include one additional line reporting push status:
 ```
 Push: yes
 ```

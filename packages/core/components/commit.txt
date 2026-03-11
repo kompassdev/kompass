@@ -1,12 +1,23 @@
 ### Message Format
-- Start with a high-level overview (1 sentence)
-- One line if possible, max 72 characters
+- Prefer this format unless the change is tiny:
+
+```text
+type: summary
+
+- change
+- change
+- change
+```
+
+- Keep the subject concise and under 72 characters
 - Use conventional commit format: "feat:", "fix:", "refactor:", "docs:", etc.
-- Add body only if additional context is essential
+- For non-trivial changes, add 2-5 short bullets with the main grouped changes
+- Use a one-line commit only when a body would add no value
 
 ### Commit Phase
 1. Use the loaded change data as the source of truth for what will be committed
 2. Stage changes with `git add` (use `-A` for all, or specific files)
 3. Generate the commit message and store it as `<commit-message>`
-4. Create the commit with `<commit-message>` using `git commit -m`
-5. Only run `git status` if the commit fails and additional diagnosis is required
+4. Preserve the blank line between subject and bullets when present
+5. Create the commit with `<commit-message>`
+6. Only run `git status` if the commit fails and needs diagnosis

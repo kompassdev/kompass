@@ -31,6 +31,7 @@ describe("applyCommandsConfig", () => {
         "pr/create",
         "pr/review",
         "pr/fix",
+        "ship",
         "ticket/create",
         "ticket/plan",
         "ticket/dev",
@@ -55,6 +56,7 @@ describe("applyCommandsConfig", () => {
       assert.equal(cfg.command!["ticket/create"]?.agent, "build");
       assert.equal(cfg.command!["ticket/plan"]?.agent, "planner");
       assert.equal(cfg.command!["dev"]?.agent, "build");
+      assert.equal(cfg.command!["ship"]?.agent, "build");
       assert.ok(cfg.command!["pr/review"]?.description);
       assert.ok(cfg.command!["reload"]?.template);
       assert.ok(cfg.command!["dev"]?.template);
@@ -317,8 +319,29 @@ describe("applyCommandsConfig", () => {
       assert.ok(cfg.command!["pr/review"]?.template);
       assert.ok(cfg.command!["ticket/plan"]?.template);
       assert.ok(cfg.command!["pr/fix"]?.template);
+      assert.ok(cfg.command!["ship"]?.template);
       assert.ok(cfg.command!["ticket/dev"]?.template);
       assert.ok(cfg.command!["review"]?.template);
+    });
+
+    test("embeds all expected components in ship command", async () => {
+      delete process.env.CI;
+      const cfg: { command?: Record<string, { template: string }> } = {};
+
+      await applyCommandsConfig(cfg as never, process.cwd());
+
+      assert.ok(cfg.command);
+      const shipTemplate = cfg.command!["ship"].template;
+
+      assert.match(shipTemplate, /## Goal/);
+      assert.match(shipTemplate, /Ship the current work/);
+      assert.match(shipTemplate, /Load Change Context/);
+      assert.match(shipTemplate, /Check Blockers/);
+      assert.match(shipTemplate, /Ensure Feature Branch/);
+      assert.match(shipTemplate, /call subagent @general \/commit/);
+      assert.match(shipTemplate, /call subagent @general \/pr\/create/);
+
+      assert.doesNotMatch(shipTemplate, /\{\{[\w-]+\}\}/);
     });
 
     test("embeds all expected components in dev command", async () => {

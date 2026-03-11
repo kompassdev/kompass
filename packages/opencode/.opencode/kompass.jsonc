@@ -27,7 +27,13 @@
     "review": {
       "enabled": true
     },
+    "ship": {
+      "enabled": true
+    },
     "rmslop": {
+      "enabled": true
+    },
+    "todo": {
       "enabled": true
     },
     "ticket/create": {

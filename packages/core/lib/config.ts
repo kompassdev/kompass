@@ -27,7 +27,9 @@ export const DEFAULT_COMMAND_NAMES = [
   "pr/review",
   "reload",
   "review",
+  "ship",
   "rmslop",
+  "todo",
   "ticket/create",
   "ticket/dev",
   "ticket/plan",
@@ -97,7 +99,9 @@ export interface KompassConfig {
     "pr/review"?: CommandConfig;
     reload?: CommandConfig;
     review?: CommandConfig;
+    ship?: CommandConfig;
     rmslop?: CommandConfig;
+    todo?: CommandConfig;
     "ticket/create"?: CommandConfig;
     "ticket/dev"?: CommandConfig;
     "ticket/plan"?: CommandConfig;

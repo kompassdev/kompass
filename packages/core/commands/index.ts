@@ -57,10 +57,20 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     agent: "reviewer",
     templatePath: "commands/review.txt",
   },
+  ship: {
+    description: "Ship branch work through commit and PR creation",
+    agent: "build",
+    templatePath: "commands/ship.txt",
+  },
   rmslop: {
     description: "Remove AI code slop from current branch",
     agent: "build",
     templatePath: "commands/rmslop.txt",
+  },
+  todo: {
+    description: "Work through a todo file task by task",
+    agent: "build",
+    templatePath: "commands/todo.txt",
   },
   "ticket/dev": {
     description: "Implement a ticket and create a PR",

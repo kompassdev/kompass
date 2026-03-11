@@ -180,6 +180,18 @@ Reviews uncommitted changes or changes against a base branch (default: main). Pr
 
 </details>
 
+### `/ship`
+
+Ships the fast path from change summary to commit and PR creation.
+
+<details>
+
+**Usage:** `/ship [base-or-context]`
+
+Summarizes current changes, creates a feature branch when you are still on the base branch, then delegates to `/commit` and `/pr/create`.
+
+</details>
+
 ### `/rmslop`
 
 Removes unnecessary code and simplifies.

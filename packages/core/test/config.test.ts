@@ -87,6 +87,14 @@ describe("object-based config", () => {
   });
 });
 
+describe("command defaults", () => {
+  test("enables todo command by default", () => {
+    const config = mergeWithDefaults(null);
+
+    assert.equal(config.commands.enabled.includes("todo"), true);
+  });
+});
+
 describe("skills config", () => {
   test("defaults to all skills enabled when no allowlist is configured", () => {
     const config = mergeWithDefaults(null);

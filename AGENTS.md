@@ -32,7 +32,7 @@ Never edit `packages/opencode/.opencode/` directly.
 ```text
 packages/core/      # Shared commands, agents, components, tools, tests
 packages/opencode/  # OpenCode adapter package
-kompass.json        # Local workspace config used for development
+kompass.jsonc       # Local workspace config used for development
 packages/opencode/.opencode/ # Generated OpenCode output for review
 ```
 

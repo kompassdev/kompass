@@ -132,6 +132,33 @@ describe("applyCommandsConfig", () => {
       }
     });
 
+    test("supports object-based command toggles", async () => {
+      delete process.env.CI;
+      const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-command-entries-"));
+
+      try {
+        await writeFile(
+          path.join(tempDir, "kompass.jsonc"),
+          `{
+            "commands": {
+              "dev": { "enabled": false },
+              "review": { "enabled": true }
+            }
+          }`,
+        );
+
+        const cfg: { command?: Record<string, { template: string }> } = {};
+
+        await applyCommandsConfig(cfg as never, tempDir);
+
+        assert.ok(cfg.command);
+        assert.equal(cfg.command!["dev"], undefined);
+        assert.ok(cfg.command!["review"]);
+      } finally {
+        await rm(tempDir, { recursive: true, force: true });
+      }
+    });
+
     test("replaces {{dev-flow}} placeholder with component content", async () => {
       delete process.env.CI;
       const cfg: { command?: Record<string, { template: string }> } = {};

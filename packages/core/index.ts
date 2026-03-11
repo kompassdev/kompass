@@ -5,10 +5,19 @@ export type { ResolvedCommandDefinition } from "./commands/index.ts";
 export {
   getConfiguredToolName,
   getEnabledToolNames,
+  isSkillEnabled,
   loadKompassConfig,
   mergeWithDefaults,
 } from "./lib/config.ts";
-export type { AgentDefinition, KompassConfig, MergedKompassConfig, ToolConfig, ToolName } from "./lib/config.ts";
+export type {
+  AgentDefinition,
+  KompassConfig,
+  MergedKompassConfig,
+  SkillFilterConfig,
+  SkillIdentity,
+  ToolConfig,
+  ToolName,
+} from "./lib/config.ts";
 export { createTools } from "./tools/index.ts";
 export { createChangesLoadTool } from "./tools/changes-load.ts";
 export { createPrLoadTool } from "./tools/pr-load.ts";

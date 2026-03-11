@@ -34,13 +34,13 @@ Config is optional. To publish a config file:
 
 ```bash
 # Inside .opencode folder
-curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/.opencode/kompass.json -o .opencode/kompass.json
+curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/.opencode/kompass.jsonc -o .opencode/kompass.jsonc
 
 # Project root
-curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/kompass.json -o kompass.json
+curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/kompass.jsonc -o kompass.jsonc
 ```
 
-Kompass looks for `.opencode/kompass.json` first, then `kompass.json`.
+Kompass prefers `.opencode/kompass.jsonc`, then `kompass.jsonc`, and still accepts the legacy `.json` filenames.
 
 ## How To Use
 
@@ -49,7 +49,8 @@ Kompass looks for `.opencode/kompass.json` first, then `kompass.json`.
 Use `@kompassdev/opencode` when you want Kompass workflows inside OpenCode.
 
 - install the plugin in your OpenCode config
-- optionally add `.opencode/kompass.json` or `kompass.json` to customize commands, agents, tools, and defaults
+- optionally add `.opencode/kompass.jsonc` or `kompass.jsonc` to customize commands, agents, tools, skills, and defaults
+- bundled Kompass skills are registered automatically when the plugin loads, so users do not need to copy skill files manually
 - use commands like `/review`, `/pr/create`, or `/ticket/plan` inside OpenCode
 - for CLI session debugging, use `opencode session list` to find a session id and `opencode export <sessionID>` to dump the raw session JSON
 
@@ -163,7 +164,7 @@ Reloads the OpenCode project cache.
 
 **Usage:** `/reload`
 
-Refreshes config, commands, agents, and tools without restarting OpenCode. Useful after making changes to `kompass.json`.
+Refreshes config, commands, agents, and tools without restarting OpenCode. Useful after making changes to `kompass.jsonc`.
 
 </details>
 
@@ -366,7 +367,7 @@ Refresh the OpenCode project cache.
 **Why it helps:**
 
 - refresh config, commands, and tools without restarting
-- useful after making changes to kompass.json
+- useful after making changes to `kompass.jsonc`
 
 </details>
 
@@ -376,14 +377,14 @@ Project config is optional.
 
 If you want to customize Kompass, use one of these preferred locations in the consumer project:
 
-- `.opencode/kompass.json`
-- `kompass.json`
+- `.opencode/kompass.jsonc`
+- `kompass.jsonc`
 
-See `kompass.json` for the root example, `.opencode/kompass.json` for the OpenCode-scoped example, and `kompass.schema.json` for the schema.
+See `kompass.jsonc` for the root example, `packages/opencode/.opencode/kompass.jsonc` for the compiled OpenCode-scoped example, and `kompass.schema.json` for the schema.
 
 Tool names can also be remapped per adapter. For example, this keeps `ticket_sync` enabled but exposes it as `custom_ticket_name`, and Kompass command or agent references are rewritten to match:
 
-```json
+```jsonc
 {
   "tools": {
     "ticket_sync": {

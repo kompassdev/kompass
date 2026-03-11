@@ -13,7 +13,8 @@ import {
   mergeWithDefaults,
   resolveCommands,
 } from "../core/index.ts";
-import { applyAgentsConfig, applyCommandsConfig } from "./config.ts";
+import { applyAgentsConfig, applyCommandsConfig, applySkillsConfig } from "./config.ts";
+import { createPluginLogger } from "./logging.ts";
 import {
   getConfiguredOpenCodeToolName,
   prefixKompassToolReferences,
@@ -41,10 +42,6 @@ export type CommandExecution = {
   arguments: string;
   prompt: string;
 };
-
-function logHook(label: string, value: unknown) {
-  console.info(label, JSON.stringify(value, null, 2));
-}
 
 type ParsedSlashCommand = {
   command: string;
@@ -291,11 +288,17 @@ export async function createOpenCodeTools(
   const userConfig = await loadKompassConfig(projectRoot);
   const config = mergeWithDefaults(userConfig);
   const tools: Record<string, ToolDefinition> = {};
+  const logger = createPluginLogger(client, projectRoot);
 
   for (const toolName of getEnabledToolNames(config.tools)) {
     const creator = opencodeToolCreators[toolName as keyof typeof opencodeToolCreators];
     if (creator) {
-      tools[getConfiguredOpenCodeToolName(toolName, config.tools[toolName].name)] = creator($, client);
+      const registeredName = getConfiguredOpenCodeToolName(toolName, config.tools[toolName].name);
+      tools[registeredName] = creator($, client);
+      await logger.info("Loaded Kompass tool", {
+        tool: toolName,
+        registeredName,
+      });
     }
   }
 
@@ -303,28 +306,31 @@ export async function createOpenCodeTools(
 }
 
 export const OpenCodeCompassPlugin: Plugin = async ({ $, client, worktree }: PluginInput) => {
+  const logger = createPluginLogger(client, worktree);
+
   return {
     tool: await createOpenCodeTools($, client, worktree),
     async config(cfg) {
-      await applyAgentsConfig(cfg, worktree);
-      await applyCommandsConfig(cfg, worktree);
+      await applyAgentsConfig(cfg, worktree, { logger });
+      await applyCommandsConfig(cfg, worktree, { logger });
+      await applySkillsConfig(cfg, { logger });
     },
     async "command.execute.before"(input, output) {
       const commandExecution = getCommandExecution(input, output);
 
       if (!commandExecution) return;
 
-      logHook("[kompass] command.execute.before", commandExecution);
+      await logger.info("Executing Kompass command", commandExecution as Record<string, unknown>);
     },
     async "tool.execute.before"(input, output) {
       const taskExecution = await getTaskToolExecution(input, output, worktree);
 
       if (!taskExecution) return;
 
-      logHook("[kompass] tool.execute.before task", taskExecution);
+      await logger.info("Executing Kompass task tool", taskExecution as Record<string, unknown>);
     },
   };
 };
 
-export { applyAgentsConfig, applyCommandsConfig };
+export { applyAgentsConfig, applyCommandsConfig, applySkillsConfig };
 export default OpenCodeCompassPlugin;

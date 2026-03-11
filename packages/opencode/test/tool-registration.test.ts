@@ -8,6 +8,9 @@ import { createOpenCodeTools } from "../index.ts";
 
 function createMockClient() {
   return {
+    app: {
+      log: async () => true,
+    },
     instance: {
       dispose: async () => true,
     },
@@ -68,5 +71,33 @@ describe("createOpenCodeTools", () => {
       } finally {
         await rm(tempDir, { recursive: true, force: true });
       }
+  });
+
+  test("loads tool aliases from jsonc config", async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-tools-jsonc-"));
+
+    try {
+      await writeFile(
+        path.join(tempDir, "kompass.jsonc"),
+        `{
+          // jsonc config should work
+          "tools": {
+            "pr_load": {
+              "enabled": true,
+              "name": "pull_request_context",
+            },
+          },
+        }`,
+      );
+
+      const tools = await createOpenCodeTools((() => {
+        throw new Error("not implemented");
+      }) as never, createMockClient(), tempDir);
+
+      assert.ok(tools.pull_request_context);
+      assert.equal(tools.kompass_pr_load, undefined);
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
   });
 });

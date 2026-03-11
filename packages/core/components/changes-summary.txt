@@ -1,0 +1,12 @@
+- Reuse the same change themes, rationale, and reviewer-facing validation goals from the current summary work
+- Generate a concise title (max 70 chars) that reflects the delivered outcome
+- Generate a `description` that briefly describes what was accomplished and why it matters
+- Generate checklists with:
+  - 2-4 functional sections named after user-facing areas or outcomes, not generic labels like `Changes`
+  - concise, outcome-focused items under each section that describe what changed for a human reader
+  - one final `Validation` section with reviewer-facing confirmation steps that start with `Verify that...`, `Confirm that...`, or `Check that...`
+- Keep section names and items concise, human-friendly, and function-oriented
+- Merge tiny themes together instead of creating a section per file or implementation detail
+- Do not restate the full diff
+- Do not use execution-status notes such as `Validation not run in this session` as checklist items
+- If `changes_load` reports uncommitted work, make that clear in the ticket wording

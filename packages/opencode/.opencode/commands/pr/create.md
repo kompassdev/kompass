@@ -76,14 +76,17 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
 ### Prepare Ticket Reference
 
 When `<ticket-mode>` is `auto`, create the ticket before creating the PR:
-- Reuse the same change themes, rationale, and validation notes from the current summary work
+- Reuse the same change themes, rationale, and reviewer-facing validation goals from the current summary work
 - Generate a concise title (max 70 chars) that reflects the delivered outcome
 - Generate a `description` that briefly describes what was accomplished and why it matters
 - Generate checklists with:
-  - `Changes` section listing the key changes made (concise, outcome-focused items)
-  - `Validation` section with concrete validation steps or confirmation that validation was performed
-- Keep items concise and outcome-focused
+  - 2-4 functional sections named after user-facing areas or outcomes, not generic labels like `Changes`
+  - concise, outcome-focused items under each section that describe what changed for a human reader
+  - one final `Validation` section with reviewer-facing confirmation steps that start with `Verify that...`, `Confirm that...`, or `Check that...`
+- Keep section names and items concise, human-friendly, and function-oriented
+- Merge tiny themes together instead of creating a section per file or implementation detail
 - Do not restate the full diff
+- Do not use execution-status notes such as `Validation not run in this session` as checklist items
 - If `kompass_changes_load` reports uncommitted work, make that clear in the ticket wording
 - Use `kompass_ticket_sync` with `refUrl` unset
 - Store the created issue reference or URL as `<ticket-url>`
@@ -106,11 +109,15 @@ Run `git push` and use its output as the source of truth.
 Use `kompass_pr_sync` to create the pull request:
 - Generate a concise title (max 70 chars) summarizing the change
 - Generate a short description that briefly describes the intent and scope
-- Generate a compact checklist with concrete validation items and any remaining follow-ups; mark completed items as appropriate
+- Generate a compact checklist that mirrors the same human-facing structure used for the ticket summary:
+  - group delivered work into 2-4 functional or outcome-focused sections
+  - use concise section names instead of generic labels like `Changes`
+  - end with one `Validation` section containing reviewer-facing confirmation steps
+  - do not use execution-status notes as checklist items
 - Render the PR body with this exact structure by setting `body` directly:
   - `## Ticket`, followed by `<ticket-url>` on the next line
   - `## Description`, followed by the short description
-  - `## Checklist`, followed by the checklist items
+  - `## Checklist`, followed by the checklist items and any subsection headings
 - Use `<base>` as the base branch if defined, otherwise leave it to use repo default
 - Do NOT restate the full diff
 - Keep it compact and directional

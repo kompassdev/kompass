@@ -1,9 +1,0 @@
-- Reuse the same change themes, rationale, and validation notes from the current summary work
-- Generate a concise title (max 70 chars) that reflects the delivered outcome
-- Generate a `description` that briefly describes what was accomplished and why it matters
-- Generate checklists with:
-  - `Changes` section listing the key changes made (concise, outcome-focused items)
-  - `Validation` section with concrete validation steps or confirmation that validation was performed
-- Keep items concise and outcome-focused
-- Do not restate the full diff
-- If `changes_load` reports uncommitted work, make that clear in the ticket wording

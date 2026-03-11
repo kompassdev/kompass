@@ -347,7 +347,7 @@ const defaultAgentReviewer: AgentDefinition = {
 const defaultAgentNavigator: AgentDefinition = {
   description: "Coordinate todo and ship workflows by delegating work to subagents.",
   promptPath: "agents/navigator.txt",
-  permission: { task: "allow" },
+  permission: { task: "allow", todowrite: "allow" },
 };
 
 const defaultAgentPlanner: AgentDefinition = {

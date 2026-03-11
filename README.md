@@ -64,7 +64,7 @@ Kompass is being structured as a shared core toolkit with adapter-specific packa
 
 ### `navigator`
 
-Coordinates multi-step workflows like `/todo` and `/ship` by delegating focused work to subagents.
+Coordinates multi-step workflows like `/todo` and `/ship` by keeping orchestration local and delegating focused leaf work to subagents.
 
 ### `planner`
 
@@ -192,7 +192,7 @@ Ships the fast path from change summary to commit and PR creation.
 
 **Usage:** `/ship [base-or-context]`
 
-Summarizes current changes, creates a feature branch when you are still on the base branch, then delegates to `/commit` and `/pr/create`.
+Summarizes current changes, creates a feature branch when you are still on the base branch, then delegates the commit and PR steps to `/commit` and `/pr/create`.
 
 </details>
 

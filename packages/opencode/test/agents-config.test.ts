@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { applyAgentsConfig } from "../config.ts";
 
 describe("applyAgentsConfig", () => {
-  test("registers navigator with task permission", async () => {
+  test("registers navigator with task and todowrite permission", async () => {
     const cfg: {
       agent?: Record<
         string,
@@ -23,7 +23,12 @@ describe("applyAgentsConfig", () => {
       cfg.agent.navigator?.description,
       "Coordinate todo and ship workflows by delegating work to subagents.",
     );
-    assert.deepEqual(cfg.agent.navigator?.permission, { task: "allow" });
+    assert.deepEqual(cfg.agent.navigator?.permission, {
+      task: "allow",
+      todowrite: "allow",
+    });
     assert.match(cfg.agent.navigator?.prompt ?? "", /navigation specialist/i);
+    assert.match(cfg.agent.navigator?.prompt ?? "", /delegate only explicit leaf tasks/i);
+    assert.match(cfg.agent.navigator?.prompt ?? "", /todowrite/i);
   });
 });

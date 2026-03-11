@@ -62,6 +62,10 @@ Kompass is being structured as a shared core toolkit with adapter-specific packa
 
 ## Agents
 
+### `navigator`
+
+Coordinates multi-step workflows like `/todo` and `/ship` by keeping orchestration local and delegating focused leaf work to subagents.
+
 ### `planner`
 
 Turns a request or ticket into a scoped implementation plan.
@@ -177,6 +181,18 @@ Reviews branch changes for issues and improvements.
 **Usage:** `/review [base]`
 
 Reviews uncommitted changes or changes against a base branch (default: main). Provides feedback on code quality, patterns, and potential issues.
+
+</details>
+
+### `/ship`
+
+Ships the fast path from change summary to commit and PR creation.
+
+<details>
+
+**Usage:** `/ship [base-or-context]`
+
+Summarizes current changes, creates a feature branch when you are still on the base branch, then delegates the commit and PR steps to `/commit` and `/pr/create`.
 
 </details>
 

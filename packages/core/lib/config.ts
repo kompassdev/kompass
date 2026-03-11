@@ -27,13 +27,15 @@ export const DEFAULT_COMMAND_NAMES = [
   "pr/review",
   "reload",
   "review",
+  "ship",
   "rmslop",
+  "todo",
   "ticket/create",
   "ticket/dev",
   "ticket/plan",
 ] as const;
 
-export const DEFAULT_AGENT_NAMES = ["planner", "reviewer"] as const;
+export const DEFAULT_AGENT_NAMES = ["navigator", "planner", "reviewer"] as const;
 
 export const DEFAULT_COMPONENT_NAMES = [
   "change-summary",
@@ -97,7 +99,9 @@ export interface KompassConfig {
     "pr/review"?: CommandConfig;
     reload?: CommandConfig;
     review?: CommandConfig;
+    ship?: CommandConfig;
     rmslop?: CommandConfig;
+    todo?: CommandConfig;
     "ticket/create"?: CommandConfig;
     "ticket/dev"?: CommandConfig;
     "ticket/plan"?: CommandConfig;
@@ -105,6 +109,7 @@ export interface KompassConfig {
     templates?: Record<string, string>;
   };
   agents?: {
+    navigator?: AgentConfig;
     planner?: AgentConfig;
     reviewer?: AgentConfig;
     enabled?: string[];
@@ -147,6 +152,7 @@ export interface MergedKompassConfig {
   };
   agents: {
     enabled: string[];
+    navigator: AgentDefinition;
     reviewer: AgentDefinition;
     planner: AgentDefinition;
   };
@@ -338,6 +344,12 @@ const defaultAgentReviewer: AgentDefinition = {
   permission: { edit: "deny" },
 };
 
+const defaultAgentNavigator: AgentDefinition = {
+  description: "Coordinate todo and ship workflows by delegating work to subagents.",
+  promptPath: "agents/navigator.txt",
+  permission: { task: "allow", todowrite: "allow" },
+};
+
 const defaultAgentPlanner: AgentDefinition = {
   description: "Turn requests or tickets into scoped implementation plans.",
   promptPath: "agents/planner.txt",
@@ -489,6 +501,8 @@ export function mergeWithDefaults(
   config: KompassConfig | null,
 ): MergedKompassConfig {
   const mergedSkills = getMergedSkillLists(config);
+  const { enabled: _navigatorEnabled, ...navigatorOverrides } =
+    config?.agents?.navigator ?? {};
   const { enabled: _reviewerEnabled, ...reviewerOverrides } = config?.agents?.reviewer ?? {};
   const { enabled: _plannerEnabled, ...plannerOverrides } = config?.agents?.planner ?? {};
 
@@ -514,6 +528,7 @@ export function mergeWithDefaults(
         config?.agents?.enabled,
         DEFAULT_AGENT_NAMES,
       ),
+      navigator: { ...defaultAgentNavigator, ...navigatorOverrides },
       reviewer: { ...defaultAgentReviewer, ...reviewerOverrides },
       planner: { ...defaultAgentPlanner, ...plannerOverrides },
     },

@@ -20,12 +20,16 @@ import {
   prefixKompassToolReferences,
 } from "./tool-names.ts";
 
+const AGENT_HANDOFF_MARKER = "generate a prompt and call the task tool with subagent:";
+
 type ToolExecuteBeforeHook = NonNullable<Hooks["tool.execute.before"]>;
 type ToolExecuteBeforeInput = Parameters<ToolExecuteBeforeHook>[0];
 type ToolExecuteBeforeOutput = Parameters<ToolExecuteBeforeHook>[1];
 type CommandExecuteBeforeHook = NonNullable<Hooks["command.execute.before"]>;
 type CommandExecuteBeforeInput = Parameters<CommandExecuteBeforeHook>[0];
 type CommandExecuteBeforeOutput = Parameters<CommandExecuteBeforeHook>[1];
+type ChatMessageHook = NonNullable<Hooks["chat.message"]>;
+type ChatMessageOutput = Parameters<ChatMessageHook>[1];
 
 export type TaskToolExecution = {
   prompt: string;
@@ -156,6 +160,19 @@ export function getCommandExecution(
     arguments: input.arguments,
     prompt,
   };
+}
+
+export function removeSyntheticAgentHandoff(output: ChatMessageOutput): boolean {
+  const filteredParts = output.parts.filter((part) => !(
+    part.type === "text" &&
+    part.synthetic === true &&
+    part.text.includes(AGENT_HANDOFF_MARKER)
+  ));
+
+  if (filteredParts.length === output.parts.length) return false;
+
+  output.parts.splice(0, output.parts.length, ...filteredParts);
+  return true;
 }
 
 function createReloadTool(client: PluginInput["client"]) {
@@ -314,6 +331,17 @@ export const OpenCodeCompassPlugin: Plugin = async ({ $, client, worktree }: Plu
       await applyAgentsConfig(cfg, worktree, { logger });
       await applyCommandsConfig(cfg, worktree, { logger });
       await applySkillsConfig(cfg, { logger });
+    },
+    async "chat.message"(input, output) {
+      const removedSyntheticHandoff = removeSyntheticAgentHandoff(output);
+
+      if (!removedSyntheticHandoff) return;
+
+      await logger.info("Removed synthetic agent handoff text", {
+        sessionID: input.sessionID,
+        messageID: input.messageID,
+        agent: input.agent,
+      });
     },
     async "command.execute.before"(input, output) {
       const commandExecution = getCommandExecution(input, output);

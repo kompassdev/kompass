@@ -106,6 +106,7 @@ Current command workflows include:
 - `/pr/review`
 - `/reload`
 - `/review`
+- `/ship`
 - `/rmslop`
 - `/ticket/create`
 - `/ticket/dev`

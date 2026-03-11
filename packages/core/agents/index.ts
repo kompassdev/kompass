@@ -9,6 +9,7 @@ export interface ResolvedAgentDefinition
 // Re-export agent definitions from config for compile script
 export function getAgentDefinitions(config: ReturnType<typeof mergeWithDefaults>): Record<string, AgentDefinition> {
   return {
+    navigator: config.agents.navigator,
     reviewer: config.agents.reviewer,
     planner: config.agents.planner,
   };

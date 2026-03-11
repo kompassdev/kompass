@@ -4,7 +4,6 @@ import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool";
 import {
   createChangesLoadTool,
   createPrLoadTool,
-  createPrReviewTool,
   createPrSyncTool,
   createTicketLoadTool,
   createTicketSyncTool,
@@ -218,22 +217,6 @@ const opencodeToolCreators = {
       description: definition.description,
       args: {
         pr: tool.schema.string().describe("PR number or URL").optional(),
-      },
-      execute: (args, context) => definition.execute(args, context),
-    });
-  },
-  pr_review($: PluginInput["$"]) {
-    const definition = createPrReviewTool($);
-    return tool({
-      description: definition.description,
-      args: {
-        pr: tool.schema.string().describe("PR number or URL (optional, uses current PR if not provided)").optional(),
-        comment_type: tool.schema.enum(["general", "inline", "reply"]).describe("Type of comment to add"),
-        body: tool.schema.string().describe("Comment text"),
-        commit_id: tool.schema.string().describe("Commit SHA for inline comments").optional(),
-        path: tool.schema.string().describe("File path for inline comments").optional(),
-        line: tool.schema.number().int().positive().describe("Line number for inline comments").optional(),
-        in_reply_to: tool.schema.number().int().positive().describe("Comment ID to reply to").optional(),
       },
       execute: (args, context) => definition.execute(args, context),
     });

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/kompass.png" alt="Kompass" height="300" />
+  <img src="https://raw.githubusercontent.com/kompassdev/kompass/main/assets/kompass.png" alt="Kompass" height="300" />
 </p>
 
 # Kompass
@@ -34,7 +34,7 @@ Config is optional. To publish a config file:
 
 ```bash
 # Inside .opencode folder
-curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/.opencode/kompass.jsonc -o .opencode/kompass.jsonc
+curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/kompass.jsonc -o .opencode/kompass.jsonc
 
 # Project root
 curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/kompass.jsonc -o kompass.jsonc
@@ -196,6 +196,18 @@ Summarizes current changes, creates a feature branch when you are still on the b
 
 </details>
 
+### `/todo`
+
+Works through a todo file task by task.
+
+<details>
+
+**Usage:** `/todo [todo-file]`
+
+Loads a todo list, delegates one item at a time, and keeps orchestration local so work can pause and resume cleanly.
+
+</details>
+
 ### `/rmslop`
 
 Removes unnecessary code and simplifies.
@@ -281,30 +293,6 @@ Load PR metadata and review history.
 
 - gives agents normalized PR context before they start reviewing or summarizing
 - keeps review workflows grounded in actual PR state instead of inferred context
-
-</details>
-
-### `pr_review`
-
-Legacy PR comment helper for general comments, inline comments, or thread replies. Prefer `pr_sync` for new workflows.
-
-<details>
-
-**Parameters:**
-
-- `comment_type` (required): type of comment - "general", "inline", or "reply"
-- `body` (required): comment text
-- `pr` (optional): PR number or URL (uses current PR if not provided)
-- `commit_id` (optional): commit SHA for inline comments
-- `path` (optional): file path for inline comments
-- `line` (optional): line number for inline comments
-- `in_reply_to` (optional): comment ID to reply to
-
-**Why it helps:**
-
-- kept for backwards compatibility with existing automations
-- no shell escaping issues with backticks or quotes
-- replies automatically fetch parent comment context
 
 </details>
 

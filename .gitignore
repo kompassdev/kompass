@@ -20,6 +20,7 @@ build/
 packages/opencode/agents/
 packages/opencode/commands/
 packages/opencode/components/
+packages/opencode/skills/
 
 # IDE
 .vscode/

@@ -12,13 +12,16 @@
     "pr/review": { "enabled": true },
     "reload": { "enabled": true },
     "review": { "enabled": true },
+    "ship": { "enabled": true },
     "rmslop": { "enabled": true },
+    "todo": { "enabled": true },
     "ticket/create": { "enabled": true },
     "ticket/dev": { "enabled": true },
     "ticket/plan": { "enabled": true },
   },
 
   "agents": {
+    "navigator": { "enabled": true },
     "planner": { "enabled": true },
     "reviewer": { "enabled": true },
   },
@@ -26,7 +29,6 @@
   "tools": {
     "changes_load": { "enabled": true },
     "pr_load": { "enabled": true },
-    "pr_review": { "enabled": true },
     "pr_sync": { "enabled": true },
     "ticket_load": { "enabled": true },
     "ticket_sync": { "enabled": true },

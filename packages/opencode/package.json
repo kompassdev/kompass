@@ -1,6 +1,6 @@
 {
   "name": "@kompassdev/opencode",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "description": "OpenCode plugin for navigating repos with fewer wrong turns",
   "type": "module",
   "main": "./dist/index.js",
@@ -36,7 +36,16 @@
     "automation",
     "kompass"
   ],
+  "homepage": "https://github.com/kompassdev/kompass#readme",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kompassdev/kompass.git",
+    "directory": "packages/opencode"
+  },
+  "bugs": {
+    "url": "https://github.com/kompassdev/kompass/issues"
+  },
   "dependencies": {
     "@opencode-ai/plugin": "^1.2.24",
     "@opencode-ai/sdk": "1.2.24",

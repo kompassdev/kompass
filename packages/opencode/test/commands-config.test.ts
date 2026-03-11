@@ -84,7 +84,7 @@ describe("applyCommandsConfig", () => {
       assert.doesNotMatch(reviewTemplate, /`ticket_load`/);
     });
 
-    test("pr/fix template prefers pr_sync over pr_review", async () => {
+    test("pr/fix template uses pr_sync only", async () => {
       delete process.env.CI;
       const cfg: { command?: Record<string, { template: string }> } = {};
 

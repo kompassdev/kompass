@@ -9,6 +9,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(__dirname, "..");
 const workspaceRoot = path.resolve(packageRoot, "..", "..");
 const coreRoot = path.join(workspaceRoot, "packages", "core");
+const workspaceReadme = path.join(workspaceRoot, "README.md");
+const packageReadme = path.join(packageRoot, "README.md");
 
 const runtimeDirs = ["agents", "commands", "components", "skills"] as const;
 const bundleExternals = ["@opencode-ai/plugin", "@opencode-ai/plugin/tool"] as const;
@@ -49,5 +51,10 @@ async function copyRuntimeText() {
   }
 }
 
+async function syncReadme() {
+  await cp(workspaceReadme, packageReadme);
+}
+
 await buildBundle();
 await copyRuntimeText();
+await syncReadme();

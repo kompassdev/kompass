@@ -42,7 +42,13 @@
         "review": {
           "$ref": "#/$defs/commandConfig"
         },
+        "ship": {
+          "$ref": "#/$defs/commandConfig"
+        },
         "rmslop": {
+          "$ref": "#/$defs/commandConfig"
+        },
+        "todo": {
           "$ref": "#/$defs/commandConfig"
         },
         "ticket/create": {
@@ -68,7 +74,9 @@
               "pr/review",
               "reload",
               "review",
+              "ship",
               "rmslop",
+              "todo",
               "ticket/create",
               "ticket/dev",
               "ticket/plan"
@@ -90,7 +98,9 @@
               "pr/review",
               "reload",
               "review",
+              "ship",
               "rmslop",
+              "todo",
               "ticket/create",
               "ticket/dev",
               "ticket/plan"
@@ -107,6 +117,9 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "navigator": {
+          "$ref": "#/$defs/agentConfig"
+        },
         "planner": {
           "$ref": "#/$defs/agentConfig"
         },
@@ -117,7 +130,7 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["planner", "reviewer"]
+            "enum": ["navigator", "planner", "reviewer"]
           },
           "uniqueItems": true,
           "deprecated": true
@@ -132,9 +145,6 @@
           "$ref": "#/$defs/toolConfig"
         },
         "pr_load": {
-          "$ref": "#/$defs/toolConfig"
-        },
-        "pr_review": {
           "$ref": "#/$defs/toolConfig"
         },
         "pr_sync": {
@@ -375,7 +385,6 @@
       "enum": [
         "changes_load",
         "pr_load",
-        "pr_review",
         "pr_sync",
         "ticket_sync",
         "ticket_load",

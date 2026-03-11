@@ -64,9 +64,6 @@
     "pr_load": {
       "enabled": true
     },
-    "pr_review": {
-      "enabled": true
-    },
     "pr_sync": {
       "enabled": true
     },

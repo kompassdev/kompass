@@ -29,7 +29,7 @@ Kompass adds focused repository workflows to OpenCode through built-in commands,
 - Use `kompass_changes_load` to inspect branch changes against a base branch.
 - Use `kompass_pr_load` to load PR metadata and review history.
 - Use `kompass_ticket_load` to normalize ticket input from GitHub, a file, or raw text.
-- Use `kompass_pr_review`, `kompass_pr_sync`, and `kompass_ticket_sync` for structured GitHub updates when the user asks for them.
+- Use `kompass_pr_sync` and `kompass_ticket_sync` for structured GitHub updates when the user asks for them.
 
 ## Notes
 

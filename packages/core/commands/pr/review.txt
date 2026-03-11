@@ -60,6 +60,8 @@ While reading files:
 
 Derive `<previous-grade>` from the most recent prior review body by `<pr-context.viewerLogin>` when one is present.
 
+Derive `<already-approved>` from whether `<pr-context.viewerLogin>` already has an `APPROVED` review on `<pr-context.pr.headRefOid>`.
+
 Derive `<body-note>` only when you have review feedback that does not belong in an inline comment.
 
 Before publishing, derive:
@@ -67,6 +69,7 @@ Before publishing, derive:
 - `<has-body-note>` from whether `<body-note>` exists
 - `<has-supporting-feedback>` from whether `<has-inline-comments>` or `<has-body-note>` is true
 - `<publish-grade>` as the current grade when `<has-supporting-feedback>` is true; otherwise set it to `★★★★★`
+- `<should-approve>` from whether `<has-supporting-feedback>` is false and `<publish-grade>` is `★★★★★`
 - `<grade-changed>` from whether `<previous-grade>` differs from `<publish-grade>`
 
 Never publish a review below `★★★★★` unless it includes at least one inline comment or a non-inline body note.
@@ -74,40 +77,32 @@ If the generated grade is below `★★★★★` without supporting feedback, r
 
 ### Publish Review
 
-If `<has-supporting-feedback>` is false and `<previous-grade>` matches `<publish-grade>`:
-- Skip publishing a review entirely
+If `<should-approve>` is true and `<already-approved>` is true:
+- Stop immediately
+- Do not call `pr_sync`
+- Return the approval-skip output
+
+If `<should-approve>` is true:
+- Call `pr_sync` with `refUrl: <pr-context.pr.url>` and `approve: true`
+- Do not publish a review body or inline comments
+- Return the approval output
 
 If `<has-supporting-feedback>` is false and `<grade-changed>` is false:
 - Stop immediately
-- Do not call `gh api`
+- Do not publish review feedback
 - Return the skip output
 
-Create the review payload inline and pipe it to `gh api`:
-
-```bash
-gh api --method POST \
-  /repos/{owner}/{repo}/pulls/<pr-context.pr.number>/reviews \
-  --input - <<'EOF'
-{
-  "commit_id": "<pr-context.pr.headRefOid>",
-  "body": "<review-body>",
-  "event": "COMMENT",
-  "comments": [
-    {
-      "path": "<file-path>",
-      "line": <line-on-right-side>,
-      "side": "RIGHT",
-      "body": "<comment-text>"
-    }
-  ]
-}
-EOF
-```
+Otherwise, call `pr_sync` with:
+- `refUrl: <pr-context.pr.url>`
+- `review.event: "COMMENT"`
+- `review.commitId: <pr-context.pr.headRefOid>` when there are inline comments
+- `review.body: <review-body>` when `<review-body>` exists
+- `review.comments` set to the inline findings when there are inline comments
 
 Set `<review-body>` using these rules:
 - If there are inline comments and no non-inline feedback, use only `<publish-grade>`
 - If there are inline comments and `<body-note>` exists, use `<publish-grade>\n\n<body-note>`
-- If there are no inline comments and `<publish-grade>` changed, use only `<publish-grade>`
+- If there are no inline comments and `<body-note>` exists, use `<publish-grade>\n\n<body-note>`
 - If there are no inline comments, no `<body-note>`, and `<publish-grade>` did not change, skip submission
 
 **Single-line comments**: Use `line` and `side: "RIGHT"`
@@ -128,11 +123,31 @@ If the file is deleted or the finding points at removed lines, anchor to the lef
 
 Include only actionable inline comments. Prefer posting a precise comment over restating it in the review body.
 
+If `pr_sync` returns a review URL, store it as `<review-url>`.
+
 ## Additional Context
 
 Use `<ticket-context>` and `<additional-context>` to judge whether the PR meets its stated intent without over-indexing on stylistic preferences.
 
 ## Output
+
+When the PR is approved without comments, display:
+```
+PR approved for #<pr-context.pr.number>
+
+<details>
+- Grade: ★★★★★
+- PR URL: <pr-context.pr.url>
+```
+
+If approval is skipped because the current head is already approved and there is no new feedback, display:
+```
+Approval skipped for PR #<pr-context.pr.number>
+
+<details>
+- Grade unchanged: ★★★★★
+- Reason: current head already approved and there is no new feedback
+```
 
 When the review is published, display:
 ```

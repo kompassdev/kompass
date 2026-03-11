@@ -39,5 +39,6 @@ describe("applyAgentsConfig", () => {
     assert.match(cfg.agent.navigator?.prompt ?? "", /navigation specialist/i);
     assert.match(cfg.agent.navigator?.prompt ?? "", /delegate only explicit leaf tasks/i);
     assert.match(cfg.agent.navigator?.prompt ?? "", /complete the local steps first/i);
+    assert.match(cfg.agent.reviewer?.prompt ?? "", /Never switch branches/i);
   });
 });

@@ -163,11 +163,11 @@ function simplifyReviews(reviews: any[]) {
       id: review.id,
       state: review.state,
       author: review.user?.login,
-      body: review.body,
+      ...(typeof review.body === "string" && review.body.trim().length > 0 ? { body: review.body } : {}),
       submittedAt: review.submitted_at,
       commitId: review.commit_id,
     }))
-    .filter((review) => typeof review.body === "string" && review.body.trim().length > 0);
+    .filter((review) => review.state === "APPROVED" || typeof review.body === "string");
 }
 
 function simplifyIssueComments(comments: any[]) {

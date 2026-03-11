@@ -243,7 +243,7 @@ const opencodeToolCreators = {
     return tool({
       description: definition.description,
       args: {
-        title: tool.schema.string().describe("PR title"),
+        title: tool.schema.string().describe("PR title; required when creating or renaming a PR").optional(),
         body: tool.schema.string().describe("PR body override").optional(),
         description: tool.schema.string().describe("Short PR description rendered above checklist sections").optional(),
         base: tool.schema.string().describe("Base branch to merge into").optional(),
@@ -256,6 +256,25 @@ const opencodeToolCreators = {
         })).describe("Checklist sections rendered as markdown").optional(),
         draft: tool.schema.boolean().describe("Create as draft PR").optional(),
         refUrl: tool.schema.string().describe("Optional PR URL to update").optional(),
+        approve: tool.schema.boolean().describe("Approve the referenced PR without posting a comment body").optional(),
+        review: tool.schema.object({
+          event: tool.schema.enum(["COMMENT", "APPROVE", "REQUEST_CHANGES"]).describe("Review event to submit"),
+          body: tool.schema.string().describe("Optional review summary body").optional(),
+          commitId: tool.schema.string().describe("Commit SHA anchor for inline review comments").optional(),
+          comments: tool.schema.array(tool.schema.object({
+            path: tool.schema.string().describe("Changed file path"),
+            body: tool.schema.string().describe("Inline review comment body"),
+            line: tool.schema.number().int().positive().describe("Ending line on the diff side"),
+            startLine: tool.schema.number().int().positive().describe("Starting line for multi-line comments").optional(),
+            side: tool.schema.enum(["LEFT", "RIGHT"]).describe("Diff side for the ending line").optional(),
+            startSide: tool.schema.enum(["LEFT", "RIGHT"]).describe("Diff side for the starting line").optional(),
+          })).describe("Inline review comments to submit").optional(),
+        }).describe("Structured review submission").optional(),
+        replies: tool.schema.array(tool.schema.object({
+          inReplyTo: tool.schema.number().int().positive().describe("Existing review comment ID to reply to"),
+          body: tool.schema.string().describe("Reply body"),
+        })).describe("Replies to existing review comments").optional(),
+        commentBody: tool.schema.string().describe("General PR comment body").optional(),
       },
       execute: (args, context) => definition.execute(args, context),
     });

@@ -10,7 +10,7 @@
     "compile": "bun run ./packages/opencode/scripts/compile.ts",
     "publish:opencode": "npm publish ./packages/opencode --access public",
     "typecheck": "tsc -p packages/core/tsconfig.json --noEmit && tsc -p packages/opencode/tsconfig.json --noEmit",
-    "test": "bun test packages/core/test packages/opencode/test"
+    "test": "bun test packages/core/test && node --test packages/opencode/test/*.test.ts"
   },
   "devDependencies": {
     "@types/node": "^25.3.5",

@@ -13,6 +13,7 @@ Before reviewing, always check repository guidance:
 1. **Load Changes**: Use `changes_load` to get the changed-file set and structured diffs
    - In CI or shallow clones, pass explicit base and head refs
    - Scan the summary first to understand scope, file states, and risk clusters
+   - Never switch branches, create local review branches, or otherwise mutate `HEAD`; if a loader fails, prefer reporting the blocker over changing checkout state
 
 2. **Read Code**: Read every changed file individually before finalizing
      - Read full current files for added/modified/renamed/copied/untracked files

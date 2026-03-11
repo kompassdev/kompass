@@ -1,12 +1,36 @@
 import {
+  loadRepoName,
   stringifyJson,
   type Shell,
   type ToolDefinition,
   type ToolExecutionContext,
 } from "./shared.ts";
 
+type ReviewEvent = "COMMENT" | "APPROVE" | "REQUEST_CHANGES";
+
+type ReviewComment = {
+  path: string;
+  body: string;
+  line: number;
+  startLine?: number;
+  side?: "LEFT" | "RIGHT";
+  startSide?: "LEFT" | "RIGHT";
+};
+
+type ReviewInput = {
+  event: ReviewEvent;
+  body?: string;
+  commitId?: string;
+  comments?: ReviewComment[];
+};
+
+type ReviewReply = {
+  inReplyTo: number;
+  body: string;
+};
+
 type PrSyncArgs = {
-  title: string;
+  title?: string;
   body?: string;
   description?: string;
   base?: string;
@@ -19,6 +43,10 @@ type PrSyncArgs = {
   }>;
   draft?: boolean;
   refUrl?: string;
+  approve?: boolean;
+  review?: ReviewInput;
+  replies?: ReviewReply[];
+  commentBody?: string;
 };
 
 function renderPrBody(args: PrSyncArgs) {
@@ -45,18 +73,229 @@ function renderPrBody(args: PrSyncArgs) {
   }
 
   const body = sections.join("\n\n").trim();
-  if (!body) {
-    throw new Error("pr_sync requires body, description, or checklist content");
+  return body || undefined;
+}
+
+function normalizeReviewInput(args: PrSyncArgs) {
+  if (args.approve && args.review) {
+    throw new Error("pr_sync cannot combine approve with review");
   }
 
-  return body;
+  if (args.approve) {
+    return { event: "APPROVE" } satisfies ReviewInput;
+  }
+
+  return args.review;
+}
+
+function hasMetadataUpdate(args: PrSyncArgs, body?: string) {
+  return Boolean(args.title?.trim() || body || args.base?.trim());
+}
+
+function requiresExistingPullRequest(args: PrSyncArgs, review?: ReviewInput) {
+  return Boolean(review || args.commentBody?.trim() || (args.replies?.length ?? 0) > 0);
+}
+
+async function resolvePullRequest($: Shell, worktree: string, ref?: string) {
+  const proc = ref?.trim()
+    ? await $`gh pr view ${ref.trim()} --json number,url`
+        .cwd(worktree)
+        .quiet()
+        .nothrow()
+    : await $`gh pr view --json number,url`
+        .cwd(worktree)
+        .quiet()
+        .nothrow();
+
+  if (proc.exitCode !== 0) {
+    throw new Error(proc.stderr.toString() || "Failed to resolve PR");
+  }
+
+  const result = JSON.parse(proc.text());
+  return {
+    number: Number(result.number),
+    url: String(result.url),
+  };
+}
+
+function normalizeReviewComment(comment: ReviewComment) {
+  if (!comment.path?.trim()) {
+    throw new Error("Review comments require a path");
+  }
+
+  if (!comment.body?.trim()) {
+    throw new Error("Review comments require a body");
+  }
+
+  if (!Number.isInteger(comment.line) || comment.line <= 0) {
+    throw new Error("Review comments require a positive line number");
+  }
+
+  const side = comment.side ?? "RIGHT";
+  const normalized = {
+    path: comment.path.trim(),
+    body: comment.body.trim(),
+    side,
+    line: comment.line,
+  } as Record<string, unknown>;
+
+  if (typeof comment.startLine === "number") {
+    if (!Number.isInteger(comment.startLine) || comment.startLine <= 0) {
+      throw new Error("Multi-line review comments require a positive startLine");
+    }
+
+    normalized.start_line = comment.startLine;
+    normalized.start_side = comment.startSide ?? side;
+  }
+
+  return normalized;
+}
+
+async function postGeneralComment($: Shell, worktree: string, prRef: string, body: string) {
+  const proc = await $`gh pr comment ${prRef} --body ${body}`
+    .cwd(worktree)
+    .quiet()
+    .nothrow();
+
+  if (proc.exitCode !== 0) {
+    throw new Error(proc.stderr.toString() || "Failed to post PR comment");
+  }
+}
+
+async function submitReview(
+  $: Shell,
+  worktree: string,
+  owner: string,
+  repo: string,
+  prNumber: number,
+  review: ReviewInput,
+) {
+  const comments = (review.comments ?? []).map(normalizeReviewComment);
+  const body = review.body?.trim();
+
+  if (comments.length > 0 && !review.commitId?.trim()) {
+    throw new Error("Review comments require review.commitId");
+  }
+
+  if (review.event !== "APPROVE" && comments.length === 0 && !body) {
+    throw new Error(`pr_sync review event ${review.event} requires body or comments`);
+  }
+
+  const payload = JSON.stringify({
+    event: review.event,
+    ...(review.commitId?.trim() ? { commit_id: review.commitId.trim() } : {}),
+    ...(body ? { body } : {}),
+    ...(comments.length > 0 ? { comments } : {}),
+  });
+
+  const proc = await $`echo ${payload} | gh api --method POST /repos/${owner}/${repo}/pulls/${prNumber}/reviews --input -`
+    .cwd(worktree)
+    .quiet()
+    .nothrow();
+
+  if (proc.exitCode !== 0) {
+    throw new Error(proc.stderr.toString() || "Failed to submit PR review");
+  }
+
+  const responseText = proc.text().trim();
+  if (!responseText) {
+    return undefined;
+  }
+
+  const response = JSON.parse(responseText);
+  return typeof response.html_url === "string" ? response.html_url : undefined;
+}
+
+async function postReply(
+  $: Shell,
+  worktree: string,
+  owner: string,
+  repo: string,
+  prNumber: number,
+  reply: ReviewReply,
+) {
+  if (!Number.isInteger(reply.inReplyTo) || reply.inReplyTo <= 0) {
+    throw new Error("Reply comments require a positive inReplyTo value");
+  }
+
+  if (!reply.body?.trim()) {
+    throw new Error("Reply comments require a body");
+  }
+
+  const parentProc = await $`gh api /repos/${owner}/${repo}/pulls/comments/${reply.inReplyTo}`
+    .cwd(worktree)
+    .quiet()
+    .nothrow();
+
+  if (parentProc.exitCode !== 0) {
+    throw new Error(parentProc.stderr.toString() || "Failed to load parent comment");
+  }
+
+  const parent = JSON.parse(parentProc.text());
+  const payload = JSON.stringify({
+    body: reply.body.trim(),
+    commit_id: parent.commit_id,
+    path: parent.path,
+    line: parent.line,
+    in_reply_to: reply.inReplyTo,
+  });
+
+  const proc = await $`echo ${payload} | gh api --method POST /repos/${owner}/${repo}/pulls/${prNumber}/comments --input -`
+    .cwd(worktree)
+    .quiet()
+    .nothrow();
+
+  if (proc.exitCode !== 0) {
+    throw new Error(proc.stderr.toString() || "Failed to post reply comment");
+  }
+}
+
+async function updatePullRequest(
+  $: Shell,
+  worktree: string,
+  refUrl: string,
+  args: { title?: string; body?: string; base?: string },
+) {
+  const updateArgs: string[] = [];
+  if (args.title?.trim()) {
+    updateArgs.push("--title", args.title.trim());
+  }
+  if (args.body) {
+    updateArgs.push("--body", args.body);
+  }
+  if (args.base?.trim()) {
+    updateArgs.push("--base", args.base.trim());
+  }
+
+  if (updateArgs.length === 0) {
+    return false;
+  }
+
+  const proc = await $`gh pr edit ${refUrl} ${updateArgs}`
+    .cwd(worktree)
+    .quiet()
+    .nothrow();
+
+  if (proc.exitCode !== 0) {
+    throw new Error(proc.stderr.toString() || "Failed to update PR");
+  }
+
+  return true;
+}
+
+function summarizeActions(actions: string[]) {
+  return actions.join("_and_");
 }
 
 export function createPrSyncTool($: Shell) {
   return {
-    description: "Create or update a GitHub pull request",
+    description: "Create, update, or review a GitHub pull request",
     args: {
-      title: { type: "string", description: "PR title" },
+      title: {
+        type: "string",
+        optional: true,
+        description: "PR title; required when creating a PR or renaming one",
+      },
       body: {
         type: "string",
         optional: true,
@@ -85,55 +324,124 @@ export function createPrSyncTool($: Shell) {
       refUrl: {
         type: "string",
         optional: true,
-        description: "Optional PR URL to update instead of creating a new PR",
+        description: "Optional PR URL or reference to update instead of creating a new PR",
+      },
+      approve: {
+        type: "boolean",
+        optional: true,
+        description: "Approve the referenced PR without posting a comment body",
+      },
+      review: {
+        type: "json",
+        optional: true,
+        description: "Structured PR review submission with event, optional body, commitId, and inline comments",
+      },
+      replies: {
+        type: "json",
+        optional: true,
+        description: "Replies to existing review comments, each with inReplyTo and body",
+      },
+      commentBody: {
+        type: "string",
+        optional: true,
+        description: "General PR comment body",
       },
     },
     async execute(args: PrSyncArgs, ctx: ToolExecutionContext) {
       const body = renderPrBody(args);
+      const review = normalizeReviewInput(args);
+      const metadataUpdate = hasMetadataUpdate(args, body);
+      const existingPrActions = requiresExistingPullRequest(args, review);
 
-      if (args.refUrl) {
-        // Update existing PR
-        const updateArgs = ["--title", args.title, "--body", body];
-        if (args.base) {
-          updateArgs.push("--base", args.base);
+      if (!args.refUrl?.trim() && existingPrActions && metadataUpdate) {
+        throw new Error("pr_sync requires refUrl when combining PR updates with review, comment, or reply actions");
+      }
+
+      if (!args.refUrl?.trim() && !existingPrActions) {
+        if (!args.title?.trim()) {
+          throw new Error("pr_sync requires title when creating a PR");
         }
 
-        const proc = await $`gh pr edit ${args.refUrl} ${updateArgs}`
+        if (!body) {
+          throw new Error("pr_sync requires body, description, or checklist content");
+        }
+
+        const createArgs: string[] = [];
+        if (args.base?.trim()) {
+          createArgs.push("--base", args.base.trim());
+        }
+        if (args.draft) {
+          createArgs.push("--draft");
+        }
+
+        const proc = await $`gh pr create --title ${args.title.trim()} --body ${body} ${createArgs}`
           .cwd(ctx.worktree)
           .quiet()
           .nothrow();
 
         if (proc.exitCode !== 0) {
-          throw new Error(proc.stderr.toString() || "Failed to update PR");
+          throw new Error(proc.stderr.toString() || "Failed to create PR");
         }
 
         return stringifyJson({
-          url: args.refUrl,
-          action: "updated",
+          url: proc.text().trim(),
+          action: "created",
+          actions: ["created"],
         });
       }
 
-      // Create new PR
-      const createArgs: string[] = [];
-      if (args.base) {
-        createArgs.push("--base", args.base);
-      }
-      if (args.draft) {
-        createArgs.push("--draft");
+      const target = await resolvePullRequest($, ctx.worktree, args.refUrl);
+      const actions: string[] = [];
+
+      if (metadataUpdate) {
+        const updated = await updatePullRequest($, ctx.worktree, target.url, {
+          title: args.title,
+          body,
+          base: args.base,
+        });
+        if (updated) {
+          actions.push("updated");
+        }
       }
 
-      const proc = await $`gh pr create --title ${args.title} --body ${body} ${createArgs}`
-        .cwd(ctx.worktree)
-        .quiet()
-        .nothrow();
+      if (args.commentBody?.trim()) {
+        await postGeneralComment($, ctx.worktree, target.url, args.commentBody.trim());
+        actions.push("commented");
+      }
 
-      if (proc.exitCode !== 0) {
-        throw new Error(proc.stderr.toString() || "Failed to create PR");
+      let reviewUrl: string | undefined;
+      if (review) {
+        const repo = await loadRepoName($, ctx.worktree);
+        const [owner, repoName] = repo.split("/");
+        reviewUrl = await submitReview($, ctx.worktree, owner, repoName, target.number, review);
+        actions.push(review.event === "APPROVE" ? "approved" : "reviewed");
+
+        if ((args.replies?.length ?? 0) > 0) {
+          for (const reply of args.replies ?? []) {
+            await postReply($, ctx.worktree, owner, repoName, target.number, reply);
+          }
+          actions.push("replied");
+        }
+      } else if ((args.replies?.length ?? 0) > 0) {
+        const repo = await loadRepoName($, ctx.worktree);
+        const [owner, repoName] = repo.split("/");
+        for (const reply of args.replies ?? []) {
+          await postReply($, ctx.worktree, owner, repoName, target.number, reply);
+        }
+        actions.push("replied");
+      }
+
+      if (actions.length === 0) {
+        throw new Error(
+          "pr_sync requires title, body, description, checklist content, review, commentBody, replies, or approve",
+        );
       }
 
       return stringifyJson({
-        url: proc.text().trim(),
-        action: "created",
+        url: target.url,
+        action: summarizeActions(actions),
+        actions,
+        ...(reviewUrl ? { reviewUrl } : {}),
       });
     },
   } satisfies ToolDefinition<PrSyncArgs>;

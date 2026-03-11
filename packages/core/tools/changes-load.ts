@@ -62,12 +62,22 @@ export function createChangesLoadTool($: Shell) {
       }
 
       const requestedBase = await resolveBaseRef($, ctx.worktree, args.base);
-      const baseRef = await ensureGitRef($, ctx.worktree, requestedBase, {
+      let baseRef = await ensureGitRef($, ctx.worktree, requestedBase, {
         depthHint,
       });
-      const headRef = args.head?.trim()
+      let headRef = args.head?.trim()
         ? await resolveHeadRef($, ctx.worktree, args.head, depthHint)
         : "HEAD";
+
+      if (!implicitWorkspaceMode) {
+        ({ baseRef, headRef } = await ensureComparableRefs($, ctx.worktree, {
+          requestedBase,
+          requestedHead: args.head,
+          baseRef,
+          headRef,
+          depthHint,
+        }));
+      }
 
       const files = implicitWorkspaceMode
         ? await $`git diff --find-renames --find-copies --name-status ${baseRef}`
@@ -392,4 +402,52 @@ async function resolveHeadRef($: Shell, cwd: string, input: string, depthHint?: 
   }
 
   return ensureGitRef($, cwd, trimmed, { depthHint });
+}
+
+async function ensureComparableRefs(
+  $: Shell,
+  cwd: string,
+  args: {
+    requestedBase: string;
+    requestedHead?: string;
+    baseRef: string;
+    headRef: string;
+    depthHint?: number;
+  },
+) {
+  if (await hasMergeBase($, cwd, args.baseRef, args.headRef)) {
+    return { baseRef: args.baseRef, headRef: args.headRef };
+  }
+
+  const fetchDepth = Math.max(args.depthHint ?? 0, 50);
+  await hydrateNamedRefHistory($, cwd, args.requestedBase, fetchDepth);
+  if (args.requestedHead?.trim()) {
+    await hydrateNamedRefHistory($, cwd, args.requestedHead, fetchDepth);
+  }
+
+  const baseRef = await ensureGitRef($, cwd, args.requestedBase, { depthHint: fetchDepth });
+  const headRef = args.requestedHead?.trim()
+    ? await resolveHeadRef($, cwd, args.requestedHead, fetchDepth)
+    : args.headRef;
+
+  return { baseRef, headRef };
+}
+
+async function hasMergeBase($: Shell, cwd: string, baseRef: string, headRef: string) {
+  const proc = await $`git merge-base ${baseRef} ${headRef}`.cwd(cwd).quiet().nothrow();
+  return proc.exitCode === 0;
+}
+
+async function hydrateNamedRefHistory($: Shell, cwd: string, input: string, depth: number) {
+  const trimmed = input.trim();
+  if (!trimmed || trimmed === "HEAD" || /^[0-9a-f]{7,40}$/i.test(trimmed)) {
+    return;
+  }
+
+  const remoteBranch = trimmed.startsWith("origin/") ? trimmed.slice("origin/".length) : trimmed;
+  const remoteRef = `refs/remotes/origin/${remoteBranch}`;
+  await $`git fetch --no-tags --depth=${depth} origin ${remoteBranch}:${remoteRef}`
+    .cwd(cwd)
+    .quiet()
+    .nothrow();
 }

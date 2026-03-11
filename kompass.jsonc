@@ -35,10 +35,10 @@
 
   "components": {
     "change-summary": { "enabled": true },
+    "changes-summary": { "enabled": true },
     "commit": { "enabled": true },
     "dev-flow": { "enabled": true },
     "summarize-changes": { "enabled": true },
-    "ticket-summary": { "enabled": true },
   },
 
   "skills": {

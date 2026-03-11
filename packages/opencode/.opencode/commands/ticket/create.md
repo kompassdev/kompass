@@ -43,14 +43,17 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
 ### Create Ticket
 
 Use `kompass_ticket_sync` with `refUrl` unset to create the ticket:
-- Reuse the same change themes, rationale, and validation notes from the current summary work
+- Reuse the same change themes, rationale, and reviewer-facing validation goals from the current summary work
 - Generate a concise title (max 70 chars) that reflects the delivered outcome
 - Generate a `description` that briefly describes what was accomplished and why it matters
 - Generate checklists with:
-  - `Changes` section listing the key changes made (concise, outcome-focused items)
-  - `Validation` section with concrete validation steps or confirmation that validation was performed
-- Keep items concise and outcome-focused
+  - 2-4 functional sections named after user-facing areas or outcomes, not generic labels like `Changes`
+  - concise, outcome-focused items under each section that describe what changed for a human reader
+  - one final `Validation` section with reviewer-facing confirmation steps that start with `Verify that...`, `Confirm that...`, or `Check that...`
+- Keep section names and items concise, human-friendly, and function-oriented
+- Merge tiny themes together instead of creating a section per file or implementation detail
 - Do not restate the full diff
+- Do not use execution-status notes such as `Validation not run in this session` as checklist items
 - If `kompass_changes_load` reports uncommitted work, make that clear in the ticket wording
 - Store the created issue reference or URL as `<ticket-ref>`
 

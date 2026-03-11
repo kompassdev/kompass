@@ -21,7 +21,7 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
 ### Create Ticket
 
 Use `ticket_sync` with `refUrl` unset to create the ticket:
-{{ticket-summary}}
+{{changes-summary}}
 - Store the created issue reference or URL as `<ticket-ref>`
 
 ## Additional Context

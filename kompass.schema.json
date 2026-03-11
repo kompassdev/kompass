@@ -158,6 +158,9 @@
         "change-summary": {
           "$ref": "#/$defs/componentConfig"
         },
+        "changes-summary": {
+          "$ref": "#/$defs/componentConfig"
+        },
         "commit": {
           "$ref": "#/$defs/componentConfig"
         },
@@ -167,14 +170,11 @@
         "summarize-changes": {
           "$ref": "#/$defs/componentConfig"
         },
-        "ticket-summary": {
-          "$ref": "#/$defs/componentConfig"
-        },
         "enabled": {
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["change-summary", "commit", "dev-flow", "summarize-changes", "ticket-summary"]
+            "enum": ["change-summary", "changes-summary", "commit", "dev-flow", "summarize-changes"]
           },
           "uniqueItems": true,
           "deprecated": true
@@ -182,7 +182,7 @@
         "paths": {
           "type": "object",
           "propertyNames": {
-            "enum": ["change-summary", "commit", "dev-flow", "summarize-changes", "ticket-summary"]
+            "enum": ["change-summary", "changes-summary", "commit", "dev-flow", "summarize-changes"]
           },
           "additionalProperties": {
             "type": "string"

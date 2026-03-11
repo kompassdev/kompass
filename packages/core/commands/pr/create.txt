@@ -54,7 +54,7 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
 ### Prepare Ticket Reference
 
 When `<ticket-mode>` is `auto`, create the ticket before creating the PR:
-{{ticket-summary}}
+{{changes-summary}}
 - Use `ticket_sync` with `refUrl` unset
 - Store the created issue reference or URL as `<ticket-url>`
 
@@ -76,11 +76,15 @@ Run `git push` and use its output as the source of truth.
 Use `pr_sync` to create the pull request:
 - Generate a concise title (max 70 chars) summarizing the change
 - Generate a short description that briefly describes the intent and scope
-- Generate a compact checklist with concrete validation items and any remaining follow-ups; mark completed items as appropriate
+- Generate a compact checklist that mirrors the same human-facing structure used for the ticket summary:
+  - group delivered work into 2-4 functional or outcome-focused sections
+  - use concise section names instead of generic labels like `Changes`
+  - end with one `Validation` section containing reviewer-facing confirmation steps
+  - do not use execution-status notes as checklist items
 - Render the PR body with this exact structure by setting `body` directly:
   - `## Ticket`, followed by `<ticket-url>` on the next line
   - `## Description`, followed by the short description
-  - `## Checklist`, followed by the checklist items
+  - `## Checklist`, followed by the checklist items and any subsection headings
 - Use `<base>` as the base branch if defined, otherwise leave it to use repo default
 - Do NOT restate the full diff
 - Keep it compact and directional

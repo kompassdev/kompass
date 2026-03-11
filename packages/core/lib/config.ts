@@ -37,10 +37,10 @@ export const DEFAULT_AGENT_NAMES = ["planner", "reviewer"] as const;
 
 export const DEFAULT_COMPONENT_NAMES = [
   "change-summary",
+  "changes-summary",
   "commit",
   "dev-flow",
   "summarize-changes",
-  "ticket-summary",
 ] as const;
 
 export type ToolName = (typeof DEFAULT_TOOL_NAMES)[number];
@@ -120,10 +120,10 @@ export interface KompassConfig {
   };
   components?: {
     "change-summary"?: ComponentConfig;
+    "changes-summary"?: ComponentConfig;
     commit?: ComponentConfig;
     "dev-flow"?: ComponentConfig;
     "summarize-changes"?: ComponentConfig;
-    "ticket-summary"?: ComponentConfig;
     enabled?: string[];
     paths?: Record<string, string>;
   };
@@ -346,10 +346,10 @@ const defaultAgentPlanner: AgentDefinition = {
 
 const defaultComponentPaths: Record<string, string> = {
   "change-summary": "components/change-summary.txt",
+  "changes-summary": "components/changes-summary.txt",
   "commit": "components/commit.txt",
   "dev-flow": "components/dev-flow.txt",
   "summarize-changes": "components/summarize-changes.txt",
-  "ticket-summary": "components/ticket-summary.txt",
 };
 
 const defaultToolConfig: Record<ToolName, ToolConfig> = {

@@ -65,15 +65,19 @@ Derive `<body-note>` only when you have review feedback that does not belong in 
 Before publishing, derive:
 - `<has-inline-comments>` from whether the review payload would contain any inline comments
 - `<has-body-note>` from whether `<body-note>` exists
-- `<grade-changed>` from whether `<previous-grade>` differs from the current grade
+- `<has-supporting-feedback>` from whether `<has-inline-comments>` or `<has-body-note>` is true
+- `<publish-grade>` as the current grade when `<has-supporting-feedback>` is true; otherwise set it to `★★★★★`
+- `<grade-changed>` from whether `<previous-grade>` differs from `<publish-grade>`
+
+Never publish a review below `★★★★★` unless it includes at least one inline comment or a non-inline body note.
+If the generated grade is below `★★★★★` without supporting feedback, raise the published grade to `★★★★★` before applying skip logic.
 
 ### Publish Review
 
-If `<has-inline-comments>` is false and `<has-body-note>` is false:
-- If `<previous-grade>` matches the current grade, skip publishing a review entirely
-- Otherwise, publish a grade-only review body
+If `<has-supporting-feedback>` is false and `<previous-grade>` matches `<publish-grade>`:
+- Skip publishing a review entirely
 
-If `<has-inline-comments>` is false, `<has-body-note>` is false, and `<grade-changed>` is false:
+If `<has-supporting-feedback>` is false and `<grade-changed>` is false:
 - Stop immediately
 - Do not call `gh api`
 - Return the skip output
@@ -101,10 +105,10 @@ EOF
 ```
 
 Set `<review-body>` using these rules:
-- If there are inline comments and no non-inline feedback, use only the grade
-- If there are inline comments and `<body-note>` exists, use `<grade>\n\n<body-note>`
-- If there are no inline comments and the grade changed, use only the grade
-- If there are no inline comments, no `<body-note>`, and the grade did not change, skip submission
+- If there are inline comments and no non-inline feedback, use only `<publish-grade>`
+- If there are inline comments and `<body-note>` exists, use `<publish-grade>\n\n<body-note>`
+- If there are no inline comments and `<publish-grade>` changed, use only `<publish-grade>`
+- If there are no inline comments, no `<body-note>`, and `<publish-grade>` did not change, skip submission
 
 **Single-line comments**: Use `line` and `side: "RIGHT"`
 

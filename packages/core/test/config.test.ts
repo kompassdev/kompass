@@ -100,6 +100,7 @@ describe("command defaults", () => {
     assert.deepEqual(config.agents.navigator.permission, {
       task: "allow",
       todowrite: "allow",
+      question: "allow",
     });
   });
 

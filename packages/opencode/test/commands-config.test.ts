@@ -250,6 +250,8 @@ describe("applyCommandsConfig", () => {
       assert.ok(cfg.command);
       assert.equal(cfg.command!["pr/review"]?.subtask, true);
       assert.equal(cfg.command!["dev"]?.subtask, true);
+      assert.equal(cfg.command!["ship"]?.subtask, true);
+      assert.equal(cfg.command!["todo"]?.subtask, true);
     });
 
     test("disables subtask mode in CI", async () => {
@@ -261,6 +263,8 @@ describe("applyCommandsConfig", () => {
       assert.ok(cfg.command);
       assert.equal(cfg.command!["pr/review"]?.subtask, false);
       assert.equal(cfg.command!["dev"]?.subtask, false);
+      assert.equal(cfg.command!["ship"]?.subtask, false);
+      assert.equal(cfg.command!["todo"]?.subtask, false);
     });
   });
 

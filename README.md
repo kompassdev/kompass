@@ -62,6 +62,10 @@ Kompass is being structured as a shared core toolkit with adapter-specific packa
 
 ## Agents
 
+### `navigator`
+
+Coordinates multi-step workflows like `/todo` and `/ship` by delegating focused work to subagents.
+
 ### `planner`
 
 Turns a request or ticket into a scoped implementation plan.

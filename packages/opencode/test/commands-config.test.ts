@@ -56,7 +56,8 @@ describe("applyCommandsConfig", () => {
       assert.equal(cfg.command!["ticket/create"]?.agent, "build");
       assert.equal(cfg.command!["ticket/plan"]?.agent, "planner");
       assert.equal(cfg.command!["dev"]?.agent, "build");
-      assert.equal(cfg.command!["ship"]?.agent, "build");
+      assert.equal(cfg.command!["ship"]?.agent, "navigator");
+      assert.equal(cfg.command!["todo"]?.agent, "navigator");
       assert.ok(cfg.command!["pr/review"]?.description);
       assert.ok(cfg.command!["reload"]?.template);
       assert.ok(cfg.command!["dev"]?.template);

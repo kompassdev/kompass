@@ -59,7 +59,7 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   ship: {
     description: "Ship branch work through commit and PR creation",
-    agent: "build",
+    agent: "navigator",
     templatePath: "commands/ship.txt",
   },
   rmslop: {
@@ -69,7 +69,7 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   todo: {
     description: "Work through a todo file task by task",
-    agent: "build",
+    agent: "navigator",
     templatePath: "commands/todo.txt",
   },
   "ticket/dev": {

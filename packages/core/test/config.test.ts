@@ -48,6 +48,7 @@ describe("object-based config", () => {
         review: { enabled: true, template: "commands/custom-review.txt" },
       },
       agents: {
+        navigator: { permission: { task: "deny" } },
         reviewer: { enabled: false },
       },
       components: {
@@ -59,6 +60,7 @@ describe("object-based config", () => {
     assert.equal(config.commands.enabled.includes("dev"), false);
     assert.equal(config.commands.enabled.includes("review"), true);
     assert.equal(config.commands.templates.review, "commands/custom-review.txt");
+    assert.deepEqual(config.agents.navigator.permission, { task: "deny" });
     assert.equal(config.agents.enabled.includes("reviewer"), false);
     assert.equal(config.components.enabled.includes("dev-flow"), false);
     assert.equal(config.components.paths.commit, "components/custom-commit.txt");
@@ -88,6 +90,13 @@ describe("object-based config", () => {
 });
 
 describe("command defaults", () => {
+  test("enables navigator agent by default", () => {
+    const config = mergeWithDefaults(null);
+
+    assert.equal(config.agents.enabled.includes("navigator"), true);
+    assert.deepEqual(config.agents.navigator.permission, { task: "allow" });
+  });
+
   test("enables todo command by default", () => {
     const config = mergeWithDefaults(null);
 

@@ -51,14 +51,14 @@ packages/opencode/.opencode/ # Generated OpenCode output for review
 - Use angle-bracket placeholders consistently for derived values and stored context, such as `<arguments>`, `<base>`, `<additional-context>`, `<pr-url>`, and define each placeholder before it is referenced later in the command
 - When referring to placeholders literally in prose, always wrap them in backticks, such as `<arguments>` or `<pr-url>`; keep output examples plain when the placeholder represents substituted user-facing text
 - If arguments can mean different things, explicitly disambiguate them in `### Interpret Arguments` and store each interpretation in a separate placeholder
-- For orchestrator commands, separate context loading, blocker checks, delegated execution, and final reporting into distinct workflow subsections so the control flow is easy to follow
+- For navigator-style commands, separate context loading, blocker checks, delegated execution, and final reporting into distinct workflow subsections so the control flow is easy to follow
 - Prefer explicit subsection names like `### Load ... Context`, `### Check Blockers`, `### Delegate ...`, and `### Mark Complete And Loop` when the command coordinates multiple phases or subagents
 - Treat loader tools and provided attachments as the source of truth for orchestration inputs; avoid extra exploratory commands when an existing tool result already answers the question
 - Before delegating to a subagent, state what inputs it receives, what result should be stored, and whether the workflow must stop, pause, or continue based on that result
 - When a command can pause for approval or loop over repeated work, describe the resume condition and the exact cases that must STOP without mutating state
 - Use `## Additional Context` for instructions about how optional guidance, related tickets, focus areas, or other stored context should influence analysis and output
 - Use `## Output` to define the exact user-facing response shape, including placeholders for generated values
-- Make success, blocked, and no-op outcomes explicit in `## Output` or the surrounding workflow so orchestrators report deterministic end states
+- Make success, blocked, and no-op outcomes explicit in `## Output` or the surrounding workflow so navigator-led flows report deterministic end states
 - Command-specific extra sections are fine, but they should support this core structure rather than replace it
 
 ## Component Authoring

@@ -47,6 +47,9 @@
     }
   },
   "agents": {
+    "navigator": {
+      "enabled": true
+    },
     "planner": {
       "enabled": true
     },

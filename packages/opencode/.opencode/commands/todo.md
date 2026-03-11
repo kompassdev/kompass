@@ -1,6 +1,6 @@
 ---
 description: Work through a todo file task by task
-agent: build
+agent: navigator
 ---
 
 ## Goal

@@ -1,6 +1,6 @@
 ---
 description: Ship branch work through commit and PR creation
-agent: build
+agent: navigator
 ---
 
 ## Goal

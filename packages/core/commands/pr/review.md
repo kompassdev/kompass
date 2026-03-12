@@ -136,6 +136,8 @@ Use `<ticket-context>` and `<additional-context>` to judge whether the PR meets 
 
 ## Output
 
+These formats display results to the user after completing the Publish Review step:
+
 When the PR is approved without comments, display:
 ```
 PR approved for #<pr-context.pr.number>

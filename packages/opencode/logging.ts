@@ -20,7 +20,7 @@ export function createPluginLogger(
         body: {
           service: "kompass",
           level,
-          message,
+          message: `[kompass] ${message}`,
           ...(extra ? { extra } : {}),
         },
       });

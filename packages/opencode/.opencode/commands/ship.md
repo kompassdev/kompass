@@ -67,7 +67,7 @@ Branch: <working-branch>
 Additional context: <additional-context>
 </prompt-commit>
 
-- Call subagent `@general` with the exact prompt `<prompt-commit>`
+- Pass `<prompt-commit>` to subagent `@general` unchanged; do not expand the command
 - Store the subagent result as `<commit-result>`
 - If `<commit-result>` says there was nothing to commit, STOP and report that result without creating a PR
 - If `<commit-result>` is blocked or incomplete, STOP and report the commit blocker
@@ -82,7 +82,7 @@ Base branch: <resolved-base>
 Additional context: <additional-context>
 </prompt-pr>
 
-- Call subagent `@general` with the exact prompt `<prompt-pr>`
+- Pass `<prompt-pr>` to subagent `@general` unchanged; do not expand the command
 - Store the subagent result as `<pr-result>`
 - If `<pr-result>` is blocked or incomplete, STOP and report the PR blocker
 - Otherwise, continue and store a concise PR outcome as `<pr-summary>`

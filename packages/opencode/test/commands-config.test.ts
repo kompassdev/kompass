@@ -359,8 +359,8 @@ describe("applyCommandsConfig", () => {
       assert.match(shipTemplate, /Load Change Context/);
       assert.match(shipTemplate, /Check Blockers/);
       assert.match(shipTemplate, /Ensure Feature Branch/);
-      assert.match(shipTemplate, /Call subagent `@general` with the exact prompt `<prompt-commit>`/);
-      assert.match(shipTemplate, /Call subagent `@general` with the exact prompt `<prompt-pr>`/);
+      assert.match(shipTemplate, /Pass `<prompt-commit>` to subagent `@general` unchanged; do not expand the command/);
+      assert.match(shipTemplate, /Pass `<prompt-pr>` to subagent `@general` unchanged; do not expand the command/);
       assert.match(shipTemplate, /<prompt-commit>\s*\/commit/);
       assert.match(shipTemplate, /<prompt-pr>\s*\/pr\/create/);
 

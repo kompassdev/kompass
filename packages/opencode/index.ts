@@ -295,6 +295,7 @@ const opencodeToolCreators = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
+  // another useless line
   ticket_load($: PluginInput["$"]) {
     const definition = createTicketLoadTool($);
     return tool({

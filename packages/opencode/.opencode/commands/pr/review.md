@@ -38,119 +38,54 @@ If `<pr-context.pr.body>` links to exactly one clear ticket:
 
 ### Load Changes
 
-Use `<pr-context.pr.commitCount>` as `<depth-hint>` only when it is a known positive integer.
-
-Depth hint rules:
-- If `<pr-context.pr.commitCount>` is missing, zero, negative, non-integer, or otherwise invalid, omit `depthHint` entirely
-- Never negate, offset, estimate, or invent `depthHint` values
-- If the exact count is not available, prefer no `depthHint` over a guessed one
-
-Call `kompass_changes_load` with:
-- `base: <pr-context.pr.baseRefName>`
-- `head: <pr-context.pr.headRefName>`
-- `depthHint: <depth-hint>` only when `<depth-hint>` is defined
-
-Store as `<changes>`.
+Call `kompass_changes_load` with `base: <pr-context.pr.baseRefName>`, `head: <pr-context.pr.headRefName>`, and `depthHint: <pr-context.pr.commitCount>` only when it is a positive integer. Store as `<changes>`.
 
 ### Review Changes
 
 Following the reviewer agent guidance:
-1. Read every changed file for full context in the current session before finalizing findings
-2. Inspect `<pr-context.reviews>`, `<pr-context.issueComments>`, and `<pr-context.threads>` for anything already posted by `<pr-context.viewerLogin>`
-3. Do not repeat the same finding when an equivalent unresolved or already-submitted comment exists
-4. Prefer inline comments for file-specific findings; use the review body only for anything that cannot be expressed inline
-5. Do not guess GitHub diff anchors from absolute file line numbers alone; use the diff hunks in `<changes>` to map any inline comment to the changed side of the patch
+1. Read every changed file for full context before finalizing findings
+2. Check `<pr-context.reviews>`, `<pr-context.issueComments>`, and `<pr-context.threads>` for ALL existing comments - don't duplicate findings already raised by anyone
+3. Prefer inline comments for file-specific findings; use the review body only for high-level summaries
+4. Use diff hunks in `<changes>` to map inline comments to the correct lines
 
-While reading files:
-- Load relevant nested `AGENTS.md` files in the current session before applying review criteria
-- For deleted files, inspect the previous contents from git rather than assuming `kompass_changes_load` included the full file
-- Use a helper agent only if the changed-file set is too large to review comfortably in one session after the changed paths are already known
-- After reading the changed files and any directly relevant `AGENTS.md`, stop expanding unless a specific finding needs confirmation
-- Do not inspect unrelated tool implementations, callers, or config paths just to gain confidence when the changed files already answer the question
+Derive `<previous-grade>` from prior reviews and `<already-approved>` from existing approvals on `<pr-context.pr.headRefOid>`.
 
-Derive `<previous-grade>` from the most recent prior review body by `<pr-context.viewerLogin>` when one is present.
+Before publishing, derive: `<has-inline-comments>`, `<has-body-note>`, `<publish-grade>`, and `<grade-changed>`.
 
-Derive `<already-approved>` from whether `<pr-context.viewerLogin>` already has an `APPROVED` review on `<pr-context.pr.headRefOid>`.
+**Grading and Publishing Rules:**
+1. Assign a grade based on code quality (1-5 stars)
+2. If grade is below `★★★★★` without supporting feedback (inline comments or body note), you MUST add feedback - never publish a low grade without explaining why
+3. **NEVER post a review with `★★★★★`** - if the final grade is 5 stars, approve the PR instead
+4. If there are issues (grade < 5 stars), create inline comments on specific lines
 
-Derive `<body-note>` only when you have review feedback that does not belong in an inline comment.
+**Inline comment format:**
+```json
+{"path": "file.ts", "line": 123, "body": "Issue description"}
+```
 
-Before publishing, derive:
-- `<has-inline-comments>` from whether the review payload would contain any inline comments
-- `<has-body-note>` from whether `<body-note>` exists
-- `<has-supporting-feedback>` from whether `<has-inline-comments>` or `<has-body-note>` is true
-- `<publish-grade>` as the current grade when `<has-supporting-feedback>` is true; otherwise set it to `★★★★★`
-- `<should-approve>` from whether `<has-supporting-feedback>` is false and `<publish-grade>` is `★★★★★`
-- `<grade-changed>` from whether `<previous-grade>` differs from `<publish-grade>`
+For multi-line: add `startLine`: `{"path": "file.ts", "line": 125, "startLine": 120, "body": "..."}`
 
-Never publish a review below `★★★★★` unless it includes at least one inline comment or a non-inline body note.
-If the generated grade is below `★★★★★` without supporting feedback, raise the published grade to `★★★★★` before applying skip logic.
-
-**When to use inline comments:**
-- ALWAYS use inline comments when referencing specific line numbers in files
-- When a finding points to a specific file and line (e.g., "line 336 in pr-sync.ts"), create an inline comment on that exact line
-- Inline comments should include the core issue and a brief explanation
-- Use the review body only for high-level summaries or findings that span multiple locations
-- Each distinct file+line issue should be its own inline comment
+Use `side: "LEFT"` for deleted files or removed lines.
 
 ### Publish Review
 
-If `<should-approve>` is true and `<already-approved>` is true:
-- Stop immediately
-- Do not call `kompass_pr_sync`
-- Return the approval-skip output
+**If `<publish-grade>` is `★★★★★` (no issues found):**
+- If already approved → skip
+- Otherwise → call `kompass_pr_sync` with `review.approve: true`
 
-If `<should-approve>` is true:
+**If `<publish-grade>` is below `★★★★★` (issues found):**
+- MUST have supporting feedback (inline comments or body note explaining the issues)
 - Call `kompass_pr_sync` with:
-  - `refUrl: <pr-context.pr.url>`
-  - `review.approve: true`
-- Do not publish a review body or inline comments
-- Return the approval output
+  - `review.body`: grade + optional note for issues that CANNOT be mapped to specific lines (general rules, side effects, architectural concerns)
+  - `review.comments`: inline comments for EVERY issue that maps to a specific file/line
+  - `commitId` when there are inline comments
 
-If `<has-supporting-feedback>` is false and `<grade-changed>` is false:
-- Stop immediately
-- Do not publish review feedback
-- Return the skip output
-
-Otherwise, call `kompass_pr_sync` with:
-- `refUrl: <pr-context.pr.url>`
-- `commitId: <pr-context.pr.headRefOid>` when there are inline comments
-- `review.body: <review-body>` when `<review-body>` exists
-- `review.comments` set to the inline findings when there are inline comments
-
-Set `<review-body>` using these rules:
-- If there are inline comments and no non-inline feedback, use only `<publish-grade>`
-- If there are inline comments and `<body-note>` exists, use `<publish-grade>\n\n<body-note>`
-- If there are no inline comments and `<body-note>` exists, use `<publish-grade>\n\n<body-note>`
-- If there are no inline comments, no `<body-note>`, and `<publish-grade>` did not change, skip submission
-
-If the file is deleted or the finding points at removed lines, use `side: "LEFT"` instead of `"RIGHT"`.
-
-Include only actionable inline comments. Prefer posting a precise comment over restating it in the review body.
-
-**Inline comment format:**
-When you identify an issue at a specific line, create an inline comment object:
-```json
-{
-  "path": "relative/path/to/file.ts",
-  "line": 123,
-  "body": "Brief description of the issue and suggested fix"
-}
-```
-
-For multi-line comments spanning multiple lines, add `startLine`:
-```json
-{
-  "path": "relative/path/to/file.ts",
-  "line": 125,
-  "startLine": 120,
-  "body": "This entire block has an issue..."
-}
-```
-
-**Mapping findings to inline comments:**
-- "Line 336 in pr-sync.ts has misleading description" → Create inline comment on line 336 of pr-sync.ts
-- "Lines 328-331 duplicate functionality" → Create inline comment with `line: 331, startLine: 328`
-- "The logic in changes-load.ts lines 124-125 contradicts docs" → Create inline comment with `line: 125, startLine: 124`
+**Body note usage:** Only use the review body note for feedback that doesn't map to a specific changed line:
+- General architectural concerns
+- Side effects or impact on other parts of the codebase
+- Process/policy violations (e.g., "Missing tests for new features")
+- Issues in unchanged files that are affected by these changes
+- All other findings MUST be inline comments on the specific lines
 
 If `kompass_pr_sync` returns a review URL, store it as `<review-url>`.
 
@@ -160,25 +95,21 @@ Use `<ticket-context>` and `<additional-context>` to judge whether the PR meets 
 
 ## Output
 
-These formats display results to the user after completing the Publish Review step:
-
-When the PR is approved without comments, display:
+When approved:
 ```
 PR approved for #<pr-context.pr.number>
 
-- Grade: ★★★★★
 - PR URL: <pr-context.pr.url>
 ```
 
-If approval is skipped because the current head is already approved and there is no new feedback, display:
+When approval skipped (already approved):
 ```
 Approval skipped for PR #<pr-context.pr.number>
 
-- Grade unchanged: ★★★★★
-- Reason: current head already approved and there is no new feedback
+- Reason: current head already approved
 ```
 
-When the review is published, display:
+When review published (grade < 5 stars with feedback):
 ```
 Review submitted for PR #<pr-context.pr.number>
 
@@ -186,10 +117,9 @@ Review submitted for PR #<pr-context.pr.number>
 - Review URL: <review-url>
 ```
 
-If the review is skipped because the grade did not change and there was no new feedback, display:
+When review skipped (no new feedback):
 ```
 Review skipped for PR #<pr-context.pr.number>
 
-- Grade unchanged: <publish-grade>
-- Reason: no new inline comments or non-inline feedback
+- Reason: no new inline comments or feedback
 ```

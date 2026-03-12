@@ -252,10 +252,10 @@ const opencodeToolCreators = {
         draft: tool.schema.boolean().describe("Create as draft PR").optional(),
         refUrl: tool.schema.string().describe("Optional PR URL to update").optional(),
         approve: tool.schema.boolean().describe("Approve the referenced PR without posting a comment body").optional(),
+        commitId: tool.schema.string().describe("Commit SHA to anchor the approval to").optional(),
         review: tool.schema.object({
           event: tool.schema.enum(["COMMENT", "APPROVE", "REQUEST_CHANGES"]).describe("Review event to submit"),
           body: tool.schema.string().describe("Optional review summary body").optional(),
-          commitId: tool.schema.string().describe("Commit SHA anchor for inline review comments").optional(),
           comments: tool.schema.array(tool.schema.object({
             path: tool.schema.string().describe("Changed file path"),
             body: tool.schema.string().describe("Inline review comment body"),

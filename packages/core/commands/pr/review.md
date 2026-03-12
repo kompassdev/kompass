@@ -91,7 +91,7 @@ If `<should-approve>` is true:
 - Call `pr_sync` with:
   - `refUrl: <pr-context.pr.url>`
   - `approve: true`
-  - `review.commitId: <pr-context.pr.headRefOid>`
+  - `commitId: <pr-context.pr.headRefOid>`
 - Do not publish a review body or inline comments
 - Return the approval output
 

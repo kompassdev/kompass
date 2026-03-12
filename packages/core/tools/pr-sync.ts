@@ -20,7 +20,6 @@ type ReviewComment = {
 type ReviewInput = {
   event: ReviewEvent;
   body?: string;
-  commitId?: string;
   comments?: ReviewComment[];
 };
 
@@ -44,6 +43,7 @@ type PrSyncArgs = {
   draft?: boolean;
   refUrl?: string;
   approve?: boolean;
+  commitId?: string;
   review?: ReviewInput;
   replies?: ReviewReply[];
   commentBody?: string;
@@ -169,12 +169,13 @@ async function submitReview(
   repo: string,
   prNumber: number,
   review: ReviewInput,
+  commitId?: string,
 ) {
   const comments = (review.comments ?? []).map(normalizeReviewComment);
   const body = review.body?.trim();
 
-  if (comments.length > 0 && !review.commitId?.trim()) {
-    throw new Error("Review comments require review.commitId");
+  if (comments.length > 0 && !commitId?.trim()) {
+    throw new Error("Review comments require commitId");
   }
 
   if (review.event !== "APPROVE" && comments.length === 0 && !body) {
@@ -183,7 +184,7 @@ async function submitReview(
 
   const payload = JSON.stringify({
     event: review.event,
-    ...(review.commitId?.trim() ? { commit_id: review.commitId.trim() } : {}),
+    ...(commitId?.trim() ? { commit_id: commitId.trim() } : {}),
     ...(body ? { body } : {}),
     ...(comments.length > 0 ? { comments } : {}),
   });
@@ -331,6 +332,11 @@ export function createPrSyncTool($: Shell) {
         optional: true,
         description: "Approve the referenced PR without posting a comment body",
       },
+      commitId: {
+        type: "string",
+        optional: true,
+        description: "Commit ID to associate with the approval",
+      },
       review: {
         type: "json",
         optional: true,
@@ -413,7 +419,7 @@ export function createPrSyncTool($: Shell) {
       if (review) {
         const repo = await loadRepoName($, ctx.worktree);
         const [owner, repoName] = repo.split("/");
-        reviewUrl = await submitReview($, ctx.worktree, owner, repoName, target.number, review);
+        reviewUrl = await submitReview($, ctx.worktree, owner, repoName, target.number, review, args.commitId);
         actions.push(review.event === "APPROVE" ? "approved" : "reviewed");
 
         if ((args.replies?.length ?? 0) > 0) {

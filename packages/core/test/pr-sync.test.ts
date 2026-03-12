@@ -91,10 +91,10 @@ describe("pr_sync", () => {
     const tool = createPrSyncTool(shell);
     const output = await tool.execute({
       refUrl: "https://github.com/acme/repo/pull/9",
+      commitId: "abc123",
       review: {
         event: "COMMENT",
         body: "★★★☆☆\n\nPlease address the inline note.",
-        commitId: "abc123",
         comments: [
           {
             path: "src/example.ts",

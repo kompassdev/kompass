@@ -60,9 +60,6 @@ $ARGUMENTS
 
 ### Delegate Commit
 
-- The subagent receives `<working-branch>` and `<additional-context>`
-- Define `<prompt-commit>` as:
-
 <prompt-commit>
 /commit
 
@@ -70,17 +67,13 @@ Branch: <working-branch>
 Additional context: <additional-context>
 </prompt-commit>
 
-- Call subagent `@general` with `<prompt-commit>`
-- Do not paraphrase or prepend extra text
+- Call subagent `@general` with the exact prompt `<prompt-commit>`
 - Store the subagent result as `<commit-result>`
 - If `<commit-result>` says there was nothing to commit, STOP and report that result without creating a PR
 - If `<commit-result>` is blocked or incomplete, STOP and report the commit blocker
 - Otherwise, continue and store a concise commit outcome as `<commit-summary>`
 
 ### Delegate PR Creation
-
-- The subagent receives `<resolved-base>` and `<additional-context>`
-- Define `<prompt-pr>` as:
 
 <prompt-pr>
 /pr/create
@@ -89,8 +82,7 @@ Base branch: <resolved-base>
 Additional context: <additional-context>
 </prompt-pr>
 
-- Call subagent `@general` with `<prompt-pr>`
-- Do not paraphrase or prepend extra text
+- Call subagent `@general` with the exact prompt `<prompt-pr>`
 - Store the subagent result as `<pr-result>`
 - If `<pr-result>` is blocked or incomplete, STOP and report the PR blocker
 - Otherwise, continue and store a concise PR outcome as `<pr-summary>`

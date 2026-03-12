@@ -11,12 +11,18 @@ on:
 jobs:
   dev:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
     steps:
+      - name: Generate GitHub App Token
+        id: token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.KOMPASS_APP_ID }}
+          private-key: ${{ secrets.KOMPASS_APP_PRIVATE_KEY }}
+
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          token: ${{ steps.token.outputs.token }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
@@ -31,7 +37,7 @@ jobs:
 
       - name: Run Kompass Ticket Dev
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         run: opencode run --model="${{ vars.OPENCODE_MODEL }}" --variant="${{ vars.OPENCODE_VARIANT }}" --thinking --command="ticket/dev" "${{ inputs.ticket }}"
 

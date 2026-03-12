@@ -55,7 +55,7 @@ export interface ToolDefinition<Args = Record<string, unknown>> {
 }
 
 export function stringifyJson(value: unknown) {
-  return JSON.stringify(value, null, 2);
+  return JSON.stringify(value);
 }
 
 export function nonEmptyLines(text: string) {

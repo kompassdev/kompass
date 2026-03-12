@@ -10,7 +10,7 @@ import type { Shell, ShellPromise, ToolExecutionContext } from "../tools/shared.
 const execFileAsync = promisify(execFile);
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
-export const repoRoot = path.resolve(scriptDirectory, "..");
+export const repoRoot = path.resolve(scriptDirectory, "../../..");
 
 type CommandResult = ShellPromise & {
   stdout: Buffer;

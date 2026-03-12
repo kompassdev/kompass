@@ -318,8 +318,8 @@ Create, update, or review a GitHub pull request with structured checklists.
 - `checklists` (optional): structured checklist sections (e.g., Testing, Summary)
 - `draft` (optional): create as draft PR
 - `refUrl` (optional): PR URL to update instead of creating new
-- `approve` (optional): approve the referenced PR without posting a comment body
-- `review` (optional): structured review submission with `event`, optional `body`, optional `commitId`, and inline `comments`
+- `commitId` (optional): commit SHA to anchor review comments to
+- `review` (optional): structured review submission with optional `body`, inline `comments`, and `approve` flag
 - `replies` (optional): replies to existing review comments
 - `commentBody` (optional): general PR comment body
 

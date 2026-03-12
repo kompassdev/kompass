@@ -93,7 +93,10 @@ If `<should-approve>` is true and `<already-approved>` is true:
 - Return the approval-skip output
 
 If `<should-approve>` is true:
-- Call `kompass_pr_sync` with `refUrl: <pr-context.pr.url>` and `approve: true`
+- Call `kompass_pr_sync` with:
+  - `refUrl: <pr-context.pr.url>`
+  - `approve: true`
+  - `review.commitId: <pr-context.pr.headRefOid>`
 - Do not publish a review body or inline comments
 - Return the approval output
 

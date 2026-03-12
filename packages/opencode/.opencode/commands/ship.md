@@ -9,9 +9,14 @@ Ship the current work from change summary to commit and PR creation, creating a 
 
 ## Workflow
 
+### Arguments
+
+<arguments>
+$ARGUMENTS
+</arguments>
+
 ### Interpret Arguments
 
-Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed:
 - **Branch name**: If `<arguments>` looks like a branch reference (for example `main` or `origin/develop`), store it as `<base>`
 - **Branch naming guidance**: If `<arguments>` includes wording that should influence the generated feature branch name, store it as `<branch-context>`
 - **Additional context**: If `<arguments>` provides commit or PR guidance, store it as `<additional-context>`
@@ -24,10 +29,11 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
 - If `<base>` is defined: call `kompass_changes_load` with the `base` parameter set to `<base>`
 - Otherwise: call `kompass_changes_load` with no parameters
 - Use the returned base branch as the default for the rest of this workflow
-- Use `kompass_changes_load` as the source of truth; no additional git analysis commands are needed
+- Store the returned result as `<changes>`
+- Use `<changes>` as the source of truth; no additional git analysis commands are needed
 
 #### Step 2: Analyze Files
-- Review the paths, statuses, and diffs from `kompass_changes_load`
+- Review the paths, statuses, and diffs from `<changes>`
 - Identify the nature of changes (added, modified, deleted)
 - Note lines added/removed per file
 
@@ -54,24 +60,51 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
 
 ### Delegate Commit
 
-- After the branch check is complete, call subagent @general /commit
-- Include `<additional-context>` when it materially improves the commit message
-- Wait for the subagent to finish before continuing
-- If the commit workflow reports that there was nothing to commit, STOP and report that result without creating a PR
-- Store a concise commit outcome as `<commit-summary>`
+- The subagent receives `<working-branch>` and `<additional-context>`
+- Define `<prompt>` as:
+
+<prompt>
+/commit
+
+Branch: <working-branch>
+Additional context: <additional-context>
+</prompt>
+
+- Call subagent `@general` with `<prompt>`
+- Do not paraphrase or prepend extra text
+- Store the subagent result as `<commit-result>`
+- If `<commit-result>` says there was nothing to commit, STOP and report that result without creating a PR
+- If `<commit-result>` is blocked or incomplete, STOP and report the commit blocker
+- Otherwise, continue and store a concise commit outcome as `<commit-summary>`
 
 ### Delegate PR Creation
 
-- After a successful commit, call subagent @general /pr/create
-- Pass `<resolved-base>` when available so PR creation compares against the intended base branch
-- Include `<additional-context>` when it improves the PR title or description
-- Wait for the subagent to finish and store a concise PR outcome as `<pr-summary>`
+- The subagent receives `<resolved-base>` and `<additional-context>`
+- Define `<prompt>` as:
+
+<prompt>
+/pr/create
+
+Base branch: <resolved-base>
+Additional context: <additional-context>
+</prompt>
+
+- Call subagent `@general` with `<prompt>`
+- Do not paraphrase or prepend extra text
+- Store the subagent result as `<pr-result>`
+- If `<pr-result>` is blocked or incomplete, STOP and report the PR blocker
+- Otherwise, continue and store a concise PR outcome as `<pr-summary>`
 
 ## Additional Context
 
 Use `<branch-context>` to steer branch naming. Use `<additional-context>` to refine the delegated commit and PR summaries.
 
 ## Output
+
+If there is nothing to ship, display:
+```
+Nothing to ship
+```
 
 When complete, display:
 ```

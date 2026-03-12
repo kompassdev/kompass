@@ -9,9 +9,14 @@ Work through a todo file one pending item at a time by planning, getting approva
 
 ## Workflow
 
+### Arguments
+
+<arguments>
+$ARGUMENTS
+</arguments>
+
 ### Interpret Arguments
 
-Store `$ARGUMENTS` as `<arguments>`, then normalize it:
 - If `<arguments>` contains a file reference prefixed with `@`, store that value as `<todo-file>`
 - If `<arguments>` includes execution guidance, scope constraints, or notes beyond the file reference, store them as `<additional-context>`
 - If no file reference is provided, default `<todo-file>` to `@TODO.md`
@@ -34,9 +39,22 @@ Store `$ARGUMENTS` as `<arguments>`, then normalize it:
 
 ### Delegate Planning
 
-- Call subagent `@planner /ticket/plan` with `<task>`, `<task-context>`, and `<additional-context>`
+- The subagent receives `<task>`, `<task-context>`, and `<additional-context>`
+- Define `<prompt>` as:
+
+<prompt>
+/ticket/plan
+
+Task: <task>
+Task context: <task-context>
+Additional context: <additional-context>
+</prompt>
+
+- Call subagent `@planner` with `<prompt>`
+- Do not paraphrase or prepend extra text
 - Ask the planner for a concise implementation plan with clear scope, risks, and validation steps
 - Store the result as `<plan>`
+- If the planner is blocked or cannot produce a usable plan, store the blocker as `<pause-reason>`, then STOP and report that planning blocker
 
 ### Review Plan With User
 
@@ -47,21 +65,63 @@ Store `$ARGUMENTS` as `<arguments>`, then normalize it:
   - options:
     - `Implement` - proceed with the current plan
     - `Revise` - update the plan based on feedback
-  - custom answers enabled so the user can provide specific plan changes
-- If the user requests changes, fold that feedback into `<user-answer>` and re-run subagent `@planner /ticket/plan` with `<task>`, the current `<plan>`, and `<user-answer>` so the revision responds to the plan feedback directly
+- custom answers enabled so the user can provide specific plan changes
+- If the user requests changes, store that feedback as `<user-answer>`
+- The subagent receives `<task>`, `<task-context>`, `<plan>`, `<user-answer>`, and `<additional-context>`
+- Define `<prompt>` as:
+
+<prompt>
+/ticket/plan
+
+Task: <task>
+Task context: <task-context>
+Current plan: <plan>
+Plan feedback: <user-answer>
+Additional context: <additional-context>
+</prompt>
+
+- Call subagent `@planner` with `<prompt>`
+- Do not paraphrase or prepend extra text
+- Store the revised result as `<plan>` and continue the review loop
+- If the revised planner result is blocked or unusable, store that blocker as `<pause-reason>`, then STOP and report it before continuing the review loop
 - Repeat this review step until the user approves or stops
-- If the user does not approve implementation, STOP without changing `<todo-file>`
+- If the user does not approve implementation, store `plan approval not granted` as `<pause-reason>`, then STOP without changing `<todo-file>`
 
 ### Delegate Implementation
 
-- If the user approves, call subagent `@general /dev <plan>`
-- Wait for implementation to complete before continuing
-- If implementation is incomplete, blocked, or fails validation, STOP and report the issue without marking the task complete
+- The subagent receives `<plan>`, `<task>`, `<task-context>`, and `<additional-context>`
+- Define `<prompt>` as:
+
+<prompt>
+/dev
+
+Plan: <plan>
+Task: <task>
+Task context: <task-context>
+Additional context: <additional-context>
+</prompt>
+
+- Call subagent `@general` with `<prompt>`
+- Do not paraphrase or prepend extra text
+- Store the subagent result as `<implementation-result>`
+- If `<implementation-result>` is incomplete, blocked, or fails validation, store the issue as `<pause-reason>`, then STOP and report it without marking the task complete
 
 ### Delegate Commit
 
-- After successful implementation, call subagent `@general /commit`
-- If the commit does not succeed, STOP and report the commit status without marking the task complete
+- The subagent receives `<task>` and `<additional-context>`
+- Define `<prompt>` as:
+
+<prompt>
+/commit
+
+Task: <task>
+Additional context: <additional-context>
+</prompt>
+
+- Call subagent `@general` with `<prompt>`
+- Do not paraphrase or prepend extra text
+- Store the subagent result as `<commit-result>`
+- If `<commit-result>` does not succeed, store the commit status as `<pause-reason>`, then STOP and report it without marking the task complete
 
 ### Mark Complete And Loop
 
@@ -85,6 +145,13 @@ Task: <task>
 
 Plan:
 <plan>
+```
+
+If the workflow pauses before marking the task complete, display:
+```
+Todo paused: <todo-file>
+Task: <task>
+Reason: <pause-reason>
 ```
 
 When all pending tasks are complete, display:

@@ -9,12 +9,18 @@ Extract non-obvious learnings from this session and document them appropriately.
 
 ## Workflow
 
+### Arguments
+
+<arguments>
+$ARGUMENTS
+</arguments>
+
 ### Interpret Arguments
 
-Store `$ARGUMENTS` as `<arguments>`, then normalize it:
 - If `<arguments>` narrows the work to a package, directory, or feature area, store it as `<focus-scope>`
 - If `<arguments>` provides extra guidance about what to capture, store it as `<additional-context>`
-- If empty, review the full session
+- If `<focus-scope>` is defined, store it as `<focus-summary>`
+- Otherwise, store `the current session` as `<focus-summary>`
 
 ### Review Session
 
@@ -54,6 +60,7 @@ Store `$ARGUMENTS` as `<arguments>`, then normalize it:
 ### Summarize Results
 
 - Report which files were created or updated and how many learnings were added to each
+- Store those summary lines as `<file-update-lines>` in the format `- <file-path>: <learning-count> learnings`
 
 ## Additional Context
 
@@ -69,5 +76,5 @@ When the documentation update is complete, display:
 Documented learnings for <focus-summary>
 
 Files updated:
-- <file-path>: <learning-count> learnings
+<file-update-lines>
 ```

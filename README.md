@@ -1,24 +1,31 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/kompassdev/kompass/main/assets/kompass.png" alt="Kompass" height="300" />
+  <br>
+  <em>Navigate your way — manual steering, steered autonomy, or autonomously.</em>
 </p>
 
-# Kompass
+> Kompass is under active development, so workflows, package APIs, and adapter support may keep evolving as the toolkit expands.
 
-Kompass helps coding agents navigate repositories with fewer wrong turns.
+Kompass keeps AI coding agents on course with token-efficient, composable workflows. **Finally, your agent stops wandering.**
 
-It packages reusable workflows, focused agents, and structured repository tools so planning, review, ticket work, and pull request prep stay grounded in real project context instead of broad repo guesswork.
+Whether you prefer full control, guided collaboration, or hands-off autonomy, Kompass adapts to how you work.
 
-Kompass is under active development, so workflows, package APIs, and adapter support may keep evolving as the toolkit expands.
+## Choose Your Mode
 
-Why people use it:
+**🧭 Manual Steering** — You chart the course, the agent follows your lead
+**⚓ Collaborative** — Plan together, develop together, review together
+**🚢 Autonomous** — Let your agent navigate independently, review at checkpoints
 
-- help agents navigate codebases with more direction and less drift
-- load branch, PR, and ticket context into workflows built for real repository work
-- reuse one shared workflow system across coding agents instead of rebuilding the same prompts each time
+## Why Kompass?
 
-Today, Kompass supports OpenCode through `@kompassdev/opencode`.
-
-The toolkit is structured so additional adapters can plug into the same core workflows over time, with Claude Code support planned next.
+| Challenge | How Kompass Helps |
+|-----------|-------------------|
+| Agents wander without direction | 🧭 **Navigation** — structured workflows keep agents on course |
+| Rebuilding prompts for every agent | 🔌 **Plug & Play** — same workflows across OpenCode, Claude Code, and more |
+| Token bloat in long sessions | 🎯 **Token Efficient** — minimal, focused prompts that get to the point |
+| Ad-hoc planning and review | ⚓ **Workflows** — purpose-built flows for plan, dev, and review |
+| Generic tools miss context | 🛠️ **Tailored Tools** — purpose-built for repository work |
+| Complex setup overhead | ⚡ **Easy to Use** — install the plugin, start navigating |
 
 ## Installation
 

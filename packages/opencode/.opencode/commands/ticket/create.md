@@ -9,9 +9,14 @@ Create a ticket that summarizes the work returned by the current change comparis
 
 ## Workflow
 
+### Arguments
+
+<arguments>
+$ARGUMENTS
+</arguments>
+
 ### Interpret Arguments
 
-Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed:
 - **Branch name**: If `<arguments>` looks like a branch reference (e.g., "main", "origin/develop"), store it as `<base>`
 - **Additional context**: If `<arguments>` provides guidance (audience, focus areas, related issues, notes), store it as `<additional-context>`
 - **Empty**: If no `<arguments>` are provided, proceed with defaults and rely on `kompass_changes_load` to decide the comparison mode
@@ -22,16 +27,23 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
 - call `kompass_changes_load`
 - If `<base>` is defined: call `kompass_changes_load` with the `base` parameter set to `<base>`
 - Otherwise: call `kompass_changes_load` with no parameters
-- Use `kompass_changes_load` as the source of truth; no additional git analysis commands are needed
+- Store the returned result as `<changes>`
+- Use `<changes>` as the source of truth; no additional git analysis commands are needed
 
 #### Step 2: Analyze Files
-- Review the paths, statuses, and diffs from `kompass_changes_load`
+- Review the paths, statuses, and diffs from `<changes>`
 - Identify the nature of changes (added, modified, deleted)
 - Note lines added/removed per file
 
 #### Step 3: Group and Summarize
 - Group related changes into logical themes
 - Summarize the "what" and "why" (not the "how")
+
+- Store the loaded change result as `<changes>`
+
+### Check Blockers
+
+- If `<changes>` contains no files, STOP and report that there is no work to summarize in a ticket
 
 ### Summarize Changes
 
@@ -55,13 +67,19 @@ Use `kompass_ticket_sync` with `refUrl` unset to create the ticket:
 - Do not restate the full diff
 - Do not use execution-status notes such as `Validation not run in this session` as checklist items
 - If `kompass_changes_load` reports uncommitted work, make that clear in the ticket wording
-- Store the created issue reference or URL as `<ticket-ref>`
+- Store the generated title as `<ticket-title>`
+- Store the created issue URL as `<ticket-url>`
 
 ## Additional Context
 
 Consider `<additional-context>` when analyzing the work and writing the ticket title and body.
 
 ## Output
+
+If there is no work to summarize, display:
+```
+Nothing to turn into a ticket
+```
 
 When the ticket is created, display:
 ```

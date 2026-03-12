@@ -1,10 +1,11 @@
 #### Step 1: Load Changes
 - call `changes_load`
 {{param:rules}}
-- Use `changes_load` as the source of truth; no additional git analysis commands are needed
+- Store the returned result as `<changes>`
+- Use `<changes>` as the source of truth; no additional git analysis commands are needed
 
 #### Step 2: Analyze Files
-- Review the paths, statuses, and diffs from `changes_load`
+- Review the paths, statuses, and diffs from `<changes>`
 - Identify the nature of changes (added, modified, deleted)
 - Note lines added/removed per file
 

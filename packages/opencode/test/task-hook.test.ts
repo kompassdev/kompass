@@ -33,7 +33,7 @@ describe("getTaskToolExecution", () => {
     assert.equal(execution?.command, "@reviewer /review auth bug");
     assert.equal(execution?.command_name, "review");
     assert.equal(execution?.command_arguments, "auth bug");
-    assert.match(execution?.prompt ?? "", /Store `auth bug` as `<arguments>`/);
+    assert.match(execution?.prompt ?? "", /<arguments>\s*auth bug\s*<\/arguments>/);
     assert.equal(output.args.prompt, execution?.prompt);
   });
 
@@ -108,7 +108,7 @@ describe("expandSlashCommandPrompt", () => {
 
     assert.deepEqual(execution?.command, "review");
     assert.deepEqual(execution?.arguments, "asd");
-    assert.match(execution?.prompt ?? "", /Store `asd` as `<arguments>`/);
+    assert.match(execution?.prompt ?? "", /<arguments>\s*asd\s*<\/arguments>/);
   });
 });
 

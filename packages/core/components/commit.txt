@@ -20,4 +20,5 @@ type: summary
 3. Generate the commit message and store it as `<commit-message>`
 4. Preserve the blank line between subject and bullets when present
 5. Create the commit with `<commit-message>`
-6. Only run `git status` if the commit fails and needs diagnosis
+6. Store the created commit hash as `<hash>`
+7. Only run `git status` if the commit fails and needs diagnosis

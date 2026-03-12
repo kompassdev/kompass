@@ -47,7 +47,7 @@ packages/opencode/.opencode/ # Generated OpenCode output for review
 - Author command definitions in `packages/core/commands/`; treat `packages/opencode/.opencode/commands/` as generated output only
 - Use `packages/core/commands/pr/create.txt` as the canonical example for command structure and tone
 - Keep this section order in command docs unless a command has a strong reason not to: `## Goal`, `## Workflow`, `## Additional Context`, `## Output`
-- Start `## Workflow` with a dedicated `### Arguments` subsection that stores the raw `$ARGUMENTS` value in `<arguments>` before any normalization
+- Start `## Workflow` with a dedicated `### Arguments` subsection that stores the raw `$ARGUMENTS` value inside literal `<arguments>` tags before any normalization
 - Follow `### Arguments` with `### Interpret Arguments`, and normalize `<arguments>` into any additional named placeholders before execution steps
 - Use angle-bracket placeholders consistently for derived values and stored context, such as `<arguments>`, `<base>`, `<additional-context>`, `<pr-url>`, and define each placeholder before it is referenced later in the command
 - When referring to placeholders literally in prose, always wrap them in backticks, such as `<arguments>` or `<pr-url>`; keep output examples plain when the placeholder represents substituted user-facing text
@@ -56,7 +56,7 @@ packages/opencode/.opencode/ # Generated OpenCode output for review
 - Prefer explicit subsection names like `### Load ... Context`, `### Check Blockers`, `### Delegate ...`, and `### Mark Complete And Loop` when the command coordinates multiple phases or subagents
 - Treat loader tools and provided attachments as the source of truth for orchestration inputs; avoid extra exploratory commands when an existing tool result already answers the question
 - Before delegating to a subagent, state what inputs it receives, what result should be stored, and whether the workflow must stop, pause, or continue based on that result
-- When delegating to a slash-command subagent, show the exact prompt shape in a fenced code block, start with the literal slash command on the first line, pass labeled placeholder values on following lines, and explicitly say not to paraphrase or prepend extra text
+- When delegating to a slash-command subagent, define the exact delegated prompt inside literal `<prompt>` tags, start with the literal slash command on the first line, pass labeled placeholder values on following lines, call the subagent with `<prompt>`, and explicitly say not to paraphrase or prepend extra text
 - When a command can pause for approval or loop over repeated work, describe the resume condition and the exact cases that must STOP without mutating state
 - Use `## Additional Context` for instructions about how optional guidance, related tickets, focus areas, or other stored context should influence analysis and output
 - Use `## Output` to define the exact user-facing response shape, including placeholders for generated values
@@ -74,11 +74,9 @@ Describe the command's purpose in one short paragraph.
 
 ### Arguments
 
-Store the raw command arguments as `<arguments>`:
-
-```text
+<arguments>
 $ARGUMENTS
-```
+</arguments>
 
 ### Interpret Arguments
 
@@ -92,30 +90,35 @@ $ARGUMENTS
 
 ### Delegate Planning
 
-- Call subagent `@planner` with the exact prompt:
+- The subagent receives `<task>`, `<task-context>`, and `<additional-context>`
+- Define `<prompt>` as:
 
-```text
+<prompt>
 /ticket/plan
 
 Task: <task>
 Task context: <task-context>
 Additional context: <additional-context>
-```
+</prompt>
 
+- Call subagent `@planner` with `<prompt>`
 - Do not paraphrase or prepend extra text
 - Store the result as `<plan>`
+- STOP if planning is blocked or unusable
 
 ### Delegate Implementation
 
-- Call subagent `@general` with the exact prompt:
+- The subagent receives `<plan>` and `<additional-context>`
+- Define `<prompt>` as:
 
-```text
+<prompt>
 /dev
 
 Plan: <plan>
 Constraints: <additional-context>
-```
+</prompt>
 
+- Call subagent `@general` with `<prompt>`
 - Do not paraphrase or prepend extra text
 - STOP if implementation is blocked or incomplete
 
@@ -131,7 +134,7 @@ Constraints: <additional-context>
 Example delegation rule:
 
 ```text
-Before delegating, say what inputs the subagent receives, what result should be stored, and whether the workflow should continue or STOP based on that result.
+Before delegating, say what inputs the subagent receives, define `<prompt>`, call the subagent with `<prompt>`, say what result should be stored, and whether the workflow should continue or STOP based on that result.
 ```
 
 ## Component Authoring

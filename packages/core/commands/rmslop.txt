@@ -4,17 +4,27 @@ Remove AI-generated code slop and inconsistencies from the branch changes.
 
 ## Workflow
 
+### Arguments
+
+<arguments>
+$ARGUMENTS
+</arguments>
+
 ### Interpret Arguments
 
-Store `$ARGUMENTS` as `<arguments>`, then normalize it:
 - If `<arguments>` looks like a base branch reference, store it as `<base>`
 - If `<arguments>` provides cleanup priorities, exclusions, or style guidance, store it as `<additional-context>`
-- If empty, compare the current branch against the default base branch
+- Otherwise, compare the current branch against the default base branch
 
 ### Load Changes
 
 - Call `changes_load` to get the diff against `<base>` when defined, otherwise use the default comparison
 - Store the result as `<changes>`
+- Store `<changes>.comparison` as `<scope-summary>`
+
+### Check Blockers
+
+- If `<changes>` contains no files, STOP and report that there is no branch work to clean up
 
 ### Identify Slop
 
@@ -34,16 +44,22 @@ Store `$ARGUMENTS` as `<arguments>`, then normalize it:
 - Fix type issues properly instead of using `any`
 - Align style with the surrounding codebase
 - Remove emojis unless explicitly requested
+- Store the number of updated files as `<files-updated>`
 
 ### Validate
 
-- Run the relevant validation commands for the affected area
+- Run the required validation commands for the edited work in this session:
+  - `bun run compile`
+  - `bun run typecheck`
+  - `bun run test`
 - Confirm the cleaned-up code still works correctly before committing
+- Store the overall validation result as `<validation-status>`
 
 ### Commit Changes
 
 - Stage the cleaned files with `git add`
 - Create a focused commit describing the cleanup
+- Store the created commit hash as `<hash>`
 
 ## Additional Context
 
@@ -51,12 +67,17 @@ Use `<additional-context>` to decide which kinds of slop to prioritize and which
 
 ## Output
 
+If there is no branch work to clean up, display:
+```
+Nothing to clean for <scope-summary>
+```
+
 When the cleanup is complete, display:
 ```
 Cleaned branch changes for <scope-summary>
 
 Results:
-- Files updated: <count>
-- Validation: <status>
+- Files updated: <files-updated>
+- Validation: <validation-status>
 - Commit: <hash>
 ```

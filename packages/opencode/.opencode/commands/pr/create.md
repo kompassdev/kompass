@@ -9,9 +9,14 @@ Create a pull request for the current branch, handling the entire workflow from 
 
 ## Workflow
 
+### Arguments
+
+<arguments>
+$ARGUMENTS
+</arguments>
+
 ### Interpret Arguments
 
-Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed:
 - **Branch name**: If `<arguments>` looks like a branch reference (e.g., "main", "origin/develop"), store it as `<base>`
 - **Ticket directive**: If `<arguments>` clearly requests ticket auto-creation, store `<ticket-mode>` as `auto`
 - **Ticket reference**: If `<arguments>` includes a ticket URL or clear ticket reference, store it as `<ticket-url>` and store `<ticket-mode>` as `provided`
@@ -26,10 +31,11 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
 - If `<base>` is defined: call `kompass_changes_load` with the `base` parameter set to `<base>`
 - Otherwise: call `kompass_changes_load` with no parameters
 - Never pass `uncommitted: true` in this command
-- Use `kompass_changes_load` as the source of truth; no additional git analysis commands are needed
+- Store the returned result as `<changes>`
+- Use `<changes>` as the source of truth; no additional git analysis commands are needed
 
 #### Step 2: Analyze Files
-- Review the paths, statuses, and diffs from `kompass_changes_load`
+- Review the paths, statuses, and diffs from `<changes>`
 - Identify the nature of changes (added, modified, deleted)
 - Note lines added/removed per file
 
@@ -37,19 +43,24 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
 - Group related changes into logical themes
 - Summarize the "what" and "why" (not the "how")
 
+- Store the loaded change result as `<changes>`
+- Store the current branch from `<changes>` as `<current-branch>` when it is available
+- Store the effective base branch as `<resolved-base>` by preferring `<base>` when it was provided, otherwise using the base branch implied by `<changes>.comparison`
+
 ### Check Blockers
 
-- If `comparison` is "uncommitted":
+- If `<changes>.comparison` is "uncommitted":
   - STOP immediately
   - Report: "There are uncommitted changes. Please commit or stash them before creating a PR."
-  - List the changed files from the result
+  - List the changed files from `<changes>`
   - Do NOT proceed further
 - Treat this as a blocker only when `kompass_changes_load` returns `comparison: "uncommitted"` from the default call above; never force that mode during PR creation
-- If `branch` equals `<base>`:
+- If `<current-branch>` equals `<resolved-base>`:
   - STOP immediately
-  - Report: "You are currently on the base branch (<base>). Please checkout a feature branch before creating a PR."
+  - Report: "You are currently on the base branch (<resolved-base>). Please checkout a feature branch before creating a PR."
   - Suggest: `git checkout -b <feature-name>`
   - Do NOT proceed further
+- If `<changes>` contains no files and no commits, STOP and report that there is nothing to include in a PR
 
 ### Summarize Changes
 
@@ -103,11 +114,13 @@ Run `git push` and use its output as the source of truth.
 - If the branch was pushed during this run, report `Push: yes`
 - If `git push` reports no push was needed, report `Push: no`
 - If `Push: yes`, also report `Pushed: <current-branch> → origin/<current-branch>`
+- Store the push status line as `<push-status>`
+- When a push occurs, store the pushed ref line as `<pushed-line>`
 
 ### Create PR
 
 Use `kompass_pr_sync` to create the pull request:
-- Generate a concise title (max 70 chars) summarizing the change
+- Generate a concise title (max 70 chars) summarizing the change and store it as `<pr-title>`
 - Generate a short description that briefly describes the intent and scope
 - Generate a compact checklist that mirrors the same human-facing structure used for the ticket summary:
   - group delivered work into 2-4 functional or outcome-focused sections
@@ -118,33 +131,35 @@ Use `kompass_pr_sync` to create the pull request:
   - `## Ticket`, followed by `<ticket-url>` on the next line
   - `## Description`, followed by the short description
   - `## Checklist`, followed by the checklist items and any subsection headings
-- Use `<base>` as the base branch if defined, otherwise leave it to use repo default
+- Use `<resolved-base>` as the base branch when it is defined
 - Do NOT restate the full diff
 - Keep it compact and directional
 - Store the returned URL as `<pr-url>`
 - If `kompass_pr_sync` reports that a PR already exists for the branch, treat the result as an existing PR
 - Track whether the branch was pushed during this run and report that status in the final response
 
-## PR Body Guidelines
-
-- Always include the `Ticket`, `Description`, and `Checklist` sections in that order
-- Use the literal `SKIPPED` when ticket mention was skipped
-- Keep description focused on intent, not implementation details
-- Mark checklist validation items as completed if validation was performed
-- Uncommitted changes and being on base branch block PR creation entirely
-
 ## Additional Context
 
 Consider `<additional-context>` when analyzing changes and writing the PR description.
+- Always include the `Ticket`, `Description`, and `Checklist` sections in that order.
+- Use the literal `SKIPPED` when ticket mention was skipped.
+- Keep the description focused on intent, not implementation details.
+- Mark checklist validation items as completed if validation was performed.
+- Uncommitted changes and being on the base branch block PR creation entirely.
 
 ## Output
 
+If PR creation stops because there is nothing to include, display:
+```
+Nothing to include in a PR
+```
+
 When a new PR is created, display:
 ```
-Created PR: <title>
+Created PR: <pr-title>
 
 URL: <pr-url>
-Branch: <current-branch> → <base-branch>
+Branch: <current-branch> → <resolved-base>
 Ticket: <ticket-url>
 ```
 
@@ -153,21 +168,16 @@ If a PR already exists for the branch, display:
 PR already exists
 
 URL: <pr-url>
-Branch: <current-branch> → <base-branch>
+Branch: <current-branch> → <resolved-base>
 Ticket: <ticket-url>
 ```
 
 After the ticket line, always include one additional line reporting push status:
 ```
-Push: yes
+<push-status>
 ```
 
-If `Push: yes`, include one more line:
+If a push happened during this run, include one more line:
 ```
-Pushed: <current-branch> → origin/<current-branch>
-```
-
-If the branch did not need pushing, use:
-```
-Push: no
+<pushed-line>
 ```

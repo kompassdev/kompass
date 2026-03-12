@@ -9,9 +9,14 @@ Create a scoped implementation plan from a request or ticket, then capture that 
 
 ## Workflow
 
+### Arguments
+
+<arguments>
+$ARGUMENTS
+</arguments>
+
 ### Interpret Arguments
 
-Store `$ARGUMENTS` as `<arguments>`, then normalize it:
 - If `<arguments>` looks like a ticket reference or URL, store it as `<ticket-url>`
 - Otherwise, treat `<arguments>` as `<request>`
 - If `<arguments>` includes planning focus areas, constraints, or notes beyond the main request, store them as `<additional-context>`
@@ -21,6 +26,7 @@ Store `$ARGUMENTS` as `<arguments>`, then normalize it:
 
 - If `<ticket-url>` is defined, use `kompass_ticket_load` with `<ticket-url>` and treat the result as `<planning-context>`
 - Otherwise, treat `<request>` as `<planning-context>`
+- If `<planning-context>` is empty or missing, STOP and report that planning context could not be determined
 
 ### Shape the Plan
 
@@ -42,7 +48,7 @@ Store `$ARGUMENTS` as `<arguments>`, then normalize it:
     - `Validation` with `<validation-items>`
   - set `refUrl` to `<ticket-url>` when updating an existing ticket
   - leave `refUrl` unset when creating a new ticket from the request
-- Store the returned ticket reference or URL as `<ticket-ref>`
+- Store the returned ticket URL as `<ticket-url>`
 
 ### Present Plan
 
@@ -58,8 +64,13 @@ Store `$ARGUMENTS` as `<arguments>`, then normalize it:
 
 ## Output
 
+If planning context cannot be determined, display:
+```
+Unable to plan: missing request or ticket context
+```
+
 When the plan is ready, display:
 ```
-Title: `<ticket-title>`
+Title: `<plan-title>`
 URL: `<ticket-url>`
 ```

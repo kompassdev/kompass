@@ -9,13 +9,18 @@ Review code changes and provide actionable feedback with a grade and risk assess
 
 ## Workflow
 
+### Arguments
+
+<arguments>
+$ARGUMENTS
+</arguments>
+
 ### Interpret Arguments
 
-Store `$ARGUMENTS` as `<arguments>`:
 - If `<arguments>` equals "uncommitted", store as `<scope>` = "uncommitted"
 - If `<arguments>` looks like a branch reference (e.g., "main", "origin/main"), store as `<base>`
 - If `<arguments>` provides review focus areas or related context, store it as `<additional-context>`
-- If empty, no placeholder needed
+- Otherwise, leave optional placeholders undefined
 
 ### Load Changes
 
@@ -24,10 +29,16 @@ Call `kompass_changes_load`:
 - Otherwise: call with no parameters (auto-detects uncommitted vs branch comparison)
 
 Store the result as `<changes>`.
+- If `<changes>.branch` is available, store it as `<current-branch>`
 
 If `<changes>.comparison` is "uncommitted":
 - Treat as reviewing uncommitted changes
-- Otherwise: reviewing branch changes
+- Store `uncommitted changes` as `<scope-description>`
+
+If `<changes>.comparison` is not "uncommitted":
+- Treat as reviewing branch changes
+- If `<base>` is defined and `<current-branch>` is available, store `<current-branch> -> <base>` as `<scope-description>`
+- Otherwise, store `<changes>.comparison` as `<scope-description>`
 
 ### Review Changes
 
@@ -35,6 +46,8 @@ Following the reviewer agent guidance:
 1. Read each changed file for full context in the current session before drafting findings
 2. Analyze for bugs, security issues, and correctness problems
 3. Formulate findings ordered by impact
+4. Store the overall rating as `<star-rating>`, the top-line conclusion as `<short-verdict>`, and the severity counts as `<critical>`, `<high>`, `<medium>`, and `<low>`
+5. Store the total number of findings as `<count>`
 
 While reading files:
 - Load any relevant nested `AGENTS.md` in the current session before applying review criteria
@@ -51,12 +64,7 @@ When the review is complete, display:
 ```
 Review complete for <scope-description>
 
-<details>
 - Grade: <star-rating>
 - Verdict: <short-verdict>
 - Findings: <count> total (<critical> critical, <high> high, <medium> medium, <low> low)
 ```
-
-Where `<scope-description>` is either:
-- "uncommitted changes" if reviewing uncommitted changes
-- "<branch> → <base>" if reviewing branch comparison

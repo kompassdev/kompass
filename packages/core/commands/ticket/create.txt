@@ -4,9 +4,14 @@ Create a ticket that summarizes the work returned by the current change comparis
 
 ## Workflow
 
+### Arguments
+
+<arguments>
+$ARGUMENTS
+</arguments>
+
 ### Interpret Arguments
 
-Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed:
 - **Branch name**: If `<arguments>` looks like a branch reference (e.g., "main", "origin/develop"), store it as `<base>`
 - **Additional context**: If `<arguments>` provides guidance (audience, focus areas, related issues, notes), store it as `<additional-context>`
 - **Empty**: If no `<arguments>` are provided, proceed with defaults and rely on `changes_load` to decide the comparison mode
@@ -16,19 +21,31 @@ Store `$ARGUMENTS` as `<arguments>`, then analyze it to determine how to proceed
 {{change-summary rules="- If `<base>` is defined: call `changes_load` with the `base` parameter set to `<base>`
 - Otherwise: call `changes_load` with no parameters"}}
 
+- Store the loaded change result as `<changes>`
+
+### Check Blockers
+
+- If `<changes>` contains no files, STOP and report that there is no work to summarize in a ticket
+
 {{summarize-changes}}
 
 ### Create Ticket
 
 Use `ticket_sync` with `refUrl` unset to create the ticket:
 {{changes-summary}}
-- Store the created issue reference or URL as `<ticket-ref>`
+- Store the generated title as `<ticket-title>`
+- Store the created issue URL as `<ticket-url>`
 
 ## Additional Context
 
 Consider `<additional-context>` when analyzing the work and writing the ticket title and body.
 
 ## Output
+
+If there is no work to summarize, display:
+```
+Nothing to turn into a ticket
+```
 
 When the ticket is created, display:
 ```

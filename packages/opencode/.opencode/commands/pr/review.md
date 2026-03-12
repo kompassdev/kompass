@@ -36,6 +36,13 @@ If `<pr-context.pr.body>` links to exactly one clear ticket:
 - Call `kompass_ticket_load` with the ticket reference
 - Store the result as `<ticket-context>` for consideration during review
 
+### Numeric Parameters
+
+All numeric parameters must be positive integers:
+- **Line numbers**: Used for inline review comments to specify positions in the file (e.g., `106`, not `-106`)
+- **Depth hints** (`<depth-hint>`): Used for loading changes; must be positive or omitted
+- Never negate, offset, or invent numeric values
+
 ### Load Changes
 
 Use `<pr-context.pr.commitCount>` as `<depth-hint>` only when it is a known positive integer.
@@ -118,21 +125,7 @@ Set `<review-body>` using these rules:
 - If there are no inline comments and `<body-note>` exists, use `<publish-grade>\n\n<body-note>`
 - If there are no inline comments, no `<body-note>`, and `<publish-grade>` did not change, skip submission
 
-**Single-line comments**: Use `line` and `side: "RIGHT"`
-
-**Multi-line comments**: Add `start_line`, `line`, `start_side`, and `side`:
-```json
-{
-  "path": "<file-path>",
-  "body": "<comment-text>",
-  "start_side": "RIGHT",
-  "side": "RIGHT",
-  "start_line": <start-line>,
-  "line": <end-line>
-}
-```
-
-If the file is deleted or the finding points at removed lines, anchor to the left side of the diff instead of the right side.
+If the file is deleted or the finding points at removed lines, use `side: "LEFT"` instead of `"RIGHT"`.
 
 Include only actionable inline comments. Prefer posting a precise comment over restating it in the review body.
 

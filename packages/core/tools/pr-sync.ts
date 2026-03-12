@@ -214,8 +214,8 @@ async function postReply(
   prNumber: number,
   reply: ReviewReply,
 ) {
-  if (!Number.isInteger(reply.inReplyTo) || reply.inReplyTo <= 0) {
-    throw new Error("Reply comments require a positive inReplyTo value");
+  if (!Number.isInteger(reply.inReplyTo)) {
+    throw new Error("Reply comments require an inReplyTo value");
   }
 
   if (!reply.body?.trim()) {
@@ -237,7 +237,7 @@ async function postReply(
     commit_id: parent.commit_id,
     path: parent.path,
     line: parent.line,
-    in_reply_to: reply.inReplyTo,
+    in_reply_to: Math.abs(reply.inReplyTo),
   });
 
   const proc = await $`echo ${payload} | gh api --method POST /repos/${owner}/${repo}/pulls/${prNumber}/comments --input -`
@@ -326,11 +326,6 @@ export function createPrSyncTool($: Shell) {
         optional: true,
         description: "Optional PR URL or reference to update instead of creating a new PR",
       },
-      approve: {
-        type: "boolean",
-        optional: true,
-        description: "Approve the referenced PR without posting a comment body",
-      },
       commitId: {
         type: "string",
         optional: true,
@@ -352,6 +347,7 @@ export function createPrSyncTool($: Shell) {
         description: "General PR comment body",
       },
     },
+    // useless comment
     async execute(args: PrSyncArgs, ctx: ToolExecutionContext) {
       const body = renderPrBody(args);
       const review = normalizeReviewInput(args);
@@ -414,6 +410,7 @@ export function createPrSyncTool($: Shell) {
         actions.push("commented");
       }
 
+      // another useless comment
       let reviewUrl: string | undefined;
 
       if (review) {

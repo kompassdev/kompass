@@ -1,24 +1,35 @@
+> Kompass is under active development, so workflows, package APIs, and adapter support may keep evolving as the toolkit expands.
+
 <p align="center">
-  <img src="assets/kompass.png" alt="Kompass" height="300" />
+  <img src="https://raw.githubusercontent.com/kompassdev/kompass/main/assets/kompass.png" alt="Kompass" height="300" />
+  <br>
+  <em>Navigate your way - manual steering, steered autonomy, or autonomously.</em>
 </p>
 
-# @kompassdev/opencode
+Kompass keeps AI coding agents on course with token-efficient, composable workflows. **Finally, your agent stops wandering.**
 
-`@kompassdev/opencode` is an OpenCode plugin that helps your agent navigate repositories with fewer wrong turns.
+Whether you prefer full control, guided collaboration, or hands-off autonomy, Kompass adapts to how you work.
 
-It brings Kompass workflows, focused agents, and structured repository tools into OpenCode so sessions stay grounded in branch, PR, and ticket context instead of wandering through the repo from scratch.
+## Choose Your Mode
 
-`@kompassdev/opencode` is under active development, so commands, tools, and integration details may keep evolving as Kompass matures.
+<p>**🧭 Manual Steering** — You chart the course, the agent follows your lead</p>
+<p>**⚓ Collaborative** — Plan together, develop together, review together</p>
+<p>**🚢 Autonomous** — Let your agent navigate independently, review at checkpoints</p>
 
-Why people use it:
+## Why Kompass?
 
-- help OpenCode navigate codebases with more direction and less drift
-- load branch, PR, and ticket context through purpose-built tools
-- keep planning, review, implementation, and PR work consistent across sessions
+| Challenge | How Kompass Helps |
+|-----------|-------------------|
+| Agents wander without direction | 🧭 **Navigation** — structured workflows keep agents on course |
+| Rebuilding prompts for every agent | 🔌 **Plug & Play** — same workflows across OpenCode, Claude Code, and more |
+| Token bloat in long sessions | 🎯 **Token Efficient** — minimal, focused prompts that get to the point |
+| Ad-hoc planning and review | ⚓ **Workflows** — purpose-built flows for plan, dev, and review |
+| Generic tools miss context | 🛠️ **Tailored Tools** — purpose-built for repository work |
+| Complex setup overhead | ⚡ **Easy to Use** — install the plugin, start navigating |
 
 ## Installation
 
-Add the plugin to your OpenCode config:
+For OpenCode, add the adapter package to your config:
 
 ```json
 {
@@ -26,11 +37,11 @@ Add the plugin to your OpenCode config:
 }
 ```
 
-Config is optional. To add a Kompass config file to your project:
+Config is optional. To publish a config file:
 
 ```bash
 # Inside .opencode folder
-curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/.opencode/kompass.jsonc -o .opencode/kompass.jsonc
+curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/kompass.jsonc -o .opencode/kompass.jsonc
 
 # Project root
 curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/kompass.jsonc -o kompass.jsonc
@@ -40,103 +51,234 @@ Kompass prefers `.opencode/kompass.jsonc`, then `kompass.jsonc`, and still accep
 
 ## How To Use
 
-Use `@kompassdev/opencode` when you want Kompass workflows available directly inside OpenCode.
+### OpenCode
+
+Use `@kompassdev/opencode` when you want Kompass workflows inside OpenCode.
 
 - install the plugin in your OpenCode config
 - optionally add `.opencode/kompass.jsonc` or `kompass.jsonc` to customize commands, agents, tools, skills, and defaults
-- bundled Kompass skills are registered automatically when the plugin loads; users do not need to copy skill files manually
-- run commands like `/review`, `/pr/create`, or `/ticket/plan` inside OpenCode
-- for session debugging, use `opencode session list` to find a session id and `opencode export <session-id>` to inspect the raw session output
+- bundled Kompass skills are registered automatically when the plugin loads, so users do not need to copy skill files manually
+- use commands like `/review`, `/pr/create`, or `/ticket/plan` inside OpenCode
+- for CLI session debugging, use `opencode session list` to find a session id and `opencode export <sessionID>` to dump the raw session JSON
 
-If you want OpenCode to see a Kompass tool under a custom name, set it directly on that tool entry:
+### Claude Code
 
-```jsonc
-{
-  "tools": {
-    "ticket_sync": {
-      "enabled": true,
-      "name": "custom_ticket_name"
-    }
-  }
-}
-```
+Claude Code adapter support is coming soon.
 
-That registers `custom_ticket_name` instead of `kompass_ticket_sync`, and command or agent prompts are rewritten to use the custom name.
-
-You can also control discovered skills through `kompass.jsonc`:
-
-```jsonc
-{
-  "skills": {
-    "entries": {
-      "release-checklist": { "enabled": true },
-      "@acme/opencode-release/hotfix-triage": { "enabled": true },
-      "legacy-release-flow": { "enabled": false }
-    },
-    "plugins": {
-      "entries": {
-        "@acme/opencode-experimental": { "enabled": false }
-      }
-    }
-  }
-}
-```
-
-- omit `skills.entries` to allow all discovered skills by default
-- set a skill entry to `{ "enabled": false }` to disable it by short name or fully-qualified id
-- set a plugin entry to `{ "enabled": false }` to disable all skills from that plugin without disabling the plugin itself
+Kompass is being structured as a shared core toolkit with adapter-specific packages, so the same workflows can be reused across agents instead of rebuilt from scratch.
 
 ## Agents
 
-This package currently exposes two focused agents through OpenCode:
+### `navigator`
 
-- `planner`: turns a request or ticket into a scoped implementation plan
-- `reviewer`: reviews branch or PR changes without editing files
+Coordinates multi-step workflows like `/todo` and `/ship` by keeping orchestration local and delegating focused leaf work to subagents.
+
+### `planner`
+
+Turns a request or ticket into a scoped implementation plan.
+
+### `reviewer`
+
+Reviews branch or PR changes without editing files.
 
 ## Commands
 
-Current command workflows include:
+### `/commit`
 
-- `/commit`
-- `/commit-and-push`
-- `/dev`
-- `/learn`
-- `/pr/create`
-- `/pr/fix`
-- `/pr/review`
-- `/reload`
-- `/review`
-- `/ship`
-- `/rmslop`
-- `/ticket/create`
-- `/ticket/dev`
-- `/ticket/plan`
+Stages and commits changes with a generated message.
+
+<details>
+
+**Usage:** `/commit [message]`
+
+If a message is provided, commits with that message. Otherwise, generates an appropriate commit message based on the staged changes.
+
+</details>
+
+### `/commit-and-push`
+
+Stages, commits, and pushes changes in one workflow.
+
+<details>
+
+**Usage:** `/commit-and-push [message]`
+
+Commits changes (generating a message if not provided) and pushes to the remote repository.
+
+</details>
+
+### `/dev`
+
+Implementation mode for focused development work.
+
+<details>
+
+**Usage:** `/dev <description>`
+
+Use for active development tasks. The agent implements the described changes while staying focused on the task.
+
+</details>
+
+### `/learn`
+
+Learns patterns and conventions from existing code.
+
+<details>
+
+**Usage:** `/learn <what-to-learn>`
+
+Analyzes the codebase to understand patterns, conventions, or specific implementations. Useful for understanding how things work before making changes.
+
+</details>
+
+### `/pr/create`
+
+Creates a pull request with structured checklists.
+
+<details>
+
+**Usage:** `/pr/create [title]`
+
+Creates a PR from the current branch. Generates a title if not provided. Includes checklist sections for consistent PR structure.
+
+</details>
+
+### `/pr/fix`
+
+Fixes issues found during PR review.
+
+<details>
+
+**Usage:** `/pr/fix [context]`
+
+Addresses review comments and feedback on an open PR. Loads the PR context and works through requested changes.
+
+</details>
+
+### `/pr/review`
+
+Reviews a pull request and adds structured feedback.
+
+<details>
+
+**Usage:** `/pr/review [pr]`
+
+Reviews the specified PR (or current PR if not specified) and provides feedback using inline comments and review threads.
+
+</details>
+
+### `/reload`
+
+Reloads the OpenCode project cache.
+
+<details>
+
+**Usage:** `/reload`
+
+Refreshes config, commands, agents, and tools without restarting OpenCode. Useful after making changes to `kompass.jsonc`.
+
+</details>
+
+### `/review`
+
+Reviews branch changes for issues and improvements.
+
+<details>
+
+**Usage:** `/review [base]`
+
+Reviews uncommitted changes or changes against a base branch (default: main). Provides feedback on code quality, patterns, and potential issues.
+
+</details>
+
+### `/ship`
+
+Ships the fast path from change summary to commit and PR creation.
+
+<details>
+
+**Usage:** `/ship [base-or-context]`
+
+Summarizes current changes, creates a feature branch when you are still on the base branch, then delegates the commit and PR steps to `/commit` and `/pr/create`.
+
+</details>
+
+### `/todo`
+
+Works through a todo file task by task.
+
+<details>
+
+**Usage:** `/todo [todo-file]`
+
+Loads a todo list, delegates one item at a time, and keeps orchestration local so work can pause and resume cleanly.
+
+</details>
+
+### `/rmslop`
+
+Removes unnecessary code and simplifies.
+
+<details>
+
+**Usage:** `/rmslop`
+
+Analyzes the codebase for unnecessary complexity, unused code, and opportunities for simplification.
+
+</details>
+
+### `/ticket/create`
+
+Creates a GitHub issue from a description.
+
+<details>
+
+**Usage:** `/ticket/create <description>`
+
+Creates a new GitHub issue with the provided description, generating a title and structured body with checklists.
+
+</details>
+
+### `/ticket/dev`
+
+Implements a ticket with planning and execution.
+
+<details>
+
+**Usage:** `/ticket/dev <ticket-reference>`
+
+Loads the specified ticket (URL, #id, or file path), creates an implementation plan, and executes the work.
+
+</details>
+
+### `/ticket/plan`
+
+Creates an implementation plan for a ticket.
+
+<details>
+
+**Usage:** `/ticket/plan <ticket-reference>`
+
+Loads the specified ticket and creates a detailed implementation plan without executing changes.
+
+</details>
 
 ## Tools
 
-`@kompassdev/opencode` includes Kompass tools that give OpenCode focused, structured context for repository workflows.
-
-- `changes_load`: load branch changes against a base branch
-- `pr_load`: load PR metadata and review history
-- `pr_review`: legacy PR comment helper kept for compatibility
-- `pr_sync`: create, update, or review a pull request with checklists
-- `ticket_load`: load a ticket from GitHub, file, or text
-- `ticket_sync`: create or update a GitHub issue with checklists
-- `reload`: refresh the OpenCode project cache
-
-<details>
-<summary><strong>`changes_load` details</strong></summary>
+### `changes_load`
 
 Load branch changes against a base branch.
 
-Parameters:
+<details>
+
+**Parameters:**
 
 - `base` (optional): base branch or ref
 - `head` (optional): head branch, commit, or ref override
 - `depthHint` (optional): shallow-fetch hint such as PR commit count
-- `uncommitted` (optional): include uncommitted workspace changes
+- `uncommitted` (optional): only load uncommitted changes (staged and unstaged), never fall back to branch comparison
 
-Why it helps:
+**Why it helps:**
 
 - keeps branch diff loading focused
 - works well for review and PR workflows
@@ -144,89 +286,30 @@ Why it helps:
 
 </details>
 
-<details>
-<summary><strong>`pr_load` details</strong></summary>
+### `pr_load`
 
 Load PR metadata and review history.
 
-Parameters:
+<details>
+
+**Parameters:**
 
 - `pr` (optional): PR number or URL
 
-Why it helps:
+**Why it helps:**
 
 - gives agents normalized PR context before they start reviewing or summarizing
 - keeps review workflows grounded in actual PR state instead of inferred context
 
 </details>
 
-<details>
-<summary><strong>`ticket_load` details</strong></summary>
-
-Load a ticket from GitHub, file, or text.
-
-Parameters:
-
-- `source` (required): issue URL, repo#id, #id, file path, or raw text
-- `comments` (optional): include issue comments
-
-Why it helps:
-
-- lets the same workflow start from GitHub, a local file, or pasted text
-- gives planning and implementation flows a consistent input format
-
-</details>
-
-<details>
-<summary><strong>`ticket_sync` details</strong></summary>
-
-Create or update a GitHub issue.
-
-Parameters:
-
-- `title` (required): issue title
-- `body` (optional): raw issue body override
-- `description` (optional): short issue description rendered above checklist sections
-- `labels` (optional): labels to apply when creating or updating the issue
-- `checklists` (optional): structured checklist sections rendered as markdown, for example `### Requirement` followed by `- [ ] Item 1`
-- `refUrl` (optional): issue URL to update instead of creating a new issue
-
-Why it helps:
-
-- lets ticket flows create a new issue or update an existing one with one tool
-- avoids making the agent handcraft raw `gh` issue commands each time
-
-</details>
-
-<details>
-<summary><strong>`pr_review` details</strong></summary>
-
-Legacy PR comment helper for general comments, inline comments, or thread replies. Prefer `pr_sync` for new workflows.
-
-Parameters:
-
-- `comment_type` (required): type of comment - "general", "inline", or "reply"
-- `body` (required): comment text
-- `pr` (optional): PR number or URL (uses current PR if not provided)
-- `commit_id` (optional): commit SHA for inline comments
-- `path` (optional): file path for inline comments
-- `line` (optional): line number for inline comments
-- `in_reply_to` (optional): comment ID to reply to
-
-Why it helps:
-
-- kept for backwards compatibility with existing automations
-- no shell escaping issues with backticks or quotes
-- replies automatically fetch parent comment context
-
-</details>
-
-<details>
-<summary><strong>`pr_sync` details</strong></summary>
+### `pr_sync`
 
 Create, update, or review a GitHub pull request with structured checklists.
 
-Parameters:
+<details>
+
+**Parameters:**
 
 - `title` (optional): PR title; required when creating a PR or renaming one
 - `body` (optional): raw PR body override
@@ -240,7 +323,7 @@ Parameters:
 - `replies` (optional): replies to existing review comments
 - `commentBody` (optional): general PR comment body
 
-Why it helps:
+**Why it helps:**
 
 - consistent PR creation with checklist support
 - create, update, review, approve, and reply with one tool
@@ -248,25 +331,95 @@ Why it helps:
 
 </details>
 
+### `ticket_load`
+
+Load a ticket from GitHub, file, or text.
+
 <details>
-<summary><strong>`reload` details</strong></summary>
 
-Reload the OpenCode project cache.
+**Parameters:**
 
-Parameters: none
+- `source` (required): issue URL, repo#id, #id, file path, or raw text
+- `comments` (optional): include issue comments
 
-Why it helps:
+**Why it helps:**
+
+- lets the same workflow start from GitHub, a local file, or pasted text
+- gives planning and implementation flows a consistent input format
+
+</details>
+
+### `ticket_sync`
+
+Create or update a GitHub issue with checklists.
+
+<details>
+
+**Parameters:**
+
+- `title` (required): issue title
+- `body` (optional): raw issue body override
+- `description` (optional): short issue description rendered above checklist sections
+- `labels` (optional): labels to apply when creating or updating the issue
+- `checklists` (optional): structured checklist sections rendered as markdown
+- `refUrl` (optional): issue URL to update instead of creating a new issue
+
+**Why it helps:**
+
+- lets ticket flows create a new issue or update an existing one with one tool
+- avoids making the agent handcraft raw `gh` issue commands each time
+
+</details>
+
+### `reload`
+
+Refresh the OpenCode project cache.
+
+<details>
+
+**Parameters:** none
+
+**Why it helps:**
 
 - refresh config, commands, and tools without restarting
 - useful after making changes to `kompass.jsonc`
 
 </details>
 
-## Local Development
+## Config
 
-This package lives in the Kompass workspace and loads shared logic directly from `packages/core` during local development.
+Project config is optional.
 
-From the workspace root, run:
+If you want to customize Kompass, use one of these preferred locations in the consumer project:
+
+- `.opencode/kompass.jsonc`
+- `kompass.jsonc`
+
+See `kompass.jsonc` for the root example, `packages/opencode/.opencode/kompass.jsonc` for the compiled OpenCode-scoped example, and `kompass.schema.json` for the schema.
+
+Tool names can also be remapped per adapter. For example, this keeps `ticket_sync` enabled but exposes it as `custom_ticket_name`, and Kompass command or agent references are rewritten to match:
+
+```jsonc
+{
+  "tools": {
+    "ticket_sync": {
+      "enabled": true,
+      "name": "custom_ticket_name"
+    }
+  }
+}
+```
+
+## Workspace
+
+This repository is the Kompass development workspace.
+
+- `packages/core`: shared Kompass workflows, prompts, components, config loading, and tool definitions
+- `packages/opencode`: the OpenCode adapter package, published as `@kompassdev/opencode`
+
+The root coordinates workspace scripts, shared config, tests, and compiled review output.
+
+## Workspace Scripts
 
 ```bash
 bun run compile
@@ -274,4 +427,10 @@ bun run typecheck
 bun run test
 ```
 
-`bun run compile` regenerates `packages/opencode/.opencode/` from the current workspace sources.
+`bun run compile` regenerates `packages/opencode/.opencode/` from the OpenCode package.
+
+## Publishing Direction
+
+- publish `packages/opencode` as `@kompassdev/opencode`
+- keep shared workflow logic in `packages/core`
+- add future adapters as sibling packages, such as `packages/claude-code`

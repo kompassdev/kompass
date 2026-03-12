@@ -40,6 +40,7 @@ export const DEFAULT_COMPONENT_NAMES = [
   "change-summary",
   "changes-summary",
   "commit",
+  "delegate-to-subagent",
   "dev-flow",
   "summarize-changes",
 ] as const;
@@ -357,6 +358,7 @@ const defaultComponentPaths: Record<string, string> = {
   "change-summary": "components/change-summary.md",
   "changes-summary": "components/changes-summary.md",
   "commit": "components/commit.md",
+  "delegate-to-subagent": "components/delegate-to-subagent.md",
   "dev-flow": "components/dev-flow.md",
   "summarize-changes": "components/summarize-changes.md",
 };

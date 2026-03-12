@@ -137,10 +137,20 @@ When you identify an issue at a specific line, create an inline comment object:
 }
 ```
 
+For multi-line comments spanning multiple lines, add `startLine`:
+```json
+{
+  "path": "relative/path/to/file.ts",
+  "line": 125,
+  "startLine": 120,
+  "body": "This entire block has an issue..."
+}
+```
+
 **Mapping findings to inline comments:**
 - "Line 336 in pr-sync.ts has misleading description" → Create inline comment on line 336 of pr-sync.ts
-- "Lines 328-331 duplicate functionality" → Create inline comment on line 328 (or the most relevant line)
-- "The logic in changes-load.ts lines 124-125 contradicts docs" → Create inline comment on line 124
+- "Lines 328-331 duplicate functionality" → Create inline comment with `line: 331, startLine: 328`
+- "The logic in changes-load.ts lines 124-125 contradicts docs" → Create inline comment with `line: 125, startLine: 124`
 
 If `kompass_pr_sync` returns a review URL, store it as `<review-url>`.
 

@@ -39,9 +39,10 @@ Call `changes_load` with `base: <pr-context.pr.baseRefName>`, `head: <pr-context
 
 Following the reviewer agent guidance:
 1. Read every changed file for full context before finalizing findings
-2. Check `<pr-context.reviews>`, `<pr-context.issueComments>`, and `<pr-context.threads>` for ALL existing comments - don't duplicate findings already raised by anyone
+2. Check `<pr-context.reviews>`, `<pr-context.issueComments>`, and `<pr-context.threads>`
 3. Prefer inline comments for file-specific findings; use the review body only for high-level summaries
 4. Use diff hunks in `<changes>` to map inline comments to the correct lines
+5. Do NOT duplicate findings already raised
 
 Derive `<previous-grade>` from prior reviews and `<already-approved>` from existing approvals on `<pr-context.pr.headRefOid>`.
 
@@ -70,7 +71,7 @@ For multi-line: add `startLine`. For deleted lines: use `side: "LEFT"`.
 
 **If `<publish-grade>` < `★★★★★`:**
 - `review.body`: grade + notes (unchanged lines, general concerns)
-- `review.comments`: inline comments (changed lines only)
+- `review.comments`: inline comments (changed lines only) - **skip lines that already have comments in `<pr-context.threads>`**
 
 If `pr_sync` returns a review URL, store it as `<review-url>`.
 

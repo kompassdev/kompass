@@ -75,7 +75,7 @@ For multi-line: add `startLine`. For deleted lines: use `side: "LEFT"`.
 
 **If `<publish-grade>` < `★★★★★`:**
 - `review.body`: grade + notes (unchanged lines, general concerns)
-- `review.comments`: inline comments (changed lines only)
+- `review.comments`: inline comments (changed lines only) - **skip lines that already have comments in `<pr-context.threads>`**
 
 If `kompass_pr_sync` returns a review URL, store it as `<review-url>`.
 

@@ -273,6 +273,7 @@ const opencodeToolCreators = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
+  // useless line
   ticket_sync($: PluginInput["$"]) {
     const definition = createTicketSyncTool($);
     return tool({

@@ -73,6 +73,14 @@ describe("pr_sync", () => {
         stdout: JSON.stringify({ nameWithOwner: "acme/repo" }),
       },
       {
+        contains: "gh api user --jq .login",
+        stdout: "kompassdev[bot]",
+      },
+      {
+        contains: "/repos/acme/repo/pulls/9/requested_reviewers --input -",
+        stdout: JSON.stringify({}),
+      },
+      {
         contains: "/repos/acme/repo/pulls/9/reviews --input -",
         stdout: JSON.stringify({ html_url: "https://github.com/acme/repo/pull/9#pullrequestreview-3" }),
       },
@@ -97,10 +105,10 @@ describe("pr_sync", () => {
     const result = JSON.parse(output);
     assert.equal(result.action, "reviewed");
     assert.equal(result.reviewUrl, "https://github.com/acme/repo/pull/9#pullrequestreview-3");
-    assert.match(executedCommands[2], /"event":"COMMENT"/);
-    assert.match(executedCommands[2], /"commit_id":"abc123"/);
-    assert.match(executedCommands[2], /"path":"src\/example.ts"/);
-    assert.match(executedCommands[2], /"line":12/);
+    assert.match(executedCommands[4], /"event":"COMMENT"/);
+    assert.match(executedCommands[4], /"commit_id":"abc123"/);
+    assert.match(executedCommands[4], /"path":"src\/example.ts"/);
+    assert.match(executedCommands[4], /"line":12/);
   });
 
   test("approves and submits review comments in one call", async () => {
@@ -117,6 +125,14 @@ describe("pr_sync", () => {
       {
         contains: "gh repo view --json nameWithOwner",
         stdout: JSON.stringify({ nameWithOwner: "acme/repo" }),
+      },
+      {
+        contains: "gh api user --jq .login",
+        stdout: "kompassdev[bot]",
+      },
+      {
+        contains: "/repos/acme/repo/pulls/9/requested_reviewers --input -",
+        stdout: JSON.stringify({}),
       },
       {
         contains: "/repos/acme/repo/pulls/9/reviews --input -",

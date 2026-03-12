@@ -85,6 +85,13 @@ Before publishing, derive:
 Never publish a review below `★★★★★` unless it includes at least one inline comment or a non-inline body note.
 If the generated grade is below `★★★★★` without supporting feedback, raise the published grade to `★★★★★` before applying skip logic.
 
+**When to use inline comments:**
+- ALWAYS use inline comments when referencing specific line numbers in files
+- When a finding points to a specific file and line (e.g., "line 336 in pr-sync.ts"), create an inline comment on that exact line
+- Inline comments should include the core issue and a brief explanation
+- Use the review body only for high-level summaries or findings that span multiple locations
+- Each distinct file+line issue should be its own inline comment
+
 ### Publish Review
 
 If `<should-approve>` is true and `<already-approved>` is true:
@@ -119,6 +126,21 @@ Set `<review-body>` using these rules:
 If the file is deleted or the finding points at removed lines, use `side: "LEFT"` instead of `"RIGHT"`.
 
 Include only actionable inline comments. Prefer posting a precise comment over restating it in the review body.
+
+**Inline comment format:**
+When you identify an issue at a specific line, create an inline comment object:
+```json
+{
+  "path": "relative/path/to/file.ts",
+  "line": 123,
+  "body": "Brief description of the issue and suggested fix"
+}
+```
+
+**Mapping findings to inline comments:**
+- "Line 336 in pr-sync.ts has misleading description" → Create inline comment on line 336 of pr-sync.ts
+- "Lines 328-331 duplicate functionality" → Create inline comment on line 328 (or the most relevant line)
+- "The logic in changes-load.ts lines 124-125 contradicts docs" → Create inline comment on line 124
 
 If `kompass_pr_sync` returns a review URL, store it as `<review-url>`.
 

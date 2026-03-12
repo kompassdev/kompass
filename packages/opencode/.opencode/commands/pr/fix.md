@@ -79,7 +79,7 @@ kompass_pr_sync refUrl="<pr-context.pr.url>" commentBody="<reply-text>"
 kompass_pr_sync refUrl="<pr-context.pr.url>" replies=[{"inReplyTo": <comment-id>, "body": "<reply-text>"}]
 
 # Follow-up inline review comment on a specific line
-kompass_pr_sync refUrl="<pr-context.pr.url>" review={"event": "COMMENT", "commitId": "<commit-sha>", "comments": [{"path": "<file-path>", "line": <line-number>, "body": "<reply-text>"}]}
+kompass_pr_sync refUrl="<pr-context.pr.url>" commitId="<commit-sha>" review={"comments": [{"path": "<file-path>", "line": <line-number>, "body": "<reply-text>"}]}
 ```
 
 Confirm which feedback was addressed and which was intentionally not followed.

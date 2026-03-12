@@ -376,12 +376,15 @@ function normalizeNativeDiff(file: ChangedFile, rawDiff: string) {
 
 async function resolveHeadRef($: Shell, cwd: string, input: string, depthHint?: number) {
   const trimmed = input.trim();
-  const direct = await $`git rev-parse --verify ${trimmed}`.cwd(cwd).quiet().nothrow();
-  if (direct.exitCode === 0) {
-    return trimmed;
-  }
 
+  // If it's already a commit SHA, try to resolve it directly
   if (/^[0-9a-f]{7,40}$/i.test(trimmed)) {
+    const direct = await $`git rev-parse --verify ${trimmed}`.cwd(cwd).quiet().nothrow();
+    if (direct.exitCode === 0) {
+      return trimmed;
+    }
+
+    // Try to fetch the commit directly
     const fetchProc = depthHint
       ? await $`git fetch --no-tags --depth=${Math.max(depthHint, 20)} origin ${trimmed}`
           .cwd(cwd)
@@ -397,6 +400,29 @@ async function resolveHeadRef($: Shell, cwd: string, input: string, depthHint?: 
       if (fetched.exitCode === 0) {
         return trimmed;
       }
+    }
+  }
+
+  // For branch names, try to resolve as a remote ref first (common in CI)
+  const isBranchName = !trimmed.startsWith("refs/") && !/^[0-9a-f]{7,40}$/i.test(trimmed);
+  if (isBranchName) {
+    const remoteRef = trimmed.startsWith("origin/") ? trimmed : `origin/${trimmed}`;
+    const remoteCheck = await $`git rev-parse --verify ${remoteRef}`.cwd(cwd).quiet().nothrow();
+    if (remoteCheck.exitCode === 0) {
+      return remoteRef;
+    }
+
+    // Try to fetch the branch
+    const branchName = trimmed.startsWith("origin/") ? trimmed.slice(7) : trimmed;
+    const fetchDepth = Math.max(depthHint ?? 0, 50);
+    await $`git fetch --no-tags --depth=${fetchDepth} origin ${branchName}:${remoteRef}`
+      .cwd(cwd)
+      .quiet()
+      .nothrow();
+
+    const afterFetch = await $`git rev-parse --verify ${remoteRef}`.cwd(cwd).quiet().nothrow();
+    if (afterFetch.exitCode === 0) {
+      return remoteRef;
     }
   }
 

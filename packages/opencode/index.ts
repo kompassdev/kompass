@@ -251,10 +251,8 @@ const opencodeToolCreators = {
         })).describe("Checklist sections rendered as markdown").optional(),
         draft: tool.schema.boolean().describe("Create as draft PR").optional(),
         refUrl: tool.schema.string().describe("Optional PR URL to update").optional(),
-        approve: tool.schema.boolean().describe("Approve the referenced PR without posting a comment body").optional(),
-        commitId: tool.schema.string().describe("Commit SHA to anchor the approval to").optional(),
+        commitId: tool.schema.string().describe("Commit SHA to anchor review comments to").optional(),
         review: tool.schema.object({
-          event: tool.schema.enum(["COMMENT", "APPROVE", "REQUEST_CHANGES"]).describe("Review event to submit"),
           body: tool.schema.string().describe("Optional review summary body").optional(),
           comments: tool.schema.array(tool.schema.object({
             path: tool.schema.string().describe("Changed file path"),
@@ -264,6 +262,7 @@ const opencodeToolCreators = {
             side: tool.schema.enum(["LEFT", "RIGHT"]).describe("Diff side for the ending line").optional(),
             startSide: tool.schema.enum(["LEFT", "RIGHT"]).describe("Diff side for the starting line").optional(),
           })).describe("Inline review comments to submit").optional(),
+          approve: tool.schema.boolean().describe("Approve the PR; can be combined with review comments").optional(),
         }).describe("Structured review submission").optional(),
         replies: tool.schema.array(tool.schema.object({
           inReplyTo: tool.schema.number().int().describe("Existing review comment ID to reply to"),

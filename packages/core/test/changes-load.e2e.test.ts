@@ -211,7 +211,7 @@ describe("changes_load e2e", () => {
 
     const result = await runChangesLoad(clone, { base: "main", head: "feature/misc", depthHint: 1 });
 
-    assert.equal(result.comparison, "origin/main...feature/misc");
+    assert.equal(result.comparison, "origin/main...origin/feature/misc");
     assert.equal(result.branch, "feature/misc");
     assert.equal(result.files.length, 1);
     assert.equal(result.files[0].path, "feature.txt");

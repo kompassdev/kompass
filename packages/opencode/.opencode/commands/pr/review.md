@@ -95,8 +95,7 @@ If `<should-approve>` is true and `<already-approved>` is true:
 If `<should-approve>` is true:
 - Call `kompass_pr_sync` with:
   - `refUrl: <pr-context.pr.url>`
-  - `approve: true`
-  - `commitId: <pr-context.pr.headRefOid>`
+  - `review.approve: true`
 - Do not publish a review body or inline comments
 - Return the approval output
 
@@ -107,8 +106,7 @@ If `<has-supporting-feedback>` is false and `<grade-changed>` is false:
 
 Otherwise, call `kompass_pr_sync` with:
 - `refUrl: <pr-context.pr.url>`
-- `review.event: "COMMENT"`
-- `review.commitId: <pr-context.pr.headRefOid>` when there are inline comments
+- `commitId: <pr-context.pr.headRefOid>` when there are inline comments
 - `review.body: <review-body>` when `<review-body>` exists
 - `review.comments` set to the inline findings when there are inline comments
 

@@ -14,26 +14,20 @@ describe("pr_sync", () => {
         stdout: JSON.stringify({ number: 9, url: "https://github.com/acme/repo/pull/9" }),
       },
       {
-        contains: "gh repo view --json nameWithOwner",
-        stdout: JSON.stringify({ nameWithOwner: "acme/repo" }),
-      },
-      {
-        contains: "/repos/acme/repo/pulls/9/reviews --input -",
-        stdout: JSON.stringify({ html_url: "https://github.com/acme/repo/pull/9#pullrequestreview-1" }),
+        contains: "gh pr review https://github.com/acme/repo/pull/9 --approve",
+        stdout: "",
       },
     ]);
 
     const tool = createPrSyncTool(shell);
     const output = await tool.execute({
       refUrl: "https://github.com/acme/repo/pull/9",
-      approve: true,
+      review: { approve: true },
     }, createToolContextForDirectory("/tmp/repo"));
 
     const result = JSON.parse(output);
     assert.equal(result.url, "https://github.com/acme/repo/pull/9");
     assert.equal(result.action, "approved");
-    assert.equal(result.reviewUrl, "https://github.com/acme/repo/pull/9#pullrequestreview-1");
-    assert.match(executedCommands[2], /"event":"APPROVE"/);
   });
 
   test("updates and approves an existing PR in one call", async () => {
@@ -48,12 +42,8 @@ describe("pr_sync", () => {
         stdout: "",
       },
       {
-        contains: "gh repo view --json nameWithOwner",
-        stdout: JSON.stringify({ nameWithOwner: "acme/repo" }),
-      },
-      {
-        contains: "/repos/acme/repo/pulls/9/reviews --input -",
-        stdout: JSON.stringify({ html_url: "https://github.com/acme/repo/pull/9#pullrequestreview-2" }),
+        contains: "gh pr review https://github.com/acme/repo/pull/9 --approve",
+        stdout: "",
       },
     ]);
 
@@ -62,7 +52,7 @@ describe("pr_sync", () => {
       title: "Tighten review automation",
       body: "Updated body",
       refUrl: "https://github.com/acme/repo/pull/9",
-      approve: true,
+      review: { approve: true },
     }, createToolContextForDirectory("/tmp/repo"));
 
     const result = JSON.parse(output);
@@ -93,7 +83,6 @@ describe("pr_sync", () => {
       refUrl: "https://github.com/acme/repo/pull/9",
       commitId: "abc123",
       review: {
-        event: "COMMENT",
         body: "★★★☆☆\n\nPlease address the inline note.",
         comments: [
           {
@@ -107,10 +96,54 @@ describe("pr_sync", () => {
 
     const result = JSON.parse(output);
     assert.equal(result.action, "reviewed");
+    assert.equal(result.reviewUrl, "https://github.com/acme/repo/pull/9#pullrequestreview-3");
     assert.match(executedCommands[2], /"event":"COMMENT"/);
     assert.match(executedCommands[2], /"commit_id":"abc123"/);
     assert.match(executedCommands[2], /"path":"src\/example.ts"/);
     assert.match(executedCommands[2], /"line":12/);
+  });
+
+  test("approves and submits review comments in one call", async () => {
+    const executedCommands: string[] = [];
+    const shell = createMockShell(executedCommands, [
+      {
+        contains: "gh pr view https://github.com/acme/repo/pull/9 --json number,url",
+        stdout: JSON.stringify({ number: 9, url: "https://github.com/acme/repo/pull/9" }),
+      },
+      {
+        contains: "gh pr review https://github.com/acme/repo/pull/9 --approve",
+        stdout: "",
+      },
+      {
+        contains: "gh repo view --json nameWithOwner",
+        stdout: JSON.stringify({ nameWithOwner: "acme/repo" }),
+      },
+      {
+        contains: "/repos/acme/repo/pulls/9/reviews --input -",
+        stdout: JSON.stringify({ html_url: "https://github.com/acme/repo/pull/9#pullrequestreview-4" }),
+      },
+    ]);
+
+    const tool = createPrSyncTool(shell);
+    const output = await tool.execute({
+      refUrl: "https://github.com/acme/repo/pull/9",
+      commitId: "abc123",
+      review: {
+        approve: true,
+        body: "LGTM with minor suggestions",
+        comments: [
+          {
+            path: "src/example.ts",
+            line: 12,
+            body: "Consider adding a comment here.",
+          },
+        ],
+      },
+    }, createToolContextForDirectory("/tmp/repo"));
+
+    const result = JSON.parse(output);
+    assert.equal(result.action, "approved_and_reviewed");
+    assert.equal(result.reviewUrl, "https://github.com/acme/repo/pull/9#pullrequestreview-4");
   });
 
   test("posts a general comment and thread reply in one call", async () => {

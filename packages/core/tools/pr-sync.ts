@@ -6,8 +6,6 @@ import {
   type ToolExecutionContext,
 } from "./shared.ts";
 
-type ReviewEvent = "COMMENT" | "APPROVE" | "REQUEST_CHANGES";
-
 type ReviewComment = {
   path: string;
   body: string;
@@ -18,9 +16,9 @@ type ReviewComment = {
 };
 
 type ReviewInput = {
-  event: ReviewEvent;
   body?: string;
   comments?: ReviewComment[];
+  approve?: boolean;
 };
 
 type ReviewReply = {
@@ -42,7 +40,6 @@ type PrSyncArgs = {
   }>;
   draft?: boolean;
   refUrl?: string;
-  approve?: boolean;
   commitId?: string;
   review?: ReviewInput;
   replies?: ReviewReply[];
@@ -77,14 +74,6 @@ function renderPrBody(args: PrSyncArgs) {
 }
 
 function normalizeReviewInput(args: PrSyncArgs) {
-  if (args.approve && args.review) {
-    throw new Error("pr_sync cannot combine approve with review");
-  }
-
-  if (args.approve) {
-    return { event: "APPROVE" } satisfies ReviewInput;
-  }
-
   return args.review;
 }
 
@@ -158,6 +147,19 @@ async function postGeneralComment($: Shell, worktree: string, prRef: string, bod
   }
 }
 
+async function approvePullRequest($: Shell, worktree: string, prRef: string) {
+  const proc = await $`gh pr review ${prRef} --approve`
+    .cwd(worktree)
+    .quiet()
+    .nothrow();
+
+  if (proc.exitCode !== 0) {
+    throw new Error(proc.stderr.toString() || "Failed to approve PR");
+  }
+
+  return prRef;
+}
+
 async function submitReview(
   $: Shell,
   worktree: string,
@@ -174,12 +176,12 @@ async function submitReview(
     throw new Error("Review comments require commitId");
   }
 
-  if (review.event !== "APPROVE" && comments.length === 0 && !body) {
-    throw new Error(`pr_sync review event ${review.event} requires body or comments`);
+  if (comments.length === 0 && !body) {
+    throw new Error("pr_sync review requires body or comments");
   }
 
   const payload = JSON.stringify({
-    event: review.event,
+    event: "COMMENT",
     ...(commitId?.trim() ? { commit_id: commitId.trim() } : {}),
     ...(body ? { body } : {}),
     ...(comments.length > 0 ? { comments } : {}),
@@ -412,19 +414,24 @@ export function createPrSyncTool($: Shell) {
       }
 
       let reviewUrl: string | undefined;
-      if (review) {
-        const repo = await loadRepoName($, ctx.worktree);
-        const [owner, repoName] = repo.split("/");
-        reviewUrl = await submitReview($, ctx.worktree, owner, repoName, target.number, review, args.commitId);
-        actions.push(review.event === "APPROVE" ? "approved" : "reviewed");
 
-        if ((args.replies?.length ?? 0) > 0) {
-          for (const reply of args.replies ?? []) {
-            await postReply($, ctx.worktree, owner, repoName, target.number, reply);
-          }
-          actions.push("replied");
+      if (review) {
+        // Handle approval separately using gh pr review --approve
+        if (review.approve) {
+          await approvePullRequest($, ctx.worktree, target.url);
+          actions.push("approved");
         }
-      } else if ((args.replies?.length ?? 0) > 0) {
+
+        // Submit review comments if there are any
+        if ((review.comments?.length ?? 0) > 0 || review.body?.trim()) {
+          const repo = await loadRepoName($, ctx.worktree);
+          const [owner, repoName] = repo.split("/");
+          reviewUrl = await submitReview($, ctx.worktree, owner, repoName, target.number, review, args.commitId);
+          actions.push("reviewed");
+        }
+      }
+
+      if ((args.replies?.length ?? 0) > 0) {
         const repo = await loadRepoName($, ctx.worktree);
         const [owner, repoName] = repo.split("/");
         for (const reply of args.replies ?? []) {
@@ -435,7 +442,7 @@ export function createPrSyncTool($: Shell) {
 
       if (actions.length === 0) {
         throw new Error(
-          "pr_sync requires title, body, description, checklist content, review, commentBody, replies, or approve",
+          "pr_sync requires title, body, description, checklist content, review, commentBody, or replies",
         );
       }
 

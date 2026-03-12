@@ -172,10 +172,6 @@ async function submitReview(
   const comments = (review.comments ?? []).map(normalizeReviewComment);
   const body = review.body?.trim();
 
-  if (comments.length > 0 && !commitId?.trim()) {
-    throw new Error("Review comments require commitId");
-  }
-
   if (comments.length === 0 && !body) {
     throw new Error("pr_sync review requires body or comments");
   }
@@ -193,7 +189,12 @@ async function submitReview(
     .nothrow();
 
   if (proc.exitCode !== 0) {
-    throw new Error(proc.stderr.toString() || "Failed to submit PR review");
+    const stderr = proc.stderr.toString().trim();
+    const stdout = proc.text().trim();
+    const errorDetails = stderr || stdout || "Unknown error";
+    throw new Error(
+      `Failed to submit PR review: ${errorDetails}\n\nPayload: ${payload}`,
+    );
   }
 
   const responseText = proc.text().trim();

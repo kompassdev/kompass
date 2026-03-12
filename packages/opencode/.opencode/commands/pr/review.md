@@ -63,29 +63,19 @@ Before publishing, derive: `<has-inline-comments>`, `<has-body-note>`, `<publish
 {"path": "file.ts", "line": 123, "body": "Issue description"}
 ```
 
-For multi-line: add `startLine`: `{"path": "file.ts", "line": 125, "startLine": 120, "body": "..."}`
+For multi-line: add `startLine`. For deleted lines: use `side: "LEFT"`.
 
-Use `side: "LEFT"` for deleted files or removed lines.
+**Important:** Inline comments ONLY work on changed lines (in diff hunks from `<changes>`). Put feedback on unchanged lines in `review.body` (e.g., "file.ts:216 - issue description").
 
 ### Publish Review
 
-**If `<publish-grade>` is `★★★★★` (no issues found):**
-- If already approved → skip
-- Otherwise → call `kompass_pr_sync` with `review.approve: true`
+**If `<publish-grade>` is `★★★★★`:**
+- Already approved → skip
+- Otherwise → `kompass_pr_sync` with `review.approve: true`
 
-**If `<publish-grade>` is below `★★★★★` (issues found):**
-- MUST have supporting feedback (inline comments or body note explaining the issues)
-- Call `kompass_pr_sync` with:
-  - `review.body`: grade + optional note for issues that CANNOT be mapped to specific lines (general rules, side effects, architectural concerns)
-  - `review.comments`: inline comments for EVERY issue that maps to a specific file/line
-  - `commitId` when there are inline comments
-
-**Body note usage:** Only use the review body note for feedback that doesn't map to a specific changed line:
-- General architectural concerns
-- Side effects or impact on other parts of the codebase
-- Process/policy violations (e.g., "Missing tests for new features")
-- Issues in unchanged files that are affected by these changes
-- All other findings MUST be inline comments on the specific lines
+**If `<publish-grade>` < `★★★★★`:**
+- `review.body`: grade + notes (unchanged lines, general concerns)
+- `review.comments`: inline comments (changed lines only)
 
 If `kompass_pr_sync` returns a review URL, store it as `<review-url>`.
 

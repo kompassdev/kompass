@@ -1,4 +1,4 @@
-name: OpenCode PR Review
+name: Kompass PR Review
 
 on:
   pull_request:
@@ -24,22 +24,15 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Install OpenCode
-        uses: ./.github/actions/opencode-install
+      - name: Install Kompass Tooling
+        uses: ./.github/actions/kompass-opencode-install
 
-      - name: Run PR Review
+      - name: Run Kompass PR Review
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         run: opencode run --model="${{ vars.OPENCODE_MODEL }}" --variant="${{ vars.OPENCODE_VARIANT }}" --thinking --command="pr/review" "${{ github.event.pull_request.html_url }}"
 
-      - name: Print review session
+      - name: Export Kompass Session
         if: always()
-        run: |
-          session_id="$(opencode session list | awk 'NR > 2 && $1 ~ /^ses_/ { print $1; exit }')"
-          if [ -n "$session_id" ]; then
-            echo "OpenCode session: $session_id"
-            opencode export "$session_id"
-          else
-            echo "No OpenCode session found to export"
-          fi
+        uses: ./.github/actions/kompass-opencode-session-export

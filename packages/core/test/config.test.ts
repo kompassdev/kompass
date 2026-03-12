@@ -45,7 +45,7 @@ describe("object-based config", () => {
     const config = mergeWithDefaults({
       commands: {
         dev: { enabled: false },
-        review: { enabled: true, template: "commands/custom-review.txt" },
+        review: { enabled: true, template: "commands/custom-review.md" },
       },
       agents: {
         navigator: { permission: { task: "deny", todowrite: "deny" } },
@@ -53,20 +53,20 @@ describe("object-based config", () => {
       },
       components: {
         "dev-flow": { enabled: false },
-        commit: { path: "components/custom-commit.txt" },
+        commit: { path: "components/custom-commit.md" },
       },
     });
 
     assert.equal(config.commands.enabled.includes("dev"), false);
     assert.equal(config.commands.enabled.includes("review"), true);
-    assert.equal(config.commands.templates.review, "commands/custom-review.txt");
+    assert.equal(config.commands.templates.review, "commands/custom-review.md");
     assert.deepEqual(config.agents.navigator.permission, {
       task: "deny",
       todowrite: "deny",
     });
     assert.equal(config.agents.enabled.includes("reviewer"), false);
     assert.equal(config.components.enabled.includes("dev-flow"), false);
-    assert.equal(config.components.paths.commit, "components/custom-commit.txt");
+    assert.equal(config.components.paths.commit, "components/custom-commit.md");
   });
 
   test("supports skill entry maps", () => {

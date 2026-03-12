@@ -186,7 +186,7 @@ describe("applyCommandsConfig", () => {
 
       assert.ok(cfg.command);
       assert.ok(cfg.command!["dev"]);
-      // Should contain the actual content from dev-flow.txt
+      // Should contain the actual content from dev-flow.md
       assert.match(cfg.command!["dev"].template, /Development Flow Navigation Guide/);
       // Should NOT contain the placeholder
       assert.doesNotMatch(cfg.command!["dev"].template, /\{\{dev-flow\}\}/);
@@ -200,7 +200,7 @@ describe("applyCommandsConfig", () => {
 
       assert.ok(cfg.command);
       assert.ok(cfg.command!["dev"]);
-      // dev.txt uses {{dev-flow}} component
+      // dev.md uses {{dev-flow}} component
       assert.doesNotMatch(cfg.command!["dev"].template, /\{\{dev-flow\}\}/);
     });
 
@@ -359,11 +359,17 @@ describe("applyCommandsConfig", () => {
       assert.match(shipTemplate, /Load Change Context/);
       assert.match(shipTemplate, /Check Blockers/);
       assert.match(shipTemplate, /Ensure Feature Branch/);
-      assert.match(shipTemplate, /Call subagent `@general` with `<prompt>`/);
+      // Verify delegate-to-subagent component was expanded (look for the expanded content)
+      assert.match(shipTemplate, /Define `<prompt>` exactly as:/);
+      assert.match(shipTemplate, /Call the Task tool with subagent `@general`/);
+      assert.match(shipTemplate, /Pass `<prompt>` as the exact prompt parameter/);
+      assert.match(shipTemplate, /Do NOT describe what the subagent will do/);
       assert.match(shipTemplate, /<prompt>\s*\/commit/);
       assert.match(shipTemplate, /<prompt>\s*\/pr\/create/);
 
-      assert.doesNotMatch(shipTemplate, /\{\{[\w-]+\}\}/);
+      // Verify no component placeholders remain (all should be expanded)
+      const remainingPlaceholders = shipTemplate.match(/\{\{[\w-]+\}\}/g);
+      assert.strictEqual(remainingPlaceholders, null, `Found unexpanded placeholders: ${remainingPlaceholders?.join(', ')}`);
     });
 
     test("embeds all expected components in dev command", async () => {

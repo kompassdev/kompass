@@ -1,5 +1,5 @@
-name: "Install opencode"
-description: "Install opencode in GitHub Actions workflows"
+name: "Install Kompass Tooling"
+description: "Install the OpenCode CLI used by Kompass workflows"
 branding:
   icon: "download"
   color: "orange"
@@ -7,25 +7,25 @@ branding:
 runs:
   using: "composite"
   steps:
-    - name: Get opencode version
+    - name: Get OpenCode Version
       id: version
       shell: bash
       run: |
         VERSION=$(curl -sf https://api.github.com/repos/anomalyco/opencode/releases/latest | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4)
         echo "version=${VERSION:-latest}" >> $GITHUB_OUTPUT
 
-    - name: Cache opencode
+    - name: Cache OpenCode
       id: cache
       uses: actions/cache@v4
       with:
         path: ~/.opencode/bin
         key: opencode-${{ runner.os }}-${{ runner.arch }}-${{ steps.version.outputs.version }}
 
-    - name: Install opencode
+    - name: Install OpenCode
       if: steps.cache.outputs.cache-hit != 'true'
       shell: bash
       run: curl -fsSL https://opencode.ai/install | bash
 
-    - name: Add opencode to PATH
+    - name: Add OpenCode to PATH
       shell: bash
       run: echo "$HOME/.opencode/bin" >> $GITHUB_PATH

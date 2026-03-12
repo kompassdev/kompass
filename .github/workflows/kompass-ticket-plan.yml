@@ -1,4 +1,4 @@
-name: OpenCode Ticket Dev
+name: Kompass Ticket Plan
 
 on:
   workflow_dispatch:
@@ -9,11 +9,11 @@ on:
         type: string
 
 jobs:
-  dev:
+  plan:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
+      issues: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,11 +26,15 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Install OpenCode
-        uses: ./.github/actions/opencode-install
+      - name: Install Kompass Tooling
+        uses: ./.github/actions/kompass-opencode-install
 
-      - name: Run Ticket Dev
+      - name: Run Kompass Ticket Plan
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-        run: opencode run --model="${{ vars.OPENCODE_MODEL }}" --variant="${{ vars.OPENCODE_VARIANT }}" --thinking --command="ticket/dev" "${{ inputs.ticket }}"
+        run: opencode run --model="${{ vars.OPENCODE_MODEL }}" --variant="${{ vars.OPENCODE_VARIANT }}" --thinking --command="ticket/plan" "${{ inputs.ticket }}"
+
+      - name: Export Kompass Session
+        if: always()
+        uses: ./.github/actions/kompass-opencode-session-export

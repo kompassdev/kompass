@@ -13,7 +13,7 @@ import {
   resolveCommands,
 } from "../core/index.ts";
 import { applyAgentsConfig, applyCommandsConfig, applySkillsConfig } from "./config.ts";
-import { createPluginLogger } from "./logging.ts";
+import { createPluginLogger, type PluginLogger } from "./logging.ts";
 import {
   getConfiguredOpenCodeToolName,
   prefixKompassToolReferences,
@@ -82,6 +82,7 @@ function expandCommandTemplate(template: string, commandArguments: string) {
 export async function expandSlashCommandPrompt(
   projectRoot: string,
   value: string,
+  logger?: PluginLogger,
 ): Promise<CommandExecution | undefined> {
   const parsedCommand = parseSlashCommand(value);
 
@@ -101,11 +102,21 @@ export async function expandSlashCommandPrompt(
     ]),
   );
   const template = prefixKompassToolReferences(definition.template, configuredToolNames);
+  const expandedPrompt = expandCommandTemplate(template, parsedCommand.arguments);
+
+  if (logger) {
+    await logger.info("Resolved slash command", {
+      input: value,
+      command: parsedCommand.command,
+      arguments: parsedCommand.arguments,
+      output: expandedPrompt,
+    });
+  }
 
   return {
     command: parsedCommand.command,
     arguments: parsedCommand.arguments,
-    prompt: expandCommandTemplate(template, parsedCommand.arguments),
+    prompt: expandedPrompt,
   };
 }
 
@@ -113,6 +124,7 @@ export async function getTaskToolExecution(
   input: ToolExecuteBeforeInput,
   output: ToolExecuteBeforeOutput,
   projectRoot: string,
+  logger?: PluginLogger,
 ): Promise<TaskToolExecution | undefined> {
   if (input.tool !== "task") return;
   if (!output.args || typeof output.args !== "object") return;
@@ -124,9 +136,9 @@ export async function getTaskToolExecution(
   if (!prompt && !command) return;
 
   const expandedCommand = command
-    ? await expandSlashCommandPrompt(projectRoot, command)
+    ? await expandSlashCommandPrompt(projectRoot, command, logger)
     : prompt
-      ? await expandSlashCommandPrompt(projectRoot, prompt)
+      ? await expandSlashCommandPrompt(projectRoot, prompt, logger)
       : undefined;
   const finalPrompt = expandedCommand?.prompt ?? prompt ?? command ?? "";
 
@@ -353,7 +365,7 @@ export const OpenCodeCompassPlugin: Plugin = async ({ $, client, worktree }: Plu
       await logger.info("Executing Kompass command", commandExecution as Record<string, unknown>);
     },
     async "tool.execute.before"(input, output) {
-      const taskExecution = await getTaskToolExecution(input, output, worktree);
+      const taskExecution = await getTaskToolExecution(input, output, worktree, logger);
 
       if (!taskExecution) return;
 

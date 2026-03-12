@@ -12,9 +12,9 @@ Whether you prefer full control, guided collaboration, or hands-off autonomy, Ko
 
 ## Choose Your Mode
 
-**🧭 Manual Steering** — You chart the course, the agent follows your lead<br>
-**⚓ Collaborative** — Plan together, develop together, review together<br>
-**🚢 Autonomous** — Let your agent navigate independently, review at checkpoints
+<p>**🧭 Manual Steering** — You chart the course, the agent follows your lead</p>
+<p>**⚓ Collaborative** — Plan together, develop together, review together</p>
+<p>**🚢 Autonomous** — Let your agent navigate independently, review at checkpoints</p>
 
 ## Why Kompass?
 

@@ -1,0 +1,20 @@
+name: "Export Kompass Session"
+description: "Export the latest OpenCode session for Kompass workflows"
+branding:
+  icon: "terminal"
+  color: "orange"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Export latest OpenCode session
+      shell: bash
+      run: |
+        session_id="$(opencode session list | awk 'NR > 2 && $1 ~ /^ses_/ { print $1; exit }')"
+
+        if [ -n "$session_id" ]; then
+          echo "Kompass session: $session_id"
+          opencode export "$session_id"
+        else
+          echo "No OpenCode session found to export"
+        fi

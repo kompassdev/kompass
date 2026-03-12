@@ -45,7 +45,7 @@ packages/opencode/.opencode/ # Generated OpenCode output for review
 ## Command Authoring
 
 - Author command definitions in `packages/core/commands/`; treat `packages/opencode/.opencode/commands/` as generated output only
-- Use `packages/core/commands/pr/create.txt` as the canonical example for command structure and tone
+- Use `packages/core/commands/pr/create.md` as the canonical example for command structure and tone
 - Keep this section order in command docs unless a command has a strong reason not to: `## Goal`, `## Workflow`, `## Additional Context`, `## Output`
 - Start `## Workflow` with a dedicated `### Arguments` subsection that stores the raw `$ARGUMENTS` value inside literal `<arguments>` tags before any normalization
 - Follow `### Arguments` with `### Interpret Arguments`, and normalize `<arguments>` into any additional named placeholders before execution steps

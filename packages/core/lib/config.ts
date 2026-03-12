@@ -337,28 +337,28 @@ function removeTrailingCommas(input: string): string {
 
 const defaultAgentReviewer: AgentDefinition = {
   description: "Review diffs, PRs, and existing feedback without editing files.",
-  promptPath: "agents/reviewer.txt",
+  promptPath: "agents/reviewer.md",
   permission: { edit: "deny", question: "allow" },
 };
 
 const defaultAgentNavigator: AgentDefinition = {
   description: "Coordinate todo and ship workflows by delegating work to subagents.",
-  promptPath: "agents/navigator.txt",
+  promptPath: "agents/navigator.md",
   permission: { task: "allow", todowrite: "allow", question: "allow" },
 };
 
 const defaultAgentPlanner: AgentDefinition = {
   description: "Turn requests or tickets into scoped implementation plans.",
-  promptPath: "agents/planner.txt",
+  promptPath: "agents/planner.md",
   permission: { edit: "deny", question: "allow" },
 };
 
 const defaultComponentPaths: Record<string, string> = {
-  "change-summary": "components/change-summary.txt",
-  "changes-summary": "components/changes-summary.txt",
-  "commit": "components/commit.txt",
-  "dev-flow": "components/dev-flow.txt",
-  "summarize-changes": "components/summarize-changes.txt",
+  "change-summary": "components/change-summary.md",
+  "changes-summary": "components/changes-summary.md",
+  "commit": "components/commit.md",
+  "dev-flow": "components/dev-flow.md",
+  "summarize-changes": "components/summarize-changes.md",
 };
 
 const defaultToolConfig: Record<ToolName, ToolConfig> = {

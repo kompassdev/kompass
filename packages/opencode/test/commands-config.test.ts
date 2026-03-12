@@ -186,7 +186,7 @@ describe("applyCommandsConfig", () => {
 
       assert.ok(cfg.command);
       assert.ok(cfg.command!["dev"]);
-      // Should contain the actual content from dev-flow.txt
+      // Should contain the actual content from dev-flow.md
       assert.match(cfg.command!["dev"].template, /Development Flow Navigation Guide/);
       // Should NOT contain the placeholder
       assert.doesNotMatch(cfg.command!["dev"].template, /\{\{dev-flow\}\}/);
@@ -200,7 +200,7 @@ describe("applyCommandsConfig", () => {
 
       assert.ok(cfg.command);
       assert.ok(cfg.command!["dev"]);
-      // dev.txt uses {{dev-flow}} component
+      // dev.md uses {{dev-flow}} component
       assert.doesNotMatch(cfg.command!["dev"].template, /\{\{dev-flow\}\}/);
     });
 

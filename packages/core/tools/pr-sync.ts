@@ -26,6 +26,11 @@ type ReviewReply = {
   body: string;
 };
 
+type DismissReviewInput = {
+  reviewId: number;
+  message?: string;
+};
+
 type PrSyncArgs = {
   title?: string;
   body?: string;
@@ -44,6 +49,7 @@ type PrSyncArgs = {
   review?: ReviewInput;
   replies?: ReviewReply[];
   commentBody?: string;
+  dismissReview?: DismissReviewInput;
 };
 
 function renderPrBody(args: PrSyncArgs) {
@@ -82,7 +88,12 @@ function hasMetadataUpdate(args: PrSyncArgs, body?: string) {
 }
 
 function requiresExistingPullRequest(args: PrSyncArgs, review?: ReviewInput) {
-  return Boolean(review || args.commentBody?.trim() || (args.replies?.length ?? 0) > 0);
+  return Boolean(
+    review ||
+      args.commentBody?.trim() ||
+      (args.replies?.length ?? 0) > 0 ||
+      args.dismissReview,
+  );
 }
 
 async function resolvePullRequest($: Shell, worktree: string, ref?: string) {
@@ -158,6 +169,38 @@ async function approvePullRequest($: Shell, worktree: string, prRef: string) {
   }
 
   return prRef;
+}
+
+async function dismissReview(
+  $: Shell,
+  worktree: string,
+  owner: string,
+  repo: string,
+  prNumber: number,
+  dismissReview: DismissReviewInput,
+) {
+  if (!Number.isInteger(dismissReview.reviewId)) {
+    throw new Error("dismissReview requires a reviewId");
+  }
+
+  const message = dismissReview.message?.trim() || "Dismissed review";
+  const payload = JSON.stringify({ message });
+
+  const proc = await $`echo ${payload} | gh api --method PUT /repos/${owner}/${repo}/pulls/${prNumber}/reviews/${dismissReview.reviewId}/dismissals --input -`
+    .cwd(worktree)
+    .quiet()
+    .nothrow();
+
+  if (proc.exitCode !== 0) {
+    const stderr = proc.stderr.toString().trim();
+    const stdout = proc.text().trim();
+    const errorDetails = stderr || stdout || "Unknown error";
+    throw new Error(
+      `Failed to dismiss review: ${errorDetails}\n\nPayload: ${payload}`,
+    );
+  }
+
+  return dismissReview.reviewId;
 }
 
 async function submitReview(
@@ -346,6 +389,11 @@ export function createPrSyncTool($: Shell) {
         optional: true,
         description: "General PR comment body",
       },
+      dismissReview: {
+        type: "json",
+        optional: true,
+        description: "Dismiss an existing PR review; requires reviewId and optional message",
+      },
     },
     // useless comment
     async execute(args: PrSyncArgs, ctx: ToolExecutionContext) {
@@ -400,6 +448,7 @@ export function createPrSyncTool($: Shell) {
           body,
           base: args.base,
         });
+        // useless too
         if (updated) {
           actions.push("updated");
         }
@@ -436,6 +485,13 @@ export function createPrSyncTool($: Shell) {
           await postReply($, ctx.worktree, owner, repoName, target.number, reply);
         }
         actions.push("replied");
+      }
+
+      if (args.dismissReview) {
+        const repo = await loadRepoName($, ctx.worktree);
+        const [owner, repoName] = repo.split("/");
+        await dismissReview($, ctx.worktree, owner, repoName, target.number, args.dismissReview);
+        actions.push("dismissed_review");
       }
 
       if (actions.length === 0) {

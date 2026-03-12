@@ -1,10 +1,10 @@
+> Kompass is under active development, so workflows, package APIs, and adapter support may keep evolving as the toolkit expands.
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/kompassdev/kompass/main/assets/kompass.png" alt="Kompass" height="300" />
   <br>
-  <em>Navigate your way — manual steering, steered autonomy, or autonomously.</em>
+  <em>Navigate your way - manual steering, steered autonomy, or autonomously.</em>
 </p>
-
-> Kompass is under active development, so workflows, package APIs, and adapter support may keep evolving as the toolkit expands.
 
 Kompass keeps AI coding agents on course with token-efficient, composable workflows. **Finally, your agent stops wandering.**
 

@@ -127,8 +127,8 @@ function normalizeReviewComment(comment: ReviewComment) {
     throw new Error("Review comments require a body");
   }
 
-  if (!Number.isInteger(comment.line) || comment.line <= 0) {
-    throw new Error("Review comments require a positive line number");
+  if (!Number.isInteger(comment.line)) {
+    throw new Error("Review comments require a line number");
   }
 
   const side = comment.side ?? "RIGHT";
@@ -136,15 +136,11 @@ function normalizeReviewComment(comment: ReviewComment) {
     path: comment.path.trim(),
     body: comment.body.trim(),
     side,
-    line: comment.line,
+    line: Math.abs(comment.line),
   } as Record<string, unknown>;
 
   if (typeof comment.startLine === "number") {
-    if (!Number.isInteger(comment.startLine) || comment.startLine <= 0) {
-      throw new Error("Multi-line review comments require a positive startLine");
-    }
-
-    normalized.start_line = comment.startLine;
+    normalized.start_line = Math.abs(comment.startLine);
     normalized.start_side = comment.startSide ?? side;
   }
 

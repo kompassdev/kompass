@@ -31,13 +31,6 @@ If `<pr-context.pr.body>` links to exactly one clear ticket:
 - Call `ticket_load` with the ticket reference
 - Store the result as `<ticket-context>` for consideration during review
 
-### Numeric Parameters
-
-All numeric parameters must be positive integers:
-- **Line numbers**: Used for inline review comments to specify positions in the file (e.g., `106`, not `-106`)
-- **Depth hints** (`<depth-hint>`): Used for loading changes; must be positive or omitted
-- Never negate, offset, or invent numeric values
-
 ### Load Changes
 
 Use `<pr-context.pr.commitCount>` as `<depth-hint>` only when it is a known positive integer.

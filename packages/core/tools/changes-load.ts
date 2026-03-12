@@ -27,7 +27,6 @@ export function createChangesLoadTool($: Shell) {
       depthHint: {
         type: "number",
         int: true,
-        positive: true,
         optional: true,
         description: "Optional shallow-fetch hint, such as PR commit count",
       },
@@ -122,8 +121,8 @@ export function createChangesLoadTool($: Shell) {
 
 function normalizeDepthHint(depthHint?: number) {
   const candidate = depthHint;
-  return typeof candidate === "number" && Number.isInteger(candidate) && candidate > 0
-    ? candidate
+  return typeof candidate === "number" && Number.isInteger(candidate)
+    ? Math.abs(candidate)
     : undefined;
 }
 

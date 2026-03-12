@@ -70,7 +70,7 @@ Reply to addressed threads:
 # General PR comment
 pr_sync refUrl="<pr-context.pr.url>" commentBody="<reply-text>"
 
-# Reply to a specific review thread
+# Reply to a specific review thread (use comment.id from threads.comments)
 pr_sync refUrl="<pr-context.pr.url>" replies=[{"inReplyTo": <comment-id>, "body": "<reply-text>"}]
 
 # Follow-up inline review comment on a specific line

@@ -119,7 +119,7 @@ const REVIEW_THREADS_QUERY = `query($owner: String!, $repo: String!, $number: In
           startLine
           comments(first: 100) {
             nodes {
-              id
+              databaseId
               author {
                 login
               }
@@ -192,7 +192,7 @@ function simplifyThreads(threads: any[]) {
     isOutdated: thread.isOutdated,
     comments: Array.isArray(thread.comments?.nodes)
       ? thread.comments.nodes.map((comment: any) => ({
-          id: comment.id,
+          id: comment.databaseId,
           author: comment.author?.login,
           body: comment.body,
           createdAt: comment.createdAt,

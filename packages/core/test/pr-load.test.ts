@@ -93,7 +93,7 @@ describe("pr_load", () => {
                       comments: {
                         nodes: [
                           {
-                            id: "comment-1",
+                            databaseId: 12345,
                             author: { login: "review-bot" },
                             body: "Please simplify this block",
                             createdAt: "2026-03-07T00:00:03Z",
@@ -160,7 +160,7 @@ describe("pr_load", () => {
         isOutdated: false,
         comments: [
           {
-            id: "comment-1",
+            id: 12345,
             author: "review-bot",
             body: "Please simplify this block",
             createdAt: "2026-03-07T00:00:03Z",

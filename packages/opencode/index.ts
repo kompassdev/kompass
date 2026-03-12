@@ -233,6 +233,7 @@ const opencodeToolCreators = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
+  // asdsad
   pr_sync($: PluginInput["$"]) {
     const definition = createPrSyncTool($);
     return tool({

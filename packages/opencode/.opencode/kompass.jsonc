@@ -1,5 +1,8 @@
 {
   "commands": {
+    "branch": {
+      "enabled": true
+    },
     "commit": {
       "enabled": true
     },

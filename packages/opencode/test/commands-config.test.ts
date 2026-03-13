@@ -27,6 +27,7 @@ describe("applyCommandsConfig", () => {
 
       assert.ok(cfg.command);
       const expectedCommands = [
+        "branch",
         "reload",
         "pr/create",
         "pr/review",
@@ -51,6 +52,7 @@ describe("applyCommandsConfig", () => {
 
       assert.ok(cfg.command);
       assert.equal(cfg.command!["pr/review"]?.agent, "reviewer");
+      assert.equal(cfg.command!["branch"]?.agent, "build");
       assert.equal(cfg.command!["reload"]?.agent, "build");
       assert.equal(cfg.command!["pr/create"]?.agent, "build");
       assert.equal(cfg.command!["ticket/create"]?.agent, "build");
@@ -61,6 +63,7 @@ describe("applyCommandsConfig", () => {
       assert.ok(cfg.command!["pr/review"]?.description);
       assert.ok(cfg.command!["reload"]?.template);
       assert.ok(cfg.command!["dev"]?.template);
+      assert.ok(cfg.command!["branch"]?.template);
     });
   });
 

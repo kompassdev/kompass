@@ -17,6 +17,7 @@ export const DEFAULT_TOOL_NAMES = [
 ] as const;
 
 export const DEFAULT_COMMAND_NAMES = [
+  "branch",
   "commit",
   "commit-and-push",
   "dev",
@@ -90,6 +91,7 @@ export interface SkillIdentity {
 
 export interface KompassConfig {
   commands?: {
+    branch?: CommandConfig;
     commit?: CommandConfig;
     "commit-and-push"?: CommandConfig;
     dev?: CommandConfig;

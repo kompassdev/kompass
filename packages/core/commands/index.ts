@@ -10,6 +10,11 @@ interface CommandDefinition {
 }
 
 export const commandDefinitions: Record<string, CommandDefinition> = {
+  branch: {
+    description: "Create a feature branch from current changes",
+    agent: "build",
+    templatePath: "commands/branch.md",
+  },
   commit: {
     description: "Commit current changes with a message",
     agent: "build",

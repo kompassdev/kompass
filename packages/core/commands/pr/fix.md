@@ -86,10 +86,11 @@ Use `<additional-context>` when prioritizing which review feedback to address fi
 
 ## Output
 
-When fixes are complete, display:
+When fixes are complete, display exactly this final completion summary and stop. Do not continue with extra analysis, planning, or follow-up tasks unless the workflow is blocked or the user asked for more:
 ```
-Addressed feedback on PR #<pr-context.pr.number>
+PR fix complete for #<pr-context.pr.number>
 
+- Status: complete, no additional steps needed
 - Changes made: <changes-count> files modified
 - Threads resolved: <threads-resolved>
 - Tests passing: <tests-passing>

@@ -24,8 +24,9 @@ export function createPluginLogger(
           ...(extra ? { extra } : {}),
         },
       });
-    } catch {
-      // Swallow log write failures so plugin behavior never depends on logging.
+    } catch (err) {
+      // Log to console for debugging; plugin behavior must not depend on logging.
+      console.error("[kompass] Log write failed:", err);
     }
   }
 

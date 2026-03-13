@@ -129,7 +129,18 @@ export async function applyCommandsConfig(
 
 export async function applySkillsConfig(cfg: Config, options?: ApplyConfigOptions) {
   const bundledSkillsRoot = await resolveBundledSkillsRoot();
-  if (!bundledSkillsRoot) return;
+
+  if (!bundledSkillsRoot) {
+    await options?.logger?.warn("Skipping Kompass skills registration", {
+      reason: "No bundled skills directory found",
+    });
+
+    const skillsConfig = cfg as ConfigWithSkillsPaths;
+    if (skillsConfig.skills && "paths" in skillsConfig.skills) {
+      delete skillsConfig.skills.paths;
+    }
+    return;
+  }
 
   const skillsConfig = cfg as ConfigWithSkillsPaths;
   skillsConfig.skills ??= {};
@@ -144,7 +155,6 @@ export async function applySkillsConfig(cfg: Config, options?: ApplyConfigOption
     entries = await readdir(bundledSkillsRoot, { withFileTypes: true });
   } catch (error) {
     await options?.logger?.warn("Skipping Kompass skills registration", {
-      path: bundledSkillsRoot,
       error: error instanceof Error ? error.message : String(error),
     });
     return;

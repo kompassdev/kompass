@@ -9,6 +9,17 @@ export interface PluginLogger {
   error(message: string, extra?: Record<string, unknown>): Promise<void>;
 }
 
+export function getErrorDetails(error: unknown): Record<string, unknown> {
+  if (error instanceof Error) {
+    return {
+      error: error.message,
+      name: error.name,
+    };
+  }
+
+  return { error: String(error) };
+}
+
 export function createPluginLogger(
   client: PluginInput["client"],
   directory: string,

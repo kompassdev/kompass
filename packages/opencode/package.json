@@ -1,6 +1,6 @@
 {
   "name": "@kompassdev/opencode",
-  "version": "0.2.0",
+  "version": "0.2.7",
   "description": "OpenCode plugin for navigating repos with fewer wrong turns",
   "type": "module",
   "main": "./dist/index.js",
@@ -46,9 +46,12 @@
   "bugs": {
     "url": "https://github.com/kompassdev/kompass/issues"
   },
-  "dependencies": {
-    "@opencode-ai/plugin": "^1.2.24",
-    "@opencode-ai/sdk": "1.2.24",
+  "peerDependencies": {
+    "@opencode-ai/plugin": "^1.2.25"
+  },
+  "devDependencies": {
+    "@opencode-ai/plugin": "^1.2.25",
+    "@opencode-ai/sdk": "^1.2.25",
     "yaml": "^2.8.2"
   }
 }

@@ -11,9 +11,10 @@ import {
   loadKompassConfig,
   mergeWithDefaults,
   resolveCommands,
+  type Shell,
 } from "../core/index.ts";
 import { applyAgentsConfig, applyCommandsConfig, applySkillsConfig } from "./config.ts";
-import { createPluginLogger, type PluginLogger } from "./logging.ts";
+import { createPluginLogger, getErrorDetails, type PluginLogger } from "./logging.ts";
 import {
   getConfiguredOpenCodeToolName,
   prefixKompassToolReferences,
@@ -29,6 +30,10 @@ type CommandExecuteBeforeInput = Parameters<CommandExecuteBeforeHook>[0];
 type CommandExecuteBeforeOutput = Parameters<CommandExecuteBeforeHook>[1];
 type ChatMessageHook = NonNullable<Hooks["chat.message"]>;
 type ChatMessageOutput = Parameters<ChatMessageHook>[1];
+
+function asShell(shell: PluginInput["$"]): Shell {
+  return shell as unknown as Shell;
+}
 
 export type TaskToolExecution = {
   prompt: string;
@@ -207,7 +212,7 @@ function createReloadTool(client: PluginInput["client"]) {
 
 const opencodeToolCreators = {
   changes_load($: PluginInput["$"]) {
-    const definition = createChangesLoadTool($);
+    const definition = createChangesLoadTool(asShell($));
     return tool({
       description: definition.description,
       args: {
@@ -224,7 +229,7 @@ const opencodeToolCreators = {
     });
   },
   pr_load($: PluginInput["$"]) {
-    const definition = createPrLoadTool($);
+    const definition = createPrLoadTool(asShell($));
     return tool({
       description: definition.description,
       args: {
@@ -234,7 +239,7 @@ const opencodeToolCreators = {
     });
   },
   pr_sync($: PluginInput["$"]) {
-    const definition = createPrSyncTool($);
+    const definition = createPrSyncTool(asShell($));
     return tool({
       description: definition.description,
       args: {
@@ -274,7 +279,7 @@ const opencodeToolCreators = {
     });
   },
   ticket_sync($: PluginInput["$"]) {
-    const definition = createTicketSyncTool($);
+    const definition = createTicketSyncTool(asShell($));
     return tool({
       description: definition.description,
       args: {
@@ -295,7 +300,7 @@ const opencodeToolCreators = {
     });
   },
   ticket_load($: PluginInput["$"]) {
-    const definition = createTicketLoadTool($);
+    const definition = createTicketLoadTool(asShell($));
     return tool({
       description: definition.description,
       args: {
@@ -338,19 +343,33 @@ export async function createOpenCodeTools(
 export const OpenCodeCompassPlugin: Plugin = async ({ $, client, worktree }: PluginInput) => {
   const logger = createPluginLogger(client, worktree);
 
+  async function createToolsSafely() {
+    try {
+      return await createOpenCodeTools($, client, worktree);
+    } catch (error) {
+      await logger.warn("Skipping Kompass tool registration", {
+        ...getErrorDetails(error),
+      });
+      return {};
+    }
+  }
+
   async function runConfigStep(name: string, register: () => Promise<void>) {
     try {
       await register();
     } catch (error) {
       await logger.warn("Skipping Kompass config registration step", {
         step: name,
-        error: error instanceof Error ? error.message : String(error),
+        worktree,
+        ...getErrorDetails(error),
       });
     }
   }
 
+  const tools = await createToolsSafely();
+
   return {
-    tool: await createOpenCodeTools($, client, worktree),
+    tool: tools,
     async config(cfg) {
       await runConfigStep("agents", () => applyAgentsConfig(cfg, worktree, { logger }));
       await runConfigStep("commands", () => applyCommandsConfig(cfg, worktree, { logger }));

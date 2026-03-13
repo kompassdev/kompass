@@ -51,6 +51,12 @@ type ApplyConfigOptions = {
   logger?: PluginLogger;
 };
 
+function normalizeSkillPaths(paths: unknown): string[] {
+  if (!Array.isArray(paths)) return [];
+
+  return paths.filter((entry): entry is string => typeof entry === "string" && entry.length > 0);
+}
+
 export async function applyAgentsConfig(
   cfg: Config,
   projectRoot: string,
@@ -127,13 +133,23 @@ export async function applySkillsConfig(cfg: Config, options?: ApplyConfigOption
 
   const skillsConfig = cfg as ConfigWithSkillsPaths;
   skillsConfig.skills ??= {};
-  skillsConfig.skills.paths ??= [];
+  skillsConfig.skills.paths = normalizeSkillPaths(skillsConfig.skills.paths);
 
   if (!skillsConfig.skills.paths.includes(bundledSkillsRoot)) {
     skillsConfig.skills.paths.push(bundledSkillsRoot);
   }
 
-  const entries = await readdir(bundledSkillsRoot, { withFileTypes: true });
+  let entries;
+  try {
+    entries = await readdir(bundledSkillsRoot, { withFileTypes: true });
+  } catch (error) {
+    await options?.logger?.warn("Skipping Kompass skills registration", {
+      path: bundledSkillsRoot,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return;
+  }
+
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
 

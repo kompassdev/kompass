@@ -338,12 +338,23 @@ export async function createOpenCodeTools(
 export const OpenCodeCompassPlugin: Plugin = async ({ $, client, worktree }: PluginInput) => {
   const logger = createPluginLogger(client, worktree);
 
+  async function runConfigStep(name: string, register: () => Promise<void>) {
+    try {
+      await register();
+    } catch (error) {
+      await logger.warn("Skipping Kompass config registration step", {
+        step: name,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
   return {
     tool: await createOpenCodeTools($, client, worktree),
     async config(cfg) {
-      await applyAgentsConfig(cfg, worktree, { logger });
-      await applyCommandsConfig(cfg, worktree, { logger });
-      await applySkillsConfig(cfg, { logger });
+      await runConfigStep("agents", () => applyAgentsConfig(cfg, worktree, { logger }));
+      await runConfigStep("commands", () => applyCommandsConfig(cfg, worktree, { logger }));
+      await runConfigStep("skills", () => applySkillsConfig(cfg, { logger }));
     },
     async "chat.message"(input, output) {
       const removedSyntheticHandoff = removeSyntheticAgentHandoff(output);

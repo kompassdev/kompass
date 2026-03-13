@@ -36,7 +36,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.token.outputs.token }}
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-        run: opencode run --model="${{ vars.OPENCODE_MODEL }}" --variant="${{ vars.OPENCODE_VARIANT }}" --thinking --command="pr/review" "${{ github.event.pull_request.html_url }}"
+        run: opencode run --model="${{ vars.OPENCODE_MODEL }}" --variant="${{ vars.OPENCODE_VARIANT }}" --thinking --command="pr/review" "${{ github.event.pull_request.number }}"
 
       - name: Export Kompass Session
         if: always()

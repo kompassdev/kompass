@@ -358,10 +358,10 @@ describe("applyCommandsConfig", () => {
       const shipTemplate = cfg.command!["ship"].template;
 
       assert.match(shipTemplate, /## Goal/);
-      assert.match(shipTemplate, /Ship the current work/);
-      assert.match(shipTemplate, /Load Change Context/);
-      assert.match(shipTemplate, /Check Blockers/);
+      assert.match(shipTemplate, /Ship the current work by delegating/);
       assert.match(shipTemplate, /Ensure Feature Branch/);
+      assert.match(shipTemplate, /<task agent="general" command="\/branch">/);
+      assert.match(shipTemplate, /Store the subagent result as `<branch-result>`/);
       assert.match(shipTemplate, /Store the subagent result as `<commit-result>`/);
       assert.match(shipTemplate, /<task agent="general" command="\/commit">/);
       assert.match(shipTemplate, /Store the subagent result as `<pr-result>`/);

@@ -1,6 +1,6 @@
 ## Goal
 
-Ship the current work from change summary to commit and PR creation, creating a feature branch first when the user is still on the base branch.
+Ship the current work by delegating branch creation, commit creation, and PR creation.
 
 ## Workflow
 
@@ -17,59 +17,48 @@ $ARGUMENTS
 - **Additional context**: If `<arguments>` provides commit or PR guidance, store it as `<additional-context>`
 - **Empty**: If no `<arguments>` provided, proceed with defaults
 
-### Load Change Context
-
-{{change-summary rules="- If `<base>` is defined: call `changes_load` with the `base` parameter set to `<base>`
-- Otherwise: call `changes_load` with no parameters
-- Use the returned base branch as the default for the rest of this workflow"}}
-
-### Check Blockers
-
-- If the change summary reports no uncommitted or branch-specific work to ship, STOP and report that there is nothing to ship
-
 ### Ensure Feature Branch
 
-- Read the current `branch`, resolved base branch, and summarized change themes from the `changes_load` result
-- Store the effective base branch as `<resolved-base>` by preferring `<base>` when it was provided, otherwise using the returned base branch
-- If `branch` equals `<resolved-base>`:
-  - Generate a concise kebab-case slug from the summarized change themes and `<branch-context>` when available, then store it as `<branch-slug>`
-  - Create and checkout `feature/<branch-slug>` with `git checkout -b`
-  - If that name already exists, retry once with a short numeric suffix
-  - Store the checked-out branch as `<working-branch>`
-  - Store `Created branch: <working-branch>` as `<branch-result>`
-- Otherwise, store the current branch as `<working-branch>`
-  - Store `Created branch: no` as `<branch-result>`
+<task agent="general" command="/branch">
+
+Branch naming guidance: <branch-context>
+</task>
+
+- Store the subagent result as `<branch-result>`
+- If `<branch-result>` is blocked or incomplete, STOP and report the branch blocker
+- If `<branch-result>` says there was nothing to branch from, continue without changing branches
+- Otherwise, continue with the created branch
 
 ### Delegate Commit
 
 <task agent="general" command="/commit">
 
-Branch: <working-branch>
 Additional context: <additional-context>
 </task>
 
 - Store the subagent result as `<commit-result>`
 
-- If `<commit-result>` says there was nothing to commit, STOP and report that result without creating a PR
+- If `<commit-result>` says there was nothing to commit, continue without creating a new commit
 - If `<commit-result>` is blocked or incomplete, STOP and report the commit blocker
-- Otherwise, continue and store a concise commit outcome as `<commit-summary>`
+- Otherwise, continue with the created commit
 
 ### Delegate PR Creation
 
 <task agent="general" command="/pr/create">
 
-Base branch: <resolved-base>
+Base branch: <base>
 Additional context: <additional-context>
 </task>
 
 - Store the subagent result as `<pr-result>`
 
 - If `<pr-result>` is blocked or incomplete, STOP and report the PR blocker
-- Otherwise, continue and store a concise PR outcome as `<pr-summary>`
+- If `<pr-result>` says there is nothing to include in a PR, STOP and report that there is nothing to ship
+- Otherwise, continue with the created or existing PR
 
 ## Additional Context
 
-Use `<branch-context>` to steer branch naming. Use `<additional-context>` to refine the delegated commit and PR summaries.
+Use `<branch-context>` to steer delegated branch naming. Use `<additional-context>` to refine the delegated commit and PR summaries. Pass `<base>` through to PR creation when it was provided.
 
 ## Output
 
@@ -82,9 +71,7 @@ When complete, display:
 ```
 Ship flow complete
 
-Branch: <working-branch>
-Base: <resolved-base>
-Commit: <commit-summary>
-PR: <pr-summary>
-<branch-result>
+Branch: <branch-result>
+Commit: <commit-result>
+PR: <pr-result>
 ```

@@ -21,11 +21,11 @@ describe("applyAgentsConfig", () => {
     assert.ok(cfg.agent);
     assert.equal(
       cfg.agent.navigator?.description,
-      "Coordinate todo and ship workflows by delegating work to subagents.",
+      "Coordinate structured multi-step workflows by delegating focused leaf work to subagents.",
     );
     assert.deepEqual(cfg.agent.navigator?.permission, {
+      edit: "deny",
       task: "allow",
-      todowrite: "allow",
       question: "allow",
     });
     assert.deepEqual(cfg.agent.reviewer?.permission, {

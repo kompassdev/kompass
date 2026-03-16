@@ -348,7 +348,7 @@ describe("applyCommandsConfig", () => {
       assert.ok(cfg.command!["review"]?.template);
     });
 
-    test("embeds all expected components in ship command", async () => {
+    test("embeds direct task delegation in ship command", async () => {
       delete process.env.CI;
       const cfg: { command?: Record<string, { template: string }> } = {};
 
@@ -358,17 +358,14 @@ describe("applyCommandsConfig", () => {
       const shipTemplate = cfg.command!["ship"].template;
 
       assert.match(shipTemplate, /## Goal/);
-      assert.match(shipTemplate, /Ship the current work/);
-      assert.match(shipTemplate, /Load Change Context/);
-      assert.match(shipTemplate, /Check Blockers/);
+      assert.match(shipTemplate, /Ship the current work by delegating/);
       assert.match(shipTemplate, /Ensure Feature Branch/);
-      // Verify delegate-to-subagent component was expanded (look for the expanded content)
-      assert.match(shipTemplate, /Define `<prompt>` exactly as:/);
-      assert.match(shipTemplate, /Call the Task tool with subagent `@general`/);
-      assert.match(shipTemplate, /Pass `<prompt>` as the exact prompt parameter/);
-      assert.match(shipTemplate, /Do NOT describe what the subagent will do/);
-      assert.match(shipTemplate, /<prompt>\s*\/commit/);
-      assert.match(shipTemplate, /<prompt>\s*\/pr\/create/);
+      assert.match(shipTemplate, /<task agent="general" command="\/branch">/);
+      assert.match(shipTemplate, /Store the subagent result as `<branch-result>`/);
+      assert.match(shipTemplate, /Store the subagent result as `<commit-result>`/);
+      assert.match(shipTemplate, /<task agent="general" command="\/commit">/);
+      assert.match(shipTemplate, /Store the subagent result as `<pr-result>`/);
+      assert.match(shipTemplate, /<task agent="general" command="\/pr\/create">/);
 
       // Verify no component placeholders remain (all should be expanded)
       const remainingPlaceholders = shipTemplate.match(/\{\{[\w-]+\}\}/g);

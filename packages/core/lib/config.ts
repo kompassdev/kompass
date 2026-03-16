@@ -41,7 +41,6 @@ export const DEFAULT_COMPONENT_NAMES = [
   "change-summary",
   "changes-summary",
   "commit",
-  "delegate-to-subagent",
   "dev-flow",
   "summarize-changes",
 ] as const;
@@ -345,9 +344,9 @@ const defaultAgentReviewer: AgentDefinition = {
 };
 
 const defaultAgentNavigator: AgentDefinition = {
-  description: "Coordinate todo and ship workflows by delegating work to subagents.",
+  description: "Coordinate structured multi-step workflows by delegating focused leaf work to subagents.",
   promptPath: "agents/navigator.md",
-  permission: { task: "allow", todowrite: "allow", question: "allow" },
+  permission: { edit: "deny", task: "allow", question: "allow" },
 };
 
 const defaultAgentPlanner: AgentDefinition = {
@@ -360,7 +359,6 @@ const defaultComponentPaths: Record<string, string> = {
   "change-summary": "components/change-summary.md",
   "changes-summary": "components/changes-summary.md",
   "commit": "components/commit.md",
-  "delegate-to-subagent": "components/delegate-to-subagent.md",
   "dev-flow": "components/dev-flow.md",
   "summarize-changes": "components/summarize-changes.md",
 };

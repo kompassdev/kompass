@@ -55,8 +55,8 @@ packages/opencode/.opencode/ # Generated OpenCode output for review
 - For navigator-style commands, separate context loading, blocker checks, delegated execution, and final reporting into distinct workflow subsections so the control flow is easy to follow
 - Prefer explicit subsection names like `### Load ... Context`, `### Check Blockers`, `### Delegate ...`, and `### Mark Complete And Loop` when the command coordinates multiple phases or subagents
 - Treat loader tools and provided attachments as the source of truth for orchestration inputs; avoid extra exploratory commands when an existing tool result already answers the question
-- Before delegating to a subagent, state what inputs it receives, what result should be stored, and whether the workflow must stop, pause, or continue based on that result
-- When delegating to a slash-command subagent, define the exact delegated prompt inside literal `<prompt>` tags, start with the literal slash command on the first line, pass labeled placeholder values on following lines, call the subagent with `<prompt>`, and explicitly say not to paraphrase or prepend extra text
+- Before delegating to a subagent, say what result should be stored and whether the workflow must stop, pause, or continue based on that result
+- When delegating work to a subagent, define the exact delegated task inside literal `<task>` tags with required `agent` and optional `command` attributes; the navigator treats that block as a literal dispatch instruction and must send it exactly as written
 - When a command can pause for approval or loop over repeated work, describe the resume condition and the exact cases that must STOP without mutating state
 - Use `## Additional Context` for instructions about how optional guidance, related tickets, focus areas, or other stored context should influence analysis and output
 - Use `## Output` to define the exact user-facing response shape, including placeholders for generated values
@@ -90,36 +90,24 @@ $ARGUMENTS
 
 ### Delegate Planning
 
-- The subagent receives `<task>`, `<task-context>`, and `<additional-context>`
-- Define `<prompt>` as:
-
-<prompt>
-/ticket/plan
+<task agent="planner" command="/ticket/plan">
 
 Task: <task>
 Task context: <task-context>
 Additional context: <additional-context>
-</prompt>
+</task>
 
-- Call subagent `@planner` with `<prompt>`
-- Do not paraphrase or prepend extra text
 - Store the result as `<plan>`
 - STOP if planning is blocked or unusable
 
 ### Delegate Implementation
 
-- The subagent receives `<plan>` and `<additional-context>`
-- Define `<prompt>` as:
-
-<prompt>
-/dev
+<task agent="general" command="/dev">
 
 Plan: <plan>
 Constraints: <additional-context>
-</prompt>
+</task>
 
-- Call subagent `@general` with `<prompt>`
-- Do not paraphrase or prepend extra text
 - STOP if implementation is blocked or incomplete
 
 ## Additional Context
@@ -134,7 +122,7 @@ Constraints: <additional-context>
 Example delegation rule:
 
 ```text
-Before delegating, say what inputs the subagent receives, define `<prompt>`, call the subagent with `<prompt>`, say what result should be stored, and whether the workflow should continue or STOP based on that result.
+Before delegating, write the exact `<task ...>...</task>` block, say what result should be stored, and whether the workflow should continue or STOP based on that result.
 ```
 
 ## Component Authoring

@@ -72,11 +72,14 @@ For multi-line: add `startLine`. For deleted lines: use `side: "LEFT"`.
 
 **If `<publish-grade>` is `★★★★★`:**
 - Already approved → skip
-- Otherwise → `kompass_pr_sync` with `review.approve: true`
+- Otherwise → `kompass_pr_sync` with `refUrl: <pr-context.pr.url>` and `review.approve: true`
 
 **If `<publish-grade>` < `★★★★★`:**
 - `review.body`: grade + notes (unchanged lines, general concerns)
 - `review.comments`: inline comments (changed lines only) - **skip lines that already have comments in `<pr-context.threads>`**
+- Call `kompass_pr_sync` with `refUrl: <pr-context.pr.url>` and the review payload
+- Do not pass PR update fields such as `base`, `title`, `body`, or `description` when publishing a review unless you intentionally also want to update the PR
+- If a review must be combined with a PR update, `refUrl` is required for that mixed `kompass_pr_sync` call
 
 If `kompass_pr_sync` returns a review URL, store it as `<review-url>`.
 

@@ -72,13 +72,22 @@ $ARGUMENTS
 ### Resolve Ticket
 
 - If `<ticket-mode>` is already `auto`, `provided`, or `skip`, do not ask a follow-up question
-- Otherwise, ask one `question` with:
-  - header `Provide Ticket`
-  - question `Provide Ticket`
-  - options:
-    - `Automatically Create` - create a fresh ticket from the summarized branch work
-    - `Skip` - mention `SKIPPED` in the PR body
-  - custom answers enabled so the user can paste a ticket URL or ticket reference directly
+- Otherwise, if the `question` tool is available, this step is mandatory:
+  - Ask exactly one `question` before creating a ticket or PR
+  - Do not infer a default ticket mode
+  - Do not proceed to `Prepare Ticket Reference`, `Push Branch`, or `Create PR` until the answer is resolved
+  - Ask with:
+    - header `Provide Ticket`
+    - question `Provide Ticket`
+    - options:
+      - `Automatically Create` - create a fresh ticket from the summarized branch work
+      - `Skip` - mention `SKIPPED` in the PR body
+    - custom answers enabled so the user can paste a ticket URL or ticket reference directly
+- Otherwise, if the `question` tool is not available:
+  - Do not ask a follow-up question
+  - Store `<ticket-mode>` as `skip`
+  - Store `<ticket-url>` as `SKIPPED`
+  - Continue without blocking
 - Normalize the result into one of these paths:
   - `Automatically Create` => `<ticket-mode>` = `auto`
   - custom ticket URL or reference => `<ticket-mode>` = `provided` and store the answer as `<ticket-url>`

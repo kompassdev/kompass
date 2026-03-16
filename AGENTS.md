@@ -139,7 +139,7 @@ Before delegating, write the exact `<task ...>...</task>` block, say what result
 
 - Command and component files render through Eta
 - Use Eta syntax for conditionals and includes; do not introduce custom placeholder syntaxes
-- Store command-specific render inputs directly on `commands.<name>` in config, for example `commands.pr/review.approve`
+- Store shared render inputs in top-level shared config when multiple surfaces need them, for example `shared.prApprove`; keep command-specific render inputs on `commands.<name>` only when they are truly command-local
 - Custom command templates are rendered through the same Eta pipeline as bundled templates
 
 ## Testing

@@ -57,9 +57,6 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     description: "Review the current PR and publish review feedback",
     agent: "reviewer",
     templatePath: "commands/pr/review.md",
-    config: {
-      approve: false,
-    },
   },
   review: {
     description: "Review branch changes without publishing comments",
@@ -145,10 +142,16 @@ export async function resolveCommands(
       ...(definition.config ?? {}),
       ...(config.commands.entries[name] ?? {}),
     };
+    const templateData = {
+      ...commandConfig,
+      config: {
+        shared: config.shared,
+      },
+    };
 
     try {
       const rawTemplate = await loadProjectText(templatePath);
-      template = renderTemplate(rawTemplate, components, commandConfig);
+      template = renderTemplate(rawTemplate, components, templateData);
     } catch {
       // Template file doesn't exist, skip
       continue;

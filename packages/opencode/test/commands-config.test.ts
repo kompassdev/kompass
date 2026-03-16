@@ -244,7 +244,7 @@ describe("applyCommandsConfig", () => {
       assert.doesNotMatch(cfg.command!["pr/review"].template, /<%/);
       assert.match(
         cfg.command!["pr/review"].template,
-        /publish it as review feedback instead of approving the PR/,
+        /publish it as review feedback with `★★★★★` at the start of `review\.body`/,
       );
       assert.doesNotMatch(cfg.command!["pr/review"].template, /only `review\.approve: true`/);
     });
@@ -257,10 +257,8 @@ describe("applyCommandsConfig", () => {
         await writeFile(
           path.join(tempDir, "kompass.jsonc"),
           `{
-            "commands": {
-              "pr/review": {
-                "approve": false
-              }
+            "shared": {
+              "prApprove": false
             }
           }`,
         );
@@ -272,9 +270,12 @@ describe("applyCommandsConfig", () => {
         assert.ok(cfg.command);
         assert.match(
           cfg.command!["pr/review"].template,
-          /publish it as review feedback instead of approving the PR/,
+          /publish it as review feedback with `★★★★★` at the start of `review\.body`/,
         );
-        assert.match(cfg.command!["pr/review"].template, /`★★★★★` plus any optional positive summary notes/);
+        assert.match(cfg.command!["pr/review"].template, /If `<publish-grade>` is `★★★★★`:/);
+        assert.match(cfg.command!["pr/review"].template, /`kompass_pr_sync` with `refUrl: <pr-context\.pr\.url>` and `review\.body` starting with `★★★★★`/);
+        assert.match(cfg.command!["pr/review"].template, /If there are no positive summary notes, the body must be exactly `★★★★★`/);
+        assert.doesNotMatch(cfg.command!["pr/review"].template, /approve|approval|approved/i);
         assert.doesNotMatch(cfg.command!["pr/review"].template, /only `review\.approve: true`/);
       } finally {
         await rm(tempDir, { recursive: true, force: true });

@@ -1,4 +1,7 @@
 {
+  "shared": {
+    "prApprove": false
+  },
   "commands": {
     "branch": {
       "enabled": true
@@ -22,8 +25,7 @@
       "enabled": true
     },
     "pr/review": {
-      "enabled": true,
-      "approve": false
+      "enabled": true
     },
     "reload": {
       "enabled": true

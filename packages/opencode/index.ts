@@ -11,6 +11,7 @@ import {
   loadKompassConfig,
   mergeWithDefaults,
   resolveCommands,
+  type MergedKompassConfig,
   type Shell,
 } from "../core/index.ts";
 import { applyAgentsConfig, applyCommandsConfig, applySkillsConfig } from "./config.ts";
@@ -21,6 +22,10 @@ import {
 } from "./tool-names.ts";
 
 const AGENT_HANDOFF_MARKER = "generate a prompt and call the task tool with subagent:";
+
+function isPrReviewApprovalEnabled(config: MergedKompassConfig) {
+  return config.shared.prApprove !== false;
+}
 
 type ToolExecuteBeforeHook = NonNullable<Hooks["tool.execute.before"]>;
 type ToolExecuteBeforeInput = Parameters<ToolExecuteBeforeHook>[0];
@@ -211,7 +216,7 @@ function createReloadTool(client: PluginInput["client"]) {
 }
 
 const opencodeToolCreators = {
-  changes_load($: PluginInput["$"]) {
+  changes_load($: PluginInput["$"], _: PluginInput["client"], __: MergedKompassConfig) {
     const definition = createChangesLoadTool(asShell($));
     return tool({
       description: definition.description,
@@ -228,7 +233,7 @@ const opencodeToolCreators = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
-  pr_load($: PluginInput["$"]) {
+  pr_load($: PluginInput["$"], _: PluginInput["client"], __: MergedKompassConfig) {
     const definition = createPrLoadTool(asShell($));
     return tool({
       description: definition.description,
@@ -238,8 +243,26 @@ const opencodeToolCreators = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
-  pr_sync($: PluginInput["$"]) {
+  pr_sync($: PluginInput["$"], _: PluginInput["client"], config: MergedKompassConfig) {
     const definition = createPrSyncTool(asShell($));
+    const reviewFields = {
+      body: tool.schema.string().describe("Optional review summary body").optional(),
+      comments: tool.schema.array(tool.schema.object({
+        path: tool.schema.string().describe("Changed file path"),
+        body: tool.schema.string().describe("Inline review comment body"),
+        line: tool.schema.number().int().describe("Ending line on the diff side"),
+        startLine: tool.schema.number().int().describe("Starting line for multi-line comments").optional(),
+        side: tool.schema.enum(["LEFT", "RIGHT"]).describe("Diff side for the ending line").optional(),
+        startSide: tool.schema.enum(["LEFT", "RIGHT"]).describe("Diff side for the starting line").optional(),
+      })).describe("Inline review comments to submit").optional(),
+    };
+    const reviewSchema = isPrReviewApprovalEnabled(config)
+      ? tool.schema.object({
+          ...reviewFields,
+          approve: tool.schema.boolean().describe("Approve the PR; can be combined with review comments").optional(),
+        })
+      : tool.schema.object(reviewFields);
+
     return tool({
       description: definition.description,
       args: {
@@ -258,18 +281,7 @@ const opencodeToolCreators = {
         draft: tool.schema.boolean().describe("Create as draft PR").optional(),
         refUrl: tool.schema.string().describe("Optional PR URL to update").optional(),
         commitId: tool.schema.string().describe("Commit SHA to anchor review comments to").optional(),
-        review: tool.schema.object({
-          body: tool.schema.string().describe("Optional review summary body").optional(),
-          comments: tool.schema.array(tool.schema.object({
-            path: tool.schema.string().describe("Changed file path"),
-            body: tool.schema.string().describe("Inline review comment body"),
-            line: tool.schema.number().int().describe("Ending line on the diff side"),
-            startLine: tool.schema.number().int().describe("Starting line for multi-line comments").optional(),
-            side: tool.schema.enum(["LEFT", "RIGHT"]).describe("Diff side for the ending line").optional(),
-            startSide: tool.schema.enum(["LEFT", "RIGHT"]).describe("Diff side for the starting line").optional(),
-          })).describe("Inline review comments to submit").optional(),
-          approve: tool.schema.boolean().describe("Approve the PR; can be combined with review comments").optional(),
-        }).describe("Structured review submission").optional(),
+        review: reviewSchema.describe("Structured review submission").optional(),
         replies: tool.schema.array(tool.schema.object({
           inReplyTo: tool.schema.number().int().describe("Existing review comment ID to reply to"),
           body: tool.schema.string().describe("Reply body"),
@@ -279,7 +291,7 @@ const opencodeToolCreators = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
-  ticket_sync($: PluginInput["$"]) {
+  ticket_sync($: PluginInput["$"], _: PluginInput["client"], __: MergedKompassConfig) {
     const definition = createTicketSyncTool(asShell($));
     return tool({
       description: definition.description,
@@ -300,7 +312,7 @@ const opencodeToolCreators = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
-  ticket_load($: PluginInput["$"]) {
+  ticket_load($: PluginInput["$"], _: PluginInput["client"], __: MergedKompassConfig) {
     const definition = createTicketLoadTool(asShell($));
     return tool({
       description: definition.description,
@@ -311,7 +323,7 @@ const opencodeToolCreators = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
-  reload(_: PluginInput["$"], client: PluginInput["client"]) {
+  reload(_: PluginInput["$"], client: PluginInput["client"], __: MergedKompassConfig) {
     return createReloadTool(client);
   },
 } as const;
@@ -330,7 +342,7 @@ export async function createOpenCodeTools(
     const creator = opencodeToolCreators[toolName as keyof typeof opencodeToolCreators];
     if (creator) {
       const registeredName = getConfiguredOpenCodeToolName(toolName, config.tools[toolName].name);
-      tools[registeredName] = creator($, client);
+      tools[registeredName] = creator($, client, config);
       await logger.info("Loaded Kompass tool", {
         tool: toolName,
         registeredName,

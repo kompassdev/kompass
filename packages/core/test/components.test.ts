@@ -17,9 +17,9 @@ describe("renderTemplate", () => {
 
   test("supports Eta conditionals with template data", () => {
     const output = renderTemplate(
-      "<% if (it.approve === false) { %>stars<% } else { %>approve<% } %>",
+      "<% if (it.config.shared.prApprove === false) { %>stars<% } else { %>approve<% } %>",
       {},
-      { approve: false },
+      { config: { shared: { prApprove: false } } },
     );
 
     assert.equal(output, "stars");

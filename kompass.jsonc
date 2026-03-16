@@ -1,6 +1,10 @@
 {
   "$schema": "https://raw.githubusercontent.com/kompassdev/kompass/main/kompass.schema.json",
 
+  "shared": {
+    "prApprove": false,
+  },
+
   // Command config is now object-based so each entry can be toggled or customized.
   "commands": {
     "commit": { "enabled": true },

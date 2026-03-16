@@ -90,6 +90,9 @@ export interface SkillIdentity {
 }
 
 export interface KompassConfig {
+  shared?: {
+    prApprove?: boolean;
+  };
   commands?: {
     branch?: CommandConfig;
     commit?: CommandConfig;
@@ -147,6 +150,9 @@ export interface KompassConfig {
 }
 
 export interface MergedKompassConfig {
+  shared: {
+    prApprove: boolean;
+  };
   commands: {
     enabled: string[];
     templates: Record<string, string>;
@@ -514,6 +520,9 @@ export function mergeWithDefaults(
   const { enabled: _plannerEnabled, ...plannerOverrides } = config?.agents?.planner ?? {};
 
   return {
+    shared: {
+      prApprove: config?.shared?.prApprove ?? false,
+    },
     commands: {
       enabled: getEnabledNames(
         DEFAULT_COMMAND_NAMES,

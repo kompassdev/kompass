@@ -49,7 +49,8 @@ Following the reviewer agent guidance:
 4. Use diff hunks in `<changes>` to map inline comments to the correct lines
 5. Do NOT duplicate findings already raised
 
-Derive `<previous-grade>` from prior reviews and `<already-approved>` from existing approvals on `<pr-context.pr.headRefOid>`.
+Derive `<previous-grade>` from prior reviews.
+
 
 Before publishing, derive: `<has-inline-comments>`, `<has-body-note>`, `<publish-grade>`, and `<grade-changed>`.
 
@@ -57,7 +58,7 @@ Before publishing, derive: `<has-inline-comments>`, `<has-body-note>`, `<publish
 1. Assign a grade based on code quality (1-5 stars)
 2. If grade is below `★★★★★` without supporting feedback (inline comments or body note), you MUST add feedback - never publish a low grade without explaining why
 
-3. If the final grade is `★★★★★`, publish it as review feedback instead of approving the PR
+3. If the final grade is `★★★★★`, publish it as review feedback with `★★★★★` at the start of `review.body`
 
 4. If there are issues (grade < 5 stars), create inline comments on specific lines
 
@@ -74,16 +75,17 @@ For multi-line: add `startLine`. For deleted lines: use `side: "LEFT"`.
 
 
 **If `<publish-grade>` is `★★★★★`:**
-- Pass `refUrl: <pr-context.pr.url>`
-- `review.body`: `★★★★★` plus any optional positive summary notes
-- Do not pass `review.approve`
-- Do not pass any other fields
+- `kompass_pr_sync` with `refUrl: <pr-context.pr.url>` and `review.body` starting with `★★★★★`
+- If there are no positive summary notes, the body must be exactly `★★★★★`
+- Do not pass `review.comments`
 
 
-**If `<publish-grade>` < `★★★★★`:**
-- Pass `refUrl: <pr-context.pr.url>`
-- `review.body`: grade + notes (unchanged lines, general concerns)
-- `review.comments`: inline comments (changed lines only) - **skip lines that already have comments in `<pr-context.threads>`**
+**If `<publish-grade>` is below `★★★★★`:**
+- Call `kompass_pr_sync` with:
+  - `refUrl: <pr-context.pr.url>`
+  - `review.body`: the grade line first (for example `★★★☆☆`), followed by any non-inline notes
+  - `review.comments`: inline comments (changed lines only) - **skip lines that already have comments in `<pr-context.threads>`**
+- Never omit the grade from `review.body` in this branch
 - Do not pass any other fields
 
 If `kompass_pr_sync` returns a review URL, store it as `<review-url>`.

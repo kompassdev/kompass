@@ -97,4 +97,37 @@ describe("createOpenCodeTools", () => {
       await rm(tempDir, { recursive: true, force: true });
     }
   });
+
+  test("hides review.approve when pr/review approval is disabled", async () => {
+    const tools = await createOpenCodeTools((() => {
+      throw new Error("not implemented");
+    }) as never, createMockClient(), process.cwd());
+
+    const reviewShape = (tools.kompass_pr_sync as any).args.review.unwrap().shape;
+    assert.equal(reviewShape.approve, undefined);
+  });
+
+  test("includes review.approve when pr/review approval is enabled", async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-tools-approve-"));
+
+    try {
+      await writeFile(
+        path.join(tempDir, "kompass.jsonc"),
+        `{
+          "shared": {
+            "prApprove": true
+          }
+        }`,
+      );
+
+      const tools = await createOpenCodeTools((() => {
+        throw new Error("not implemented");
+      }) as never, createMockClient(), tempDir);
+
+      const reviewShape = (tools.kompass_pr_sync as any).args.review.unwrap().shape;
+      assert.ok(reviewShape.approve);
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
 });

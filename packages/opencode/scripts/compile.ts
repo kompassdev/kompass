@@ -141,6 +141,7 @@ async function main() {
       : {}),
   };
   const configOutput = {
+    shared: config.shared,
     commands: Object.fromEntries(
       Object.entries(compiledCommands).map(([name, command]) => [
         name,

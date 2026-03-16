@@ -11,6 +11,16 @@
     "_comment": {
       "type": "string"
     },
+    "shared": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "prApprove": {
+          "type": "boolean",
+          "description": "Whether PR review workflows may submit approvals instead of five-star review comments"
+        }
+      }
+    },
     "commands": {
       "type": "object",
       "additionalProperties": false,

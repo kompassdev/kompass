@@ -67,9 +67,10 @@ For multi-line: add `startLine`. For deleted lines: use `side: "LEFT"`.
 
 **If `<publish-grade>` is `★★★★★`:**
 - Already approved → skip
-- Otherwise → `pr_sync` with only `review.approve: true`
+- Otherwise → `pr_sync` with `refUrl: <pr-context.pr.url>` and only `review.approve: true`
 
 **If `<publish-grade>` < `★★★★★`:**
+- Pass `refUrl: <pr-context.pr.url>`
 - `review.body`: grade + notes (unchanged lines, general concerns)
 - `review.comments`: inline comments (changed lines only) - **skip lines that already have comments in `<pr-context.threads>`**
 - Do not pass any other fields

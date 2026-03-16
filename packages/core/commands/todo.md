@@ -34,19 +34,13 @@ $ARGUMENTS
 
 ### Delegate Planning
 
-- The subagent receives `<task>`, `<task-context>`, and `<additional-context>`
-- Define `<prompt-plan>` as:
-
-<prompt-plan>
-/ticket/plan
+<task agent="planner" command="/ticket/plan">
 
 Task: <task>
 Task context: <task-context>
 Additional context: <additional-context>
-</prompt-plan>
+</task>
 
-- Call subagent `@planner` with `<prompt-plan>`
-- Do not paraphrase or prepend extra text
 - Ask the planner for a concise implementation plan with clear scope, risks, and validation steps
 - Store the result as `<plan>`
 - If the planner is blocked or cannot produce a usable plan, store the blocker as `<pause-reason>`, then STOP and report that planning blocker
@@ -62,21 +56,15 @@ Additional context: <additional-context>
     - `Revise` - update the plan based on feedback
 - custom answers enabled so the user can provide specific plan changes
 - If the user requests changes, store that feedback as `<user-answer>`
-- The subagent receives `<task>`, `<task-context>`, `<plan>`, `<user-answer>`, and `<additional-context>`
-- Define `<prompt-revise>` as:
-
-<prompt-revise>
-/ticket/plan
+<task agent="planner" command="/ticket/plan">
 
 Task: <task>
 Task context: <task-context>
 Current plan: <plan>
 Plan feedback: <user-answer>
 Additional context: <additional-context>
-</prompt-revise>
+</task>
 
-- Call subagent `@planner` with `<prompt-revise>`
-- Do not paraphrase or prepend extra text
 - Store the revised result as `<plan>` and continue the review loop
 - If the revised planner result is blocked or unusable, store that blocker as `<pause-reason>`, then STOP and report it before continuing the review loop
 - Repeat this review step until the user approves or stops
@@ -84,37 +72,25 @@ Additional context: <additional-context>
 
 ### Delegate Implementation
 
-- The subagent receives `<plan>`, `<task>`, `<task-context>`, and `<additional-context>`
-- Define `<prompt-dev>` as:
-
-<prompt-dev>
-/dev
+<task agent="general" command="/dev">
 
 Plan: <plan>
 Task: <task>
 Task context: <task-context>
 Additional context: <additional-context>
-</prompt-dev>
+</task>
 
-- Call subagent `@general` with `<prompt-dev>`
-- Do not paraphrase or prepend extra text
 - Store the subagent result as `<implementation-result>`
 - If `<implementation-result>` is incomplete, blocked, or fails validation, store the issue as `<pause-reason>`, then STOP and report it without marking the task complete
 
 ### Delegate Commit
 
-- The subagent receives `<task>` and `<additional-context>`
-- Define `<prompt-commit>` as:
-
-<prompt-commit>
-/commit
+<task agent="general" command="/commit">
 
 Task: <task>
 Additional context: <additional-context>
-</prompt-commit>
+</task>
 
-- Call subagent `@general` with `<prompt-commit>`
-- Do not paraphrase or prepend extra text
 - Store the subagent result as `<commit-result>`
 - If `<commit-result>` does not succeed, store the commit status as `<pause-reason>`, then STOP and report it without marking the task complete
 

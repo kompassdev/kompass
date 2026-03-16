@@ -42,8 +42,13 @@ $ARGUMENTS
 
 ### Delegate Commit
 
-{{delegate-to-subagent command="/commit" args="Branch: <working-branch>
-Additional context: <additional-context>" subagent="@general" result="<commit-result>"}}
+<task agent="general" command="/commit">
+
+Branch: <working-branch>
+Additional context: <additional-context>
+</task>
+
+- Store the subagent result as `<commit-result>`
 
 - If `<commit-result>` says there was nothing to commit, STOP and report that result without creating a PR
 - If `<commit-result>` is blocked or incomplete, STOP and report the commit blocker
@@ -51,8 +56,13 @@ Additional context: <additional-context>" subagent="@general" result="<commit-re
 
 ### Delegate PR Creation
 
-{{delegate-to-subagent command="/pr/create" args="Base branch: <resolved-base>
-Additional context: <additional-context>" subagent="@general" result="<pr-result>"}}
+<task agent="general" command="/pr/create">
+
+Base branch: <resolved-base>
+Additional context: <additional-context>
+</task>
+
+- Store the subagent result as `<pr-result>`
 
 - If `<pr-result>` is blocked or incomplete, STOP and report the PR blocker
 - Otherwise, continue and store a concise PR outcome as `<pr-summary>`

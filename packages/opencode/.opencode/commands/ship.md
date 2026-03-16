@@ -60,20 +60,13 @@ $ARGUMENTS
 
 ### Delegate Commit
 
-- Define `<prompt>` exactly as:
-
-<prompt>
-/commit
+<task agent="general" command="/commit">
 
 Branch: <working-branch>
 Additional context: <additional-context>
-</prompt>
+</task>
 
-- Call the Task tool with subagent `@general`
-- Pass `<prompt>` as the exact prompt parameter - do NOT expand, paraphrase, or modify it
 - Store the subagent result as `<commit-result>`
-- Do NOT describe what the subagent will do or invent its workflow
-- Do NOT add any steps beyond calling the subagent and storing its result
 
 - If `<commit-result>` says there was nothing to commit, STOP and report that result without creating a PR
 - If `<commit-result>` is blocked or incomplete, STOP and report the commit blocker
@@ -81,20 +74,13 @@ Additional context: <additional-context>
 
 ### Delegate PR Creation
 
-- Define `<prompt>` exactly as:
-
-<prompt>
-/pr/create
+<task agent="general" command="/pr/create">
 
 Base branch: <resolved-base>
 Additional context: <additional-context>
-</prompt>
+</task>
 
-- Call the Task tool with subagent `@general`
-- Pass `<prompt>` as the exact prompt parameter - do NOT expand, paraphrase, or modify it
 - Store the subagent result as `<pr-result>`
-- Do NOT describe what the subagent will do or invent its workflow
-- Do NOT add any steps beyond calling the subagent and storing its result
 
 - If `<pr-result>` is blocked or incomplete, STOP and report the PR blocker
 - Otherwise, continue and store a concise PR outcome as `<pr-summary>`

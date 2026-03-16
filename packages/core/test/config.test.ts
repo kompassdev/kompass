@@ -98,8 +98,8 @@ describe("command defaults", () => {
 
     assert.equal(config.agents.enabled.includes("navigator"), true);
     assert.deepEqual(config.agents.navigator.permission, {
+      edit: "deny",
       task: "allow",
-      todowrite: "allow",
       question: "allow",
     });
   });

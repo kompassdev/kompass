@@ -71,7 +71,7 @@ Kompass is being structured as a shared core toolkit with adapter-specific packa
 
 ### `navigator`
 
-Coordinates multi-step workflows like `/todo` and `/ship` by keeping orchestration local and delegating focused leaf work to subagents.
+Coordinates structured multi-step workflows by keeping orchestration local and delegating only focused leaf work to subagents.
 
 ### `planner`
 

@@ -31,6 +31,7 @@ type PrSyncArgs = {
   body?: string;
   description?: string;
   base?: string;
+  head?: string;
   checklists?: Array<{
     name: string;
     items: Array<{
@@ -73,10 +74,6 @@ function renderPrBody(args: PrSyncArgs) {
   return body || undefined;
 }
 
-function normalizeReviewInput(args: PrSyncArgs) {
-  return args.review;
-}
-
 function hasMetadataUpdate(args: PrSyncArgs, body?: string) {
   return Boolean(args.title?.trim() || body || args.base?.trim());
 }
@@ -109,6 +106,12 @@ async function resolvePullRequest($: Shell, worktree: string, ref?: string) {
     number: Number(result.number),
     url: String(result.url),
   };
+}
+
+async function loadRepoContext($: Shell, worktree: string) {
+  const repo = await loadRepoName($, worktree);
+  const [owner, repoName] = repo.split("/");
+  return { repo, owner, repoName };
 }
 
 function normalizeReviewComment(comment: ReviewComment) {
@@ -389,7 +392,7 @@ export function createPrSyncTool($: Shell) {
     },
     async execute(args: PrSyncArgs, ctx: ToolExecutionContext) {
       const body = renderPrBody(args);
-      const review = normalizeReviewInput(args);
+      const review = args.review;
       const metadataUpdate = hasMetadataUpdate(args, body);
       const existingPrActions = requiresExistingPullRequest(args, review);
 
@@ -409,6 +412,10 @@ export function createPrSyncTool($: Shell) {
         const createArgs: string[] = [];
         if (args.base?.trim()) {
           createArgs.push("--base", args.base.trim());
+        }
+        const headBranch = args.head?.trim();
+        if (headBranch) {
+          createArgs.push("--head", headBranch);
         }
         if (args.draft) {
           createArgs.push("--draft");
@@ -432,6 +439,12 @@ export function createPrSyncTool($: Shell) {
 
       const target = await resolvePullRequest($, ctx.worktree, args.refUrl);
       const actions: string[] = [];
+      let repoContext: Awaited<ReturnType<typeof loadRepoContext>> | undefined;
+
+      async function getRepoContext() {
+        repoContext ??= await loadRepoContext($, ctx.worktree);
+        return repoContext;
+      }
 
       if (metadataUpdate) {
         const updated = await updatePullRequest($, ctx.worktree, target.url, {
@@ -460,8 +473,7 @@ export function createPrSyncTool($: Shell) {
 
         // Submit review comments if there are any
         if ((review.comments?.length ?? 0) > 0 || review.body?.trim()) {
-          const repo = await loadRepoName($, ctx.worktree);
-          const [owner, repoName] = repo.split("/");
+          const { owner, repoName } = await getRepoContext();
           
           // Request review from self to clear any previous approval (best-effort)
           await requestReviewFromSelf($, ctx.worktree, owner, repoName, target.number);
@@ -472,8 +484,7 @@ export function createPrSyncTool($: Shell) {
       }
 
       if ((args.replies?.length ?? 0) > 0) {
-        const repo = await loadRepoName($, ctx.worktree);
-        const [owner, repoName] = repo.split("/");
+        const { owner, repoName } = await getRepoContext();
         for (const reply of args.replies ?? []) {
           await postReply($, ctx.worktree, owner, repoName, target.number, reply);
         }

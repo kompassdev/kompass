@@ -61,6 +61,7 @@ export interface ToggleConfig {
 
 export interface CommandConfig extends ToggleConfig {
   template?: string;
+  [key: string]: unknown;
 }
 
 export interface AgentConfig extends ToggleConfig, Partial<AgentDefinition> {}
@@ -149,6 +150,7 @@ export interface MergedKompassConfig {
   commands: {
     enabled: string[];
     templates: Record<string, string>;
+    entries: Record<string, CommandConfig>;
   };
   agents: {
     enabled: string[];
@@ -409,6 +411,13 @@ function getCommandTemplate(
   return entry?.template ?? config?.commands?.templates?.[name];
 }
 
+function getCommandEntry(
+  config: KompassConfig | null,
+  name: CommandName,
+): CommandConfig | undefined {
+  return getToggleEntry<CommandConfig>(config?.commands, name);
+}
+
 function getComponentPath(
   config: KompassConfig | null,
   name: ComponentName,
@@ -516,6 +525,12 @@ export function mergeWithDefaults(
         DEFAULT_COMMAND_NAMES.flatMap((name) => {
           const template = getCommandTemplate(config, name);
           return template ? [[name, template]] : [];
+        }),
+      ),
+      entries: Object.fromEntries(
+        DEFAULT_COMMAND_NAMES.flatMap((name) => {
+          const entry = getCommandEntry(config, name);
+          return entry ? [[name, entry]] : [];
         }),
       ),
     },

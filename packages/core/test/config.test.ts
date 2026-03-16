@@ -46,6 +46,7 @@ describe("object-based config", () => {
       commands: {
         dev: { enabled: false },
         review: { enabled: true, template: "commands/custom-review.md" },
+        "pr/review": { approve: false },
       },
       agents: {
         navigator: { permission: { task: "deny", todowrite: "deny" } },
@@ -60,6 +61,7 @@ describe("object-based config", () => {
     assert.equal(config.commands.enabled.includes("dev"), false);
     assert.equal(config.commands.enabled.includes("review"), true);
     assert.equal(config.commands.templates.review, "commands/custom-review.md");
+    assert.deepEqual(config.commands.entries["pr/review"], { approve: false });
     assert.deepEqual(config.agents.navigator.permission, {
       task: "deny",
       todowrite: "deny",

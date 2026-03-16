@@ -18,8 +18,7 @@ $ARGUMENTS
 
 ### Load & Analyze Changes
 
-{{change-summary rules="- If `<base>` is defined: call `changes_load` with the `base` parameter set to `<base>`
-- Otherwise: call `changes_load` with no parameters"}}
+<%~ include("@change-summary", { rules: "- If `<base>` is defined: call `changes_load` with the `base` parameter set to `<base>`\n- Otherwise: call `changes_load` with no parameters" }) %>
 
 - Store the loaded change result as `<changes>`
 
@@ -27,12 +26,12 @@ $ARGUMENTS
 
 - If `<changes>` contains no files, STOP and report that there is no work to summarize in a ticket
 
-{{summarize-changes}}
+<%~ include("@summarize-changes") %>
 
 ### Create Ticket
 
 Use `ticket_sync` with `refUrl` unset to create the ticket:
-{{changes-summary}}
+<%~ include("@changes-summary") %>
 - Store the generated title as `<ticket-title>`
 - Store the created issue URL as `<ticket-url>`
 

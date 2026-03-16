@@ -183,7 +183,7 @@ export async function gitRefExists($: Shell, cwd: string, ref: string) {
   return proc.exitCode === 0;
 }
 
-export async function ensureGitRef(
+export async function resolveComparisonRef(
   $: Shell,
   cwd: string,
   ref: string,
@@ -194,37 +194,82 @@ export async function ensureGitRef(
     throw new Error("Git ref cannot be empty");
   }
 
-  const directCandidates = [trimmed];
-  if (!trimmed.startsWith("origin/")) {
-    directCandidates.push(`origin/${trimmed}`);
+  if (trimmed === "HEAD") {
+    return trimmed;
   }
 
-  for (const candidate of directCandidates) {
-    if (await gitRefExists($, cwd, candidate)) {
-      return candidate;
+  if (trimmed.startsWith("refs/")) {
+    if (await gitRefExists($, cwd, trimmed)) {
+      return trimmed;
     }
+
+    throw new Error(`Failed to resolve git ref ${ref}`);
+  }
+
+  if (/^[0-9a-f]{7,40}$/i.test(trimmed)) {
+    if (await gitRefExists($, cwd, trimmed)) {
+      return trimmed;
+    }
+
+    const fetchProc = await fetchCommit($, cwd, trimmed, options?.depthHint);
+    if (fetchProc.exitCode === 0 && (await gitRefExists($, cwd, trimmed))) {
+      return trimmed;
+    }
+
+    throw new Error(fetchProc.stderr.toString() || `Failed to resolve git ref ${ref}`);
   }
 
   const remoteBranch = trimmed.startsWith("origin/") ? trimmed.slice("origin/".length) : trimmed;
-  const fetchProc = options?.depthHint
-    ? await $`git fetch --no-tags --depth=${Math.max(options.depthHint, 20)} origin ${remoteBranch}:${`refs/remotes/origin/${remoteBranch}`}`
-        .cwd(cwd)
-        .quiet()
-        .nothrow()
-    : await $`git fetch --no-tags origin ${remoteBranch}:${`refs/remotes/origin/${remoteBranch}`}`
-        .cwd(cwd)
-        .quiet()
-        .nothrow();
+  const remoteCandidate = `origin/${remoteBranch}`;
+  let fetchError = "";
 
-  if (fetchProc.exitCode === 0 && (await gitRefExists($, cwd, `origin/${remoteBranch}`))) {
-    return `origin/${remoteBranch}`;
+  if (await hasRemote($, cwd, "origin")) {
+    const fetchProc = await fetchRemoteBranch($, cwd, remoteBranch, options?.depthHint);
+    fetchError = fetchProc.stderr.toString();
+    if (fetchProc.exitCode === 0 && (await gitRefExists($, cwd, remoteCandidate))) {
+      return remoteCandidate;
+    }
   }
 
   if (await gitRefExists($, cwd, trimmed)) {
     return trimmed;
   }
 
-  throw new Error(fetchProc.stderr.toString() || `Failed to resolve git ref ${ref}`);
+  if (!trimmed.startsWith("origin/") && (await gitRefExists($, cwd, remoteCandidate))) {
+    return remoteCandidate;
+  }
+
+  throw new Error(fetchError || `Failed to resolve git ref ${ref}`);
+}
+
+async function hasRemote($: Shell, cwd: string, remote: string) {
+  const proc = await $`git remote get-url ${remote}`.cwd(cwd).quiet().nothrow();
+  return proc.exitCode === 0;
+}
+
+async function fetchRemoteBranch($: Shell, cwd: string, remoteBranch: string, depthHint?: number) {
+  const remoteRefspec = `+${remoteBranch}:refs/remotes/origin/${remoteBranch}`;
+  return depthHint
+    ? await $`git fetch --no-tags --depth=${Math.max(depthHint, 20)} origin ${remoteRefspec}`
+        .cwd(cwd)
+        .quiet()
+        .nothrow()
+    : await $`git fetch --no-tags origin ${remoteRefspec}`
+        .cwd(cwd)
+        .quiet()
+        .nothrow();
+}
+
+async function fetchCommit($: Shell, cwd: string, commit: string, depthHint?: number) {
+  return depthHint
+    ? await $`git fetch --no-tags --depth=${Math.max(depthHint, 20)} origin ${commit}`
+        .cwd(cwd)
+        .quiet()
+        .nothrow()
+    : await $`git fetch --no-tags origin ${commit}`
+        .cwd(cwd)
+        .quiet()
+        .nothrow();
 }
 
 export function parseIssueReference(source: string) {

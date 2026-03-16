@@ -142,7 +142,13 @@ async function main() {
   };
   const configOutput = {
     commands: Object.fromEntries(
-      Object.keys(compiledCommands).map((name) => [name, { enabled: true }]),
+      Object.entries(compiledCommands).map(([name, command]) => [
+        name,
+        {
+          enabled: true,
+          ...(command.config ? command.config : {}),
+        },
+      ]),
     ),
     agents: Object.fromEntries(
       Object.keys(resolvedAgents).map((name) => [name, { enabled: true }]),

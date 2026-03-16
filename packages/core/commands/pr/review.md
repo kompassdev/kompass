@@ -51,7 +51,11 @@ Before publishing, derive: `<has-inline-comments>`, `<has-body-note>`, `<publish
 **Grading and Publishing Rules:**
 1. Assign a grade based on code quality (1-5 stars)
 2. If grade is below `★★★★★` without supporting feedback (inline comments or body note), you MUST add feedback - never publish a low grade without explaining why
+<% if (it.approve !== false) { %>
 3. **NEVER post a review with `★★★★★`** - if the final grade is 5 stars, approve the PR instead
+<% } else { %>
+3. If the final grade is `★★★★★`, publish it as review feedback instead of approving the PR
+<% } %>
 4. If there are issues (grade < 5 stars), create inline comments on specific lines
 
 **Inline comment format:**
@@ -65,9 +69,17 @@ For multi-line: add `startLine`. For deleted lines: use `side: "LEFT"`.
 
 ### Publish Review
 
+<% if (it.approve !== false) { %>
 **If `<publish-grade>` is `★★★★★`:**
 - Already approved → skip
 - Otherwise → `pr_sync` with `refUrl: <pr-context.pr.url>` and only `review.approve: true`
+<% } else { %>
+**If `<publish-grade>` is `★★★★★`:**
+- Pass `refUrl: <pr-context.pr.url>`
+- `review.body`: `★★★★★` plus any optional positive summary notes
+- Do not pass `review.approve`
+- Do not pass any other fields
+<% } %>
 
 **If `<publish-grade>` < `★★★★★`:**
 - Pass `refUrl: <pr-context.pr.url>`
@@ -83,6 +95,7 @@ Use `<ticket-context>` and `<additional-context>` to judge whether the PR meets 
 
 ## Output
 
+<% if (it.approve !== false) { %>
 When approved:
 ```
 PR approved for #<pr-context.pr.number>
@@ -96,8 +109,9 @@ Approval skipped for PR #<pr-context.pr.number>
 
 - Reason: current head already approved
 ```
+<% } %>
 
-When review published (grade < 5 stars with feedback):
+When review published:
 ```
 Review submitted for PR #<pr-context.pr.number>
 

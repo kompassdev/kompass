@@ -21,9 +21,7 @@ $ARGUMENTS
 
 ### Load & Analyze Changes
 
-{{change-summary rules="- If `<base>` is defined: call `changes_load` with the `base` parameter set to `<base>`
-- Otherwise: call `changes_load` with no parameters
-- Never pass `uncommitted: true` in this command"}}
+<%~ include("@change-summary", { rules: "- If `<base>` is defined: call `changes_load` with the `base` parameter set to `<base>`\n- Otherwise: call `changes_load` with no parameters\n- Never pass `uncommitted: true` in this command" }) %>
 
 - Store the loaded change result as `<changes>`
 - Store the current branch from `<changes>` as `<current-branch>` when it is available
@@ -44,7 +42,7 @@ $ARGUMENTS
   - Do NOT proceed further
 - If `<changes>` contains no files and no commits, STOP and report that there is nothing to include in a PR
 
-{{summarize-changes}}
+<%~ include("@summarize-changes") %>
 
 ### Resolve Ticket
 
@@ -73,7 +71,7 @@ $ARGUMENTS
 ### Prepare Ticket Reference
 
 When `<ticket-mode>` is `auto`, create the ticket before creating the PR:
-{{changes-summary}}
+<%~ include("@changes-summary") %>
 - Use `ticket_sync` with `refUrl` unset
 - Store the created issue reference or URL as `<ticket-url>`
 
@@ -97,6 +95,7 @@ Run `git push` and use its output as the source of truth.
 Use `pr_sync` to create the pull request:
 - Generate a concise title (max 70 chars) summarizing the change and store it as `<pr-title>`
 - Generate a short description that briefly describes the intent and scope
+- Pass `<current-branch>` as `head` when it is available so PR creation does not depend on local upstream inference
 - Generate a compact checklist that mirrors the same human-facing structure used for the ticket summary:
   - group delivered work into 2-4 functional or outcome-focused sections
   - use concise section names instead of generic labels like `Changes`

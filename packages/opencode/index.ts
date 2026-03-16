@@ -247,6 +247,7 @@ const opencodeToolCreators = {
         body: tool.schema.string().describe("PR body override").optional(),
         description: tool.schema.string().describe("Short PR description rendered above checklist sections").optional(),
         base: tool.schema.string().describe("Base branch to merge into").optional(),
+        head: tool.schema.string().describe("Head branch to use when creating a PR").optional(),
         checklists: tool.schema.array(tool.schema.object({
           name: tool.schema.string().describe("Checklist section name"),
           items: tool.schema.array(tool.schema.object({

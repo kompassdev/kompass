@@ -17,7 +17,7 @@ $ARGUMENTS
 
 ### Load Changes
 
-{{change-summary rules="- pass `uncommitted: true` to get uncommitted changes only"}}
+<%~ include("@change-summary", { rules: "- pass `uncommitted: true` to get uncommitted changes only" }) %>
 - Store the loaded change result as `<changes>`
 
 ### Check Blockers
@@ -26,7 +26,7 @@ $ARGUMENTS
 
 ### Create Commit
 
-{{commit}}
+<%~ include("@commit") %>
 - Store the created commit hash as `<hash>`
 
 ### Push to Remote

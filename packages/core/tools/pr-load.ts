@@ -126,10 +126,6 @@ const REVIEW_THREADS_QUERY = `query($owner: String!, $repo: String!, $number: In
               body
               createdAt
               updatedAt
-              path
-              line
-              startLine
-              url
             }
           }
         }

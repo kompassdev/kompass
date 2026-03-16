@@ -29,5 +29,8 @@
     "toolkit",
     "agents"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "eta": "^4.5.1"
+  }
 }

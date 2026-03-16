@@ -220,6 +220,29 @@ describe("changes_load e2e", () => {
     assert.match(result.commits[0].subject, /feature commit/);
   });
 
+  test("branch comparison refreshes stale base branch before diffing", async () => {
+    const remote = await createRepo();
+    await commitFile(remote, "base.txt", "base\n", "init");
+    await git(remote, ["checkout", "-b", "feature"]);
+    await commitFile(remote, "feature.txt", "feature\n", "feature commit");
+    await git(remote, ["checkout", "main"]);
+
+    const bare = await cloneBare(remote);
+    await git(remote, ["remote", "add", "origin", `file://${bare}`]);
+    const clone = await cloneShallowBranch(bare, "feature");
+    await git(clone, ["fetch", "--depth=1", "origin", "main:refs/remotes/origin/main"]);
+
+    await git(remote, ["merge", "--ff-only", "feature"]);
+    await git(remote, ["push", "origin", "main"]);
+
+    const result = await runChangesLoad(clone, { base: "main", head: "feature" });
+
+    assert.equal(result.comparison, "origin/main...origin/feature");
+    assert.equal(result.branch, "feature");
+    assert.deepEqual(result.files, []);
+    assert.equal(result.commits, undefined);
+  });
+
 });
 
 async function createRepo() {

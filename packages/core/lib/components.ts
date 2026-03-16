@@ -1,30 +1,17 @@
-export function parseComponentParams(paramString: string): Record<string, string> {
-  const params: Record<string, string> = {};
-  if (!paramString) return params;
+import { Eta } from "eta";
 
-  // Match key="value" or key='value' patterns (supports multi-line with dotAll)
-  const regex = /(\w+)=["']([\s\S]*?)["']/g;
-  let match;
-  while ((match = regex.exec(paramString)) !== null) {
-    params[match[1]] = match[2];
-  }
-  return params;
-}
+type TemplateData = Record<string, unknown>;
 
-export function embedComponents(
+export function renderTemplate(
   template: string,
   components: Record<string, string>,
+  data: TemplateData = {},
 ): string {
-  // Match {{component-name}} or {{component-name param1="value1" param2="value2"}}
-  return template.replace(/\{\{([\w-]+)(\s+[^}]+)?\}\}/g, (match, name, paramsStr) => {
-    const component = components[name];
-    if (!component) return match;
+  const eta = new Eta({ autoEscape: false, autoTrim: false });
 
-    const params = parseComponentParams(paramsStr || "");
+  for (const [name, content] of Object.entries(components)) {
+    eta.loadTemplate(`@${name}`, content);
+  }
 
-    // Replace {{param:key}} placeholders in component content
-    return component.replace(/\{\{param:(\w+)\}\}/g, (paramMatch, paramName) => {
-      return params[paramName] !== undefined ? params[paramName] : paramMatch;
-    });
-  });
+  return eta.renderString(template, data) ?? "";
 }

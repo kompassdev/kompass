@@ -22,7 +22,8 @@
       "enabled": true
     },
     "pr/review": {
-      "enabled": true
+      "enabled": true,
+      "approve": false
     },
     "reload": {
       "enabled": true

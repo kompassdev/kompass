@@ -3,10 +3,10 @@ import { mkdtemp, rm } from "node:fs/promises";
 
 import {
   type ChangedFile,
-  ensureGitRef,
   nonEmptyLines,
   parseCommitList,
   parseNameStatus,
+  resolveComparisonRef,
   resolveBaseRef,
   stringifyJson,
   type Shell,
@@ -44,10 +44,11 @@ export function createChangesLoadTool($: Shell) {
       const depthHint = normalizeDepthHint(args.depthHint);
       const branch = await loadCurrentBranch($, ctx.worktree);
       const implicitWorkspaceMode = !args.base?.trim() && !args.head?.trim();
-      const forceWorkspaceMode = args.uncommitted === true;
-      const useWorkspaceMode = forceWorkspaceMode || (implicitWorkspaceMode && (await hasWorktreeChanges($, ctx.worktree)));
+      const comparisonMode = args.uncommitted === true || (implicitWorkspaceMode && (await hasWorktreeChanges($, ctx.worktree)))
+        ? "workspace"
+        : "branch";
 
-      if (useWorkspaceMode) {
+      if (comparisonMode === "workspace") {
         const filesWithDiff = await withTemporaryIndex($, ctx.worktree, async (indexPath) => {
           const files = await loadTemporaryIndexFiles($, ctx.worktree, indexPath);
           return await loadTemporaryIndexDiffs($, ctx.worktree, indexPath, files);
@@ -61,11 +62,11 @@ export function createChangesLoadTool($: Shell) {
       }
 
       const requestedBase = await resolveBaseRef($, ctx.worktree, args.base);
-      let baseRef = await ensureGitRef($, ctx.worktree, requestedBase, {
+      let baseRef = await resolveComparisonRef($, ctx.worktree, requestedBase, {
         depthHint,
       });
       let headRef = args.head?.trim()
-        ? await resolveHeadRef($, ctx.worktree, args.head, depthHint)
+        ? await resolveComparisonRef($, ctx.worktree, args.head, { depthHint })
         : "HEAD";
 
       if (!implicitWorkspaceMode) {
@@ -102,7 +103,7 @@ export function createChangesLoadTool($: Shell) {
       const filesWithDiff = implicitWorkspaceMode
         ? await loadWorkspaceFileDiffs($, ctx.worktree, baseRef, parsedFiles)
         : await loadFileDiffs($, ctx.worktree, baseRef, headRef, parsedFiles);
-      const commits = useWorkspaceMode ? [] : parseCommitList(log.text());
+      const commits = parseCommitList(log.text());
 
       return stringifyJson({
         comparison: `${baseRef}...${headRef}`,
@@ -207,20 +208,9 @@ async function loadFileDiffs(
   headRef: string,
   files: ChangedFile[],
 ) {
-  const enriched: Array<Record<string, unknown>> = [];
-
-  for (const file of files) {
-    if (file.status === "added") {
-      enriched.push(
-        serializeFile(file, {
-        diffOmittedReason: "added file; read current file contents instead",
-        }),
-      );
-      continue;
-    }
-
+  return enrichFileDiffs(files, async (file) => {
     const paths = [file.previousPath, file.path].filter(Boolean) as string[];
-    const proc = paths.length > 1
+    return paths.length > 1
       ? await $`git diff --find-renames --find-copies --unified=3 --no-color --no-ext-diff --no-prefix ${baseRef}...${headRef} -- ${paths[0]} ${paths[1]}`
           .cwd(cwd)
           .quiet()
@@ -229,35 +219,12 @@ async function loadFileDiffs(
           .cwd(cwd)
           .quiet()
           .nothrow();
-
-    if (proc.exitCode !== 0) {
-      enriched.push(serializeFile(file));
-      continue;
-    }
-
-    enriched.push(serializeFile(file, normalizeNativeDiff(file, proc.text())));
-  }
-
-  return enriched;
+  });
 }
 
 async function loadWorkspaceFileDiffs($: Shell, cwd: string, baseRef: string, files: ChangedFile[]) {
-  const enriched: Array<Record<string, unknown>> = [];
-
-  for (const file of files) {
-    if (file.status === "added" || file.status === "untracked") {
-      enriched.push(
-        serializeFile(file, {
-        diffOmittedReason:
-          file.status === "added"
-            ? "added file; read current file contents instead"
-            : "untracked file; read current file contents instead",
-        }),
-      );
-      continue;
-    }
-
-    const proc = [file.previousPath, file.path].filter(Boolean).length > 1
+  return enrichFileDiffs(files, async (file) => {
+    return [file.previousPath, file.path].filter(Boolean).length > 1
       ? await $`git diff --find-renames --find-copies --unified=3 --no-color --no-ext-diff --no-prefix ${baseRef} -- ${file.previousPath!} ${file.path}`
           .cwd(cwd)
           .quiet()
@@ -266,19 +233,27 @@ async function loadWorkspaceFileDiffs($: Shell, cwd: string, baseRef: string, fi
           .cwd(cwd)
           .quiet()
           .nothrow();
-
-    if (proc.exitCode !== 0) {
-      enriched.push(serializeFile(file));
-      continue;
-    }
-
-    enriched.push(serializeFile(file, normalizeNativeDiff(file, proc.text())));
-  }
-
-  return enriched;
+  });
 }
 
 async function loadTemporaryIndexDiffs($: Shell, cwd: string, indexPath: string, files: ChangedFile[]) {
+  return enrichFileDiffs(files, async (file) => {
+    return [file.previousPath, file.path].filter(Boolean).length > 1
+      ? await $`env GIT_INDEX_FILE=${indexPath} git diff --cached --find-renames --find-copies --unified=3 --no-color --no-ext-diff --no-prefix -- ${file.previousPath!} ${file.path}`
+          .cwd(cwd)
+          .quiet()
+          .nothrow()
+      : await $`env GIT_INDEX_FILE=${indexPath} git diff --cached --find-renames --find-copies --unified=3 --no-color --no-ext-diff --no-prefix -- ${file.path}`
+          .cwd(cwd)
+          .quiet()
+          .nothrow();
+  });
+}
+
+async function enrichFileDiffs(
+  files: ChangedFile[],
+  loadDiff: (file: ChangedFile) => Promise<{ exitCode: number; text(): string }>,
+) {
   const enriched: Array<Record<string, unknown>> = [];
 
   for (const file of files) {
@@ -294,15 +269,7 @@ async function loadTemporaryIndexDiffs($: Shell, cwd: string, indexPath: string,
       continue;
     }
 
-    const proc = [file.previousPath, file.path].filter(Boolean).length > 1
-      ? await $`env GIT_INDEX_FILE=${indexPath} git diff --cached --find-renames --find-copies --unified=3 --no-color --no-ext-diff --no-prefix -- ${file.previousPath!} ${file.path}`
-          .cwd(cwd)
-          .quiet()
-          .nothrow()
-      : await $`env GIT_INDEX_FILE=${indexPath} git diff --cached --find-renames --find-copies --unified=3 --no-color --no-ext-diff --no-prefix -- ${file.path}`
-          .cwd(cwd)
-          .quiet()
-          .nothrow();
+    const proc = await loadDiff(file);
 
     if (proc.exitCode !== 0) {
       enriched.push(serializeFile(file));
@@ -374,61 +341,6 @@ function normalizeNativeDiff(file: ChangedFile, rawDiff: string) {
   return undefined;
 }
 
-async function resolveHeadRef($: Shell, cwd: string, input: string, depthHint?: number) {
-  const trimmed = input.trim();
-
-  // If it's already a commit SHA, try to resolve it directly
-  if (/^[0-9a-f]{7,40}$/i.test(trimmed)) {
-    const direct = await $`git rev-parse --verify ${trimmed}`.cwd(cwd).quiet().nothrow();
-    if (direct.exitCode === 0) {
-      return trimmed;
-    }
-
-    // Try to fetch the commit directly
-    const fetchProc = depthHint
-      ? await $`git fetch --no-tags --depth=${Math.max(depthHint, 20)} origin ${trimmed}`
-          .cwd(cwd)
-          .quiet()
-          .nothrow()
-      : await $`git fetch --no-tags origin ${trimmed}`
-          .cwd(cwd)
-          .quiet()
-          .nothrow();
-
-    if (fetchProc.exitCode === 0) {
-      const fetched = await $`git rev-parse --verify ${trimmed}`.cwd(cwd).quiet().nothrow();
-      if (fetched.exitCode === 0) {
-        return trimmed;
-      }
-    }
-  }
-
-  // For branch names, try to resolve as a remote ref first (common in CI)
-  const isBranchName = !trimmed.startsWith("refs/") && !/^[0-9a-f]{7,40}$/i.test(trimmed);
-  if (isBranchName) {
-    const remoteRef = trimmed.startsWith("origin/") ? trimmed : `origin/${trimmed}`;
-    const remoteCheck = await $`git rev-parse --verify ${remoteRef}`.cwd(cwd).quiet().nothrow();
-    if (remoteCheck.exitCode === 0) {
-      return remoteRef;
-    }
-
-    // Try to fetch the branch
-    const branchName = trimmed.startsWith("origin/") ? trimmed.slice(7) : trimmed;
-    const fetchDepth = Math.max(depthHint ?? 0, 50);
-    await $`git fetch --no-tags --depth=${fetchDepth} origin ${branchName}:${remoteRef}`
-      .cwd(cwd)
-      .quiet()
-      .nothrow();
-
-    const afterFetch = await $`git rev-parse --verify ${remoteRef}`.cwd(cwd).quiet().nothrow();
-    if (afterFetch.exitCode === 0) {
-      return remoteRef;
-    }
-  }
-
-  return ensureGitRef($, cwd, trimmed, { depthHint });
-}
-
 async function ensureComparableRefs(
   $: Shell,
   cwd: string,
@@ -445,14 +357,9 @@ async function ensureComparableRefs(
   }
 
   const fetchDepth = Math.max(args.depthHint ?? 0, 50);
-  await hydrateNamedRefHistory($, cwd, args.requestedBase, fetchDepth);
-  if (args.requestedHead?.trim()) {
-    await hydrateNamedRefHistory($, cwd, args.requestedHead, fetchDepth);
-  }
-
-  const baseRef = await ensureGitRef($, cwd, args.requestedBase, { depthHint: fetchDepth });
+  const baseRef = await resolveComparisonRef($, cwd, args.requestedBase, { depthHint: fetchDepth });
   const headRef = args.requestedHead?.trim()
-    ? await resolveHeadRef($, cwd, args.requestedHead, fetchDepth)
+    ? await resolveComparisonRef($, cwd, args.requestedHead, { depthHint: fetchDepth })
     : args.headRef;
 
   return { baseRef, headRef };
@@ -461,18 +368,4 @@ async function ensureComparableRefs(
 async function hasMergeBase($: Shell, cwd: string, baseRef: string, headRef: string) {
   const proc = await $`git merge-base ${baseRef} ${headRef}`.cwd(cwd).quiet().nothrow();
   return proc.exitCode === 0;
-}
-
-async function hydrateNamedRefHistory($: Shell, cwd: string, input: string, depth: number) {
-  const trimmed = input.trim();
-  if (!trimmed || trimmed === "HEAD" || /^[0-9a-f]{7,40}$/i.test(trimmed)) {
-    return;
-  }
-
-  const remoteBranch = trimmed.startsWith("origin/") ? trimmed.slice("origin/".length) : trimmed;
-  const remoteRef = `refs/remotes/origin/${remoteBranch}`;
-  await $`git fetch --no-tags --depth=${depth} origin ${remoteBranch}:${remoteRef}`
-    .cwd(cwd)
-    .quiet()
-    .nothrow();
 }

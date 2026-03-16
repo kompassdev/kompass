@@ -28,7 +28,7 @@ $ARGUMENTS
 - Summarize the goal, constraints, and acceptance criteria from `<request-context>` before making changes
 - Store that summary as `<request-summary>`
 
-{{dev-flow}}
+<%~ include("@dev-flow") %>
 
 ### Validate Changes
 

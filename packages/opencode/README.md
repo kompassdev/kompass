@@ -315,6 +315,7 @@ Create, update, or review a GitHub pull request with structured checklists.
 - `body` (optional): raw PR body override
 - `description` (optional): short PR description rendered above checklist sections
 - `base` (optional): base branch to merge into
+- `head` (optional): head branch to use when creating a PR
 - `checklists` (optional): structured checklist sections (e.g., Testing, Summary)
 - `draft` (optional): create as draft PR
 - `refUrl` (optional): PR URL to update instead of creating new

@@ -181,7 +181,7 @@ describe("applyCommandsConfig", () => {
       }
     });
 
-    test("replaces {{dev-flow}} placeholder with component content", async () => {
+    test("renders Eta partial content into commands", async () => {
       delete process.env.CI;
       const cfg: { command?: Record<string, { template: string }> } = {};
 
@@ -191,11 +191,10 @@ describe("applyCommandsConfig", () => {
       assert.ok(cfg.command!["dev"]);
       // Should contain the actual content from dev-flow.md
       assert.match(cfg.command!["dev"].template, /Development Flow Navigation Guide/);
-      // Should NOT contain the placeholder
-      assert.doesNotMatch(cfg.command!["dev"].template, /\{\{dev-flow\}\}/);
+      assert.doesNotMatch(cfg.command!["dev"].template, /<%/);
     });
 
-    test("replaces multiple component placeholders in same template", async () => {
+    test("renders commands with all partials expanded", async () => {
       delete process.env.CI;
       const cfg: { command?: Record<string, { template: string }> } = {};
 
@@ -203,8 +202,7 @@ describe("applyCommandsConfig", () => {
 
       assert.ok(cfg.command);
       assert.ok(cfg.command!["dev"]);
-      // dev.md uses {{dev-flow}} component
-      assert.doesNotMatch(cfg.command!["dev"].template, /\{\{dev-flow\}\}/);
+      assert.doesNotMatch(cfg.command!["dev"].template, /<%/);
     });
 
     test("pr/fix command does not use pr-fix component", async () => {
@@ -243,19 +241,54 @@ describe("applyCommandsConfig", () => {
       assert.doesNotMatch(cfg.command!["pr/review"].template, /\{\{code-review\}\}/);
       assert.match(cfg.command!["pr/review"].template, /## Goal/);
       assert.match(cfg.command!["pr/review"].template, /Review a GitHub pull request/);
+      assert.doesNotMatch(cfg.command!["pr/review"].template, /<%/);
+      assert.match(
+        cfg.command!["pr/review"].template,
+        /publish it as review feedback instead of approving the PR/,
+      );
+      assert.doesNotMatch(cfg.command!["pr/review"].template, /only `review\.approve: true`/);
     });
 
-    test("preserves unknown placeholders when component not found", async () => {
+    test("pr/review supports disabling approval via template data", async () => {
+      delete process.env.CI;
+      const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-pr-review-template-data-"));
+
+      try {
+        await writeFile(
+          path.join(tempDir, "kompass.jsonc"),
+          `{
+            "commands": {
+              "pr/review": {
+                "approve": false
+              }
+            }
+          }`,
+        );
+
+        const cfg: { command?: Record<string, { template: string }> } = {};
+
+        await applyCommandsConfig(cfg as never, tempDir);
+
+        assert.ok(cfg.command);
+        assert.match(
+          cfg.command!["pr/review"].template,
+          /publish it as review feedback instead of approving the PR/,
+        );
+        assert.match(cfg.command!["pr/review"].template, /`★★★★★` plus any optional positive summary notes/);
+        assert.doesNotMatch(cfg.command!["pr/review"].template, /only `review\.approve: true`/);
+      } finally {
+        await rm(tempDir, { recursive: true, force: true });
+      }
+    });
+
+    test("renders templates without leaving Eta tags behind", async () => {
       delete process.env.CI;
       const cfg: { command?: Record<string, { template: string }> } = {};
 
-      // This test verifies the embedComponents function preserves unknown placeholders
-      // by checking that the command registration still works even with unknown components
       await applyCommandsConfig(cfg as never, process.cwd());
 
       assert.ok(cfg.command);
-      // All default commands should still be registered
-      assert.ok(cfg.command!["dev"]);
+      assert.doesNotMatch(cfg.command!["pr/create"].template, /<%/);
     });
   });
 
@@ -367,9 +400,7 @@ describe("applyCommandsConfig", () => {
       assert.match(shipTemplate, /Store the subagent result as `<pr-result>`/);
       assert.match(shipTemplate, /<task agent="general" command="\/pr\/create">/);
 
-      // Verify no component placeholders remain (all should be expanded)
-      const remainingPlaceholders = shipTemplate.match(/\{\{[\w-]+\}\}/g);
-      assert.strictEqual(remainingPlaceholders, null, `Found unexpanded placeholders: ${remainingPlaceholders?.join(', ')}`);
+      assert.doesNotMatch(shipTemplate, /<%/);
     });
 
     test("embeds all expected components in dev command", async () => {
@@ -387,8 +418,7 @@ describe("applyCommandsConfig", () => {
       assert.match(devTemplate, /## Goal/);
       assert.match(devTemplate, /Implement a feature or fix/);
       
-      // Should not have any remaining placeholders
-      assert.doesNotMatch(devTemplate, /\{\{[\w-]+\}\}/);
+      assert.doesNotMatch(devTemplate, /<%/);
     });
 
     test("embeds all expected components in pr/create command", async () => {
@@ -406,8 +436,7 @@ describe("applyCommandsConfig", () => {
       assert.match(prCreateTemplate, /Interpret Arguments/);
       assert.match(prCreateTemplate, /Load & Analyze Changes/);
       
-      // Should not have any remaining placeholders
-      assert.doesNotMatch(prCreateTemplate, /\{\{[\w-]+\}\}/);
+      assert.doesNotMatch(prCreateTemplate, /<%/);
     });
 
     test("embeds all expected components in ticket/create command", async () => {
@@ -423,7 +452,7 @@ describe("applyCommandsConfig", () => {
       assert.match(ticketCreateTemplate, /Create a ticket that summarizes the work returned by the current change comparison/);
       assert.match(ticketCreateTemplate, /Load & Analyze Changes/);
 
-      assert.doesNotMatch(ticketCreateTemplate, /\{\{[\w-]+\}\}/);
+      assert.doesNotMatch(ticketCreateTemplate, /<%/);
     });
 
     test("embeds all expected components in ticket/dev command", async () => {
@@ -441,13 +470,12 @@ describe("applyCommandsConfig", () => {
       assert.match(ticketDevTemplate, /## Goal/);
       assert.match(ticketDevTemplate, /Implement a ticket/);
       
-      // Should not have any remaining placeholders
-      assert.doesNotMatch(ticketDevTemplate, /\{\{[\w-]+\}\}/);
+      assert.doesNotMatch(ticketDevTemplate, /<%/);
     });
   });
 
-  describe("parameterized component replacement", () => {
-    test("replaces {{param:name}} with provided parameter value", async () => {
+  describe("partial locals", () => {
+    test("passes locals into Eta partials", async () => {
       delete process.env.CI;
       const cfg: { command?: Record<string, { template: string }> } = {};
 
@@ -455,15 +483,12 @@ describe("applyCommandsConfig", () => {
 
       assert.ok(cfg.command);
       
-      // commit command uses parameterized change-summary
       const commitTemplate = cfg.command!["commit"].template;
-      // Should have replaced the parameter
       assert.match(commitTemplate, /pass `uncommitted: true`/);
-      // Should NOT have {{param:...}} placeholders
-      assert.doesNotMatch(commitTemplate, /\{\{param:[\w-]+\}\}/);
+      assert.doesNotMatch(commitTemplate, /<%/);
     });
 
-    test("uses different parameter values for different commands", async () => {
+    test("uses different local values for different commands", async () => {
       delete process.env.CI;
       const cfg: { command?: Record<string, { template: string }> } = {};
 
@@ -474,20 +499,17 @@ describe("applyCommandsConfig", () => {
       const commitTemplate = cfg.command!["commit"].template;
       const prCreateTemplate = cfg.command!["pr/create"].template;
       
-      // commit should mention uncommitted
       assert.match(commitTemplate, /pass `uncommitted: true`/);
-      // pr/create should mention base branch detection
       assert.match(prCreateTemplate, /base branch/);
     });
 
-    test("preserves {{param:...}} when parameter not provided", async () => {
+    test("renders commands that do not need partial locals", async () => {
       delete process.env.CI;
       const cfg: { command?: Record<string, { template: string }> } = {};
 
       await applyCommandsConfig(cfg as never, process.cwd());
 
       assert.ok(cfg.command);
-      // Commands without parameters should still work
       assert.ok(cfg.command!["dev"]);
       assert.ok(cfg.command!["pr/review"]);
     });

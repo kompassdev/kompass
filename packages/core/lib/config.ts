@@ -41,7 +41,6 @@ export const DEFAULT_COMPONENT_NAMES = [
   "change-summary",
   "changes-summary",
   "commit",
-  "delegate-to-subagent",
   "dev-flow",
   "summarize-changes",
 ] as const;

@@ -32,6 +32,34 @@ describe("config loading", () => {
     }
   });
 
+  test("parses validation strings in jsonc config files", async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-config-validation-"));
+
+    try {
+      await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
+      await writeFile(
+        path.join(tempDir, ".opencode", "kompass.jsonc"),
+        `{
+          "shared": {
+            "validation": [
+              "Run lint if available",
+              "Run tests if available"
+            ]
+          }
+        }`,
+      );
+
+      const config = await loadKompassConfig(tempDir);
+
+      assert.equal(
+        JSON.stringify(config.shared?.validation),
+        JSON.stringify(["Run lint if available", "Run tests if available"]),
+      );
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
+
   test("prefers project config files in documented order", async () => {
     const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-config-order-"));
 
@@ -106,7 +134,10 @@ describe("config loading", () => {
 describe("object-based config", () => {
   test("supports command, agent, and component entry toggles", () => {
     const config = mergeWithDefaults({
-      shared: { prApprove: false },
+      shared: {
+        prApprove: false,
+        validation: ["Run custom validation"],
+      },
       commands: {
         dev: { enabled: false },
         review: { enabled: true, template: "commands/custom-review.md" },
@@ -125,6 +156,7 @@ describe("object-based config", () => {
     assert.equal(config.commands.enabled.includes("review"), true);
     assert.equal(config.commands.templates.review, "commands/custom-review.md");
     assert.equal(config.shared.prApprove, false);
+    assert.deepEqual(config.shared.validation, ["Run custom validation"]);
     assert.deepEqual(config.agents.navigator.permission, {
       task: "deny",
       todowrite: "deny",
@@ -162,6 +194,7 @@ describe("command defaults", () => {
     const config = mergeWithDefaults(null);
 
     assert.equal(config.agents.enabled.includes("navigator"), true);
+    assert.deepEqual(config.shared.validation, []);
     assert.deepEqual(config.agents.navigator.permission, {
       edit: "deny",
       task: "allow",

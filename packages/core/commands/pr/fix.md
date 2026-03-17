@@ -45,12 +45,13 @@ Do not blindly follow every suggestion—some may lead you off course.
 
 ### Validate Changes
 
-Run validation commands:
-- Compile: `bun run compile`
-- Type checking: `bun run typecheck`
-- Tests: `bun run test`
-- Confirm fixes address the feedback
-- Store the overall test result as `<tests-passing>` with value `yes` or `no`
+Run the most relevant available validation for the fixes:
+<% for (const line of it.config.shared.validation) { -%>
+- <%= line %>
+<% } -%>
+- Confirm the fixes address the feedback
+- Store the collected validation details as `<validation-results>`
+- Store the overall validation outcome as `<validation-passing>` with value `yes` or `no`
 
 ### Push Updates
 
@@ -93,6 +94,7 @@ PR fix complete for #<pr-context.pr.number>
 - Status: complete, no additional steps needed
 - Changes made: <changes-count> files modified
 - Threads resolved: <threads-resolved>
-- Tests passing: <tests-passing>
+- Validation passing: <validation-passing>
+- Validation details: <validation-results>
 - Pushed: <pushed>
 ```

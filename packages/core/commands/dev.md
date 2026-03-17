@@ -32,11 +32,11 @@ $ARGUMENTS
 
 ### Validate Changes
 
-- Run the required validation commands for edits made in this session:
-  - `bun run compile`
-  - `bun run typecheck`
-  - `bun run test`
-- Store the results as `<compile-status>`, `<typecheck-status>`, and `<test-status>`
+- Run the most relevant available validation for edits made in this session
+<% for (const line of it.config.shared.validation) { -%>
+- <%= line %>
+<% } -%>
+- Store the collected results as `<validation-results>`
 
 ### Prepare PR Handoff
 
@@ -56,9 +56,7 @@ When the implementation is ready for PR creation, display:
 Implementation ready: <request-summary>
 
 Validation:
-- Compile: <compile-status>
-- Typecheck: <typecheck-status>
-- Test: <test-status>
+<validation-results>
 
 Next: create a PR for <branch>
 ```

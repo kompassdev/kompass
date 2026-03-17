@@ -48,12 +48,12 @@ $ARGUMENTS
 
 ### Validate
 
-- Run the required validation commands for the edited work in this session:
-  - `bun run compile`
-  - `bun run typecheck`
-  - `bun run test`
+- Run the most relevant available validation for the edited work in this session
+<% for (const line of it.config.shared.validation) { -%>
+- <%= line %>
+<% } -%>
 - Confirm the cleaned-up code still works correctly before committing
-- Store the overall validation result as `<validation-status>`
+- Store the collected validation summary as `<validation-status>`
 
 ### Commit Changes
 

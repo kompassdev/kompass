@@ -95,6 +95,7 @@ export interface SkillIdentity {
 export interface KompassConfig {
   shared?: {
     prApprove?: boolean;
+    validation?: string[];
   };
   commands?: {
     branch?: CommandConfig;
@@ -155,6 +156,7 @@ export interface KompassConfig {
 export interface MergedKompassConfig {
   shared: {
     prApprove: boolean;
+    validation: string[];
   };
   commands: {
     enabled: string[];
@@ -575,6 +577,7 @@ export function mergeWithDefaults(
   return {
     shared: {
       prApprove: config?.shared?.prApprove ?? false,
+      validation: config?.shared?.validation ?? [],
     },
     commands: {
       enabled: getEnabledNames(

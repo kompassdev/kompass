@@ -39,11 +39,10 @@ $ARGUMENTS
 
 ### Validate Changes
 
-- Run the required validation commands for edits made in this session:
-  - `bun run compile`
-  - `bun run typecheck`
-  - `bun run test`
-- Store the results as `<compile-status>`, `<typecheck-status>`, and `<test-status>`
+- Run the most relevant available validation for edits made in this session
+- Prefer project-native checks such as changed-area tests, linting, type checking, build verification, or other documented validation steps when they exist
+- If a category of validation is not available in the project, note it explicitly instead of inventing a command
+- Store the collected results as `<validation-results>`
 
 ### Delegate PR Creation
 
@@ -76,7 +75,5 @@ Implemented ticket: <ticket-summary>
 
 PR: <pr-url>
 Validation:
-- Compile: <compile-status>
-- Typecheck: <typecheck-status>
-- Test: <test-status>
+<validation-results>
 ```

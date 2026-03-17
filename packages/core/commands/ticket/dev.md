@@ -28,11 +28,11 @@ $ARGUMENTS
 
 ### Validate Changes
 
-- Run the required validation commands for edits made in this session:
-  - `bun run compile`
-  - `bun run typecheck`
-  - `bun run test`
-- Store the results as `<compile-status>`, `<typecheck-status>`, and `<test-status>`
+- Run the most relevant available validation for edits made in this session
+<% for (const line of it.config.shared.validation) { -%>
+- <%= line %>
+<% } -%>
+- Store the collected results as `<validation-results>`
 
 ### Delegate PR Creation
 
@@ -65,7 +65,5 @@ Implemented ticket: <ticket-summary>
 
 PR: <pr-url>
 Validation:
-- Compile: <compile-status>
-- Typecheck: <typecheck-status>
-- Test: <test-status>
+<validation-results>
 ```

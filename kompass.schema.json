@@ -18,6 +18,13 @@
         "prApprove": {
           "type": "boolean",
           "description": "Whether PR review workflows may submit approvals instead of five-star review comments"
+        },
+        "validation": {
+          "type": "array",
+          "description": "Validation guidance lines rendered into command templates",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },

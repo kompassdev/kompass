@@ -6,7 +6,7 @@ import type { Shell, ShellPromise } from "../tools/shared.ts";
 import { createTicketSyncTool } from "../tools/ticket-sync.ts";
 
 describe("ticket_sync", () => {
-  test("renders description, checklists, and labels when creating an issue", async () => {
+  test("renders description, checklists, labels, and assignees when creating an issue", async () => {
     let executedCommand = "";
     const shell = createMockShell((command) => {
       executedCommand = command;
@@ -22,6 +22,7 @@ describe("ticket_sync", () => {
       title: "Add plan sync improvements",
       description: "Capture planning output with clearer ticket formatting.",
       labels: ["planning", "tickets"],
+      assignees: ["octocat", "hubot"],
       checklists: [
         {
           name: "Requirement",
@@ -39,6 +40,8 @@ describe("ticket_sync", () => {
     assert.match(executedCommand, /gh issue create/);
     assert.match(executedCommand, /--label planning/);
     assert.match(executedCommand, /--label tickets/);
+    assert.match(executedCommand, /--assignee octocat/);
+    assert.match(executedCommand, /--assignee hubot/);
     assert.match(executedCommand, /Capture planning output with clearer ticket formatting\./);
     assert.match(executedCommand, /### Requirement/);
     assert.match(executedCommand, /- \[ \] Improve the ticket plan prompt/);
@@ -46,7 +49,7 @@ describe("ticket_sync", () => {
     assert.match(executedCommand, /- \[x\] Confirm checklist sections render correctly/);
   });
 
-  test("updates an existing issue with add-label flags", async () => {
+  test("updates an existing issue with add-label and add-assignee flags", async () => {
     let executedCommand = "";
     const shell = createMockShell((command) => {
       executedCommand = command;
@@ -62,6 +65,7 @@ describe("ticket_sync", () => {
       title: "Refresh plan",
       body: "Updated body",
       labels: ["triage"],
+      assignees: ["octocat"],
       refUrl: "https://github.com/acme/repo/issues/9",
     }, createToolContextForDirectory("/tmp/repo"));
 
@@ -69,6 +73,7 @@ describe("ticket_sync", () => {
     assert.equal(result.url, "https://github.com/acme/repo/issues/9");
     assert.match(executedCommand, /gh issue edit/);
     assert.match(executedCommand, /--add-label triage/);
+    assert.match(executedCommand, /--add-assignee octocat/);
     assert.match(executedCommand, /--body Updated body/);
   });
 

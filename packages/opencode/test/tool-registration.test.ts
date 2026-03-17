@@ -140,12 +140,15 @@ describe("createOpenCodeTools", () => {
     }
   });
 
-  test("exposes comments on ticket_sync and makes title optional", async () => {
+  test("exposes ticket assignees and comments, and PR assignees", async () => {
     const tools = await createOpenCodeTools((() => {
       throw new Error("not implemented");
     }) as never, createMockClient(), process.cwd());
 
+    const prSyncArgs = (tools.kompass_pr_sync as any).args;
     const ticketSyncArgs = (tools.kompass_ticket_sync as any).args;
+    assert.ok(prSyncArgs.assignees);
+    assert.ok(ticketSyncArgs.assignees);
     assert.ok(ticketSyncArgs.comments);
     assert.equal(ticketSyncArgs.title.isOptional(), true);
   });

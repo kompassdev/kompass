@@ -112,6 +112,7 @@ When `<ticket-mode>` is `auto`, create the ticket before creating the PR:
 - Do not use execution-status notes such as `Validation not run in this session` as checklist items
 - If `kompass_changes_load` reports uncommitted work, make that clear in the ticket wording
 - Use `kompass_ticket_sync` with `refUrl` unset
+- Set `assignees` to `[@me]` so the created ticket is assigned to yourself as the author
 - Store the created issue reference or URL as `<ticket-url>`
 
 Otherwise:
@@ -135,6 +136,7 @@ Use `kompass_pr_sync` to create the pull request:
 - Generate a concise title (max 70 chars) summarizing the change and store it as `<pr-title>`
 - Generate a short description that briefly describes the intent and scope
 - Pass `<current-branch>` as `head` when it is available so PR creation does not depend on local upstream inference
+- Set `assignees` to `[@me]` so the created PR is assigned to yourself as the author
 - Generate a compact checklist that mirrors the same human-facing structure used for the ticket summary:
   - group delivered work into 2-4 functional or outcome-focused sections
   - use concise section names instead of generic labels like `Changes`

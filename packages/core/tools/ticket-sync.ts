@@ -10,6 +10,7 @@ type TicketSyncArgs = {
   body?: string;
   description?: string;
   labels?: string[];
+  assignees?: string[];
   checklists?: Array<{
     name: string;
     items: Array<{
@@ -54,8 +55,19 @@ function collectLabels(labels?: string[]): string[] {
     .map((label) => label.trim());
 }
 
+function collectAssignees(assignees?: string[]): string[] {
+  return (assignees ?? [])
+    .filter((assignee) => assignee.trim())
+    .map((assignee) => assignee.trim());
+}
+
 function hasMetadataUpdate(args: TicketSyncArgs, body?: string) {
-  return Boolean(args.title?.trim() || body || collectLabels(args.labels).length > 0);
+  return Boolean(
+    args.title?.trim() ||
+      body ||
+      collectLabels(args.labels).length > 0 ||
+      collectAssignees(args.assignees).length > 0,
+  );
 }
 
 async function postIssueComment($: Shell, worktree: string, issueRef: string, body: string) {
@@ -95,6 +107,11 @@ export function createTicketSyncTool($: Shell) {
         optional: true,
         description: "Labels to apply to the issue",
       },
+      assignees: {
+        type: "string[]",
+        optional: true,
+        description: "Assignees to apply to the issue",
+      },
       checklists: {
         type: "json",
         optional: true,
@@ -114,6 +131,7 @@ export function createTicketSyncTool($: Shell) {
     async execute(args: TicketSyncArgs, ctx: ToolExecutionContext) {
       const body = renderTicketBody(args);
       const labels = collectLabels(args.labels);
+      const assignees = collectAssignees(args.assignees);
       const comments = collectComments(args.comments);
 
       if (args.refUrl) {
@@ -126,6 +144,7 @@ export function createTicketSyncTool($: Shell) {
             ...(args.title?.trim() ? ["--title", args.title.trim()] : []),
             ...(body ? ["--body", body] : []),
             ...labels.flatMap((label) => ["--add-label", label]),
+            ...assignees.flatMap((assignee) => ["--add-assignee", assignee]),
           ];
           const proc = await $`gh issue edit ${args.refUrl} ${editArgs}`
             .cwd(ctx.worktree)
@@ -155,7 +174,8 @@ export function createTicketSyncTool($: Shell) {
       }
 
       const labelArgs = labels.flatMap((label) => ["--label", label]);
-      const proc = await $`gh issue create --title ${args.title.trim()} --body ${body} ${labelArgs}`
+      const assigneeArgs = assignees.flatMap((assignee) => ["--assignee", assignee]);
+      const proc = await $`gh issue create --title ${args.title.trim()} --body ${body} ${labelArgs} ${assigneeArgs}`
         .cwd(ctx.worktree)
         .quiet()
         .nothrow();

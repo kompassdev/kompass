@@ -11,6 +11,11 @@ interface CommandDefinition {
 }
 
 export const commandDefinitions: Record<string, CommandDefinition> = {
+  ask: {
+    description: "Answer questions about the current project or code",
+    agent: "build",
+    templatePath: "commands/ask.md",
+  },
   branch: {
     description: "Create a feature branch from current changes",
     agent: "build",
@@ -77,6 +82,11 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     description: "Work through a todo file task by task",
     agent: "navigator",
     templatePath: "commands/todo.md",
+  },
+  "ticket/ask": {
+    description: "Answer a question on a ticket and post the response",
+    agent: "build",
+    templatePath: "commands/ticket/ask.md",
   },
   "ticket/dev": {
     description: "Implement a ticket and create a PR",

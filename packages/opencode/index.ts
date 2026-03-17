@@ -289,7 +289,7 @@ const opencodeToolCreators = {
     return tool({
       description: definition.description,
       args: {
-        title: tool.schema.string().describe("Issue title"),
+        title: tool.schema.string().describe("Issue title").optional(),
         body: tool.schema.string().describe("Issue body override").optional(),
         description: tool.schema.string().describe("Issue description rendered above checklist sections").optional(),
         labels: tool.schema.array(tool.schema.string()).describe("Labels to apply to the issue").optional(),
@@ -301,6 +301,7 @@ const opencodeToolCreators = {
           })).describe("Checklist items"),
         })).describe("Checklist sections rendered as markdown").optional(),
         refUrl: tool.schema.string().describe("Optional issue URL to update").optional(),
+        comments: tool.schema.array(tool.schema.string()).describe("Optional issue comments to post").optional(),
       },
       execute: (args, context) => definition.execute(args, context),
     });

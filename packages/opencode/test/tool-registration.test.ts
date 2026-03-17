@@ -139,4 +139,14 @@ describe("createOpenCodeTools", () => {
       await rm(tempDir, { recursive: true, force: true });
     }
   });
+
+  test("exposes comments on ticket_sync and makes title optional", async () => {
+    const tools = await createOpenCodeTools((() => {
+      throw new Error("not implemented");
+    }) as never, createMockClient(), process.cwd());
+
+    const ticketSyncArgs = (tools.kompass_ticket_sync as any).args;
+    assert.ok(ticketSyncArgs.comments);
+    assert.equal(ticketSyncArgs.title.isOptional(), true);
+  });
 });

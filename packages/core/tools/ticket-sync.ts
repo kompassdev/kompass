@@ -6,7 +6,7 @@ import {
 } from "./shared.ts";
 
 type TicketSyncArgs = {
-  title: string;
+  title?: string;
   body?: string;
   description?: string;
   labels?: string[];
@@ -18,6 +18,7 @@ type TicketSyncArgs = {
     }>;
   }>;
   refUrl?: string;
+  comments?: string[];
 };
 
 function renderTicketBody(args: TicketSyncArgs) {
@@ -44,11 +45,7 @@ function renderTicketBody(args: TicketSyncArgs) {
   }
 
   const body = sections.join("\n\n").trim();
-  if (!body) {
-    throw new Error("ticket_sync requires body, description, or checklist content");
-  }
-
-  return body;
+  return body || undefined;
 }
 
 function collectLabels(labels?: string[]): string[] {
@@ -57,11 +54,32 @@ function collectLabels(labels?: string[]): string[] {
     .map((label) => label.trim());
 }
 
+function hasMetadataUpdate(args: TicketSyncArgs, body?: string) {
+  return Boolean(args.title?.trim() || body || collectLabels(args.labels).length > 0);
+}
+
+async function postIssueComment($: Shell, worktree: string, issueRef: string, body: string) {
+  const proc = await $`gh issue comment ${issueRef} --body ${body}`
+    .cwd(worktree)
+    .quiet()
+    .nothrow();
+
+  if (proc.exitCode !== 0) {
+    throw new Error(proc.stderr.toString() || "Failed to post issue comment");
+  }
+}
+
+function collectComments(comments?: string[]): string[] {
+  return (comments ?? [])
+    .filter((comment) => comment.trim())
+    .map((comment) => comment.trim());
+}
+
 export function createTicketSyncTool($: Shell) {
   return {
     description: "Create or update a GitHub issue",
     args: {
-      title: { type: "string", description: "Issue title" },
+      title: { type: "string", optional: true, description: "Issue title" },
       body: {
         type: "string",
         optional: true,
@@ -87,20 +105,40 @@ export function createTicketSyncTool($: Shell) {
         optional: true,
         description: "Optional issue URL to update instead of creating a new issue",
       },
+      comments: {
+        type: "string[]",
+        optional: true,
+        description: "Optional issue comments to post",
+      },
     },
     async execute(args: TicketSyncArgs, ctx: ToolExecutionContext) {
       const body = renderTicketBody(args);
+      const labels = collectLabels(args.labels);
+      const comments = collectComments(args.comments);
 
       if (args.refUrl) {
-        const labels = collectLabels(args.labels);
-        const labelArgs = labels.flatMap((label) => ["--add-label", label]);
-        const proc = await $`gh issue edit ${args.refUrl} --title ${args.title} --body ${body} ${labelArgs}`
-          .cwd(ctx.worktree)
-          .quiet()
-          .nothrow();
+        if (!hasMetadataUpdate(args, body) && comments.length === 0) {
+          throw new Error("ticket_sync requires title, body, description, checklist content, labels, or comments when updating an issue");
+        }
 
-        if (proc.exitCode !== 0) {
-          throw new Error(proc.stderr.toString() || "Failed to update issue");
+        if (hasMetadataUpdate(args, body)) {
+          const editArgs = [
+            ...(args.title?.trim() ? ["--title", args.title.trim()] : []),
+            ...(body ? ["--body", body] : []),
+            ...labels.flatMap((label) => ["--add-label", label]),
+          ];
+          const proc = await $`gh issue edit ${args.refUrl} ${editArgs}`
+            .cwd(ctx.worktree)
+            .quiet()
+            .nothrow();
+
+          if (proc.exitCode !== 0) {
+            throw new Error(proc.stderr.toString() || "Failed to update issue");
+          }
+        }
+
+        for (const comment of comments) {
+          await postIssueComment($, ctx.worktree, args.refUrl, comment);
         }
 
         return stringifyJson({
@@ -108,9 +146,16 @@ export function createTicketSyncTool($: Shell) {
         });
       }
 
-      const labels = collectLabels(args.labels);
+      if (!args.title?.trim()) {
+        throw new Error("ticket_sync requires title when creating an issue");
+      }
+
+      if (!body) {
+        throw new Error("ticket_sync requires body, description, or checklist content when creating an issue");
+      }
+
       const labelArgs = labels.flatMap((label) => ["--label", label]);
-      const proc = await $`gh issue create --title ${args.title} --body ${body} ${labelArgs}`
+      const proc = await $`gh issue create --title ${args.title.trim()} --body ${body} ${labelArgs}`
         .cwd(ctx.worktree)
         .quiet()
         .nothrow();
@@ -119,8 +164,14 @@ export function createTicketSyncTool($: Shell) {
         throw new Error(proc.stderr.toString() || "Failed to create issue");
       }
 
+      const url = proc.text().trim();
+
+      for (const comment of comments) {
+        await postIssueComment($, ctx.worktree, url, comment);
+      }
+
       return stringifyJson({
-        url: proc.text().trim(),
+        url,
       });
     },
   } satisfies ToolDefinition<TicketSyncArgs>;

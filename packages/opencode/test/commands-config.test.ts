@@ -27,12 +27,14 @@ describe("applyCommandsConfig", () => {
 
       assert.ok(cfg.command);
       const expectedCommands = [
+        "ask",
         "branch",
         "reload",
         "pr/create",
         "pr/review",
         "pr/fix",
         "ship",
+        "ticket/ask",
         "ticket/create",
         "ticket/plan",
         "ticket/dev",
@@ -57,6 +59,8 @@ describe("applyCommandsConfig", () => {
       assert.equal(cfg.command!["pr/create"]?.agent, "build");
       assert.equal(cfg.command!["ticket/create"]?.agent, "build");
       assert.equal(cfg.command!["ticket/plan"]?.agent, "planner");
+      assert.equal(cfg.command!["ask"]?.agent, "build");
+      assert.equal(cfg.command!["ticket/ask"]?.agent, "build");
       assert.equal(cfg.command!["dev"]?.agent, "build");
       assert.equal(cfg.command!["ship"]?.agent, "navigator");
       assert.equal(cfg.command!["todo"]?.agent, "navigator");
@@ -410,7 +414,9 @@ describe("applyCommandsConfig", () => {
       assert.ok(cfg.command!["dev"]?.template);
       assert.ok(cfg.command!["pr/create"]?.template);
       assert.ok(cfg.command!["ticket/create"]?.template);
+      assert.ok(cfg.command!["ask"]?.template);
       assert.ok(cfg.command!["pr/review"]?.template);
+      assert.ok(cfg.command!["ticket/ask"]?.template);
       assert.ok(cfg.command!["ticket/plan"]?.template);
       assert.ok(cfg.command!["pr/fix"]?.template);
       assert.ok(cfg.command!["ship"]?.template);

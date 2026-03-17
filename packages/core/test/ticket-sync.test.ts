@@ -71,6 +71,30 @@ describe("ticket_sync", () => {
     assert.match(executedCommand, /--add-label triage/);
     assert.match(executedCommand, /--body Updated body/);
   });
+
+  test("posts a comment to an existing issue without editing metadata", async () => {
+    const executedCommands: string[] = [];
+    const shell = createMockShell((command) => {
+      executedCommands.push(command);
+      return {
+        stdout: "",
+        stderr: "",
+        exitCode: 0,
+      };
+    });
+
+    const tool = createTicketSyncTool(shell);
+    const output = await tool.execute({
+      refUrl: "https://github.com/acme/repo/issues/9",
+      comments: ["Here is the answer on the ticket."],
+    }, createToolContextForDirectory("/tmp/repo"));
+
+    const result = JSON.parse(output);
+    assert.equal(result.url, "https://github.com/acme/repo/issues/9");
+    assert.equal(executedCommands.length, 1);
+    assert.match(executedCommands[0]!, /gh issue comment/);
+    assert.match(executedCommands[0]!, /--body Here is the answer on the ticket\./);
+  });
 });
 
 function createMockShell(

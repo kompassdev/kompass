@@ -7,6 +7,9 @@
     ]
   },
   "commands": {
+    "ask": {
+      "enabled": true
+    },
     "branch": {
       "enabled": true
     },
@@ -44,6 +47,9 @@
       "enabled": true
     },
     "todo": {
+      "enabled": true
+    },
+    "ticket/ask": {
       "enabled": true
     },
     "ticket/create": {

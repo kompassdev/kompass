@@ -11,6 +11,7 @@
 
   // Command config is now object-based so each entry can be toggled or customized.
   "commands": {
+    "ask": { "enabled": true },
     "commit": { "enabled": true },
     "commit-and-push": { "enabled": true },
     "dev": { "enabled": true },
@@ -23,6 +24,7 @@
     "ship": { "enabled": true },
     "rmslop": { "enabled": true },
     "todo": { "enabled": true },
+    "ticket/ask": { "enabled": true },
     "ticket/create": { "enabled": true },
     "ticket/dev": { "enabled": true },
     "ticket/plan": { "enabled": true },

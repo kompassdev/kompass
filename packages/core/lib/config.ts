@@ -20,6 +20,7 @@ export const DEFAULT_TOOL_NAMES = [
 ] as const;
 
 export const DEFAULT_COMMAND_NAMES = [
+  "ask",
   "branch",
   "commit",
   "commit-and-push",
@@ -33,6 +34,7 @@ export const DEFAULT_COMMAND_NAMES = [
   "ship",
   "rmslop",
   "todo",
+  "ticket/ask",
   "ticket/create",
   "ticket/dev",
   "ticket/plan",
@@ -98,6 +100,7 @@ export interface KompassConfig {
     validation?: string[];
   };
   commands?: {
+    ask?: CommandConfig;
     branch?: CommandConfig;
     commit?: CommandConfig;
     "commit-and-push"?: CommandConfig;
@@ -111,6 +114,7 @@ export interface KompassConfig {
     ship?: CommandConfig;
     rmslop?: CommandConfig;
     todo?: CommandConfig;
+    "ticket/ask"?: CommandConfig;
     "ticket/create"?: CommandConfig;
     "ticket/dev"?: CommandConfig;
     "ticket/plan"?: CommandConfig;

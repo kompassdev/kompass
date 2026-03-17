@@ -56,7 +56,7 @@ Use `@kompassdev/opencode` when you want Kompass workflows inside OpenCode.
 - install the plugin in your OpenCode config
 - optionally add one project override file to customize commands, agents, tools, skills, and defaults; `.opencode/kompass.jsonc` is preferred
 - bundled Kompass skills are registered automatically when the plugin loads, so users do not need to copy skill files manually
-- use commands like `/review`, `/pr/create`, or `/ticket/plan` inside OpenCode
+- use commands like `/ask`, `/review`, `/pr/create`, or `/ticket/plan` inside OpenCode
 - for CLI session debugging, use `opencode session list` to find a session id and `opencode export <sessionID>` to dump the raw session JSON
 
 ### Claude Code
@@ -80,6 +80,18 @@ Turns a request or ticket into a scoped implementation plan.
 Reviews branch or PR changes without editing files.
 
 ## Commands
+
+### `/ask`
+
+Answers questions about the current project or codebase.
+
+<details>
+
+**Usage:** `/ask <question>`
+
+Loads only the relevant repository context needed to answer a project or code question directly.
+
+</details>
 
 ### `/commit`
 
@@ -237,6 +249,18 @@ Creates a new GitHub issue with the provided description, generating a title and
 
 </details>
 
+### `/ticket/ask`
+
+Answers a question on a ticket and posts the response.
+
+<details>
+
+**Usage:** `/ticket/ask <ticket-reference> <question>`
+
+Loads the ticket plus all comments, answers the question using ticket and repository context, and posts the response back to the same ticket.
+
+</details>
+
 ### `/ticket/dev`
 
 Implements a ticket with planning and execution.
@@ -356,16 +380,17 @@ Create or update a GitHub issue with checklists.
 
 **Parameters:**
 
-- `title` (required): issue title
+- `title` (optional): issue title; required when creating a new issue or renaming one
 - `body` (optional): raw issue body override
 - `description` (optional): short issue description rendered above checklist sections
 - `labels` (optional): labels to apply when creating or updating the issue
 - `checklists` (optional): structured checklist sections rendered as markdown
 - `refUrl` (optional): issue URL to update instead of creating a new issue
+- `comments` (optional): issue comments to post without replacing the issue body
 
 **Why it helps:**
 
-- lets ticket flows create a new issue or update an existing one with one tool
+- lets ticket flows create a new issue, update an existing one, or post a ticket comment with one tool
 - avoids making the agent handcraft raw `gh` issue commands each time
 
 </details>

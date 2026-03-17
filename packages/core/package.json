@@ -13,6 +13,7 @@
     "commands",
     "components",
     "dist",
+    "kompass.jsonc",
     "README.md",
     "LICENSE"
   ],

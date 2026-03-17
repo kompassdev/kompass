@@ -185,7 +185,7 @@ async function main() {
   console.log("\nTo use the compiled OpenCode adapter:");
   console.log("  1. Copy files from packages/opencode/.opencode/commands/ to your .opencode/commands/");
   console.log("  2. Copy files from packages/opencode/.opencode/agents/ to your .opencode/agents/");
-  console.log("  3. Reference packages/opencode/.opencode/kompass.jsonc for the configuration");
+  console.log("  3. Add consumer overrides in .opencode/kompass.jsonc when needed");
 }
 
 main().catch((error) => {

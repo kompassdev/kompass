@@ -1,6 +1,6 @@
 import { afterEach, describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -119,19 +119,20 @@ describe("applyCommandsConfig", () => {
       const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-commands-"));
 
       try {
+        await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
         await writeFile(
-          path.join(tempDir, "kompass.json"),
-          JSON.stringify({
-            tools: {
-              changes_load: { enabled: false },
-              pr_load: { enabled: false },
-              ticket_sync: {
-                enabled: true,
-                name: "custom_ticket_name",
+          path.join(tempDir, ".opencode", "kompass.jsonc"),
+          `{
+            "tools": {
+              "changes_load": { "enabled": false },
+              "pr_load": { "enabled": false },
+              "ticket_sync": {
+                "enabled": true,
+                "name": "custom_ticket_name"
               },
-              ticket_load: { enabled: false },
-            },
-          }),
+              "ticket_load": { "enabled": false }
+            }
+          }`,
         );
 
         const cfg: { command?: Record<string, { template: string }> } = {};
@@ -159,8 +160,9 @@ describe("applyCommandsConfig", () => {
       const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-command-entries-"));
 
       try {
+        await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
         await writeFile(
-          path.join(tempDir, "kompass.jsonc"),
+          path.join(tempDir, ".opencode", "kompass.jsonc"),
           `{
             "commands": {
               "dev": { "enabled": false },
@@ -243,11 +245,8 @@ describe("applyCommandsConfig", () => {
       assert.match(cfg.command!["pr/review"].template, /Review a GitHub pull request/);
       assert.doesNotMatch(cfg.command!["pr/review"].template, /<%/);
       assert.doesNotMatch(cfg.command!["pr/review"].template, /\n{3,}/);
-      assert.match(
-        cfg.command!["pr/review"].template,
-        /publish it as review feedback with `★★★★★` at the start of `review\.body`/,
-      );
-      assert.doesNotMatch(cfg.command!["pr/review"].template, /only `review\.approve: true`/);
+      assert.match(cfg.command!["pr/review"].template, /approve the PR instead/);
+      assert.match(cfg.command!["pr/review"].template, /only `review\.approve: true`/);
     });
 
     test("pr/review supports disabling approval via template data", async () => {
@@ -255,8 +254,9 @@ describe("applyCommandsConfig", () => {
       const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-pr-review-template-data-"));
 
       try {
+        await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
         await writeFile(
-          path.join(tempDir, "kompass.jsonc"),
+          path.join(tempDir, ".opencode", "kompass.jsonc"),
           `{
             "shared": {
               "prApprove": false

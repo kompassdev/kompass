@@ -37,17 +37,15 @@ For OpenCode, add the adapter package to your config:
 }
 ```
 
-Config is optional. To publish a config file:
+Config is optional. To publish a project override:
 
 ```bash
 # Inside .opencode folder
 curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/kompass.jsonc -o .opencode/kompass.jsonc
 
-# Project root
-curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/kompass.jsonc -o kompass.jsonc
 ```
 
-Kompass prefers `.opencode/kompass.jsonc`, then `kompass.jsonc`, and still accepts the legacy `.json` filenames.
+Kompass ships a bundled base config, then applies the first matching consumer-project override in this order: `.opencode/kompass.jsonc`, `.opencode/kompass.json`, `kompass.jsonc`, `kompass.json`.
 
 ## How To Use
 
@@ -56,7 +54,7 @@ Kompass prefers `.opencode/kompass.jsonc`, then `kompass.jsonc`, and still accep
 Use `@kompassdev/opencode` when you want Kompass workflows inside OpenCode.
 
 - install the plugin in your OpenCode config
-- optionally add `.opencode/kompass.jsonc` or `kompass.jsonc` to customize commands, agents, tools, skills, and defaults
+- optionally add one project override file to customize commands, agents, tools, skills, and defaults; `.opencode/kompass.jsonc` is preferred
 - bundled Kompass skills are registered automatically when the plugin loads, so users do not need to copy skill files manually
 - use commands like `/review`, `/pr/create`, or `/ticket/plan` inside OpenCode
 - for CLI session debugging, use `opencode session list` to find a session id and `opencode export <sessionID>` to dump the raw session JSON
@@ -391,12 +389,14 @@ Refresh the OpenCode project cache.
 
 Project config is optional.
 
-If you want to customize Kompass, use one of these preferred locations in the consumer project:
+If you want to customize Kompass, use one of these project override locations in precedence order:
 
 - `.opencode/kompass.jsonc`
+- `.opencode/kompass.json`
 - `kompass.jsonc`
+- `kompass.json`
 
-See `kompass.jsonc` for the root example, `packages/opencode/.opencode/kompass.jsonc` for the compiled OpenCode-scoped example, and `kompass.schema.json` for the schema.
+See `kompass.jsonc` for the published base config, `.opencode/kompass.jsonc` for the preferred consumer-project override shape, and `kompass.schema.json` for the schema.
 
 Tool names can also be remapped per adapter. For example, this keeps `ticket_sync` enabled but exposes it as `custom_ticket_name`, and Kompass command or agent references are rewritten to match:
 

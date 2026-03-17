@@ -1,6 +1,6 @@
 {
   "shared": {
-    "prApprove": false
+    "prApprove": true
   },
   "commands": {
     "branch": {

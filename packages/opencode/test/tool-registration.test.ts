@@ -1,6 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -41,20 +41,21 @@ describe("createOpenCodeTools", () => {
     const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-tools-"));
 
     try {
+      await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
       await writeFile(
-        path.join(tempDir, "kompass.json"),
-        JSON.stringify({
-          tools: {
-            changes_load: { enabled: false },
-            pr_load: { enabled: false },
-            pr_sync: { enabled: false },
-            ticket_sync: {
-              enabled: true,
-              name: "custom_ticket_name",
+        path.join(tempDir, ".opencode", "kompass.jsonc"),
+        `{
+          "tools": {
+            "changes_load": { "enabled": false },
+            "pr_load": { "enabled": false },
+            "pr_sync": { "enabled": false },
+            "ticket_sync": {
+              "enabled": true,
+              "name": "custom_ticket_name"
             },
-            ticket_load: { enabled: false },
-          },
-        }),
+            "ticket_load": { "enabled": false }
+          }
+        }`,
       );
 
       const tools = await createOpenCodeTools((() => {
@@ -74,8 +75,9 @@ describe("createOpenCodeTools", () => {
     const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-tools-jsonc-"));
 
     try {
+      await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
       await writeFile(
-        path.join(tempDir, "kompass.jsonc"),
+        path.join(tempDir, ".opencode", "kompass.jsonc"),
         `{
           // jsonc config should work
           "tools": {
@@ -99,20 +101,27 @@ describe("createOpenCodeTools", () => {
   });
 
   test("hides review.approve when pr/review approval is disabled", async () => {
-    const tools = await createOpenCodeTools((() => {
-      throw new Error("not implemented");
-    }) as never, createMockClient(), process.cwd());
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-tools-no-approve-"));
 
-    const reviewShape = (tools.kompass_pr_sync as any).args.review.unwrap().shape;
-    assert.equal(reviewShape.approve, undefined);
+    try {
+      const tools = await createOpenCodeTools((() => {
+        throw new Error("not implemented");
+      }) as never, createMockClient(), tempDir);
+
+      const reviewShape = (tools.kompass_pr_sync as any).args.review.unwrap().shape;
+      assert.equal(reviewShape.approve, undefined);
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
   });
 
   test("includes review.approve when pr/review approval is enabled", async () => {
     const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-tools-approve-"));
 
     try {
+      await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
       await writeFile(
-        path.join(tempDir, "kompass.jsonc"),
+        path.join(tempDir, ".opencode", "kompass.jsonc"),
         `{
           "shared": {
             "prApprove": true

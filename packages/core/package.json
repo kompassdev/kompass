@@ -13,6 +13,7 @@
     "commands",
     "components",
     "dist",
+    "kompass.jsonc",
     "README.md",
     "LICENSE"
   ],
@@ -29,5 +30,8 @@
     "toolkit",
     "agents"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "eta": "^4.5.1"
+  }
 }

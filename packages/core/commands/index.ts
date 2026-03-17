@@ -1,4 +1,4 @@
-import { embedComponents } from "../lib/components.ts";
+import { renderTemplate } from "../lib/components.ts";
 import { loadKompassConfig, mergeWithDefaults } from "../lib/config.ts";
 import { loadProjectText } from "../lib/text.ts";
 
@@ -7,6 +7,7 @@ interface CommandDefinition {
   agent: string;
   templatePath: string;
   subtask?: boolean;
+  config?: Record<string, unknown>;
 }
 
 export const commandDefinitions: Record<string, CommandDefinition> = {
@@ -136,13 +137,21 @@ export async function resolveCommands(
       config.commands.templates[name] || definition.templatePath;
 
     let template: string;
+    const commandConfig = {
+      enabled: true,
+      ...(definition.config ?? {}),
+      ...(config.commands.entries[name] ?? {}),
+    };
+    const templateData = {
+      ...commandConfig,
+      config: {
+        shared: config.shared,
+      },
+    };
+
     try {
       const rawTemplate = await loadProjectText(templatePath);
-      // Only embed components if using default template
-      // Custom templates bypass component expansion (allows users full control)
-      template = config.commands.templates[name]
-        ? rawTemplate
-        : embedComponents(rawTemplate, components);
+      template = renderTemplate(rawTemplate, components, templateData);
     } catch {
       // Template file doesn't exist, skip
       continue;
@@ -153,6 +162,7 @@ export async function resolveCommands(
       agent: definition.agent,
       subtask: definition.subtask ?? !isCi,
       template,
+      ...(Object.keys(commandConfig).length > 0 ? { config: commandConfig } : {}),
     };
   }
 

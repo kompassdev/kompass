@@ -11,6 +11,7 @@ import {
   loadKompassConfig,
   mergeWithDefaults,
   resolveCommands,
+  type MergedKompassConfig,
   type Shell,
 } from "../core/index.ts";
 import { applyAgentsConfig, applyCommandsConfig, applySkillsConfig } from "./config.ts";
@@ -211,7 +212,7 @@ function createReloadTool(client: PluginInput["client"]) {
 }
 
 const opencodeToolCreators = {
-  changes_load($: PluginInput["$"]) {
+  changes_load($: PluginInput["$"], _: PluginInput["client"], __: MergedKompassConfig) {
     const definition = createChangesLoadTool(asShell($));
     return tool({
       description: definition.description,
@@ -228,7 +229,7 @@ const opencodeToolCreators = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
-  pr_load($: PluginInput["$"]) {
+  pr_load($: PluginInput["$"], _: PluginInput["client"], __: MergedKompassConfig) {
     const definition = createPrLoadTool(asShell($));
     return tool({
       description: definition.description,
@@ -238,8 +239,9 @@ const opencodeToolCreators = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
-  pr_sync($: PluginInput["$"]) {
+  pr_sync($: PluginInput["$"], _: PluginInput["client"], config: MergedKompassConfig) {
     const definition = createPrSyncTool(asShell($));
+
     return tool({
       description: definition.description,
       args: {
@@ -247,6 +249,7 @@ const opencodeToolCreators = {
         body: tool.schema.string().describe("PR body override").optional(),
         description: tool.schema.string().describe("Short PR description rendered above checklist sections").optional(),
         base: tool.schema.string().describe("Base branch to merge into").optional(),
+        head: tool.schema.string().describe("Head branch to use when creating a PR").optional(),
         checklists: tool.schema.array(tool.schema.object({
           name: tool.schema.string().describe("Checklist section name"),
           items: tool.schema.array(tool.schema.object({
@@ -267,7 +270,10 @@ const opencodeToolCreators = {
             side: tool.schema.enum(["LEFT", "RIGHT"]).describe("Diff side for the ending line").optional(),
             startSide: tool.schema.enum(["LEFT", "RIGHT"]).describe("Diff side for the starting line").optional(),
           })).describe("Inline review comments to submit").optional(),
-          approve: tool.schema.boolean().describe("Approve the PR; can be combined with review comments").optional(),
+          ...(config.shared.prApprove
+            ? { approve: tool.schema.boolean().describe("Approve the PR with this review comment").optional() }
+            : {}
+          ),
         }).describe("Structured review submission").optional(),
         replies: tool.schema.array(tool.schema.object({
           inReplyTo: tool.schema.number().int().describe("Existing review comment ID to reply to"),
@@ -278,7 +284,7 @@ const opencodeToolCreators = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
-  ticket_sync($: PluginInput["$"]) {
+  ticket_sync($: PluginInput["$"], _: PluginInput["client"], __: MergedKompassConfig) {
     const definition = createTicketSyncTool(asShell($));
     return tool({
       description: definition.description,
@@ -299,7 +305,7 @@ const opencodeToolCreators = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
-  ticket_load($: PluginInput["$"]) {
+  ticket_load($: PluginInput["$"], _: PluginInput["client"], __: MergedKompassConfig) {
     const definition = createTicketLoadTool(asShell($));
     return tool({
       description: definition.description,
@@ -310,7 +316,7 @@ const opencodeToolCreators = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
-  reload(_: PluginInput["$"], client: PluginInput["client"]) {
+  reload(_: PluginInput["$"], client: PluginInput["client"], __: MergedKompassConfig) {
     return createReloadTool(client);
   },
 } as const;
@@ -329,7 +335,7 @@ export async function createOpenCodeTools(
     const creator = opencodeToolCreators[toolName as keyof typeof opencodeToolCreators];
     if (creator) {
       const registeredName = getConfiguredOpenCodeToolName(toolName, config.tools[toolName].name);
-      tools[registeredName] = creator($, client);
+      tools[registeredName] = creator($, client, config);
       await logger.info("Loaded Kompass tool", {
         tool: toolName,
         registeredName,

@@ -24,7 +24,7 @@ $ARGUMENTS
 - Store a concise ticket summary as `<ticket-summary>`
 - If `<ticket-context>` cannot be loaded, STOP and report that the ticket source is missing or invalid
 
-{{dev-flow}}
+<%~ include("@dev-flow") %>
 
 ### Validate Changes
 

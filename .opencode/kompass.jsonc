@@ -1,0 +1,7 @@
+{
+  "$schema": "https://raw.githubusercontent.com/kompassdev/kompass/main/kompass.schema.json",
+
+  "shared": {
+    "prApprove": true
+  }
+}

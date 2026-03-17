@@ -128,10 +128,19 @@ Before delegating, write the exact `<task ...>...</task>` block, say what result
 ## Component Authoring
 
 - Store reusable command fragments in `packages/core/components/`
+- Treat files in `packages/core/components/` as Eta partials and include them from commands with `<%~ include("@partial-name") %>`
+- Pass partial-specific locals with the second `include` argument, for example `<%~ include("@change-summary", { rules: "..." }) %>`
 - Create a component only when the same structure or wording is needed in multiple commands; if a section is only used once, keep it inline in the command file
 - Keep components focused on repeatable building blocks, such as shared workflow steps, analysis patterns, or output scaffolding
 - Components should complement command docs, not hide the command's main intent; commands should still read clearly when expanded
 - When a reusable pattern emerges from existing inline text, extract it into a component rather than duplicating and drifting over time
+
+## Template Authoring
+
+- Command and component files render through Eta
+- Use Eta syntax for conditionals and includes; do not introduce custom placeholder syntaxes
+- Store shared render inputs in top-level shared config when multiple surfaces need them, for example `shared.prApprove`; keep command-specific render inputs on `commands.<name>` only when they are truly command-local
+- Custom command templates are rendered through the same Eta pipeline as bundled templates
 
 ## Testing
 

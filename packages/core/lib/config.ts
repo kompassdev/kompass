@@ -1,5 +1,8 @@
 import { access, readFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export interface AgentDefinition {
   description: string;
@@ -61,6 +64,7 @@ export interface ToggleConfig {
 
 export interface CommandConfig extends ToggleConfig {
   template?: string;
+  [key: string]: unknown;
 }
 
 export interface AgentConfig extends ToggleConfig, Partial<AgentDefinition> {}
@@ -89,6 +93,9 @@ export interface SkillIdentity {
 }
 
 export interface KompassConfig {
+  shared?: {
+    prApprove?: boolean;
+  };
   commands?: {
     branch?: CommandConfig;
     commit?: CommandConfig;
@@ -146,9 +153,13 @@ export interface KompassConfig {
 }
 
 export interface MergedKompassConfig {
+  shared: {
+    prApprove: boolean;
+  };
   commands: {
     enabled: string[];
     templates: Record<string, string>;
+    entries: Record<string, CommandConfig>;
   };
   agents: {
     enabled: string[];
@@ -186,20 +197,14 @@ export interface MergedKompassConfig {
   };
 }
 
-const CONFIG_FILES = [
+const BUNDLED_CONFIG_CANDIDATES = [path.resolve(__dirname, "..", "kompass.jsonc")] as const;
+
+const PROJECT_CONFIG_FILES = [
   ".opencode/kompass.jsonc",
-  "kompass.jsonc",
   ".opencode/kompass.json",
+  "kompass.jsonc",
   "kompass.json",
-  ".compass/config.jsonc",
-  ".compass/config.json",
-  "compass.jsonc",
-  "compass.json",
-  ".opencode/compass.jsonc",
-  ".opencode/compass.json",
-  "opencode-compass.jsonc",
-  "opencode-compass.json",
-];
+] as const;
 
 async function fileExists(filePath: string): Promise<boolean> {
   try {
@@ -212,15 +217,71 @@ async function fileExists(filePath: string): Promise<boolean> {
 
 export async function loadKompassConfig(
   projectRoot: string,
+): Promise<KompassConfig> {
+  const bundledConfig = await loadBundledConfig();
+  const projectConfig = await loadFirstConfig(projectRoot, PROJECT_CONFIG_FILES);
+
+  return mergeConfigObjects(bundledConfig, projectConfig) ?? bundledConfig;
+}
+
+async function loadBundledConfig(): Promise<KompassConfig> {
+  for (const candidate of BUNDLED_CONFIG_CANDIDATES) {
+    if (await fileExists(candidate)) {
+      const content = await readFile(candidate, "utf8");
+      return parseJsonConfig(content, candidate);
+    }
+  }
+
+  throw new Error(
+    `Failed to locate bundled Kompass config. Checked: ${BUNDLED_CONFIG_CANDIDATES.join(", ")}`,
+  );
+}
+
+async function loadFirstConfig(
+  projectRoot: string,
+  configFiles: readonly string[],
 ): Promise<KompassConfig | null> {
-  for (const configFile of CONFIG_FILES) {
+  for (const configFile of configFiles) {
     const fullPath = path.resolve(projectRoot, configFile);
     if (await fileExists(fullPath)) {
       const content = await readFile(fullPath, "utf8");
       return parseJsonConfig(content, fullPath);
     }
   }
+
   return null;
+}
+
+function mergeConfigObjects(
+  base: KompassConfig | null,
+  override: KompassConfig | null,
+): KompassConfig | null {
+  if (base === null) return override;
+  if (override === null) return base;
+
+  return mergeUnknown(base, override) as KompassConfig;
+}
+
+function mergeUnknown(base: unknown, override: unknown): unknown {
+  if (override === undefined) return base;
+  if (base === undefined) return override;
+  if (Array.isArray(base) || Array.isArray(override)) {
+    return override;
+  }
+  if (!isPlainObject(base) || !isPlainObject(override)) {
+    return override;
+  }
+
+  const merged: Record<string, unknown> = { ...base };
+  for (const [key, value] of Object.entries(override)) {
+    merged[key] = key in merged ? mergeUnknown(merged[key], value) : value;
+  }
+
+  return merged;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function parseJsonConfig(content: string, filePath: string): KompassConfig {
@@ -409,6 +470,13 @@ function getCommandTemplate(
   return entry?.template ?? config?.commands?.templates?.[name];
 }
 
+function getCommandEntry(
+  config: KompassConfig | null,
+  name: CommandName,
+): CommandConfig | undefined {
+  return getToggleEntry<CommandConfig>(config?.commands, name);
+}
+
 function getComponentPath(
   config: KompassConfig | null,
   name: ComponentName,
@@ -505,6 +573,9 @@ export function mergeWithDefaults(
   const { enabled: _plannerEnabled, ...plannerOverrides } = config?.agents?.planner ?? {};
 
   return {
+    shared: {
+      prApprove: config?.shared?.prApprove ?? false,
+    },
     commands: {
       enabled: getEnabledNames(
         DEFAULT_COMMAND_NAMES,
@@ -516,6 +587,12 @@ export function mergeWithDefaults(
         DEFAULT_COMMAND_NAMES.flatMap((name) => {
           const template = getCommandTemplate(config, name);
           return template ? [[name, template]] : [];
+        }),
+      ),
+      entries: Object.fromEntries(
+        DEFAULT_COMMAND_NAMES.flatMap((name) => {
+          const entry = getCommandEntry(config, name);
+          return entry ? [[name, entry]] : [];
         }),
       ),
     },

@@ -131,6 +131,7 @@ Run `git push` and use its output as the source of truth.
 Use `kompass_pr_sync` to create the pull request:
 - Generate a concise title (max 70 chars) summarizing the change and store it as `<pr-title>`
 - Generate a short description that briefly describes the intent and scope
+- Pass `<current-branch>` as `head` when it is available so PR creation does not depend on local upstream inference
 - Generate a compact checklist that mirrors the same human-facing structure used for the ticket summary:
   - group delivered work into 2-4 functional or outcome-focused sections
   - use concise section names instead of generic labels like `Changes`

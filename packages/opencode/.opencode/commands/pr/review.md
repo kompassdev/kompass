@@ -49,7 +49,8 @@ Following the reviewer agent guidance:
 4. Use diff hunks in `<changes>` to map inline comments to the correct lines
 5. Do NOT duplicate findings already raised
 
-Derive `<previous-grade>` from prior reviews and `<already-approved>` from existing approvals on `<pr-context.pr.headRefOid>`.
+Derive `<previous-grade>` from prior reviews.
+Derive `<already-approved>` from existing approvals on `<pr-context.pr.headRefOid>`.
 
 Before publishing, derive: `<has-inline-comments>`, `<has-body-note>`, `<publish-grade>`, and `<grade-changed>`.
 
@@ -74,10 +75,12 @@ For multi-line: add `startLine`. For deleted lines: use `side: "LEFT"`.
 - Already approved → skip
 - Otherwise → `kompass_pr_sync` with `refUrl: <pr-context.pr.url>` and only `review.approve: true`
 
-**If `<publish-grade>` < `★★★★★`:**
-- Pass `refUrl: <pr-context.pr.url>`
-- `review.body`: grade + notes (unchanged lines, general concerns)
-- `review.comments`: inline comments (changed lines only) - **skip lines that already have comments in `<pr-context.threads>`**
+**If `<publish-grade>` is below `★★★★★`:**
+- Call `kompass_pr_sync` with:
+  - `refUrl: <pr-context.pr.url>`
+  - `review.body`: the grade line first (for example `★★★☆☆`), followed by any non-inline notes
+  - `review.comments`: inline comments (changed lines only) - **skip lines that already have comments in `<pr-context.threads>`**
+- Never omit the grade from `review.body` in this branch
 - Do not pass any other fields
 
 If `kompass_pr_sync` returns a review URL, store it as `<review-url>`.
@@ -87,7 +90,6 @@ If `kompass_pr_sync` returns a review URL, store it as `<review-url>`.
 Use `<ticket-context>` and `<additional-context>` to judge whether the PR meets its stated intent without over-indexing on stylistic preferences.
 
 ## Output
-
 When approved:
 ```
 PR approved for #<pr-context.pr.number>
@@ -101,8 +103,7 @@ Approval skipped for PR #<pr-context.pr.number>
 
 - Reason: current head already approved
 ```
-
-When review published (grade < 5 stars with feedback):
+When review published:
 ```
 Review submitted for PR #<pr-context.pr.number>
 

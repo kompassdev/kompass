@@ -6,6 +6,52 @@ import type { Shell, ShellPromise } from "../tools/shared.ts";
 import { createPrSyncTool } from "../tools/pr-sync.ts";
 
 describe("pr_sync", () => {
+  test("creates a PR with explicit head branch", async () => {
+    const executedCommands: string[] = [];
+    const shell = createMockShell(executedCommands, [
+      {
+        contains: "gh pr create",
+        stdout: "https://github.com/acme/repo/pull/10\n",
+      },
+    ]);
+
+    const tool = createPrSyncTool(shell);
+    const output = await tool.execute({
+      title: "Improve PR creation reliability",
+      body: "Uses explicit head branch when creating PRs.",
+      base: "main",
+      head: "feature/pr-head",
+    }, createToolContextForDirectory("/tmp/repo"));
+
+    const result = JSON.parse(output);
+    assert.equal(result.url, "https://github.com/acme/repo/pull/10");
+    assert.equal(result.action, "created");
+    assert.match(executedCommands[0], /--base main/);
+    assert.match(executedCommands[0], /--head feature\/pr-head/);
+  });
+
+  test("creates a PR without head when head is omitted", async () => {
+    const executedCommands: string[] = [];
+    const shell = createMockShell(executedCommands, [
+      {
+        contains: "gh pr create",
+        stdout: "https://github.com/acme/repo/pull/11\n",
+      },
+    ]);
+
+    const tool = createPrSyncTool(shell);
+    const output = await tool.execute({
+      title: "Improve PR creation reliability",
+      body: "Relies on caller-provided branch setup when head is omitted.",
+      base: "main",
+    }, createToolContextForDirectory("/tmp/repo"));
+
+    const result = JSON.parse(output);
+    assert.equal(result.url, "https://github.com/acme/repo/pull/11");
+    assert.equal(result.action, "created");
+    assert.doesNotMatch(executedCommands[0], /--head /);
+  });
+
   test("approves an existing PR without posting a review body", async () => {
     const executedCommands: string[] = [];
     const shell = createMockShell(executedCommands, [

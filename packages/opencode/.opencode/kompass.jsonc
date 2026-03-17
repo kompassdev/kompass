@@ -1,4 +1,7 @@
 {
+  "shared": {
+    "prApprove": true
+  },
   "commands": {
     "branch": {
       "enabled": true

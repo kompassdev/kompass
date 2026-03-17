@@ -241,21 +241,6 @@ const opencodeToolCreators = {
   },
   pr_sync($: PluginInput["$"], _: PluginInput["client"], config: MergedKompassConfig) {
     const definition = createPrSyncTool(asShell($));
-    const reviewFields = {
-      body: tool.schema.string().describe("Optional review summary body").optional(),
-      comments: tool.schema.array(tool.schema.object({
-        path: tool.schema.string().describe("Changed file path"),
-        body: tool.schema.string().describe("Inline review comment body"),
-        line: tool.schema.number().int().describe("Ending line on the diff side"),
-        startLine: tool.schema.number().int().describe("Starting line for multi-line comments").optional(),
-        side: tool.schema.enum(["LEFT", "RIGHT"]).describe("Diff side for the ending line").optional(),
-        startSide: tool.schema.enum(["LEFT", "RIGHT"]).describe("Diff side for the starting line").optional(),
-      })).describe("Inline review comments to submit").optional(),
-    };
-    const reviewFieldsWithApproval = {
-      ...reviewFields,
-      approve: tool.schema.boolean().describe("Approve the PR; can be combined with review comments").optional(),
-    };
 
     return tool({
       description: definition.description,
@@ -275,9 +260,21 @@ const opencodeToolCreators = {
         draft: tool.schema.boolean().describe("Create as draft PR").optional(),
         refUrl: tool.schema.string().describe("Optional PR URL to update").optional(),
         commitId: tool.schema.string().describe("Commit SHA to anchor review comments to").optional(),
-        review: tool.schema.object(config.shared.prApprove === true ? reviewFieldsWithApproval : reviewFields)
-          .describe("Structured review submission")
-          .optional(),
+        review: tool.schema.object({
+          body: tool.schema.string().describe("Optional review summary body").optional(),
+          comments: tool.schema.array(tool.schema.object({
+            path: tool.schema.string().describe("Changed file path"),
+            body: tool.schema.string().describe("Inline review comment body"),
+            line: tool.schema.number().int().describe("Ending line on the diff side"),
+            startLine: tool.schema.number().int().describe("Starting line for multi-line comments").optional(),
+            side: tool.schema.enum(["LEFT", "RIGHT"]).describe("Diff side for the ending line").optional(),
+            startSide: tool.schema.enum(["LEFT", "RIGHT"]).describe("Diff side for the starting line").optional(),
+          })).describe("Inline review comments to submit").optional(),
+          ...(config.shared.prApprove
+            ? { approve: tool.schema.boolean().describe("Approve the PR with this review comment").optional() }
+            : {}
+          ),
+        }).describe("Structured review submission").optional(),
         replies: tool.schema.array(tool.schema.object({
           inReplyTo: tool.schema.number().int().describe("Existing review comment ID to reply to"),
           body: tool.schema.string().describe("Reply body"),

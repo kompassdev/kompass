@@ -44,8 +44,10 @@ Following the reviewer agent guidance:
 4. Use diff hunks in `<changes>` to map inline comments to the correct lines
 5. Do NOT duplicate findings already raised
 
-Derive `<previous-grade>` from prior reviews.<% if (it.config.shared.prApprove === true) { -%>
-Derive `<already-approved>` from existing approvals on `<pr-context.pr.headRefOid>`.<% } %>
+Derive `<previous-grade>` from prior reviews.
+<% if (it.config.shared.prApprove === true) { -%>
+Derive `<already-approved>` from existing approvals on `<pr-context.pr.headRefOid>`.
+<% } -%>
 
 Before publishing, derive: `<has-inline-comments>`, `<has-body-note>`, `<publish-grade>`, and `<grade-changed>`.
 

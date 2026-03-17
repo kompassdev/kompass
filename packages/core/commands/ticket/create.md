@@ -32,6 +32,7 @@ $ARGUMENTS
 
 Use `ticket_sync` with `refUrl` unset to create the ticket:
 <%~ include("@changes-summary") %>
+- Set `assignees` to `[@me]` so the created ticket is assigned to yourself as the author
 - Store the generated title as `<ticket-title>`
 - Store the created issue URL as `<ticket-url>`
 

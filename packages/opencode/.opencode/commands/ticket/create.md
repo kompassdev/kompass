@@ -67,6 +67,7 @@ Use `kompass_ticket_sync` with `refUrl` unset to create the ticket:
 - Do not restate the full diff
 - Do not use execution-status notes such as `Validation not run in this session` as checklist items
 - If `kompass_changes_load` reports uncommitted work, make that clear in the ticket wording
+- Set `assignees` to `[@me]` so the created ticket is assigned to yourself as the author
 - Store the generated title as `<ticket-title>`
 - Store the created issue URL as `<ticket-url>`
 

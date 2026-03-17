@@ -35,6 +35,7 @@ type PrSyncArgs = {
   description?: string;
   base?: string;
   head?: string;
+  assignees?: string[];
   checklists?: Array<{
     name: string;
     items: Array<{
@@ -78,7 +79,18 @@ function renderPrBody(args: PrSyncArgs) {
 }
 
 function hasMetadataUpdate(args: PrSyncArgs, body?: string) {
-  return Boolean(args.title?.trim() || body || args.base?.trim());
+  return Boolean(
+    args.title?.trim() ||
+      body ||
+      args.base?.trim() ||
+      collectAssignees(args.assignees).length > 0,
+  );
+}
+
+function collectAssignees(assignees?: string[]): string[] {
+  return (assignees ?? [])
+    .filter((assignee) => assignee.trim())
+    .map((assignee) => assignee.trim());
 }
 
 function requiresExistingPullRequest(args: PrSyncArgs, review?: ReviewInput) {
@@ -300,7 +312,7 @@ async function updatePullRequest(
   $: Shell,
   worktree: string,
   refUrl: string,
-  args: { title?: string; body?: string; base?: string },
+  args: { title?: string; body?: string; base?: string; assignees?: string[] },
 ) {
   const updateArgs: string[] = [];
   if (args.title?.trim()) {
@@ -311,6 +323,9 @@ async function updatePullRequest(
   }
   if (args.base?.trim()) {
     updateArgs.push("--base", args.base.trim());
+  }
+  for (const assignee of collectAssignees(args.assignees)) {
+    updateArgs.push("--add-assignee", assignee);
   }
 
   if (updateArgs.length === 0) {
@@ -356,6 +371,11 @@ export function createPrSyncTool($: Shell) {
         type: "string",
         optional: true,
         description: "Base branch to merge into (defaults to repo default branch)",
+      },
+      assignees: {
+        type: "string[]",
+        optional: true,
+        description: "Assignees to apply to the PR",
       },
       checklists: {
         type: "json",
@@ -420,6 +440,9 @@ export function createPrSyncTool($: Shell) {
         if (headBranch) {
           createArgs.push("--head", headBranch);
         }
+        for (const assignee of collectAssignees(args.assignees)) {
+          createArgs.push("--assignee", assignee);
+        }
         if (args.draft) {
           createArgs.push("--draft");
         }
@@ -454,6 +477,7 @@ export function createPrSyncTool($: Shell) {
           title: args.title,
           body,
           base: args.base,
+          assignees: args.assignees,
         });
         if (updated) {
           actions.push("updated");

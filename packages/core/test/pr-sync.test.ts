@@ -6,7 +6,7 @@ import type { Shell, ShellPromise } from "../tools/shared.ts";
 import { createPrSyncTool } from "../tools/pr-sync.ts";
 
 describe("pr_sync", () => {
-  test("creates a PR with explicit head branch", async () => {
+  test("creates a PR with explicit head branch and assignees", async () => {
     const executedCommands: string[] = [];
     const shell = createMockShell(executedCommands, [
       {
@@ -21,6 +21,7 @@ describe("pr_sync", () => {
       body: "Uses explicit head branch when creating PRs.",
       base: "main",
       head: "feature/pr-head",
+      assignees: ["octocat", "hubot"],
     }, createToolContextForDirectory("/tmp/repo"));
 
     const result = JSON.parse(output);
@@ -28,6 +29,8 @@ describe("pr_sync", () => {
     assert.equal(result.action, "created");
     assert.match(executedCommands[0], /--base main/);
     assert.match(executedCommands[0], /--head feature\/pr-head/);
+    assert.match(executedCommands[0], /--assignee octocat/);
+    assert.match(executedCommands[0], /--assignee hubot/);
   });
 
   test("creates a PR without head when head is omitted", async () => {
@@ -97,6 +100,7 @@ describe("pr_sync", () => {
     const output = await tool.execute({
       title: "Tighten review automation",
       body: "Updated body",
+      assignees: ["octocat"],
       refUrl: "https://github.com/acme/repo/pull/9",
       review: { approve: true },
     }, createToolContextForDirectory("/tmp/repo"));
@@ -105,6 +109,7 @@ describe("pr_sync", () => {
     assert.equal(result.action, "updated_and_approved");
     assert.match(executedCommands[1], /--title Tighten review automation/);
     assert.match(executedCommands[1], /--body Updated body/);
+    assert.match(executedCommands[1], /--add-assignee octocat/);
   });
 
   test("submits structured review comments through pr_sync", async () => {

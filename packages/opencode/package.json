@@ -1,6 +1,6 @@
 {
   "name": "@kompassdev/opencode",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "OpenCode plugin for navigating repos with fewer wrong turns",
   "type": "module",
   "main": "./dist/index.js",

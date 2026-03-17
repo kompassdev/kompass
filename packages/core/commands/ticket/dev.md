@@ -1,6 +1,6 @@
 ## Goal
 
-Implement a ticket and create a pull request for the completed work.
+Implement a ticket by orchestrating development, branching, commit-and-push, and PR creation.
 
 ## Workflow
 
@@ -26,36 +26,63 @@ $ARGUMENTS
 
 <%~ include("@dev-flow") %>
 
-### Validate Changes
+### Delegate Implementation
 
-- Run the most relevant available validation for edits made in this session
-<% for (const line of it.config.shared.validation) { -%>
-- <%= line %>
-<% } -%>
-- Store the collected results as `<validation-results>`
+- Before delegating, send the exact task block below
 
-### Delegate PR Creation
-
-- The subagent receives `<ticket-ref>`, `<ticket-context>`, and `<additional-context>`
-- Define `<prompt>` as:
-
-<prompt>
-/pr/create
-
+<task agent="general" command="/dev">
 Ticket reference: <ticket-ref>
 Ticket context: <ticket-context>
 Additional context: <additional-context>
-</prompt>
+</task>
 
-- Call subagent `@general` with `<prompt>`
-- Do not paraphrase or prepend extra text
-- Store the subagent result as `<pr-result>`
+- Store the result as `<implementation-result>`
+- If `<implementation-result>` is blocked or incomplete, STOP and report the implementation blocker
+
+### Delegate Branch Creation
+
+- Before delegating, send the exact task block below
+
+<task agent="general" command="/branch">
+Branch naming guidance: <ticket-summary>
+Additional context: <additional-context>
+</task>
+
+- Store the result as `<branch-result>`
+- If `<branch-result>` is blocked or incomplete, STOP and report the branch blocker
+- If `<branch-result>` says branching was skipped because the current branch already looks like a work branch, continue
+
+### Delegate Commit And Push
+
+- Before delegating, send the exact task block below
+
+<task agent="general" command="/commit-and-push">
+Ticket reference: <ticket-ref>
+Ticket summary: <ticket-summary>
+Additional context: <additional-context>
+</task>
+
+- Store the result as `<commit-result>`
+- If `<commit-result>` is blocked or incomplete, STOP and report the commit or push blocker
+- If `<commit-result>` says there was nothing to commit or push, continue to PR creation so already-committed branch work can still be shipped
+
+### Delegate PR Creation
+
+- Before delegating, send the exact task block below
+
+<task agent="general" command="/pr/create">
+Ticket reference: <ticket-ref>
+Ticket context: <ticket-context>
+Additional context: <additional-context>
+</task>
+
+- Store the result as `<pr-result>`
 - If `<pr-result>` is blocked or incomplete, STOP and report the PR blocker
 - Otherwise, continue and store the resulting PR URL as `<pr-url>`
 
 ## Additional Context
 
-Use `<additional-context>` to refine scope, sequencing, and tradeoffs while implementing `<ticket-context>`.
+Use `<additional-context>` to refine scope, sequencing, and tradeoffs across the delegated `/dev`, `/branch`, `/commit-and-push`, and `/pr/create` steps.
 
 ## Output
 
@@ -63,7 +90,8 @@ When the ticket work is complete, display:
 ```
 Implemented ticket: <ticket-summary>
 
+Implementation: <implementation-result>
+Branch: <branch-result>
+Commit and push: <commit-result>
 PR: <pr-url>
-Validation:
-<validation-results>
 ```

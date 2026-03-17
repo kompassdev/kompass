@@ -25,7 +25,6 @@ $ARGUMENTS
 ### Ensure Feature Branch
 
 <task agent="general" command="/branch">
-
 Branch naming guidance: <branch-context>
 </task>
 
@@ -37,7 +36,6 @@ Branch naming guidance: <branch-context>
 ### Delegate Commit
 
 <task agent="general" command="/commit">
-
 Additional context: <additional-context>
 </task>
 
@@ -50,7 +48,6 @@ Additional context: <additional-context>
 ### Delegate PR Creation
 
 <task agent="general" command="/pr/create">
-
 Base branch: <base>
 Additional context: <additional-context>
 </task>

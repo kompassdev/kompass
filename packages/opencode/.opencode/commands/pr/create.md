@@ -72,9 +72,11 @@ $ARGUMENTS
 ### Resolve Ticket
 
 - If `<ticket-mode>` is already `auto`, `provided`, or `skip`, do not ask a follow-up question
-- Otherwise, if the `question` tool is available, this step is mandatory:
+- Otherwise, if the `question` tool is available, this step is mandatory whenever the user did not already provide ticket handling through `<arguments>`:
   - Ask exactly one `question` before creating a ticket or PR
-  - Do not infer a default ticket mode
+  - This includes the common case where no ticket-related argument was provided at all
+  - Do not infer, assume, or default to any ticket mode while the `question` tool is available
+  - Never choose `skip` unless the user explicitly selects `Skip` or explicitly asks to skip ticket mention in `<arguments>`
   - Do not proceed to `Prepare Ticket Reference`, `Push Branch`, or `Create PR` until the answer is resolved
   - Ask with:
     - header `Provide Ticket`
@@ -85,6 +87,7 @@ $ARGUMENTS
     - custom answers enabled so the user can paste a ticket URL or ticket reference directly
 - Otherwise, if the `question` tool is not available:
   - Do not ask a follow-up question
+  - Only in this case may the workflow continue without user input
   - Store `<ticket-mode>` as `skip`
   - Store `<ticket-url>` as `SKIPPED`
   - Continue without blocking

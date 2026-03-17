@@ -40,7 +40,6 @@ $ARGUMENTS
 ### Delegate Planning
 
 <task agent="planner" command="/ticket/plan">
-
 Task: <task>
 Task context: <task-context>
 Additional context: <additional-context>
@@ -62,7 +61,6 @@ Additional context: <additional-context>
 - custom answers enabled so the user can provide specific plan changes
 - If the user requests changes, store that feedback as `<user-answer>`
 <task agent="planner" command="/ticket/plan">
-
 Task: <task>
 Task context: <task-context>
 Current plan: <plan>
@@ -78,7 +76,6 @@ Additional context: <additional-context>
 ### Delegate Implementation
 
 <task agent="general" command="/dev">
-
 Plan: <plan>
 Task: <task>
 Task context: <task-context>
@@ -91,7 +88,6 @@ Additional context: <additional-context>
 ### Delegate Commit
 
 <task agent="general" command="/commit">
-
 Task: <task>
 Additional context: <additional-context>
 </task>

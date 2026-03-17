@@ -44,7 +44,7 @@ Following the reviewer agent guidance:
 4. Use diff hunks in `<changes>` to map inline comments to the correct lines
 5. Do NOT duplicate findings already raised
 
-Derive `<previous-grade>` from prior reviews.<% if (it.config.shared.prApprove !== false) { -%>
+Derive `<previous-grade>` from prior reviews.<% if (it.config.shared.prApprove === true) { -%>
 Derive `<already-approved>` from existing approvals on `<pr-context.pr.headRefOid>`.<% } %>
 
 Before publishing, derive: `<has-inline-comments>`, `<has-body-note>`, `<publish-grade>`, and `<grade-changed>`.
@@ -52,7 +52,7 @@ Before publishing, derive: `<has-inline-comments>`, `<has-body-note>`, `<publish
 **Grading and Publishing Rules:**
 1. Assign a grade based on code quality (1-5 stars)
 2. If grade is below `★★★★★` without supporting feedback (inline comments or body note), you MUST add feedback - never publish a low grade without explaining why
-<% if (it.config.shared.prApprove !== false) { -%>
+<% if (it.config.shared.prApprove === true) { -%>
 3. **NEVER post a review with `★★★★★`** - if the final grade is 5 stars, approve the PR instead
 <% } else { -%>
 3. If the final grade is `★★★★★`, publish it as review feedback with `★★★★★` at the start of `review.body`
@@ -71,7 +71,7 @@ For multi-line: add `startLine`. For deleted lines: use `side: "LEFT"`.
 ### Publish Review
 
 **If `<publish-grade>` is `★★★★★`:**
-<% if (it.config.shared.prApprove !== false) { -%>
+<% if (it.config.shared.prApprove === true) { -%>
 - Already approved → skip
 - Otherwise → `pr_sync` with `refUrl: <pr-context.pr.url>` and only `review.approve: true`
 <% } else { -%>
@@ -94,7 +94,7 @@ If `pr_sync` returns a review URL, store it as `<review-url>`.
 Use `<ticket-context>` and `<additional-context>` to judge whether the PR meets its stated intent without over-indexing on stylistic preferences.
 
 ## Output
-<% if (it.config.shared.prApprove !== false) { -%>
+<% if (it.config.shared.prApprove === true) { -%>
 When approved:
 ```
 PR approved for #<pr-context.pr.number>

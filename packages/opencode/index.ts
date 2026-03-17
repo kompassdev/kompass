@@ -23,10 +23,6 @@ import {
 
 const AGENT_HANDOFF_MARKER = "generate a prompt and call the task tool with subagent:";
 
-function isPrReviewApprovalEnabled(config: MergedKompassConfig) {
-  return config.shared.prApprove !== false;
-}
-
 type ToolExecuteBeforeHook = NonNullable<Hooks["tool.execute.before"]>;
 type ToolExecuteBeforeInput = Parameters<ToolExecuteBeforeHook>[0];
 type ToolExecuteBeforeOutput = Parameters<ToolExecuteBeforeHook>[1];
@@ -256,15 +252,10 @@ const opencodeToolCreators = {
         startSide: tool.schema.enum(["LEFT", "RIGHT"]).describe("Diff side for the starting line").optional(),
       })).describe("Inline review comments to submit").optional(),
     };
-    const reviewApproveField = isPrReviewApprovalEnabled(config)
-      ? {
-          approve: tool.schema.boolean().describe("Approve the PR; can be combined with review comments").optional(),
-        }
-      : undefined;
-    const reviewSchemaFields = reviewApproveField
-      ? { ...reviewFields, ...reviewApproveField }
-      : reviewFields;
-    const reviewSchema = tool.schema.object(reviewSchemaFields);
+    const reviewFieldsWithApproval = {
+      ...reviewFields,
+      approve: tool.schema.boolean().describe("Approve the PR; can be combined with review comments").optional(),
+    };
 
     return tool({
       description: definition.description,
@@ -284,7 +275,9 @@ const opencodeToolCreators = {
         draft: tool.schema.boolean().describe("Create as draft PR").optional(),
         refUrl: tool.schema.string().describe("Optional PR URL to update").optional(),
         commitId: tool.schema.string().describe("Commit SHA to anchor review comments to").optional(),
-        review: reviewSchema.describe("Structured review submission").optional(),
+        review: tool.schema.object(config.shared.prApprove === true ? reviewFieldsWithApproval : reviewFields)
+          .describe("Structured review submission")
+          .optional(),
         replies: tool.schema.array(tool.schema.object({
           inReplyTo: tool.schema.number().int().describe("Existing review comment ID to reply to"),
           body: tool.schema.string().describe("Reply body"),

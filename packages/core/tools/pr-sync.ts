@@ -15,11 +15,14 @@ type ReviewComment = {
   startSide?: "LEFT" | "RIGHT";
 };
 
-type ReviewInput = {
+type ReviewInputBase = {
   body?: string;
   comments?: ReviewComment[];
-  approve?: boolean;
 };
+
+type ReviewInput = ReviewInputBase | (ReviewInputBase & {
+  approve?: boolean;
+});
 
 type ReviewReply = {
   inReplyTo: number;
@@ -172,11 +175,11 @@ async function getCurrentUser($: Shell, worktree: string): Promise<string | unde
     .cwd(worktree)
     .quiet()
     .nothrow();
-  
+
   if (proc.exitCode !== 0) {
     return undefined;
   }
-  
+
   const login = proc.text().trim();
   return login || undefined;
 }
@@ -466,7 +469,7 @@ export function createPrSyncTool($: Shell) {
 
       if (review) {
         // Handle approval separately using gh pr review --approve
-        if (review.approve) {
+        if ("approve" in review && review.approve === true) {
           await approvePullRequest($, ctx.worktree, target.url);
           actions.push("approved");
         }
@@ -474,10 +477,10 @@ export function createPrSyncTool($: Shell) {
         // Submit review comments if there are any
         if ((review.comments?.length ?? 0) > 0 || review.body?.trim()) {
           const { owner, repoName } = await getRepoContext();
-          
+
           // Request review from self to clear any previous approval (best-effort)
           await requestReviewFromSelf($, ctx.worktree, owner, repoName, target.number);
-          
+
           reviewUrl = await submitReview($, ctx.worktree, owner, repoName, target.number, review, args.commitId);
           actions.push("reviewed");
         }

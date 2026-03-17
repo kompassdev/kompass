@@ -24,4 +24,15 @@ describe("renderTemplate", () => {
 
     assert.equal(output, "stars");
   });
+
+  test("supports Eta whitespace control around conditionals", () => {
+    const output = renderTemplate(
+      "Before\n<% if (it.enabled) { -%>\nShown\n<% } -%>\nAfter",
+      {},
+      { enabled: true },
+    );
+
+    assert.equal(output, "Before\nShown\nAfter");
+  });
+
 });

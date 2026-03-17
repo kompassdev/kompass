@@ -256,12 +256,15 @@ const opencodeToolCreators = {
         startSide: tool.schema.enum(["LEFT", "RIGHT"]).describe("Diff side for the starting line").optional(),
       })).describe("Inline review comments to submit").optional(),
     };
-    const reviewSchema = isPrReviewApprovalEnabled(config)
-      ? tool.schema.object({
-          ...reviewFields,
+    const reviewApproveField = isPrReviewApprovalEnabled(config)
+      ? {
           approve: tool.schema.boolean().describe("Approve the PR; can be combined with review comments").optional(),
-        })
-      : tool.schema.object(reviewFields);
+        }
+      : undefined;
+    const reviewSchemaFields = reviewApproveField
+      ? { ...reviewFields, ...reviewApproveField }
+      : reviewFields;
+    const reviewSchema = tool.schema.object(reviewSchemaFields);
 
     return tool({
       description: definition.description,

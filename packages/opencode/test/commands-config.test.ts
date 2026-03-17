@@ -242,6 +242,7 @@ describe("applyCommandsConfig", () => {
       assert.match(cfg.command!["pr/review"].template, /## Goal/);
       assert.match(cfg.command!["pr/review"].template, /Review a GitHub pull request/);
       assert.doesNotMatch(cfg.command!["pr/review"].template, /<%/);
+      assert.doesNotMatch(cfg.command!["pr/review"].template, /\n{3,}/);
       assert.match(
         cfg.command!["pr/review"].template,
         /publish it as review feedback with `★★★★★` at the start of `review\.body`/,
@@ -272,6 +273,7 @@ describe("applyCommandsConfig", () => {
           cfg.command!["pr/review"].template,
           /publish it as review feedback with `★★★★★` at the start of `review\.body`/,
         );
+        assert.doesNotMatch(cfg.command!["pr/review"].template, /\n{3,}/);
         assert.match(cfg.command!["pr/review"].template, /If `<publish-grade>` is `★★★★★`:/);
         assert.match(cfg.command!["pr/review"].template, /`kompass_pr_sync` with `refUrl: <pr-context\.pr\.url>` and `review\.body` starting with `★★★★★`/);
         assert.match(cfg.command!["pr/review"].template, /If there are no positive summary notes, the body must be exactly `★★★★★`/);

@@ -51,15 +51,12 @@ Following the reviewer agent guidance:
 
 Derive `<previous-grade>` from prior reviews.
 
-
 Before publishing, derive: `<has-inline-comments>`, `<has-body-note>`, `<publish-grade>`, and `<grade-changed>`.
 
 **Grading and Publishing Rules:**
 1. Assign a grade based on code quality (1-5 stars)
 2. If grade is below `★★★★★` without supporting feedback (inline comments or body note), you MUST add feedback - never publish a low grade without explaining why
-
 3. If the final grade is `★★★★★`, publish it as review feedback with `★★★★★` at the start of `review.body`
-
 4. If there are issues (grade < 5 stars), create inline comments on specific lines
 
 **Inline comment format:**
@@ -73,12 +70,10 @@ For multi-line: add `startLine`. For deleted lines: use `side: "LEFT"`.
 
 ### Publish Review
 
-
 **If `<publish-grade>` is `★★★★★`:**
 - `kompass_pr_sync` with `refUrl: <pr-context.pr.url>` and `review.body` starting with `★★★★★`
 - If there are no positive summary notes, the body must be exactly `★★★★★`
 - Do not pass `review.comments`
-
 
 **If `<publish-grade>` is below `★★★★★`:**
 - Call `kompass_pr_sync` with:
@@ -95,9 +90,6 @@ If `kompass_pr_sync` returns a review URL, store it as `<review-url>`.
 Use `<ticket-context>` and `<additional-context>` to judge whether the PR meets its stated intent without over-indexing on stylistic preferences.
 
 ## Output
-
-
-
 When review published:
 ```
 Review submitted for PR #<pr-context.pr.number>

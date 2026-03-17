@@ -53,12 +53,11 @@ $ARGUMENTS
 
 ### Validate
 
-- Run the required validation commands for the edited work in this session:
-  - `bun run compile`
-  - `bun run typecheck`
-  - `bun run test`
+- Run the most relevant available validation for the edited work in this session
+- Prefer project-native checks such as changed-area tests, linting, type checking, build verification, or other documented validation steps when they exist
+- If a category of validation is not available in the project, note it explicitly instead of inventing a command
 - Confirm the cleaned-up code still works correctly before committing
-- Store the overall validation result as `<validation-status>`
+- Store the collected validation summary as `<validation-status>`
 
 ### Commit Changes
 

@@ -50,12 +50,12 @@ Do not blindly follow every suggestion—some may lead you off course.
 
 ### Validate Changes
 
-Run validation commands:
-- Compile: `bun run compile`
-- Type checking: `bun run typecheck`
-- Tests: `bun run test`
-- Confirm fixes address the feedback
-- Store the overall test result as `<tests-passing>` with value `yes` or `no`
+Run the most relevant available validation for the fixes:
+- Prefer project-native checks such as changed-area tests, linting, type checking, build verification, or other documented validation steps when they exist
+- If a category of validation is not available in the project, note it explicitly instead of inventing a command
+- Confirm the fixes address the feedback
+- Store the collected validation details as `<validation-results>`
+- Store the overall validation outcome as `<validation-passing>` with value `yes` or `no`
 
 ### Push Updates
 
@@ -98,6 +98,7 @@ PR fix complete for #<pr-context.pr.number>
 - Status: complete, no additional steps needed
 - Changes made: <changes-count> files modified
 - Threads resolved: <threads-resolved>
-- Tests passing: <tests-passing>
+- Validation passing: <validation-passing>
+- Validation details: <validation-results>
 - Pushed: <pushed>
 ```

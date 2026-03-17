@@ -35,7 +35,7 @@ $ARGUMENTS
   - Non-obvious configuration, environment variables, or flags
   - Debugging breakthroughs when error messages were misleading
   - API or tool quirks and workarounds
-  - Build or test commands not documented elsewhere
+  - Project-specific validation or verification steps not documented elsewhere
   - Architectural decisions and constraints
   - Files that must change together
   - Environment-specific behavior

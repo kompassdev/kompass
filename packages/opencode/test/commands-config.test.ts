@@ -183,6 +183,40 @@ describe("applyCommandsConfig", () => {
       }
     });
 
+    test("renders shared validation guidance from config", async () => {
+      delete process.env.CI;
+      const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-validation-guidance-"));
+
+      try {
+        await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
+        await writeFile(
+          path.join(tempDir, ".opencode", "kompass.jsonc"),
+          `{
+            "shared": {
+              "validation": [
+                "Run npm test if available",
+                "Run npm run lint if available"
+              ]
+            }
+          }`,
+        );
+
+        const cfg: { command?: Record<string, { template: string }> } = {};
+
+        await applyCommandsConfig(cfg as never, tempDir);
+
+        assert.ok(cfg.command);
+        assert.match(cfg.command!["dev"].template, /Run npm test if available/);
+        assert.match(cfg.command!["dev"].template, /Run npm run lint if available/);
+        assert.doesNotMatch(
+          cfg.command!["dev"].template,
+          /Prefer project-native checks such as changed-area tests, linting, type checking, build verification, or other documented validation steps when they exist/,
+        );
+      } finally {
+        await rm(tempDir, { recursive: true, force: true });
+      }
+    });
+
     test("renders Eta partial content into commands", async () => {
       delete process.env.CI;
       const cfg: { command?: Record<string, { template: string }> } = {};

@@ -1,0 +1,8 @@
+- Use `pr_load` as the source of truth for PR selection
+- If `<%= it.ref %>` is defined, call `pr_load` with `pr: <%= it.ref %>`
+- Otherwise, call `pr_load` with no arguments
+- Do not run separate git or GitHub commands just to discover the PR before calling `pr_load`
+- Store the result as `<%= it.result %>`
+- Treat the loaded PR body, discussion, review history, and any attachments or linked artifacts returned by the loader as part of the source context
+- Review attached images, screenshots, videos, PDFs, and other linked files whenever they can affect the requested fix, review outcome, reproduction steps, or acceptance criteria
+- If any relevant attachment cannot be accessed, note that gap and continue only when the remaining PR context is still sufficient to proceed reliably

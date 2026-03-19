@@ -19,7 +19,8 @@ $ARGUMENTS
 
 ### Load Planning Context
 
-- If `<ticket-url>` is defined, use `ticket_load` with `<ticket-url>` and treat the result as `<planning-context>`
+- If `<ticket-url>` is defined:
+<%~ include("@load-ticket", { source: "<ticket-url>", result: "<planning-context>" }) %>
 - Otherwise, treat `<request>` as `<planning-context>`
 - If `<planning-context>` is empty or missing, STOP and report that planning context could not be determined
 
@@ -54,6 +55,7 @@ $ARGUMENTS
 
 - Treat ticket systems generically. Do not assume GitHub or any specific provider unless the provided context makes it relevant.
 - Use `<additional-context>` to emphasize the most important constraints, dependencies, or focus areas.
+- When the planning context comes from a ticket, include relevant attachment details in the scoped plan instead of relying only on the ticket body text.
 - For existing tickets, update the same ticket instead of creating a replacement, and keep checklist items and descriptions outcome-focused rather than implementation-focused.
 - Ask only when blocked by a missing or invalid ticket source, or by ambiguity that prevents a reliable plan.
 

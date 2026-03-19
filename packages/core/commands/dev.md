@@ -19,7 +19,8 @@ $ARGUMENTS
 
 ### Load Request Context
 
-- If `<request-source>` is defined, load it with `ticket_load` and store the result as `<request-context>`
+- If `<request-source>` is defined:
+<%~ include("@load-ticket", { source: "<request-source>", result: "<request-context>" }) %>
 - Otherwise, treat `<request>` as `<request-context>`
 - If `<request-context>` cannot be determined, STOP and report that the implementation request is missing
 
@@ -48,6 +49,7 @@ $ARGUMENTS
 ## Additional Context
 
 Use `<additional-context>` to refine priorities, scope, and tradeoffs while implementing `<request-context>`.
+- When `<request-context>` comes from a ticket, treat relevant attachment details as part of the implementation brief.
 
 ## Output
 

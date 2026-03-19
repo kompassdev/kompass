@@ -18,18 +18,14 @@ $ARGUMENTS
 
 ### Load PR Context
 
-Use `pr_load` as the source of truth for PR selection:
-- If `<pr-ref>` is defined, call `pr_load` with `pr: <pr-ref>`
-- Otherwise, call `pr_load` with no arguments
-- Do not run separate git or GitHub commands just to discover which PR to review before calling `pr_load`
-
-Store the result as `<pr-context>`.
+<%~ include("@load-pr", { ref: "<pr-ref>", result: "<pr-context>" }) %>
 
 ### Load Ticket Context
 
 If `<pr-context.pr.body>` links to exactly one clear ticket:
-- Call `ticket_load` with the ticket reference
-- Store the result as `<ticket-context>` for consideration during review
+- Store that reference as `<ticket-ref>`
+<%~ include("@load-ticket", { source: "<ticket-ref>", result: "<ticket-context>", comments: true }) %>
+- Use `<ticket-context>` for consideration during review
 
 ### Load Changes
 
@@ -40,9 +36,13 @@ Call `changes_load` with `base: <pr-context.pr.baseRefName>`, `head: <pr-context
 Following the reviewer agent guidance:
 1. Read every changed file for full context before finalizing findings
 2. Check `<pr-context.reviews>`, `<pr-context.issueComments>`, and `<pr-context.threads>`
-3. Prefer inline comments for file-specific findings; use the review body only for high-level summaries
-4. Use diff hunks in `<changes>` to map inline comments to the correct lines
-5. Do NOT duplicate findings already raised
+3. Derive `<settled-threads>` from `<pr-context.threads>`:
+   - Treat resolved threads as settled
+   - Treat threads as settled when they already contain feedback from `<pr-context.viewerLogin>` and a later reply from another participant makes it clear the suggestion was intentionally declined, deferred, or answered without a code change request
+   - Only revive a settled thread when the new diff adds concrete evidence that the underlying concern is still a material bug, security issue, or broken contract
+4. Prefer inline comments for file-specific findings; use the review body only for high-level summaries
+5. Use diff hunks in `<changes>` to map inline comments to the correct lines
+6. Do NOT duplicate findings already raised or settled
 
 Derive `<previous-grade>` from prior reviews.
 <% if (it.config.shared.prApprove === true) { -%>
@@ -85,7 +85,7 @@ For multi-line: add `startLine`. For deleted lines: use `side: "LEFT"`.
 - Call `pr_sync` with:
   - `refUrl: <pr-context.pr.url>`
   - `review.body`: the grade line first (for example `★★★☆☆`), followed by any non-inline notes
-  - `review.comments`: inline comments (changed lines only) - **skip lines that already have comments in `<pr-context.threads>`**
+  - `review.comments`: inline comments (changed lines only) - **skip lines or concerns already covered by open or settled threads in `<pr-context.threads>` unless the new diff introduces a materially different failure mode**
 - Never omit the grade from `review.body` in this branch
 - Do not pass any other fields
 
@@ -94,6 +94,8 @@ If `pr_sync` returns a review URL, store it as `<review-url>`.
 ## Additional Context
 
 Use `<ticket-context>` and `<additional-context>` to judge whether the PR meets its stated intent without over-indexing on stylistic preferences.
+- When the PR itself includes relevant attachments, use them to understand expected behavior, UX evidence, or bug reproduction details.
+- When a linked ticket includes attachments, use them to verify the PR matches the actual request, bug report, or design evidence.
 
 ## Output
 <% if (it.config.shared.prApprove === true) { -%>

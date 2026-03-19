@@ -24,7 +24,12 @@ $ARGUMENTS
 
 ### Load Request Context
 
-- If `<request-source>` is defined, load it with `kompass_ticket_load` and store the result as `<request-context>`
+- If `<request-source>` is defined:
+- Use `kompass_ticket_load` with `source: <request-source>`
+- Store the result as `<request-context>`
+- Treat the loaded ticket body, discussion, and any attachments or linked artifacts returned by the loader as part of the source context
+- Review attached images, PDFs, and other linked files whenever they can affect requirements, acceptance criteria, reproduction steps, design direction, or the requested answer
+- If any relevant attachment cannot be accessed, note that gap and continue only when the remaining ticket context is still sufficient to proceed reliably
 - Otherwise, treat `<request>` as `<request-context>`
 - If `<request-context>` cannot be determined, STOP and report that the implementation request is missing
 
@@ -58,6 +63,7 @@ $ARGUMENTS
 ## Additional Context
 
 Use `<additional-context>` to refine priorities, scope, and tradeoffs while implementing `<request-context>`.
+- When `<request-context>` comes from a ticket, treat relevant attachment details as part of the implementation brief.
 
 ## Output
 

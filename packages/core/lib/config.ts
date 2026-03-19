@@ -47,6 +47,8 @@ export const DEFAULT_COMPONENT_NAMES = [
   "changes-summary",
   "commit",
   "dev-flow",
+  "load-pr",
+  "load-ticket",
   "summarize-changes",
 ] as const;
 
@@ -140,6 +142,8 @@ export interface KompassConfig {
     "changes-summary"?: ComponentConfig;
     commit?: ComponentConfig;
     "dev-flow"?: ComponentConfig;
+    "load-pr"?: ComponentConfig;
+    "load-ticket"?: ComponentConfig;
     "summarize-changes"?: ComponentConfig;
     enabled?: string[];
     paths?: Record<string, string>;
@@ -427,6 +431,8 @@ const defaultComponentPaths: Record<string, string> = {
   "changes-summary": "components/changes-summary.md",
   "commit": "components/commit.md",
   "dev-flow": "components/dev-flow.md",
+  "load-pr": "components/load-pr.md",
+  "load-ticket": "components/load-ticket.md",
   "summarize-changes": "components/summarize-changes.md",
 };
 

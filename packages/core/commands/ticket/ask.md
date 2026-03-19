@@ -19,13 +19,12 @@ $ARGUMENTS
 
 ### Load Ticket Context
 
-- Use `ticket_load` with `source: <ticket-url>` and `comments: true`
-- Store the result as `<ticket-context>`
+<%~ include("@load-ticket", { source: "<ticket-url>", result: "<ticket-context>", comments: true }) %>
 - If `<ticket-url>` is missing or `<ticket-context>` cannot be loaded, STOP and report that the ticket context is missing or invalid
 
 ### Draft The Answer
 
-- Read the ticket body and comments in `<ticket-context>` to understand the request, history, and open questions
+- Use `<ticket-context>` to understand the request, history, and open questions
 - Answer `<question>` using the ticket discussion plus any necessary repository context
 - Store the response to post as `<ticket-answer>`
 

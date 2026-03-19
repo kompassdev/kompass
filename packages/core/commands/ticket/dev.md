@@ -18,8 +18,7 @@ $ARGUMENTS
 
 ### Load Ticket Context
 
-- Use `ticket_load` with `<ticket-source>` to understand the requirements
-- Store the result as `<ticket-context>`
+<%~ include("@load-ticket", { source: "<ticket-source>", result: "<ticket-context>" }) %>
 - Store the ticket reference for PR creation as `<ticket-ref>` by preferring the original reference, otherwise using the canonical ticket URL from `<ticket-context>` when one is available, otherwise using `SKIPPED`
 - Store a concise ticket summary as `<ticket-summary>`
 - If `<ticket-context>` cannot be loaded, STOP and report that the ticket source is missing or invalid

@@ -23,8 +23,11 @@ $ARGUMENTS
 
 ### Load Ticket Context
 
-- Use `kompass_ticket_load` with `<ticket-source>` to understand the requirements
+- Use `kompass_ticket_load` with `source: <ticket-source>`
 - Store the result as `<ticket-context>`
+- Treat the loaded ticket body, discussion, and any attachments or linked artifacts returned by the loader as part of the source context
+- Review attached images, PDFs, and other linked files whenever they can affect requirements, acceptance criteria, reproduction steps, design direction, or the requested answer
+- If any relevant attachment cannot be accessed, note that gap and continue only when the remaining ticket context is still sufficient to proceed reliably
 - Store the ticket reference for PR creation as `<ticket-ref>` by preferring the original reference, otherwise using the canonical ticket URL from `<ticket-context>` when one is available, otherwise using `SKIPPED`
 - Store a concise ticket summary as `<ticket-summary>`
 - If `<ticket-context>` cannot be loaded, STOP and report that the ticket source is missing or invalid

@@ -24,7 +24,12 @@ $ARGUMENTS
 
 ### Load Planning Context
 
-- If `<ticket-url>` is defined, use `kompass_ticket_load` with `<ticket-url>` and treat the result as `<planning-context>`
+- If `<ticket-url>` is defined:
+- Use `kompass_ticket_load` with `source: <ticket-url>`
+- Store the result as `<planning-context>`
+- Treat the loaded ticket body, discussion, and any attachments or linked artifacts returned by the loader as part of the source context
+- Review attached images, PDFs, and other linked files whenever they can affect requirements, acceptance criteria, reproduction steps, design direction, or the requested answer
+- If any relevant attachment cannot be accessed, note that gap and continue only when the remaining ticket context is still sufficient to proceed reliably
 - Otherwise, treat `<request>` as `<planning-context>`
 - If `<planning-context>` is empty or missing, STOP and report that planning context could not be determined
 

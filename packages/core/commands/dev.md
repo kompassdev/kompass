@@ -49,7 +49,6 @@ $ARGUMENTS
 ## Additional Context
 
 Use `<additional-context>` to refine priorities, scope, and tradeoffs while implementing `<request-context>`.
-- When `<request-context>` comes from a ticket, treat relevant attachment details as part of the implementation brief.
 
 ## Output
 

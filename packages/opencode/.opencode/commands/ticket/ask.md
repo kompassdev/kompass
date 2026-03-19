@@ -33,7 +33,7 @@ $ARGUMENTS
 
 ### Draft The Answer
 
-- Read the ticket body, comments, and relevant attachments in `<ticket-context>` to understand the request, history, and open questions
+- Use `<ticket-context>` to understand the request, history, and open questions
 - Answer `<question>` using the ticket discussion plus any necessary repository context
 - Store the response to post as `<ticket-answer>`
 

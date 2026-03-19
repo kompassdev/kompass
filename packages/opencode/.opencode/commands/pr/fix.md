@@ -118,7 +118,6 @@ Confirm which feedback was addressed and which was intentionally not followed.
 Use `<additional-context>` when prioritizing which review feedback to address first and when deciding how much scope to take on in this pass.
 - Default `/pr/fix` behavior is review-first: show the proposed fix, gather feedback, and loop until the user approves before committing, pushing, or replying on the PR.
 - Treat `/pr/fix auto` as the explicit opt-in to skip the approval loop and proceed directly from passing validation to commit, push, and PR replies.
-- When the PR context includes relevant attachments, use them as part of the fix brief and response context.
 
 ## Output
 

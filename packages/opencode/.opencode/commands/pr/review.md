@@ -99,8 +99,6 @@ If `kompass_pr_sync` returns a review URL, store it as `<review-url>`.
 ## Additional Context
 
 Use `<ticket-context>` and `<additional-context>` to judge whether the PR meets its stated intent without over-indexing on stylistic preferences.
-- When the PR itself includes relevant attachments, use them to understand expected behavior, UX evidence, or bug reproduction details.
-- When a linked ticket includes attachments, use them to verify the PR matches the actual request, bug report, or design evidence.
 
 ## Output
 When approved:

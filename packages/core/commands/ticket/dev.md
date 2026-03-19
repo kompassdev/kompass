@@ -82,7 +82,6 @@ Additional context: <additional-context>
 ## Additional Context
 
 Use `<additional-context>` to refine scope, sequencing, and tradeoffs across the delegated `/dev`, `/branch`, `/commit-and-push`, and `/pr/create` steps.
-- Treat attachment details from `<ticket-context>` as first-class requirements when they materially clarify the implementation.
 
 ## Output
 

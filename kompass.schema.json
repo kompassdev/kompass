@@ -134,6 +134,9 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "worker": {
+          "$ref": "#/$defs/agentConfig"
+        },
         "navigator": {
           "$ref": "#/$defs/agentConfig"
         },
@@ -147,7 +150,7 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["navigator", "planner", "reviewer"]
+            "enum": ["worker", "navigator", "planner", "reviewer"]
           },
           "uniqueItems": true,
           "deprecated": true

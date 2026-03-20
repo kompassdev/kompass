@@ -63,6 +63,9 @@
     }
   },
   "agents": {
+    "worker": {
+      "enabled": true
+    },
     "navigator": {
       "enabled": true
     },

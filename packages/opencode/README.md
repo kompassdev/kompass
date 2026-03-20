@@ -67,6 +67,10 @@ Kompass is being structured as a shared core toolkit with adapter-specific packa
 
 ## Agents
 
+### `worker`
+
+Handles generic implementation work and can ask targeted follow-up questions when execution is blocked.
+
 ### `navigator`
 
 Coordinates structured multi-step workflows by keeping orchestration local and delegating only focused leaf work to subagents.

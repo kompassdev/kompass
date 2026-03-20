@@ -44,7 +44,7 @@ $ARGUMENTS
 
 - Before delegating, send the exact dispatch block below
 
-<dispatch agent="general">
+<dispatch agent="worker">
 /dev
 Ticket reference: <ticket-ref>
 Ticket context: <ticket-context>
@@ -58,7 +58,7 @@ Additional context: <additional-context>
 
 - Before delegating, send the exact dispatch block below
 
-<dispatch agent="general">
+<dispatch agent="worker">
 /branch
 Branch naming guidance: <ticket-summary>
 Additional context: <additional-context>
@@ -72,7 +72,7 @@ Additional context: <additional-context>
 
 - Before delegating, send the exact dispatch block below
 
-<dispatch agent="general">
+<dispatch agent="worker">
 /commit-and-push
 Ticket reference: <ticket-ref>
 Ticket summary: <ticket-summary>
@@ -87,7 +87,7 @@ Additional context: <additional-context>
 
 - Before delegating, send the exact dispatch block below
 
-<dispatch agent="general">
+<dispatch agent="worker">
 /pr/create
 Ticket reference: <ticket-ref>
 Ticket context: <ticket-context>

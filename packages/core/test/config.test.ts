@@ -143,6 +143,7 @@ describe("object-based config", () => {
         review: { enabled: true, template: "commands/custom-review.md" },
       },
       agents: {
+        worker: { permission: { question: "deny", bash: "allow" } },
         navigator: { permission: { task: "deny", todowrite: "deny" } },
         reviewer: { enabled: false },
       },
@@ -157,6 +158,10 @@ describe("object-based config", () => {
     assert.equal(config.commands.templates.review, "commands/custom-review.md");
     assert.equal(config.shared.prApprove, false);
     assert.deepEqual(config.shared.validation, ["Run custom validation"]);
+    assert.deepEqual(config.agents.worker.permission, {
+      question: "deny",
+      bash: "allow",
+    });
     assert.deepEqual(config.agents.navigator.permission, {
       task: "deny",
       todowrite: "deny",
@@ -190,9 +195,13 @@ describe("object-based config", () => {
 });
 
 describe("command defaults", () => {
-  test("enables navigator agent by default", () => {
+  test("enables worker and navigator agents by default", () => {
     const config = mergeWithDefaults(null);
 
+    assert.equal(config.agents.enabled.includes("worker"), true);
+    assert.deepEqual(config.agents.worker.permission, {
+      question: "allow",
+    });
     assert.equal(config.agents.enabled.includes("navigator"), true);
     assert.deepEqual(config.shared.validation, []);
     assert.deepEqual(config.agents.navigator.permission, {

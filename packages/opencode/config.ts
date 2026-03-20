@@ -77,7 +77,7 @@ export async function applyAgentsConfig(
 
   for (const [name, definition] of Object.entries(agents)) {
     const agentConfig: AgentConfig = {
-      mode: config.adapters.opencode.agentMode,
+      mode: definition.mode ?? config.adapters.opencode.agentMode,
       description: definition.description,
       prompt: rewriteToolNames(definition.prompt),
       permission: definition.permission,

@@ -72,7 +72,7 @@ Additional context: <additional-context>
 
 ### Delegate Implementation
 
-<dispatch agent="general">
+<dispatch agent="worker">
 /dev
 Plan: <plan>
 Task: <task>
@@ -85,7 +85,7 @@ Additional context: <additional-context>
 
 ### Delegate Commit
 
-<dispatch agent="general">
+<dispatch agent="worker">
 /commit
 Task: <task>
 Additional context: <additional-context>

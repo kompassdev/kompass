@@ -8,6 +8,7 @@ export interface AgentDefinition {
   description: string;
   promptPath: string;
   permission: Record<string, string>;
+  mode?: "subagent" | "primary" | "all";
 }
 
 export const DEFAULT_TOOL_NAMES = [
@@ -40,7 +41,7 @@ export const DEFAULT_COMMAND_NAMES = [
   "ticket/plan",
 ] as const;
 
-export const DEFAULT_AGENT_NAMES = ["navigator", "planner", "reviewer"] as const;
+export const DEFAULT_AGENT_NAMES = ["worker", "navigator", "planner", "reviewer"] as const;
 
 export const DEFAULT_COMPONENT_NAMES = [
   "change-summary",
@@ -124,6 +125,7 @@ export interface KompassConfig {
     templates?: Record<string, string>;
   };
   agents?: {
+    worker?: AgentConfig;
     navigator?: AgentConfig;
     planner?: AgentConfig;
     reviewer?: AgentConfig;
@@ -172,6 +174,7 @@ export interface MergedKompassConfig {
     entries: Record<string, CommandConfig>;
   };
   agents: {
+    worker: AgentDefinition;
     enabled: string[];
     navigator: AgentDefinition;
     reviewer: AgentDefinition;
@@ -408,6 +411,13 @@ function removeTrailingCommas(input: string): string {
   return output;
 }
 
+const defaultAgentWorker: AgentDefinition = {
+  description: "Handle generic implementation work and ask targeted questions when needed.",
+  promptPath: "agents/worker.md",
+  permission: { question: "allow" },
+  mode: "all",
+};
+
 const defaultAgentReviewer: AgentDefinition = {
   description: "Review diffs, PRs, and existing feedback without editing files.",
   promptPath: "agents/reviewer.md",
@@ -578,6 +588,7 @@ export function isSkillEnabled(
 export function mergeWithDefaults(
   config: KompassConfig | null,
 ): MergedKompassConfig {
+  const { enabled: _workerEnabled, ...workerOverrides } = config?.agents?.worker ?? {};
   const mergedSkills = getMergedSkillLists(config);
   const { enabled: _navigatorEnabled, ...navigatorOverrides } =
     config?.agents?.navigator ?? {};
@@ -616,6 +627,7 @@ export function mergeWithDefaults(
         config?.agents?.enabled,
         DEFAULT_AGENT_NAMES,
       ),
+      worker: { ...defaultAgentWorker, ...workerOverrides },
       navigator: { ...defaultAgentNavigator, ...navigatorOverrides },
       reviewer: { ...defaultAgentReviewer, ...reviewerOverrides },
       planner: { ...defaultAgentPlanner, ...plannerOverrides },

@@ -24,9 +24,10 @@ $ARGUMENTS
 
 ### Ensure Feature Branch
 
-<task agent="general" command="/branch">
+<dispatch agent="general">
+/branch
 Branch naming guidance: <branch-context>
-</task>
+</dispatch>
 
 - Store the subagent result as `<branch-result>`
 - If `<branch-result>` is blocked or incomplete, STOP and report the branch blocker
@@ -35,9 +36,10 @@ Branch naming guidance: <branch-context>
 
 ### Delegate Commit
 
-<task agent="general" command="/commit">
+<dispatch agent="general">
+/commit
 Additional context: <additional-context>
-</task>
+</dispatch>
 
 - Store the subagent result as `<commit-result>`
 
@@ -47,10 +49,11 @@ Additional context: <additional-context>
 
 ### Delegate PR Creation
 
-<task agent="general" command="/pr/create">
+<dispatch agent="general">
+/pr/create
 Base branch: <base>
 Additional context: <additional-context>
-</task>
+</dispatch>
 
 - Store the subagent result as `<pr-result>`
 

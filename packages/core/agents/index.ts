@@ -3,7 +3,7 @@ import { loadProjectText } from "../lib/text.ts";
 
 export interface ResolvedAgentDefinition
   extends Omit<AgentDefinition, "promptPath"> {
-  prompt: string;
+  prompt?: string;
 }
 
 // Re-export agent definitions from config for compile script
@@ -31,7 +31,7 @@ export async function resolveAgents(
     agents[name] = {
       description: definition.description,
       mode: definition.mode,
-      prompt: await loadProjectText(definition.promptPath),
+      ...(definition.promptPath ? { prompt: await loadProjectText(definition.promptPath) } : {}),
       permission: definition.permission,
     };
   }

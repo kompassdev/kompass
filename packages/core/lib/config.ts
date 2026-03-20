@@ -6,7 +6,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export interface AgentDefinition {
   description: string;
-  promptPath: string;
+  promptPath?: string;
   permission: Record<string, string>;
   mode?: "subagent" | "primary" | "all";
 }
@@ -412,10 +412,8 @@ function removeTrailingCommas(input: string): string {
 }
 
 const defaultAgentWorker: AgentDefinition = {
-  description: "Handle generic implementation work and ask targeted questions when needed.",
-  promptPath: "agents/worker.md",
+  description: "Generic worker agent.",
   permission: { question: "allow" },
-  mode: "all",
 };
 
 const defaultAgentReviewer: AgentDefinition = {

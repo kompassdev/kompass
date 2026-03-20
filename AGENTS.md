@@ -106,7 +106,7 @@ Additional context: <additional-context>
 
 ### Delegate Implementation
 
-<dispatch agent="general">
+<dispatch agent="worker">
 /dev
 
 Plan: <plan>

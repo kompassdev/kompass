@@ -10,7 +10,7 @@ describe("applyAgentsConfig", () => {
         string,
         {
           description: string;
-          prompt: string;
+          prompt?: string;
           permission: Record<string, string>;
           mode?: string;
         }
@@ -22,12 +22,12 @@ describe("applyAgentsConfig", () => {
     assert.ok(cfg.agent);
     assert.equal(
       cfg.agent.worker?.description,
-      "Handle generic implementation work and ask targeted questions when needed.",
+      "Generic worker agent.",
     );
     assert.deepEqual(cfg.agent.worker?.permission, {
       question: "allow",
     });
-    assert.equal(cfg.agent.worker?.mode, "all");
+    assert.equal(cfg.agent.worker?.mode, undefined);
     assert.equal(
       cfg.agent.navigator?.description,
       "Coordinate structured multi-step workflows by delegating focused leaf work to subagents.",
@@ -45,8 +45,7 @@ describe("applyAgentsConfig", () => {
       edit: "deny",
       question: "allow",
     });
-    assert.match(cfg.agent.worker?.prompt ?? "", /You are Worker\./i);
-    assert.match(cfg.agent.worker?.prompt ?? "", /Ask a targeted question only when a missing detail truly blocks reliable execution/i);
+    assert.equal(cfg.agent.worker?.prompt, undefined);
     assert.match(cfg.agent.navigator?.prompt ?? "", /navigation specialist/i);
     assert.match(cfg.agent.navigator?.prompt ?? "", /delegate only explicit leaf tasks/i);
     assert.match(cfg.agent.navigator?.prompt ?? "", /complete the local steps first/i);

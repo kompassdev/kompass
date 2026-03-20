@@ -30,6 +30,10 @@ import {
   prefixKompassToolReferences,
 } from "../tool-names.ts";
 
+function ensureTrailingNewline(text: string) {
+  return text.endsWith("\n") ? text : `${text}\n`;
+}
+
 async function cleanOutputDirectory() {
   try {
     await access(OUTPUT_DIR);
@@ -86,7 +90,9 @@ async function main() {
       description: command.description,
       agent: command.agent,
     });
-    const content = `---\n${frontmatter}---\n\n${rewriteToolNames(command.template)}`;
+    const content = ensureTrailingNewline(
+      `---\n${frontmatter}---\n\n${rewriteToolNames(command.template)}`,
+    );
     await writeFile(filepath, content);
     console.log(`  commands/${name}.md`);
   }
@@ -108,7 +114,9 @@ async function main() {
         permission: agent.permission,
       });
 
-      const content = `---\n${frontmatter}---\n\n${rewriteToolNames(agent.prompt)}`;
+      const content = ensureTrailingNewline(
+        `---\n${frontmatter}---\n\n${rewriteToolNames(agent.prompt)}`,
+      );
       await writeFile(filepath, content);
       console.log(`  agents/${filename}`);
     } catch {
@@ -169,7 +177,7 @@ async function main() {
   };
   await writeFile(
     path.join(OUTPUT_DIR, "kompass.jsonc"),
-    JSON.stringify(configOutput, null, 2)
+    ensureTrailingNewline(JSON.stringify(configOutput, null, 2)),
   );
   console.log("  kompass.jsonc");
 

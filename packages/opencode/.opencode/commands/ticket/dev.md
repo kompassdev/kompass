@@ -42,25 +42,27 @@ $ARGUMENTS
 
 ### Delegate Implementation
 
-- Before delegating, send the exact task block below
+- Before delegating, send the exact dispatch block below
 
-<task agent="general" command="/dev">
+<dispatch agent="general">
+/dev
 Ticket reference: <ticket-ref>
 Ticket context: <ticket-context>
 Additional context: <additional-context>
-</task>
+</dispatch>
 
 - Store the result as `<implementation-result>`
 - If `<implementation-result>` is blocked or incomplete, STOP and report the implementation blocker
 
 ### Delegate Branch Creation
 
-- Before delegating, send the exact task block below
+- Before delegating, send the exact dispatch block below
 
-<task agent="general" command="/branch">
+<dispatch agent="general">
+/branch
 Branch naming guidance: <ticket-summary>
 Additional context: <additional-context>
-</task>
+</dispatch>
 
 - Store the result as `<branch-result>`
 - If `<branch-result>` is blocked or incomplete, STOP and report the branch blocker
@@ -68,13 +70,14 @@ Additional context: <additional-context>
 
 ### Delegate Commit And Push
 
-- Before delegating, send the exact task block below
+- Before delegating, send the exact dispatch block below
 
-<task agent="general" command="/commit-and-push">
+<dispatch agent="general">
+/commit-and-push
 Ticket reference: <ticket-ref>
 Ticket summary: <ticket-summary>
 Additional context: <additional-context>
-</task>
+</dispatch>
 
 - Store the result as `<commit-result>`
 - If `<commit-result>` is blocked or incomplete, STOP and report the commit or push blocker
@@ -82,13 +85,14 @@ Additional context: <additional-context>
 
 ### Delegate PR Creation
 
-- Before delegating, send the exact task block below
+- Before delegating, send the exact dispatch block below
 
-<task agent="general" command="/pr/create">
+<dispatch agent="general">
+/pr/create
 Ticket reference: <ticket-ref>
 Ticket context: <ticket-context>
 Additional context: <additional-context>
-</task>
+</dispatch>
 
 - Store the result as `<pr-result>`
 - If `<pr-result>` is blocked or incomplete, STOP and report the PR blocker

@@ -39,11 +39,12 @@ $ARGUMENTS
 
 ### Delegate Planning
 
-<task agent="planner" command="/ticket/plan">
+<dispatch agent="planner">
+/ticket/plan
 Task: <task>
 Task context: <task-context>
 Additional context: <additional-context>
-</task>
+</dispatch>
 
 - Ask the planner for a concise implementation plan with clear scope, risks, and validation steps
 - Store the result as `<plan>`
@@ -60,13 +61,14 @@ Additional context: <additional-context>
     - `Revise` - update the plan based on feedback
 - custom answers enabled so the user can provide specific plan changes
 - If the user requests changes, store that feedback as `<user-answer>`
-<task agent="planner" command="/ticket/plan">
+<dispatch agent="planner">
+/ticket/plan
 Task: <task>
 Task context: <task-context>
 Current plan: <plan>
 Plan feedback: <user-answer>
 Additional context: <additional-context>
-</task>
+</dispatch>
 
 - Store the revised result as `<plan>` and continue the review loop
 - If the revised planner result is blocked or unusable, store that blocker as `<pause-reason>`, then STOP and report it before continuing the review loop
@@ -75,22 +77,24 @@ Additional context: <additional-context>
 
 ### Delegate Implementation
 
-<task agent="general" command="/dev">
+<dispatch agent="general">
+/dev
 Plan: <plan>
 Task: <task>
 Task context: <task-context>
 Additional context: <additional-context>
-</task>
+</dispatch>
 
 - Store the subagent result as `<implementation-result>`
 - If `<implementation-result>` is incomplete, blocked, or fails validation, store the issue as `<pause-reason>`, then STOP and report it without marking the task complete
 
 ### Delegate Commit
 
-<task agent="general" command="/commit">
+<dispatch agent="general">
+/commit
 Task: <task>
 Additional context: <additional-context>
-</task>
+</dispatch>
 
 - Store the subagent result as `<commit-result>`
 - If `<commit-result>` does not succeed, store the commit status as `<pause-reason>`, then STOP and report it without marking the task complete

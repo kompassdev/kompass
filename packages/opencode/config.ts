@@ -77,18 +77,18 @@ export async function applyAgentsConfig(
 
   for (const [name, definition] of Object.entries(agents)) {
     const agentConfig: AgentConfig = {
-      mode: config.adapters.opencode.agentMode,
       description: definition.description,
-      prompt: rewriteToolNames(definition.prompt),
       permission: definition.permission,
+      ...(definition.prompt ? { prompt: rewriteToolNames(definition.prompt) } : {}),
+      ...(definition.mode ? { mode: definition.mode } : {}),
     };
     cfg.agent[name] ??= agentConfig;
 
     await options?.logger?.info("Loaded Kompass agent", {
-      agent: name,
-      mode: agentConfig.mode,
-      promptLength: definition.prompt.length,
-    });
+        agent: name,
+        mode: agentConfig.mode,
+        promptLength: definition.prompt?.length ?? 0,
+      });
   }
 }
 

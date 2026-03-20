@@ -19,7 +19,7 @@ $ARGUMENTS
 
 ### Ensure Feature Branch
 
-<dispatch agent="general">
+<dispatch agent="worker">
 /branch
 Branch naming guidance: <branch-context>
 </dispatch>
@@ -31,7 +31,7 @@ Branch naming guidance: <branch-context>
 
 ### Delegate Commit
 
-<dispatch agent="general">
+<dispatch agent="worker">
 /commit
 Additional context: <additional-context>
 </dispatch>
@@ -44,7 +44,7 @@ Additional context: <additional-context>
 
 ### Delegate PR Creation
 
-<dispatch agent="general">
+<dispatch agent="worker">
 /pr/create
 Base branch: <base>
 Additional context: <additional-context>

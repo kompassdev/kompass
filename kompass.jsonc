@@ -31,6 +31,7 @@
   },
 
   "agents": {
+    "worker": { "enabled": true },
     "navigator": { "enabled": true },
     "planner": { "enabled": true },
     "reviewer": { "enabled": true },

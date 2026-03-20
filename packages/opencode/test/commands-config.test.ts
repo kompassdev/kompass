@@ -436,7 +436,7 @@ describe("applyCommandsConfig", () => {
       assert.match(shipTemplate, /## Goal/);
       assert.match(shipTemplate, /Ship the current work by delegating/);
       assert.match(shipTemplate, /Ensure Feature Branch/);
-      assert.match(shipTemplate, /<dispatch agent="general">/);
+      assert.match(shipTemplate, /<dispatch agent="worker">/);
       assert.match(shipTemplate, /\n\/branch\nBranch naming guidance: <branch-context>\n<\/dispatch>/);
       assert.match(shipTemplate, /Store the subagent result as `<branch-result>`/);
       assert.match(shipTemplate, /Store the subagent result as `<commit-result>`/);
@@ -513,7 +513,7 @@ describe("applyCommandsConfig", () => {
       // PR Author content is now inline in pr/create, not embedded here
       assert.match(ticketDevTemplate, /## Goal/);
       assert.match(ticketDevTemplate, /Implement a ticket/);
-      assert.match(ticketDevTemplate, /<dispatch agent="general">/);
+      assert.match(ticketDevTemplate, /<dispatch agent="worker">/);
       assert.match(ticketDevTemplate, /\n\/dev\nTicket reference: <ticket-ref>\nTicket context: <ticket-context>\nAdditional context: <additional-context>\n<\/dispatch>/);
       assert.match(ticketDevTemplate, /\n\/branch\nBranch naming guidance: <ticket-summary>\nAdditional context: <additional-context>\n<\/dispatch>/);
       assert.match(ticketDevTemplate, /\n\/commit-and-push\nTicket reference: <ticket-ref>\nTicket summary: <ticket-summary>\nAdditional context: <additional-context>\n<\/dispatch>/);
@@ -536,6 +536,7 @@ describe("applyCommandsConfig", () => {
       assert.match(todoTemplate, /Work through a todo file one pending item at a time/);
       assert.match(todoTemplate, /<dispatch agent="planner">/);
       assert.match(todoTemplate, /\n\/ticket\/plan\nTask: <task>\nTask context: <task-context>\nAdditional context: <additional-context>\n<\/dispatch>/);
+      assert.match(todoTemplate, /<dispatch agent="worker">/);
       assert.match(todoTemplate, /Current plan: <plan>\nPlan feedback: <user-answer>/);
       assert.match(todoTemplate, /\n\/dev\nPlan: <plan>\nTask: <task>\nTask context: <task-context>\nAdditional context: <additional-context>\n<\/dispatch>/);
       assert.match(todoTemplate, /\n\/commit\nTask: <task>\nAdditional context: <additional-context>\n<\/dispatch>/);

@@ -115,7 +115,7 @@ async function main() {
       });
 
       const content = ensureTrailingNewline(
-        `---\n${frontmatter}---\n\n${rewriteToolNames(agent.prompt)}`,
+        `---\n${frontmatter}---\n${agent.prompt ? `\n${rewriteToolNames(agent.prompt)}` : ""}`,
       );
       await writeFile(filepath, content);
       console.log(`  agents/${filename}`);

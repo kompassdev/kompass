@@ -38,6 +38,8 @@ Consider `<additional-context>` when analyzing changes and writing the commit me
 If there is nothing to commit, display:
 ```
 Nothing to commit
+
+No additional steps are required.
 ```
 
 When the commit is created, display:
@@ -45,4 +47,6 @@ When the commit is created, display:
 Created commit `<hash>`:
 
 <commit-message>
+
+No additional steps are required.
 ```

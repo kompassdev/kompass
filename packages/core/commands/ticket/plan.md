@@ -63,10 +63,14 @@ $ARGUMENTS
 If planning context cannot be determined, display:
 ```
 Unable to plan: missing request or ticket context
+
+No additional steps are required.
 ```
 
 When the plan is ready, display:
 ```
 Title: `<plan-title>`
 URL: `<ticket-url>`
+
+No additional steps are required.
 ```

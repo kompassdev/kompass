@@ -131,6 +131,8 @@ Consider `<additional-context>` when analyzing changes and writing the PR descri
 If PR creation stops because there is nothing to include, display:
 ```
 Nothing to include in a PR
+
+No additional steps are required.
 ```
 
 When a new PR is created, display:
@@ -140,6 +142,10 @@ Created PR: <pr-title>
 URL: <pr-url>
 Branch: <current-branch> → <resolved-base>
 Ticket: <ticket-url>
+<push-status>
+<pushed-line>
+
+No additional steps are required.
 ```
 
 If a PR already exists for the branch, display:
@@ -149,14 +155,8 @@ PR already exists
 URL: <pr-url>
 Branch: <current-branch> → <resolved-base>
 Ticket: <ticket-url>
-```
-
-After the ticket line, always include one additional line reporting push status:
-```
 <push-status>
-```
-
-If a push happened during this run, include one more line:
-```
 <pushed-line>
+
+No additional steps are required.
 ```

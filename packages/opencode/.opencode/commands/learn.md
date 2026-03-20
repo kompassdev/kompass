@@ -77,4 +77,6 @@ Documented learnings for <focus-summary>
 
 Files updated:
 <file-update-lines>
+
+No additional steps are required.
 ```

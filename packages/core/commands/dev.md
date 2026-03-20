@@ -59,5 +59,7 @@ Implementation ready: <request-summary>
 Validation:
 <validation-results>
 
-Next: create a PR for <branch>
+Ready for PR creation on <branch>
+
+No additional steps are required.
 ```

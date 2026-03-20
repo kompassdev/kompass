@@ -45,11 +45,15 @@ Use `<branch-context>` to steer the branch category and slug while keeping the f
 If there is nothing to branch from, display:
 ```
 Nothing to branch from
+
+No additional steps are required.
 ```
 
 If branching is skipped because the current branch already looks like a work branch, display:
 ```
 Already on work branch: <current-branch>
+
+No additional steps are required.
 ```
 
 When the branch is created, display:
@@ -57,4 +61,6 @@ When the branch is created, display:
 Created branch: <new-branch>
 
 From: <current-branch>
+
+No additional steps are required.
 ```

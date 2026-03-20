@@ -44,6 +44,13 @@ $ARGUMENTS
 If the question cannot be determined, display:
 ```
 Unable to answer: missing question
+
+No additional steps are required.
 ```
 
-When the answer is ready, display the answer directly.
+When the answer is ready, display:
+```
+<answer>
+
+No additional steps are required.
+```

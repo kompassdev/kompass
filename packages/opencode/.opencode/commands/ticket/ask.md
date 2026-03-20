@@ -55,9 +55,13 @@ $ARGUMENTS
 If the ticket context or question cannot be determined, display:
 ```
 Unable to answer ticket: missing ticket or question context
+
+No additional steps are required.
 ```
 
 When the ticket answer is posted, display:
 ```
 Answered ticket: <ticket-url>
+
+No additional steps are required.
 ```

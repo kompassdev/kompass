@@ -29,4 +29,6 @@ $ARGUMENTS
 When reload succeeds, display:
 ```
 Reloaded project cache
+
+No additional steps are required.
 ```

@@ -61,6 +61,8 @@ packages/opencode/.opencode/ # Generated OpenCode output for review
 - Use `## Additional Context` for instructions about how optional guidance, related tickets, focus areas, or other stored context should influence analysis and output
 - Use `## Output` to define the exact user-facing response shape, including placeholders for generated values
 - Make success, blocked, and no-op outcomes explicit in `## Output` or the surrounding workflow so navigator-led flows report deterministic end states
+- For terminal command outcomes, prefer an explicit final line inside the output block: `No additional steps are required.`
+- For one-off commands that do not orchestrate follow-up work, make every success, blocked, or no-op output explicitly terminal with that final line
 - Command-specific extra sections are fine, but they should support this core structure rather than replace it
 
 Example command structure:
@@ -117,6 +119,7 @@ Constraints: <additional-context>
 ## Output
 
 - Define the exact success, blocked, and no-op response shapes
+- For terminal outcomes, end the output block with `No additional steps are required.`
 ```
 
 Example delegation rule:

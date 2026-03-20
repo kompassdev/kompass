@@ -67,6 +67,8 @@ Use `<branch-context>` to steer delegated branch naming. Use `<additional-contex
 If there is nothing to ship, display:
 ```
 Nothing to ship
+
+No additional steps are required.
 ```
 
 When complete, display:
@@ -76,4 +78,6 @@ Ship flow complete
 Branch: <branch-result>
 Commit: <commit-result>
 PR: <pr-result>
+
+No additional steps are required.
 ```

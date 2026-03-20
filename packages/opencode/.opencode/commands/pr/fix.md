@@ -134,10 +134,11 @@ When fixes are complete, display exactly this final completion summary and stop.
 ```
 PR fix complete for #<pr-context.pr.number>
 
-- Status: complete, no additional steps needed
 - Changes made: <changes-count> files modified
 - Threads resolved: <threads-resolved>
 - Validation passing: <validation-passing>
 - Validation details: <validation-results>
 - Pushed: <pushed>
+
+No additional steps are required.
 ```

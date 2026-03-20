@@ -124,10 +124,14 @@ If the workflow pauses before marking the task complete, display:
 Todo paused: <todo-file>
 Task: <task>
 Reason: <pause-reason>
+
+No additional steps are required.
 ```
 
 When all pending tasks are complete, display:
 ```
 Todo complete: <todo-file>
 Remaining: 0
+
+No additional steps are required.
 ```

@@ -67,4 +67,6 @@ Review complete for <scope-description>
 - Grade: <star-rating>
 - Verdict: <short-verdict>
 - Findings: <count> total (<critical> critical, <high> high, <medium> medium, <low> low)
+
+No additional steps are required.
 ```

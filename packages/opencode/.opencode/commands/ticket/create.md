@@ -80,10 +80,14 @@ Consider `<additional-context>` when analyzing the work and writing the ticket t
 If there is no work to summarize, display:
 ```
 Nothing to turn into a ticket
+
+No additional steps are required.
 ```
 
 When the ticket is created, display:
 ```
 Title: `<ticket-title>`
 URL: `<ticket-url>`
+
+No additional steps are required.
 ```

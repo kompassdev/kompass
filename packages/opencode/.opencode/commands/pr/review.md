@@ -68,8 +68,9 @@ Before publishing, derive: `<has-inline-comments>`, `<has-body-note>`, `<publish
 **Grading and Publishing Rules:**
 1. Assign a grade based on code quality (1-5 stars)
 2. If grade is below `★★★★★` without supporting feedback (inline comments or body note), you MUST add feedback - never publish a low grade without explaining why
-3. **NEVER post a review with `★★★★★`** - if the final grade is 5 stars, approve the PR instead
-4. If there are issues (grade < 5 stars), create inline comments on specific lines
+3. If the final grade is `★★★★★`, try to approve the PR instead of posting a 5-star review comment
+4. If that approval attempt fails for any reason, immediately fall back to a review with `review.body` starting with `★★★★★`
+5. If there are issues (grade < 5 stars), create inline comments on specific lines
 
 **Inline comment format:**
 ```json
@@ -84,7 +85,10 @@ For multi-line: add `startLine`. For deleted lines: use `side: "LEFT"`.
 
 **If `<publish-grade>` is `★★★★★`:**
 - Already approved → skip
-- Otherwise → `kompass_pr_sync` with `refUrl: <pr-context.pr.url>` and only `review.approve: true`
+- Otherwise → first call `kompass_pr_sync` with `refUrl: <pr-context.pr.url>` and only `review.approve: true`
+- If that approval call fails, immediately call `kompass_pr_sync` again with `refUrl: <pr-context.pr.url>` and `review.body` starting with `★★★★★`
+- If there are no positive summary notes for the fallback review, the fallback body must be exactly `★★★★★`
+- Do not pass `review.comments` in the approval attempt or the fallback review
 
 **If `<publish-grade>` is below `★★★★★`:**
 - Call `kompass_pr_sync` with:
@@ -106,6 +110,8 @@ When approved:
 PR approved for #<pr-context.pr.number>
 
 - PR URL: <pr-context.pr.url>
+
+No additional steps are required.
 ```
 
 When approval skipped (already approved):
@@ -113,6 +119,8 @@ When approval skipped (already approved):
 Approval skipped for PR #<pr-context.pr.number>
 
 - Reason: current head already approved
+
+No additional steps are required.
 ```
 When review published:
 ```
@@ -120,6 +128,8 @@ Review submitted for PR #<pr-context.pr.number>
 
 - Grade: <publish-grade>
 - Review URL: <review-url>
+
+No additional steps are required.
 ```
 
 When review skipped (no new feedback):
@@ -127,4 +137,6 @@ When review skipped (no new feedback):
 Review skipped for PR #<pr-context.pr.number>
 
 - Reason: no new inline comments or feedback
+
+No additional steps are required.
 ```

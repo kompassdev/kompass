@@ -86,6 +86,8 @@ Consider `<additional-context>` when analyzing changes and writing the commit me
 If there is nothing to commit, display:
 ```
 Nothing to commit or push
+
+No additional steps are required.
 ```
 
 When complete, display:
@@ -95,4 +97,6 @@ Created commit `<hash>`:
 <commit-message>
 
 Pushed to <push-target>
+
+No additional steps are required.
 ```

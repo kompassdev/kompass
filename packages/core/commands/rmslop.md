@@ -70,6 +70,8 @@ Use `<additional-context>` to decide which kinds of slop to prioritize and which
 If there is no branch work to clean up, display:
 ```
 Nothing to clean for <scope-summary>
+
+No additional steps are required.
 ```
 
 When the cleanup is complete, display:
@@ -80,4 +82,6 @@ Results:
 - Files updated: <files-updated>
 - Validation: <validation-status>
 - Commit: <hash>
+
+No additional steps are required.
 ```

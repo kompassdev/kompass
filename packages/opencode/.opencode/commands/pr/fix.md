@@ -65,25 +65,36 @@ Run the most relevant available validation for the fixes:
 
 - If `<validation-passing>` is `no`, STOP and report that validation is failing before any commit, push, or PR response happens
 - If `<execution-mode>` is `auto`, skip this review gate and continue directly to `### Commit And Push Updates`
-- Otherwise, this approval step is mandatory before any commit, push, or PR reply:
+- Otherwise, this review step is mandatory before any commit, push, or PR reply:
   - Present the implemented fix summary, changed file count, and validation results
-  - Ask exactly one `question` with:
+  - If `<changes-count>` is greater than `0`, ask exactly one `question` with:
     - header `Review Fixes`
     - question `Do these PR fixes look good to commit, push, and respond on the PR?`
     - options:
       - `Go Ahead` - commit, push, and respond to the PR now
       - `Revise` - update the fix based on user feedback before committing
-  - Keep custom answers enabled so the user can provide concrete feedback
+    - Keep custom answers enabled so the user can provide concrete feedback
+  - If `<changes-count>` is `0`, ask exactly one `question` with:
+    - header `Need Feedback`
+    - question `I did not make any changes for this PR feedback. What should I revise or investigate next?`
+    - options:
+      - `Revise` - provide feedback for another pass
+      - `Stop Here` - stop without committing, pushing, or replying on the PR
+    - Keep custom answers enabled so the user can provide concrete feedback
 - Normalize the answer into one of these paths:
-  - `Go Ahead` => continue to `### Commit And Push Updates`
-  - `Revise` or custom feedback => store the feedback as `<review-feedback>`, then continue to `### Apply Review Feedback`
-- Repeat this approval step until the user selects `Go Ahead`
+  - If `<changes-count>` is greater than `0`:
+    - `Go Ahead` => continue to `### Commit And Push Updates`
+    - `Revise` or custom feedback => store the feedback as `<review-feedback>`, then continue to `### Apply Review Feedback`
+  - If `<changes-count>` is `0`:
+    - `Stop Here` => STOP and report that no changes were made, so nothing was committed, pushed, or sent to the PR
+    - `Revise` or custom feedback => store the feedback as `<review-feedback>`, then continue to `### Apply Review Feedback`
+- Repeat this review step until the user selects `Go Ahead` after a pass that produces changes, or explicitly selects `Stop Here` when no changes were made
 - If the `question` tool is unavailable while `<execution-mode>` is `review`, STOP and report that approval is required before commit, push, or PR replies
 
 ### Apply Review Feedback
 
 - Use `<review-feedback>` to refine the implementation without widening scope unless the feedback explicitly asks for it
-- Return to `### Implement Fixes`, then rerun validation and the approval step
+- Return to `### Implement Fixes`, then rerun validation and the review step
 
 ### Commit And Push Updates
 
@@ -128,6 +139,17 @@ Review fixes for PR #<pr-context.pr.number>
 - Changes made: <changes-count> files modified
 - Validation passing: <validation-passing>
 - Validation details: <validation-results>
+```
+
+If the workflow stops after a no-change pass, display:
+```
+No changes made for PR #<pr-context.pr.number>
+
+- Changes made: 0 files modified
+- Validation passing: <validation-passing>
+- Validation details: <validation-results>
+
+No additional steps are required.
 ```
 
 When fixes are complete, display exactly this final completion summary and stop. Do not continue with extra analysis, planning, or follow-up tasks unless the workflow is blocked or the user asked for more:

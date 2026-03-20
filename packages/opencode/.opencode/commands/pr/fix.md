@@ -94,7 +94,7 @@ Run the most relevant available validation for the fixes:
 ### Apply Review Feedback
 
 - Use `<review-feedback>` to refine the implementation without widening scope unless the feedback explicitly asks for it
-- Return to `### Implement Fixes`, then rerun validation and the approval step
+- Return to `### Implement Fixes`, then rerun validation and the review step
 
 ### Commit And Push Updates
 

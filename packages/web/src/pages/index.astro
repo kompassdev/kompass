@@ -1,0 +1,176 @@
+---
+import CommandShowcase from "../components/CommandShowcase.astro";
+import MarketingLayout from "../layouts/MarketingLayout.astro";
+
+const pillars = [
+  {
+    eyebrow: "Modes that fit the moment",
+    title: "Manual steering when the details matter.",
+    text: "Keep the agent close, load only the right context, and move with precise commands instead of bloated prompts."
+  },
+  {
+    eyebrow: "Guided autonomy",
+    title: "Delegate the leaves, keep orchestration local.",
+    text: "Kompass turns planning, implementation, and review into composable flows so agents stay inside the rails you define."
+  },
+  {
+    eyebrow: "Cross-adapter direction",
+    title: "One workflow language across agent surfaces.",
+    text: "Shared commands, skills, and tools live in core packages while adapters expose them cleanly where developers already work."
+  }
+];
+
+const highlights = [
+  "Planner, worker, navigator, and reviewer roles built for real repository work.",
+  "Token-efficient command docs and components that can be reused across adapters.",
+  "Structured PR, ticket, and change-loading tools that keep context grounded."
+];
+
+const architectureBlocks = [
+  {
+    eyebrow: "Shared core",
+    title: "Write the workflow once.",
+    text: "Commands, agents, components, tools, and skills live in `packages/core` so the operating model stays consistent."
+  },
+  {
+    eyebrow: "Adapter surfaces",
+    title: "Expose it where developers already work.",
+    text: "Adapter packages translate the same workflow system into specific agent environments instead of reinventing the prompts."
+  },
+  {
+    eyebrow: "GitHub automation",
+    title: "Keep tickets, reviews, and PRs inside the loop.",
+    text: "Planning, review, and shipping flows stay grounded through structured GitHub-aware tools and explicit checkpoints."
+  }
+];
+
+const heroHighlights = [
+  {
+    eyebrow: "Core",
+    title: "Commands, agents, skills, tools"
+  },
+  {
+    eyebrow: "Adapters",
+    title: "OpenCode today, more surfaces next"
+  },
+  {
+    eyebrow: "Integrations",
+    title: "GitHub workflows, tickets, PRs, review loops"
+  }
+];
+
+---
+
+<MarketingLayout title="Kompass - Navigate AI coding work with intent">
+  <main class="landing-page">
+    <section class="hero">
+      <header class="site-header">
+        <a class="brand" href="/">
+          <img src="/kompass-icon.png" alt="" width="40" height="40" />
+          <span>Kompass</span>
+        </a>
+        <nav>
+          <a href="#workflow">Workflow</a>
+          <a href="#architecture">Architecture</a>
+          <a href="/docs/">Docs</a>
+          <a href="https://github.com/kompassdev/kompass">GitHub</a>
+        </nav>
+      </header>
+
+      <div class="hero__content">
+        <div class="hero__copy">
+          <p class="eyebrow">Workflow infrastructure for AI coding agents</p>
+          <h1>Navigate your way.</h1>
+          <p class="hero__lede">
+            Manual steering, steered autonomy, or full autonomy. Kompass keeps AI coding agents on course with
+            token-efficient, composable workflows.
+          </p>
+          <div class="hero__actions">
+            <a class="button button--primary" href="/docs/">Start with the docs</a>
+            <a class="button button--ghost" href="https://github.com/kompassdev/kompass">View the repo</a>
+          </div>
+        </div>
+
+        <div class="hero__rail" aria-label="Kompass highlights">
+          {heroHighlights.map((item) => (
+            <article class="hero-highlight">
+              <p class="eyebrow">{item.eyebrow}</p>
+              <h2>{item.title}</h2>
+            </article>
+          ))}
+        </div>
+      </div>
+
+      <div class="hero__showcase">
+        <CommandShowcase />
+      </div>
+    </section>
+
+    <section class="section section--pillars" id="workflow">
+      <div class="section-heading">
+        <p class="eyebrow">Why it feels different</p>
+        <h2>Every layer is built to reduce wandering.</h2>
+      </div>
+      <div class="pillar-list">
+        {pillars.map((pillar) => (
+          <article>
+            <p class="eyebrow">{pillar.eyebrow}</p>
+            <h3>{pillar.title}</h3>
+            <p>{pillar.text}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section class="section section--details" id="architecture">
+      <div class="details-copy">
+        <p class="eyebrow">Structured by design</p>
+        <h2>A calm system underneath the agent surface.</h2>
+        <p>
+          `packages/core` holds the reusable workflows. Adapter packages expose the same operating model inside each
+          coding agent. That means less reinvention, clearer reviews, and more consistent behavior from session to
+          session.
+        </p>
+        <ul>
+          {highlights.map((highlight) => <li>{highlight}</li>)}
+        </ul>
+      </div>
+
+      <div class="details-grid">
+        {architectureBlocks.map((block) => (
+          <article>
+            <p class="eyebrow">{block.eyebrow}</p>
+            <h3>{block.title}</h3>
+            <p>{block.text}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <footer class="section site-footer">
+      <div class="site-footer__brand">
+        <p class="eyebrow">Kompass</p>
+        <h2>Structured workflows for AI coding agents.</h2>
+        <p>
+          Manual steering, collaborative execution, or guided autonomy - one workflow language across planning,
+          development, review, and shipping.
+        </p>
+      </div>
+
+      <div class="site-footer__links">
+        <div>
+          <p class="eyebrow">Explore</p>
+          <a href="/docs/">Overview</a>
+          <a href="/docs/reference/commands/">Commands</a>
+          <a href="/docs/adapters/opencode/">OpenCode</a>
+        </div>
+        <div>
+          <p class="eyebrow">Workflows</p>
+          <a href="/docs/reference/tools/">Tools</a>
+          <a href="/docs/config/overview/">Configuration</a>
+          <a href="https://github.com/kompassdev/kompass">GitHub</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+</MarketingLayout>

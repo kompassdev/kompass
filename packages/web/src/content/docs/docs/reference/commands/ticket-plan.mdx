@@ -1,0 +1,26 @@
+---
+title: /ticket/plan
+description: Create an implementation plan from a ticket or request before any code changes happen.
+---
+
+## Purpose
+
+Use `/ticket/plan` to produce a scoped plan without executing changes.
+
+## Usage
+
+```text
+/ticket/plan <ticket-reference>
+```
+
+## Typical flow
+
+- load the ticket, comments, and constraints
+- inspect the relevant repository context
+- draft a detailed implementation plan and handoff
+
+## Common tools
+
+- `ticket_load`
+- `changes_load`
+- `task(planner)`

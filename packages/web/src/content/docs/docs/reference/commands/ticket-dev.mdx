@@ -1,0 +1,28 @@
+---
+title: /ticket/dev
+description: Load a ticket, create a plan, execute the work, and prepare the result for shipping.
+---
+
+## Purpose
+
+Use `/ticket/dev` when implementation starts from a tracked ticket.
+
+## Usage
+
+```text
+/ticket/dev <ticket-reference>
+```
+
+## Typical flow
+
+- load the ticket and its surrounding context
+- create an implementation plan
+- execute the work against that plan
+- run relevant validation and return PR-ready context
+
+## Common tools
+
+- `ticket_load`
+- `task(planner)`
+- `task(worker)`
+- `bash(...)`

@@ -1,0 +1,67 @@
+---
+title: Getting Started
+description: Install Kompass for OpenCode and start using the bundled workflow system.
+---
+
+## Quick start
+
+Kompass currently ships an OpenCode adapter package: `@kompassdev/opencode`.
+
+Add it to your OpenCode config:
+
+```json
+{
+  "plugin": ["@kompassdev/opencode"]
+}
+```
+
+## Add optional project config
+
+If you want to customize commands, agents, tools, skills, or defaults for a project, add one project override file.
+
+Kompass applies the first matching override in this order:
+
+1. `.opencode/kompass.jsonc`
+2. `.opencode/kompass.json`
+3. `kompass.jsonc`
+4. `kompass.json`
+
+The preferred location is `.opencode/kompass.jsonc`.
+
+To start from the published base config:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/kompass.jsonc -o .opencode/kompass.jsonc
+```
+
+## Start using workflows
+
+Once the plugin is installed, you can use commands such as:
+
+- `/ask`
+- `/dev`
+- `/review`
+- `/ticket/plan`
+- `/pr/create`
+- `/ship`
+
+## Debug OpenCode sessions
+
+For session debugging inside OpenCode:
+
+```bash
+opencode session list
+opencode export <sessionID>
+```
+
+## What happens automatically
+
+- bundled Kompass skills are registered automatically when the plugin loads
+- shared workflow logic stays in the Kompass package rather than your project repo
+- project overrides are layered on top of the bundled base config
+
+## Next steps
+
+- Read [`OpenCode`](/docs/adapters/opencode/) for adapter-specific behavior.
+- Read [`Configuration Overview`](/docs/config/overview/) to customize the system.
+- Read [`Commands`](/docs/reference/commands/) for the workflow reference.

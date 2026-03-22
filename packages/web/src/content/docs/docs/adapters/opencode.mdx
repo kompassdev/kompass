@@ -1,0 +1,42 @@
+---
+title: OpenCode
+description: Use Kompass workflows inside OpenCode through the published adapter package.
+---
+
+## Package
+
+The OpenCode adapter package is `@kompassdev/opencode`.
+
+## What it provides
+
+Inside OpenCode, the adapter exposes:
+
+- Kompass commands
+- Kompass agents
+- Kompass tools
+- bundled skills registration
+- project override loading from local config files
+
+## Project overrides
+
+OpenCode projects can customize Kompass with `.opencode/kompass.jsonc` or the other supported override file names.
+
+You can use overrides to:
+
+- enable or disable commands
+- swap command templates
+- enable or disable agents
+- remap tool names
+- change defaults such as the base branch
+
+## Useful OpenCode notes
+
+- bundled Kompass skills are registered automatically
+- the preferred override file is `.opencode/kompass.jsonc`
+- for session debugging, use `opencode session list` and `opencode export <sessionID>`
+
+## Generated output
+
+Compiled OpenCode review artifacts are written to `packages/opencode/.opencode/` in this repository.
+
+Do not edit that generated directory directly.

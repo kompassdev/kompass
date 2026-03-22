@@ -1,0 +1,29 @@
+---
+title: /pr/review
+description: Review a pull request and publish structured feedback.
+---
+
+## Purpose
+
+Use `/pr/review` to load a PR, inspect its changes, and publish the review result.
+
+## Usage
+
+```text
+/pr/review [pr]
+```
+
+## Typical flow
+
+- load the PR, reviews, comments, files, and diff context with `pr_load`
+- if the PR references a ticket, load that ticket and its comments with `ticket_load`
+- review the changes against the loaded repository context
+- add inline comments and publish a review outcome such as approval or requested changes
+
+## Common tools
+
+- `pr_load`
+- `ticket_load`
+- `changes_load`
+- `task(reviewer)`
+- `pr_sync`

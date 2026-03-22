@@ -39,3 +39,5 @@ coverage/
 # Temporary files
 *.tmp
 *.temp
+tmp/
+packages/web/.astro/

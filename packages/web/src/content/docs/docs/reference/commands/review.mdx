@@ -1,0 +1,25 @@
+---
+title: /review
+description: Review branch changes without publishing comments to GitHub.
+---
+
+## Purpose
+
+Use `/review` for a local branch review pass.
+
+## Usage
+
+```text
+/review [base]
+```
+
+## Typical flow
+
+- load the branch delta against the chosen base branch
+- inspect the changed files with repository-aware context
+- return findings without mutating the branch or posting comments
+
+## Common tools
+
+- `changes_load`
+- `task(reviewer)`

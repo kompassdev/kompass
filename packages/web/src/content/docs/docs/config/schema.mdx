@@ -1,0 +1,50 @@
+---
+title: Schema Notes
+description: Key schema concepts and defaults exposed by kompass.schema.json.
+---
+
+The published schema lives in `kompass.schema.json`.
+
+## Important defaults
+
+- default base branch: `main`
+- OpenCode adapter agent mode: `all`
+- bundled shared validation guidance is included by default
+
+## Notable schema types
+
+### Agent definitions
+
+Agents can define:
+
+- `description`
+- `promptPath`
+- `permission`
+
+### Command config
+
+Commands can define:
+
+- `enabled`
+- `template`
+
+### Component config
+
+Components can define:
+
+- `enabled`
+- `path`
+
+### Skills config
+
+Skills support entry-based enablement and plugin filtering.
+
+Deprecated array fields still exist in the schema for compatibility, but the newer entry-based shape is the preferred direction.
+
+### Adapter config
+
+`adapters.opencode.agentMode` supports:
+
+- `subagent`
+- `primary`
+- `all`

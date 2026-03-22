@@ -1,0 +1,76 @@
+---
+title: Configuration Overview
+description: Learn how Kompass merges bundled config with a project override and what each section controls.
+---
+
+## Loading model
+
+Kompass loads:
+
+1. the bundled base config
+2. the first matching project override file
+
+The project override replaces or augments the bundled configuration depending on the field.
+
+## Main sections
+
+### `shared`
+
+Shared render-time guidance, including:
+
+- `prApprove`
+- `validation`
+
+### `commands`
+
+Controls command availability and template overrides.
+
+- `entries.<name>.enabled`
+- `entries.<name>.template`
+
+### `agents`
+
+Controls bundled agent definitions and enablement.
+
+- `description`
+- `promptPath`
+- `permission`
+
+### `tools`
+
+Controls built-in tool enablement and per-adapter tool name remapping.
+
+### `components`
+
+Controls reusable template partials and path overrides used during command rendering.
+
+### `skills`
+
+Controls bundled and plugin skill filtering.
+
+- `entries`
+- `plugins.entries`
+- deprecated allowlists/excludelists are still recognized in the schema
+
+### `defaults`
+
+Shared defaults such as `baseBranch`.
+
+### `adapters`
+
+Adapter-specific configuration. Today this includes `adapters.opencode.agentMode`.
+
+## Tool alias example
+
+You can keep a Kompass tool enabled but expose it under a custom adapter-facing name:
+
+```jsonc
+{
+  "tools": {
+    "ticket_sync": {
+      "enabled": true,
+      "name": "custom_ticket_name"
+    }
+  }
+}
+```

@@ -1,0 +1,28 @@
+---
+title: /ticket/ask
+description: Answer a question on a ticket and post the response back to the same issue.
+---
+
+## Purpose
+
+Use `/ticket/ask` when a ticket needs a contextual answer grounded in both the issue history and the repo.
+
+## Usage
+
+```text
+/ticket/ask <ticket-reference> <question>
+```
+
+## Typical flow
+
+- load the ticket and its comments
+- load any necessary repository context
+- generate a contextual answer
+- post the answer back to the ticket
+
+## Common tools
+
+- `ticket_load`
+- `read`
+- `grep`
+- `ticket_sync`

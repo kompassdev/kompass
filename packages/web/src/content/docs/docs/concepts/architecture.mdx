@@ -1,0 +1,40 @@
+---
+title: Architecture
+description: Understand how Kompass splits shared workflow logic from adapter-specific integration.
+---
+
+## High-level structure
+
+Kompass is organized as a workspace with shared core logic and adapter packages.
+
+- `packages/core` contains reusable workflow logic
+- `packages/opencode` contains the OpenCode adapter
+- `packages/web` contains the marketing site and docs
+
+## Core package
+
+`packages/core` contains the durable pieces of the system:
+
+- command templates
+- agent prompts
+- reusable components
+- config loading and merging
+- tool definitions and shared schema
+
+## Adapter package
+
+`packages/opencode` exposes Kompass inside OpenCode.
+
+It is responsible for:
+
+- mapping Kompass assets into the OpenCode runtime
+- compiling reviewable output into `packages/opencode/.opencode/`
+- registering bundled skills and config for that adapter
+
+## Why this split matters
+
+This structure lets Kompass reuse the same workflow language across adapters instead of rebuilding each workflow from scratch.
+
+- shared logic stays in one place
+- adapter-specific differences stay isolated
+- future adapters can be added as sibling packages

@@ -10,6 +10,7 @@
     "compile": "bun run ./packages/opencode/scripts/compile.ts",
     "dev:web": "bun --cwd packages/web dev",
     "build:web": "bun --cwd packages/web build",
+    "deploy:web": "bun run build:web && npx wrangler pages deploy packages/web/dist --project-name kompass-web",
     "publish:opencode": "npm publish ./packages/opencode --access public",
     "typecheck": "tsc -p packages/core/tsconfig.json --noEmit && tsc -p packages/opencode/tsconfig.json --noEmit && bun --cwd packages/web astro check",
     "test": "bun test packages/core/test && node --test packages/opencode/test/*.test.ts"

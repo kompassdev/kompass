@@ -1,0 +1,27 @@
+---
+title: /ship
+description: Move branch work through summary, commit, and PR creation as a fast shipping path.
+---
+
+## Purpose
+
+Use `/ship` when you want a fast path from current changes to a PR.
+
+## Usage
+
+```text
+/ship [base-or-context]
+```
+
+## Typical flow
+
+- summarize current changes
+- create a work branch if you are still on the base branch
+- delegate commit and PR creation as focused follow-up steps
+
+## Common tools
+
+- `changes_load`
+- `task(navigator)`
+- `pr_sync`
+- `bash(git checkout -b)`

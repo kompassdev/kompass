@@ -1,0 +1,28 @@
+---
+title: /pr/fix
+description: Fix issues raised in PR review, push the updates, and reply to review threads.
+---
+
+## Purpose
+
+Use `/pr/fix` when a PR already exists and review feedback needs to be addressed.
+
+## Usage
+
+```text
+/pr/fix [context]
+```
+
+## Typical flow
+
+- load the PR and existing review state
+- implement the requested fixes on the current branch
+- push the updated branch
+- reply in the relevant review threads
+
+## Common tools
+
+- `pr_load`
+- `changes_load`
+- `apply_patch`
+- `pr_sync`

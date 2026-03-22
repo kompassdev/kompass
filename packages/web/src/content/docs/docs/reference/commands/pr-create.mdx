@@ -1,0 +1,29 @@
+---
+title: /pr/create
+description: Summarize branch work, resolve ticket handling, and create a structured pull request.
+---
+
+## Purpose
+
+Use `/pr/create` to move current branch work into a reviewable pull request.
+
+## Usage
+
+```text
+/pr/create [title-or-context]
+```
+
+## Typical flow
+
+- load branch changes against the base branch
+- stop if there are uncommitted changes or no branch work to include
+- resolve whether to attach or create a ticket
+- push the branch if needed
+- create the PR with a compact description and checklist structure
+
+## Common tools
+
+- `changes_load`
+- `ticket_sync`
+- `pr_sync`
+- `bash(git push)`

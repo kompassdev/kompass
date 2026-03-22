@@ -1,0 +1,175 @@
+---
+title: Commands
+description: Overview of the bundled Kompass command set.
+---
+
+Kompass ships workflow-oriented commands authored as explicit templates in `packages/core/commands/`.
+
+## Groups
+
+- General: `/ask`, `/learn`, `/reload`, `/branch`, `/rmslop`
+- Development: `/dev`, `/todo`, `/ship`
+- Review: `/review`, `/pr/review`, `/pr/fix`
+- Git: `/commit`, `/commit-and-push`, `/pr/create`
+- Tickets: `/ticket/create`, `/ticket/ask`, `/ticket/dev`, `/ticket/plan`
+
+## What makes them different
+
+- each command is a documented workflow, not an opaque prompt
+- placeholders like `<arguments>` and `<plan>` are normalized before execution
+- navigator workflows orchestrate locally and delegate focused leaf work
+- outputs are written to be deterministic and reviewable
+
+## General workflows
+
+### `/ask`
+
+Answers a project or code question using only the relevant repository context.
+
+- usage: `/ask <question>`
+- arguments: question or focus guidance; auto-derives from the conversation when omitted
+- expected tools: `read`, `grep`, repository exploration tools as needed
+
+### `/branch`
+
+Creates and switches to a categorized work branch from current uncommitted changes.
+
+- usage: `/branch [context]`
+- arguments: optional branch naming guidance
+- expected tools: `changes_load(uncommitted)`, `git checkout -b`
+
+### `/learn`
+
+Extracts non-obvious learnings from the current session and documents them appropriately.
+
+- usage: `/learn [focus]`
+- arguments: optional scope or extra guidance
+- expected tools: `read`, `grep`, `apply_patch`
+
+### `/reload`
+
+Reloads the current OpenCode project cache.
+
+- usage: `/reload`
+- arguments: ignored
+- expected tools: `reload`
+
+### `/rmslop`
+
+Removes AI-generated code slop and inconsistencies from branch changes.
+
+- usage: `/rmslop [base-or-guidance]`
+- arguments: optional base branch or cleanup guidance
+- expected tools: `changes_load`, file-edit tools, validation commands, commit git commands
+
+## Git workflows
+
+### `/commit`
+
+Creates a commit with an appropriate message summarizing uncommitted changes.
+
+- usage: `/commit [message-guidance]`
+- arguments: optional commit message guidance
+- expected tools: `changes_load(uncommitted)`, staging/commit git commands
+
+### `/commit-and-push`
+
+Creates a commit and immediately pushes it to the remote repository.
+
+- usage: `/commit-and-push [message-guidance]`
+- arguments: optional commit message guidance
+- expected tools: `changes_load(uncommitted)`, git commit, `git push`
+
+### `/pr/create`
+
+Creates a pull request for the current branch, including ticket handling when needed.
+
+- usage: `/pr/create [context]`
+- arguments: optional base branch, ticket directive, ticket reference, or additional context
+- expected tools: `changes_load`, `question` when ticket handling is unresolved, `ticket_sync` when auto-creating a ticket, `git push`, `pr_sync`
+
+## Development workflows
+
+### `/dev`
+
+Implements a feature or fix, validates the result, and prepares a PR handoff.
+
+- usage: `/dev <description>`
+- arguments: direct implementation guidance or a ticket-like source
+- expected tools: `ticket_load` only when a ticket-like source is provided, file-edit tools, validation commands
+
+### `/ship`
+
+Ships current work by delegating branch creation, commit creation, and PR creation.
+
+- usage: `/ship [context]`
+- arguments: optional base branch, branch naming guidance, or additional shipping context
+- expected tools: delegated `/branch`, delegated `/commit`, delegated `/pr/create`
+
+### `/todo`
+
+Works through a todo file one pending item at a time with planning, approval, implementation, and commit loops.
+
+- usage: `/todo [@todo-file]`
+- arguments: optional `@file` reference and execution guidance; defaults to `@TODO.md`
+- expected tools: `read`, delegated `/ticket/plan`, `question`, delegated `/dev`, delegated `/commit`
+
+## Review workflows
+
+### `/pr/fix`
+
+Addresses PR feedback by making fixes and responding to review threads.
+
+- usage: `/pr/fix [context]`
+- arguments: optional PR ref, `auto`, or additional fix guidance
+- expected tools: `pr_load`, file-edit tools, validation commands, `question` unless `auto`, `git push`, `pr_sync`
+
+### `/pr/review`
+
+Reviews a GitHub pull request and publishes findings as a formal review.
+
+- usage: `/pr/review [pr]`
+- arguments: optional PR number, URL, or review focus areas
+- expected tools: `pr_load`, `ticket_load` when the PR body links to one clear ticket, `changes_load`, `pr_sync`
+
+### `/review`
+
+Reviews code changes and provides actionable feedback with a grade and risk assessment.
+
+- usage: `/review [base-or-uncommitted]`
+- arguments: optional base branch, `uncommitted`, or review focus guidance
+- expected tools: `changes_load`, read changed files, reviewer analysis
+
+## Ticket workflows
+
+### `/ticket/ask`
+
+Loads a ticket and its discussion, answers the question, and posts the answer back to the ticket.
+
+- usage: `/ticket/ask <ticket-reference> <question>`
+- arguments: ticket reference plus question; auto-derives the question from the conversation when needed
+- expected tools: `ticket_load(comments)`, repository context tools as needed, `ticket_sync`
+
+### `/ticket/create`
+
+Creates a ticket summarizing the current change comparison.
+
+- usage: `/ticket/create [base-or-context]`
+- arguments: optional base branch or additional context; auto-discovers comparison mode when omitted
+- expected tools: `changes_load`, `ticket_sync`
+
+### `/ticket/dev`
+
+Implements a ticket by orchestrating development, branching, commit-and-push, and PR creation.
+
+- usage: `/ticket/dev <ticket-reference>`
+- arguments: ticket reference, URL, file path, or raw request
+- expected tools: `ticket_load`, delegated `/dev`, delegated `/branch`, delegated `/commit-and-push`, delegated `/pr/create`
+
+### `/ticket/plan`
+
+Creates a scoped implementation plan from a request or ticket and stores that plan in the ticket flow.
+
+- usage: `/ticket/plan <ticket-reference-or-request>`
+- arguments: ticket reference, URL, request text, or planning guidance
+- expected tools: `ticket_load(comments)` when planning from a ticket, light repo reconnaissance tools, `ticket_sync`

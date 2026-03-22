@@ -1,0 +1,34 @@
+---
+title: Workspace Development
+description: Repository structure, validation commands, and development rules for the Kompass workspace.
+---
+
+## Repository structure
+
+- `packages/core`: shared workflows, prompts, components, config loading, and tool definitions
+- `packages/opencode`: the OpenCode adapter package
+- `packages/web`: marketing site and docs
+- `packages/opencode/.opencode/`: generated OpenCode output for review
+
+## Validation commands
+
+When you make code or generated-file changes in this workspace, run:
+
+```bash
+bun run compile
+bun run typecheck
+bun run test
+```
+
+## Important rules
+
+- do not edit `packages/opencode/.opencode/` directly
+- keep reusable workflow logic in `packages/core`
+- keep OpenCode-specific wiring in `packages/opencode`
+- do not regenerate generated output unless the producing source changed or regeneration was requested
+
+## Publishing direction
+
+- publish `packages/opencode` as `@kompassdev/opencode`
+- keep shared logic in `packages/core`
+- add future adapters as sibling packages, such as `packages/claude-code`

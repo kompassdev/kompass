@@ -8,8 +8,10 @@
   "scripts": {
     "check": "bun --eval \"await import('./packages/opencode/index.ts')\"",
     "compile": "bun run ./packages/opencode/scripts/compile.ts",
+    "dev:web": "bun --cwd packages/web dev",
+    "build:web": "bun --cwd packages/web build",
     "publish:opencode": "npm publish ./packages/opencode --access public",
-    "typecheck": "tsc -p packages/core/tsconfig.json --noEmit && tsc -p packages/opencode/tsconfig.json --noEmit",
+    "typecheck": "tsc -p packages/core/tsconfig.json --noEmit && tsc -p packages/opencode/tsconfig.json --noEmit && bun --cwd packages/web astro check",
     "test": "bun test packages/core/test && node --test packages/opencode/test/*.test.ts"
   },
   "devDependencies": {

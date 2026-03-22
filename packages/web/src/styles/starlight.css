@@ -1,0 +1,48 @@
+:root {
+  --sl-color-accent-low: #1e2c17;
+  --sl-color-accent: #f8b84e;
+  --sl-color-accent-high: #ffe2a8;
+  --sl-color-white: #eff7fb;
+  --sl-color-gray-1: #dbe6ee;
+  --sl-color-gray-2: #b4c4d0;
+  --sl-color-gray-3: #8094a5;
+  --sl-color-gray-4: #4f6273;
+  --sl-color-gray-5: #263849;
+  --sl-color-gray-6: #172737;
+  --sl-color-black: #061019;
+  --sl-font: "Space Grotesk", sans-serif;
+  --sl-font-system: "Space Grotesk", sans-serif;
+  --sl-font-mono: "IBM Plex Mono", monospace;
+}
+
+html {
+  background:
+    radial-gradient(circle at top, rgba(80, 132, 173, 0.16), transparent 30%),
+    linear-gradient(180deg, #07111b 0%, #08131d 42%, #050d15 100%);
+}
+
+body {
+  font-family: var(--sl-font);
+}
+
+.site-title,
+h1,
+h2,
+h3 {
+  letter-spacing: -0.03em;
+}
+
+.hero {
+  border: 1px solid rgba(125, 166, 196, 0.14);
+  border-radius: 1.5rem;
+  background: linear-gradient(180deg, rgba(10, 23, 35, 0.9), rgba(9, 20, 31, 0.7));
+}
+
+.card,
+.sl-markdown-content blockquote {
+  border-radius: 1rem;
+}
+
+.sl-markdown-content a {
+  text-decoration-thickness: 0.08em;
+}

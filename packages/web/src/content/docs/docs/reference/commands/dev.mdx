@@ -1,0 +1,30 @@
+---
+title: /dev
+description: Implement a request or ticket, validate the changes, and prepare for PR creation.
+---
+
+## Purpose
+
+Use `/dev` for focused implementation work.
+
+## Usage
+
+```text
+/dev <description>
+```
+
+## Typical flow
+
+- load ticket context when the argument is a ticket reference
+- summarize the request, constraints, and acceptance criteria
+- implement the change with focused edits
+- run relevant validation
+- prepare a PR handoff instead of creating the PR directly
+
+## Common tools
+
+- `ticket_load`
+- `read`
+- `apply_patch`
+- `bash(...)`
+- `task(worker)`

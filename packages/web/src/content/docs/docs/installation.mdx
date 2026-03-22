@@ -1,0 +1,48 @@
+---
+title: Installation
+description: Install Kompass, publish optional config, and understand override precedence.
+---
+
+## OpenCode installation
+
+Kompass is currently distributed for OpenCode as `@kompassdev/opencode`.
+
+Configure OpenCode to load the adapter:
+
+```json
+{
+  "plugin": ["@kompassdev/opencode"]
+}
+```
+
+## Optional project override
+
+Project config is optional. If present, Kompass loads the first file that exists from this list:
+
+1. `.opencode/kompass.jsonc`
+2. `.opencode/kompass.json`
+3. `kompass.jsonc`
+4. `kompass.json`
+
+The recommended file is `.opencode/kompass.jsonc`.
+
+## Bootstrap from the published base config
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/kompass.jsonc -o .opencode/kompass.jsonc
+```
+
+## What the override can control
+
+- shared validation guidance
+- enabled commands and custom templates
+- agent enablement and prompt overrides
+- tool enablement and tool-name remapping
+- component path overrides
+- skill enablement and plugin skill filters
+- default base branch and adapter settings
+
+## Current adapter support
+
+- **OpenCode**: supported now
+- **Claude Code**: planned, not shipped yet

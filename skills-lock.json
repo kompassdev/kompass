@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "frontend-skill": {
+      "source": "openai/skills",
+      "sourceType": "github",
+      "computedHash": "2074b8fa089e7ac633689b7202965513a5fd069fd1baf2ea49a928bb85bb4c9c"
+    }
+  }
+}

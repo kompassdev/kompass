@@ -1,0 +1,26 @@
+---
+title: Agents
+description: Overview of the bundled Kompass agent roles.
+---
+
+## Bundled agents
+
+Kompass currently defines four bundled agent roles: `worker`, `navigator`, `planner`, and `reviewer`.
+
+These are resolved from the merged config and exposed through the active adapter.
+
+### `worker`
+
+Handles generic implementation work and can ask targeted follow-up questions when execution is blocked.
+
+### `navigator`
+
+Coordinates structured multi-step workflows locally and delegates only focused leaf work to subagents.
+
+### `planner`
+
+Turns a request or ticket into a scoped implementation plan.
+
+### `reviewer`
+
+Reviews branch or PR changes without editing files.

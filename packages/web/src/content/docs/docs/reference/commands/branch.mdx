@@ -1,0 +1,25 @@
+---
+title: /branch
+description: Create and switch to a categorized work branch from current uncommitted changes.
+---
+
+## Purpose
+
+Use `/branch` to generate a concise feature branch name from the current uncommitted work.
+
+## Usage
+
+```text
+/branch [context]
+```
+
+## Typical flow
+
+- summarize uncommitted changes with `changes_load`
+- skip if there is nothing to branch from or you are already on a work branch
+- create and checkout a categorized branch such as `feature/...` or `docs/...`
+
+## Common tools
+
+- `changes_load`
+- `bash(git checkout -b)`

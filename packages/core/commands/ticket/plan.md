@@ -41,6 +41,13 @@ $ARGUMENTS
 - Confirm current behavior and existing patterns instead of relying on ticket text alone
 - If relevant repo context cannot be found or verified, note that gap and avoid false certainty
 
+### Respect Planning Boundary
+
+- This command is planning-only
+- Do not implement the plan, edit files, run implementation workflows, or start coding from the proposed steps unless the user explicitly asks for implementation
+- Treat repo inspection as analysis-only reconnaissance needed to improve the plan
+- After syncing and presenting the plan, STOP
+
 ### Shape the Plan
 
 - Turn `<planning-objective>`, `<operative-constraints>`, `<proposed-technical-direction>`, `<open-questions>`, and repo findings into:
@@ -77,6 +84,8 @@ $ARGUMENTS
 - Earlier comments remain in force when they add operative constraints, business rules, technical decisions, migration rules, exact labels or renames, ordering rules, or scoping rules.
 - Use `<additional-context>` to emphasize the most important constraints, dependencies, or focus areas.
 - For technical tickets, repo inspection is expected unless the request is clearly non-technical or repository context is unavailable.
+- A completed plan is not authorization to implement it.
+- Do not make code changes, delegate implementation, or continue into execution unless the user explicitly asks for that work.
 - If technical details provided in the conversation are good, keep them.
 - If those details are incomplete, validate and improve them.
 - For existing tickets, update the same ticket instead of creating a replacement.

@@ -61,6 +61,18 @@ function getString(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
+async function logObservedFailure(
+  logger: PluginLogger,
+  message: string,
+  error: unknown,
+  extra?: Record<string, unknown>,
+) {
+  await logger.warn(message, {
+    ...(extra ?? {}),
+    ...getErrorDetails(error),
+  });
+}
+
 function parseSlashCommand(value: string): ParsedSlashCommand | undefined {
   const match = value.trim().match(/^(?:@\S+\s+)?\/([^\s]+)(?:\s+([\s\S]*))?$/);
 
@@ -141,11 +153,23 @@ export async function getTaskToolExecution(
 
   if (!prompt && !command) return;
 
-  const expandedCommand = command
-    ? await expandSlashCommandPrompt(projectRoot, command, logger)
-    : prompt
-      ? await expandSlashCommandPrompt(projectRoot, prompt, logger)
-      : undefined;
+  let expandedCommand: CommandExecution | undefined;
+  try {
+    expandedCommand = command
+      ? await expandSlashCommandPrompt(projectRoot, command, logger)
+      : prompt
+        ? await expandSlashCommandPrompt(projectRoot, prompt, logger)
+        : undefined;
+  } catch (error) {
+    if (logger) {
+      await logObservedFailure(logger, "Failed to expand slash command for task tool", error, {
+        projectRoot,
+        tool: input.tool,
+        command,
+        prompt,
+      });
+    }
+  }
   const finalPrompt = expandedCommand?.prompt ?? prompt ?? command ?? "";
 
   args.prompt = finalPrompt;
@@ -199,7 +223,9 @@ function createReloadTool(client: PluginInput["client"]) {
     async execute(_, context) {
       // Defer dispose so the tool returns before the session is torn down
       setTimeout(() => {
-        void client.instance.dispose({ query: { directory: context.directory } });
+        void client.instance.dispose({ query: { directory: context.directory } }).catch((error) => {
+          console.error("[kompass] Failed to dispose instance during reload:", error);
+        });
       }, 500);
       return JSON.stringify({
         scope: "project",
@@ -349,8 +375,15 @@ export async function createOpenCodeTools(
   return tools;
 }
 
-export const OpenCodeCompassPlugin: Plugin = async ({ $, client, worktree }: PluginInput) => {
+export const OpenCodeCompassPlugin: Plugin = async (input: PluginInput) => {
+  const { $, client, worktree } = input;
   const logger = createPluginLogger(client, worktree);
+
+  await logger.info("Initialized Kompass plugin", {
+    directory: getString(input.directory),
+    worktree: getString(worktree),
+    projectPath: getString((input as { project?: { path?: string } }).project?.path),
+  });
 
   async function createToolsSafely() {
     try {
@@ -385,29 +418,53 @@ export const OpenCodeCompassPlugin: Plugin = async ({ $, client, worktree }: Plu
       await runConfigStep("skills", () => applySkillsConfig(cfg, { logger }));
     },
     async "chat.message"(input, output) {
-      const removedSyntheticHandoff = removeSyntheticAgentHandoff(output);
+      try {
+        const removedSyntheticHandoff = removeSyntheticAgentHandoff(output);
 
-      if (!removedSyntheticHandoff) return;
+        if (!removedSyntheticHandoff) return;
 
-      await logger.info("Removed synthetic agent handoff text", {
-        sessionID: input.sessionID,
-        messageID: input.messageID,
-        agent: input.agent,
-      });
+        await logger.info("Removed synthetic agent handoff text", {
+          sessionID: input.sessionID,
+          messageID: input.messageID,
+          agent: input.agent,
+        });
+      } catch (error) {
+        await logObservedFailure(logger, "chat.message hook failed", error, {
+          sessionID: input.sessionID,
+          messageID: input.messageID,
+          agent: input.agent,
+        });
+      }
     },
     async "command.execute.before"(input, output) {
-      const commandExecution = getCommandExecution(input, output);
+      try {
+        const commandExecution = getCommandExecution(input, output);
 
-      if (!commandExecution) return;
+        if (!commandExecution) return;
 
-      await logger.info("Executing Kompass command", commandExecution as Record<string, unknown>);
+        await logger.info("Executing Kompass command", commandExecution as Record<string, unknown>);
+      } catch (error) {
+        await logObservedFailure(logger, "command.execute.before hook failed", error, {
+          command: input.command,
+          arguments: input.arguments,
+          sessionID: input.sessionID,
+        });
+      }
     },
     async "tool.execute.before"(input, output) {
-      const taskExecution = await getTaskToolExecution(input, output, worktree, logger);
+      try {
+        const taskExecution = await getTaskToolExecution(input, output, worktree, logger);
 
-      if (!taskExecution) return;
+        if (!taskExecution) return;
 
-      await logger.info("Executing Kompass task tool", taskExecution as Record<string, unknown>);
+        await logger.info("Executing Kompass task tool", taskExecution as Record<string, unknown>);
+      } catch (error) {
+        await logObservedFailure(logger, "tool.execute.before hook failed", error, {
+          tool: input.tool,
+          callID: input.callID,
+          sessionID: input.sessionID,
+        });
+      }
     },
   };
 };

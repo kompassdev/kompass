@@ -1,7 +1,11 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
+import os from "node:os";
+import path from "node:path";
 
 import { applyAgentsConfig } from "../config.ts";
+
+process.env.HOME = path.join(os.tmpdir(), `kompass-test-home-${process.pid}-agents-config`);
 
 describe("applyAgentsConfig", () => {
   test("registers agents with their default permissions", async () => {
@@ -50,5 +54,35 @@ describe("applyAgentsConfig", () => {
     assert.match(cfg.agent.navigator?.prompt ?? "", /delegate only explicit leaf tasks/i);
     assert.match(cfg.agent.navigator?.prompt ?? "", /complete the local steps first/i);
     assert.match(cfg.agent.reviewer?.prompt ?? "", /Never switch branches/i);
+  });
+
+  test("overwrites existing agent configuration", async () => {
+    const cfg: {
+      agent?: Record<
+        string,
+        {
+          description: string;
+          prompt?: string;
+          permission: Record<string, string>;
+          mode?: string;
+        }
+      >;
+    } = {
+      agent: {
+        worker: {
+          description: "Existing worker",
+          prompt: "Existing prompt",
+          permission: { question: "deny" },
+        },
+      },
+    };
+
+    await applyAgentsConfig(cfg as never, process.cwd());
+
+    assert.equal(cfg.agent?.worker?.description, "Generic worker agent.");
+    assert.equal(cfg.agent?.worker?.prompt, undefined);
+    assert.deepEqual(cfg.agent?.worker?.permission, {
+      question: "allow",
+    });
   });
 });

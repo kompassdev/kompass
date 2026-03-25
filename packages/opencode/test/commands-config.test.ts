@@ -7,6 +7,9 @@ import path from "node:path";
 import { applyCommandsConfig } from "../config.ts";
 
 const originalCi = process.env.CI;
+const isolatedHome = path.join(os.tmpdir(), `kompass-test-home-${process.pid}-commands-config`);
+
+process.env.HOME = isolatedHome;
 
 afterEach(() => {
   if (originalCi === undefined) {
@@ -14,6 +17,8 @@ afterEach(() => {
   } else {
     process.env.CI = originalCi;
   }
+
+  process.env.HOME = isolatedHome;
 });
 
 describe("applyCommandsConfig", () => {
@@ -361,8 +366,8 @@ describe("applyCommandsConfig", () => {
     });
   });
 
-  describe("existing command config preservation", () => {
-    test("preserves existing command configuration", async () => {
+  describe("existing command config overwrite", () => {
+    test("overwrites existing command configuration", async () => {
       delete process.env.CI;
       const cfg: { command?: Record<string, { description: string; template: string }> } = {
         command: {
@@ -375,11 +380,12 @@ describe("applyCommandsConfig", () => {
 
       await applyCommandsConfig(cfg as never, process.cwd());
 
-      assert.equal(cfg.command!["dev"].description, "Existing description");
-      assert.equal(cfg.command!["dev"].template, "Existing template");
+      assert.notEqual(cfg.command!["dev"].description, "Existing description");
+      assert.notEqual(cfg.command!["dev"].template, "Existing template");
+      assert.match(cfg.command!["dev"].template, /## Goal/);
     });
 
-    test("fills in missing commands while preserving existing ones", async () => {
+    test("overwrites existing commands and still registers the rest", async () => {
       delete process.env.CI;
       const cfg: { command?: Record<string, { description: string; template: string }> } = {
         command: {
@@ -392,11 +398,9 @@ describe("applyCommandsConfig", () => {
 
       await applyCommandsConfig(cfg as never, process.cwd());
 
-      // Existing command should be preserved
-      assert.equal(cfg.command!["dev"].description, "Custom dev description");
-      assert.equal(cfg.command!["dev"].template, "Custom dev template");
-      
-      // Other commands should still be registered
+      assert.notEqual(cfg.command!["dev"].description, "Custom dev description");
+      assert.notEqual(cfg.command!["dev"].template, "Custom dev template");
+
       assert.ok(cfg.command!["pr/review"]);
       assert.ok(cfg.command!["pr/create"]);
     });

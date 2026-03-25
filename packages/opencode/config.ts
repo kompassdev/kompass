@@ -82,7 +82,7 @@ export async function applyAgentsConfig(
       ...(definition.prompt ? { prompt: rewriteToolNames(definition.prompt) } : {}),
       ...(definition.mode ? { mode: definition.mode } : {}),
     };
-    cfg.agent[name] ??= agentConfig;
+    cfg.agent[name] = agentConfig;
 
     await options?.logger?.info("Loaded Kompass agent", {
         agent: name,
@@ -111,7 +111,7 @@ export async function applyCommandsConfig(
   cfg.command ??= {};
 
   for (const [name, definition] of Object.entries(commands)) {
-    cfg.command[name] ??= {
+    cfg.command[name] = {
       description: definition.description,
       agent: definition.agent,
       subtask: definition.subtask,

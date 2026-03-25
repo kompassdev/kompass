@@ -6,128 +6,225 @@ import path from "node:path";
 
 import { isSkillEnabled, loadKompassConfig, mergeWithDefaults } from "../lib/config.ts";
 
+const originalHome = process.env.HOME;
+
+async function withTempHome<T>(run: (homeDir: string) => Promise<T>): Promise<T> {
+  const homeDir = await mkdtemp(path.join(os.tmpdir(), "kompass-home-"));
+
+  process.env.HOME = homeDir;
+
+  try {
+    return await run(homeDir);
+  } finally {
+    if (originalHome === undefined) {
+      delete process.env.HOME;
+    } else {
+      process.env.HOME = originalHome;
+    }
+    await rm(homeDir, { recursive: true, force: true });
+  }
+}
+
 describe("config loading", () => {
   test("parses .opencode jsonc config files", async () => {
-    const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-config-"));
+    await withTempHome(async () => {
+      const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-config-"));
 
-    try {
-      await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
-      await writeFile(
-        path.join(tempDir, ".opencode", "kompass.jsonc"),
-        `{
-          // jsonc should be supported
-          "commands": {
-            "dev": {
-              "enabled": false,
+      try {
+        await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
+        await writeFile(
+          path.join(tempDir, ".opencode", "kompass.jsonc"),
+          `{
+            // jsonc should be supported
+            "commands": {
+              "dev": {
+                "enabled": false,
+              },
             },
-          },
-        }`,
-      );
+          }`,
+        );
 
-      const config = await loadKompassConfig(tempDir);
+        const config = await loadKompassConfig(tempDir);
 
-      assert.equal(config?.commands?.dev?.enabled, false);
-    } finally {
-      await rm(tempDir, { recursive: true, force: true });
-    }
+        assert.equal(config?.commands?.dev?.enabled, false);
+      } finally {
+        await rm(tempDir, { recursive: true, force: true });
+      }
+    });
   });
 
   test("parses validation strings in jsonc config files", async () => {
-    const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-config-validation-"));
+    await withTempHome(async () => {
+      const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-config-validation-"));
 
-    try {
-      await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
-      await writeFile(
-        path.join(tempDir, ".opencode", "kompass.jsonc"),
-        `{
-          "shared": {
-            "validation": [
-              "Run lint if available",
-              "Run tests if available"
-            ]
-          }
-        }`,
-      );
+      try {
+        await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
+        await writeFile(
+          path.join(tempDir, ".opencode", "kompass.jsonc"),
+          `{
+            "shared": {
+              "validation": [
+                "Run lint if available",
+                "Run tests if available"
+              ]
+            }
+          }`,
+        );
 
-      const config = await loadKompassConfig(tempDir);
+        const config = await loadKompassConfig(tempDir);
 
-      assert.equal(
-        JSON.stringify(config.shared?.validation),
-        JSON.stringify(["Run lint if available", "Run tests if available"]),
-      );
-    } finally {
-      await rm(tempDir, { recursive: true, force: true });
-    }
+        assert.equal(
+          JSON.stringify(config.shared?.validation),
+          JSON.stringify(["Run lint if available", "Run tests if available"]),
+        );
+      } finally {
+        await rm(tempDir, { recursive: true, force: true });
+      }
+    });
   });
 
   test("prefers project config files in documented order", async () => {
-    const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-config-order-"));
+    await withTempHome(async () => {
+      const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-config-order-"));
 
-    try {
-      await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
-      await writeFile(
-        path.join(tempDir, ".opencode", "kompass.json"),
-        JSON.stringify({ shared: { prApprove: false } }),
-      );
-      await writeFile(
-        path.join(tempDir, "kompass.jsonc"),
-        `{
-          "shared": {
-            "prApprove": false
-          },
-          "commands": {
-            "dev": {
-              "enabled": false
+      try {
+        await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
+        await writeFile(
+          path.join(tempDir, ".opencode", "kompass.json"),
+          JSON.stringify({ shared: { prApprove: false } }),
+        );
+        await writeFile(
+          path.join(tempDir, "kompass.jsonc"),
+          `{
+            "shared": {
+              "prApprove": false
+            },
+            "commands": {
+              "dev": {
+                "enabled": false
+              }
             }
-          }
-        }`,
-      );
-      await writeFile(
-        path.join(tempDir, ".opencode", "kompass.jsonc"),
-        `{
-          "shared": {
-            "prApprove": true
-          }
-        }`,
-      );
+          }`,
+        );
+        await writeFile(
+          path.join(tempDir, ".opencode", "kompass.jsonc"),
+          `{
+            "shared": {
+              "prApprove": true
+            }
+          }`,
+        );
 
-      const config = await loadKompassConfig(tempDir);
+        const config = await loadKompassConfig(tempDir);
 
-      assert.equal(config.shared?.prApprove, true);
-      assert.equal(config.commands?.dev?.enabled, true);
-    } finally {
-      await rm(tempDir, { recursive: true, force: true });
-    }
+        assert.equal(config.shared?.prApprove, true);
+        assert.equal(config.commands?.dev?.enabled, true);
+      } finally {
+        await rm(tempDir, { recursive: true, force: true });
+      }
+    });
   });
 
   test("merges bundled config with .opencode overrides", async () => {
-    const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-config-merge-"));
+    await withTempHome(async () => {
+      const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-config-merge-"));
 
-    try {
-      await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
-      await writeFile(
-        path.join(tempDir, ".opencode", "kompass.jsonc"),
-        `{
-          "shared": {
-            "prApprove": true
-          },
-          "commands": {
-            "dev": {
-              "enabled": false
+      try {
+        await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
+        await writeFile(
+          path.join(tempDir, ".opencode", "kompass.jsonc"),
+          `{
+            "shared": {
+              "prApprove": true
+            },
+            "commands": {
+              "dev": {
+                "enabled": false
+              }
             }
-          }
-        }`,
-      );
+          }`,
+        );
 
-      const config = await loadKompassConfig(tempDir);
+        const config = await loadKompassConfig(tempDir);
 
-      assert.equal(config?.shared?.prApprove, true);
-      assert.equal(config?.defaults?.baseBranch, "main");
-      assert.equal(config?.commands?.dev?.enabled, false);
-      assert.equal(config?.commands?.review?.enabled, true);
-    } finally {
-      await rm(tempDir, { recursive: true, force: true });
-    }
+        assert.equal(config?.shared?.prApprove, true);
+        assert.equal(config?.defaults?.baseBranch, "main");
+        assert.equal(config?.commands?.dev?.enabled, false);
+        assert.equal(config?.commands?.review?.enabled, true);
+      } finally {
+        await rm(tempDir, { recursive: true, force: true });
+      }
+    });
+  });
+
+  test("falls back to home config when project has no override", async () => {
+    await withTempHome(async (homeDir) => {
+      const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-config-home-fallback-"));
+
+      try {
+        await mkdir(path.join(homeDir, ".opencode"), { recursive: true });
+        await writeFile(
+          path.join(homeDir, ".opencode", "kompass.jsonc"),
+          `{
+            "shared": {
+              "prApprove": true
+            },
+            "commands": {
+              "dev": {
+                "enabled": false
+              }
+            }
+          }`,
+        );
+
+        const config = await loadKompassConfig(tempDir);
+
+        assert.equal(config.shared?.prApprove, true);
+        assert.equal(config.commands?.dev?.enabled, false);
+      } finally {
+        await rm(tempDir, { recursive: true, force: true });
+      }
+    });
+  });
+
+  test("project config overrides home config", async () => {
+    await withTempHome(async (homeDir) => {
+      const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-config-home-override-"));
+
+      try {
+        await mkdir(path.join(homeDir, ".opencode"), { recursive: true });
+        await writeFile(
+          path.join(homeDir, ".opencode", "kompass.jsonc"),
+          `{
+            "shared": {
+              "prApprove": false
+            },
+            "commands": {
+              "dev": {
+                "enabled": false
+              }
+            }
+          }`,
+        );
+
+        await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
+        await writeFile(
+          path.join(tempDir, ".opencode", "kompass.jsonc"),
+          `{
+            "shared": {
+              "prApprove": true
+            }
+          }`,
+        );
+
+        const config = await loadKompassConfig(tempDir);
+
+        assert.equal(config.shared?.prApprove, true);
+        assert.equal(config.commands?.dev?.enabled, false);
+      } finally {
+        await rm(tempDir, { recursive: true, force: true });
+      }
+    });
   });
 });
 

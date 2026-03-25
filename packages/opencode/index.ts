@@ -14,6 +14,7 @@ import {
   type MergedKompassConfig,
   type Shell,
 } from "../core/index.ts";
+import { DEFAULT_COMMAND_NAMES } from "../core/lib/config.ts";
 import { applyAgentsConfig, applyCommandsConfig, applySkillsConfig } from "./config.ts";
 import { createPluginLogger, getErrorDetails, type PluginLogger } from "./logging.ts";
 import {
@@ -203,11 +204,38 @@ export function getCommandExecution(
   };
 }
 
+export function removeSubtaskCommands(output: CommandExecuteBeforeOutput): number {
+  let removed = 0;
+
+  for (const part of output.parts) {
+    if (part.type !== "subtask") continue;
+    if (!("command" in part) || typeof part.command !== "string") continue;
+
+    delete (part as { command?: string }).command;
+    removed++;
+  }
+
+  return removed;
+}
+
+export function shouldRemoveSubtaskCommand(
+  command: string,
+  config: MergedKompassConfig,
+  kompassCommands = new Set<string>(DEFAULT_COMMAND_NAMES),
+): boolean {
+  const mode = config.adapters.opencode.subtaskCommandMode;
+
+  if (mode === "off") return false;
+  if (mode === "all") return true;
+
+  return kompassCommands.has(command);
+}
+
 export function removeSyntheticAgentHandoff(output: ChatMessageOutput): boolean {
   const filteredParts = output.parts.filter((part) => !(
     part.type === "text" &&
     part.synthetic === true &&
-    part.text.includes(AGENT_HANDOFF_MARKER)
+    part.text.toLowerCase().includes(AGENT_HANDOFF_MARKER)
   ));
 
   if (filteredParts.length === output.parts.length) return false;
@@ -409,6 +437,16 @@ export const OpenCodeCompassPlugin: Plugin = async (input: PluginInput) => {
   }
 
   const tools = await createToolsSafely();
+  let config = mergeWithDefaults(null);
+  try {
+    config = mergeWithDefaults(await loadKompassConfig(worktree));
+  } catch (error) {
+    await logger.warn("Falling back to default Kompass runtime config", {
+      worktree,
+      ...getErrorDetails(error),
+    });
+  }
+  const kompassCommands = new Set<string>(DEFAULT_COMMAND_NAMES);
 
   return {
     tool: tools,
@@ -438,7 +476,19 @@ export const OpenCodeCompassPlugin: Plugin = async (input: PluginInput) => {
     },
     async "command.execute.before"(input, output) {
       try {
+        const removedSubtaskCommands = shouldRemoveSubtaskCommand(input.command, config, kompassCommands)
+          ? removeSubtaskCommands(output)
+          : 0;
         const commandExecution = getCommandExecution(input, output);
+
+        if (removedSubtaskCommands > 0) {
+          await logger.info("Removed subtask command payload", {
+            command: input.command,
+            arguments: input.arguments,
+            sessionID: input.sessionID,
+            removedSubtaskCommands,
+          });
+        }
 
         if (!commandExecution) return;
 

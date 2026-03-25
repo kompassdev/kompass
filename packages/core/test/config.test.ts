@@ -266,6 +266,19 @@ describe("object-based config", () => {
     assert.equal(config.agents.enabled.includes("reviewer"), false);
     assert.equal(config.components.enabled.includes("dev-flow"), false);
     assert.equal(config.components.paths.commit, "components/custom-commit.md");
+    assert.equal(config.adapters.opencode.subtaskCommandMode, "kompass");
+  });
+
+  test("supports adapter-specific subtask command stripping mode", () => {
+    const config = mergeWithDefaults({
+      adapters: {
+        opencode: {
+          subtaskCommandMode: "all",
+        },
+      },
+    });
+
+    assert.equal(config.adapters.opencode.subtaskCommandMode, "all");
   });
 
   test("supports skill entry maps", () => {

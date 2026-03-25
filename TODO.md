@@ -4,3 +4,4 @@
 - [x] Add support for approving PR on pr_sync too, so if it's 5 star, approve PR, no comments or grade needed
 - [x] Improve commit generation, it's currently too simpler and often one line... Check a few commits and the changes to understand... Create a better list of changes.
 - [ ] Only register command / agents / tools that aren't already registered, so if the user has already registered a custom pr_create command, we don't override it with the default one. This allows for more flexibility and customization.
+- [ ] Improve /pr/fix https://github.com/kompassdev/kompass/pull/52 to not send unnecessary commentBody, only send when no inline review

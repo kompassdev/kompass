@@ -1,4 +1,5 @@
 import { access, readFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -232,9 +233,36 @@ export async function loadKompassConfig(
   projectRoot: string,
 ): Promise<KompassConfig> {
   const bundledConfig = await loadBundledConfig();
-  const projectConfig = await loadFirstConfig(projectRoot, PROJECT_CONFIG_FILES);
+  const configRoots = getConfigRoots(projectRoot);
 
-  return mergeConfigObjects(bundledConfig, projectConfig) ?? bundledConfig;
+  let mergedConfig: KompassConfig | null = bundledConfig;
+  for (const configRoot of configRoots) {
+    mergedConfig = mergeConfigObjects(
+      mergedConfig,
+      await loadFirstConfig(configRoot, PROJECT_CONFIG_FILES),
+    );
+  }
+
+  return mergedConfig ?? bundledConfig;
+}
+
+function getConfigRoots(projectRoot: string): string[] {
+  const roots: string[] = [];
+  const seen = new Set<string>();
+
+  const homeDirectory = process.env.HOME || os.homedir();
+  if (homeDirectory) {
+    const normalizedHome = path.resolve(homeDirectory);
+    seen.add(normalizedHome);
+    roots.push(normalizedHome);
+  }
+
+  const normalizedProjectRoot = path.resolve(projectRoot);
+  if (!seen.has(normalizedProjectRoot)) {
+    roots.push(normalizedProjectRoot);
+  }
+
+  return roots;
 }
 
 async function loadBundledConfig(): Promise<KompassConfig> {

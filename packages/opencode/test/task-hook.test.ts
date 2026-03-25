@@ -5,7 +5,11 @@ import {
   expandSlashCommandPrompt,
   getCommandExecution,
   getTaskToolExecution,
+  removeSyntheticAgentHandoff,
+  removeSubtaskCommands,
+  shouldRemoveSubtaskCommand,
 } from "../index.ts";
+import { mergeWithDefaults } from "../../core/lib/config.ts";
 
 describe("getTaskToolExecution", () => {
   test("expands slash commands for task tool calls", async () => {
@@ -163,5 +167,118 @@ describe("getCommandExecution", () => {
     );
 
     assert.equal(execution, undefined);
+  });
+});
+
+describe("removeSubtaskCommands", () => {
+  test("removes command from subtask parts", () => {
+    const output = {
+      parts: [
+        {
+          id: "part-1",
+          sessionID: "session-3",
+          messageID: "message-1",
+          type: "subtask",
+          prompt: "expanded command prompt",
+          description: "Run review command",
+          agent: "general",
+          command: "review",
+        },
+        {
+          id: "part-2",
+          sessionID: "session-3",
+          messageID: "message-1",
+          type: "text",
+          text: "keep this",
+        },
+      ],
+    };
+
+    const removed = removeSubtaskCommands(output as never);
+
+    assert.equal(removed, 1);
+    assert.equal("command" in output.parts[0], false);
+  });
+});
+
+describe("shouldRemoveSubtaskCommand", () => {
+  test("defaults to stripping commands only for Kompass commands", () => {
+    const config = mergeWithDefaults(null);
+
+    assert.equal(shouldRemoveSubtaskCommand("review", config), true);
+    assert.equal(shouldRemoveSubtaskCommand("third-party", config), false);
+  });
+
+  test("supports enabling stripping for all commands", () => {
+    const config = mergeWithDefaults({
+      adapters: {
+        opencode: {
+          subtaskCommandMode: "all",
+        },
+      },
+    });
+
+    assert.equal(shouldRemoveSubtaskCommand("third-party", config), true);
+  });
+
+  test("supports disabling stripping entirely", () => {
+    const config = mergeWithDefaults({
+      adapters: {
+        opencode: {
+          subtaskCommandMode: "off",
+        },
+      },
+    });
+
+    assert.equal(shouldRemoveSubtaskCommand("review", config), false);
+  });
+});
+
+describe("removeSyntheticAgentHandoff", () => {
+  test("removes the legacy synthetic agent handoff text", () => {
+    const output = {
+      parts: [
+        {
+          id: "part-1",
+          sessionID: "session-3",
+          messageID: "message-1",
+          type: "text",
+          text: "Please generate a prompt and call the task tool with subagent: planner",
+          synthetic: true,
+        },
+        {
+          id: "part-2",
+          sessionID: "session-3",
+          messageID: "message-1",
+          type: "text",
+          text: "keep this",
+        },
+      ],
+    };
+
+    const removed = removeSyntheticAgentHandoff(output as never);
+
+    assert.equal(removed, true);
+    assert.equal(output.parts.length, 1);
+    assert.equal(output.parts[0]?.text, "keep this");
+  });
+
+  test("keeps non-synthetic text untouched", () => {
+    const output = {
+      parts: [
+        {
+          id: "part-1",
+          sessionID: "session-4",
+          messageID: "message-1",
+          type: "text",
+          text: "Summarize the task tool output above and continue with your task.",
+        },
+      ],
+    };
+
+    const removed = removeSyntheticAgentHandoff(output as never);
+
+    assert.equal(removed, false);
+    assert.equal(output.parts.length, 1);
   });
 });

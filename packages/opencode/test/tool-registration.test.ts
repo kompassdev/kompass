@@ -253,4 +253,126 @@ describe("createOpenCodeTools", () => {
       }
     });
   });
+
+  test("strips subtask command payload only for Kompass commands by default", async () => {
+    await withTempHome(async () => {
+      const plugin = await OpenCodeCompassPlugin({
+        $: (() => {
+          throw new Error("not implemented");
+        }) as never,
+        client: createMockClient() as never,
+        directory: process.cwd(),
+        worktree: process.cwd(),
+      } as never);
+
+      const kompassOutput = {
+        parts: [
+          {
+            id: "part-1",
+            sessionID: "session-1",
+            messageID: "message-1",
+            type: "subtask",
+            prompt: "expanded",
+            description: "Run review command",
+            agent: "reviewer",
+            command: "review",
+          },
+        ],
+      };
+
+      await plugin["command.execute.before"]?.(
+        {
+          command: "review",
+          sessionID: "session-1",
+          arguments: "",
+        } as never,
+        kompassOutput as never,
+      );
+
+      assert.equal("command" in kompassOutput.parts[0], false);
+
+      const thirdPartyOutput = {
+        parts: [
+          {
+            id: "part-2",
+            sessionID: "session-1",
+            messageID: "message-2",
+            type: "subtask",
+            prompt: "expanded",
+            description: "Run external command",
+            agent: "reviewer",
+            command: "third-party",
+          },
+        ],
+      };
+
+      await plugin["command.execute.before"]?.(
+        {
+          command: "third-party",
+          sessionID: "session-1",
+          arguments: "",
+        } as never,
+        thirdPartyOutput as never,
+      );
+
+      assert.equal((thirdPartyOutput.parts[0] as { command?: string }).command, "third-party");
+    });
+  });
+
+  test("supports stripping subtask command payload for all commands via config", async () => {
+    await withTempHome(async () => {
+      const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-tools-subtask-mode-"));
+
+      try {
+        await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
+        await writeFile(
+          path.join(tempDir, ".opencode", "kompass.jsonc"),
+          `{
+            "adapters": {
+              "opencode": {
+                "subtaskCommandMode": "all"
+              }
+            }
+          }`,
+        );
+
+        const plugin = await OpenCodeCompassPlugin({
+          $: (() => {
+            throw new Error("not implemented");
+          }) as never,
+          client: createMockClient() as never,
+          directory: tempDir,
+          worktree: tempDir,
+        } as never);
+
+        const output = {
+          parts: [
+            {
+              id: "part-1",
+              sessionID: "session-1",
+              messageID: "message-1",
+              type: "subtask",
+              prompt: "expanded",
+              description: "Run external command",
+              agent: "reviewer",
+              command: "third-party",
+            },
+          ],
+        };
+
+        await plugin["command.execute.before"]?.(
+          {
+            command: "third-party",
+            sessionID: "session-1",
+            arguments: "",
+          } as never,
+          output as never,
+        );
+
+        assert.equal("command" in output.parts[0], false);
+      } finally {
+        await rm(tempDir, { recursive: true, force: true });
+      }
+    });
+  });
 });

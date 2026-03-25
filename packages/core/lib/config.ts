@@ -160,6 +160,7 @@ export interface KompassConfig {
   adapters?: {
     opencode?: {
       agentMode?: "subagent" | "primary" | "all";
+      subtaskCommandMode?: "kompass" | "all" | "off";
     };
   };
 }
@@ -207,6 +208,7 @@ export interface MergedKompassConfig {
   adapters: {
     opencode: {
       agentMode: "subagent" | "primary" | "all";
+      subtaskCommandMode: "kompass" | "all" | "off";
     };
   };
 }
@@ -697,6 +699,9 @@ export function mergeWithDefaults(
           config?.adapters?.opencode?.agentMode ??
           config?.defaults?.agentMode ??
           "all",
+        subtaskCommandMode:
+          config?.adapters?.opencode?.subtaskCommandMode ??
+          "kompass",
       },
     },
   };

@@ -39,12 +39,29 @@ async function pathExists(filePath: string): Promise<boolean> {
   }
 }
 
+async function hasBundledSkillDirectories(root: string): Promise<boolean> {
+  try {
+    const entries = await readdir(root, { withFileTypes: true });
+    return entries.some((entry) => entry.isDirectory());
+  } catch {
+    return false;
+  }
+}
+
 async function resolveBundledSkillsRoot(): Promise<string | undefined> {
+  let firstExistingCandidate: string | undefined;
+
   for (const candidate of BUNDLED_SKILL_ROOT_CANDIDATES) {
-    if (await pathExists(candidate)) return candidate;
+    if (!await pathExists(candidate)) continue;
+
+    firstExistingCandidate ??= candidate;
+
+    if (await hasBundledSkillDirectories(candidate)) {
+      return candidate;
+    }
   }
 
-  return undefined;
+  return firstExistingCandidate;
 }
 
 type ApplyConfigOptions = {

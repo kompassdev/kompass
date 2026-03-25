@@ -54,12 +54,6 @@
     "summarize-changes": { "enabled": true },
   },
 
-  "skills": {
-    "entries": {
-      "kompass-workflows": { "enabled": true },
-    },
-  },
-
   "defaults": {
     "baseBranch": "main",
   },

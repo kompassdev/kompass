@@ -1,2 +1,2 @@
-This directory intentionally exists so packaged OpenCode builds always ship a
-concrete `skills/` path, even when no bundled skill files are present yet.
+This directory contains bundled Kompass skills that ship with packaged OpenCode
+builds. Keep a concrete `skills/` path available for runtime registration.

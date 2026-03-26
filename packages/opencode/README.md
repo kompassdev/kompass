@@ -1,21 +1,24 @@
-# @kompassdev/opencode
+> Kompass is under active development, so workflows, package APIs, and adapter support may keep evolving as the toolkit expands.
 
-OpenCode adapter for Kompass.
+<p align="center">
+  <img src="https://raw.githubusercontent.com/kompassdev/kompass/main/assets/kompass.png" alt="Kompass" height="300" />
+  <br>
+  <em>Navigate your way - manual steering, steered autonomy, or autonomously.</em>
+</p>
 
-Kompass provides structured commands, agents, tools, and skills so AI coding workflows stay reviewable and focused instead of drifting across long sessions.
+Kompass keeps AI coding agents on course with token-efficient, composable workflows.
 
 ## Docs
 
 - Main docs: `https://kompassdev.ai/docs/`
+- Getting started: `https://kompassdev.ai/docs/getting-started/`
 - OpenCode adapter: `https://kompassdev.ai/docs/adapters/opencode/`
 - Config reference: `https://kompassdev.ai/docs/config/overview/`
-- Command reference: `https://kompassdev.ai/docs/reference/commands/`
-- Agent reference: `https://kompassdev.ai/docs/reference/agents/`
-- Tool reference: `https://kompassdev.ai/docs/reference/tools/`
+- Command, agent, and tool reference: `https://kompassdev.ai/docs/reference/commands/`, `https://kompassdev.ai/docs/reference/agents/`, `https://kompassdev.ai/docs/reference/tools/`
 
 ## Installation
 
-Add the adapter package to your OpenCode config:
+For OpenCode, add the adapter package to your config:
 
 ```json
 {
@@ -23,9 +26,7 @@ Add the adapter package to your OpenCode config:
 }
 ```
 
-## Optional project config
-
-To start from the published base config:
+Project config is optional. To start from the published base config:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/kompass.jsonc -o .opencode/kompass.jsonc
@@ -40,12 +41,13 @@ Kompass loads the bundled base config, then optional home-directory overrides, t
 
 The recommended project override path is `.opencode/kompass.jsonc`.
 
-## What the adapter provides
+## Workspace
 
-- Kompass commands
-- Kompass agent roles
-- Kompass tools
-- bundled skill registration
-- project override loading from local config files
+This repository is the Kompass development workspace.
 
-Most command execution uses OpenCode's built-in `build` agent. Kompass also ships the `worker`, `navigator`, `planner`, and `reviewer` roles for structured subagent workflows.
+- `packages/core`: shared workflows, prompts, components, config loading, and tool definitions
+- `packages/opencode`: the OpenCode adapter package, published as `@kompassdev/opencode`
+- `packages/web`: docs site and web content
+- `packages/opencode/.opencode/`: generated OpenCode output for review
+
+When changing Kompass itself, keep runtime definitions, bundled config, schema, docs, and generated output in sync in the same change.

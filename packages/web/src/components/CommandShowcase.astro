@@ -52,8 +52,7 @@ const scenarios: CommandScenario[] = [
         output: [
           'It has a clear point of view: keep AI coding agents "on course" with token-efficient, composable workflows instead of giant ad-hoc prompts.',
           'The repo is structured thoughtfully: shared logic lives in packages/core, adapter-specific wiring in packages/opencode.',
-          'The command surface is unusually coherent — /ask, /review, /pr/create, /ticket/plan all fit the same workflow philosophy.',
-          'No additional steps are required.'
+          'The command surface is unusually coherent — /ask, /review, /pr/create, /ticket/plan all fit the same workflow philosophy.'
         ]
       }
     ]
@@ -61,7 +60,7 @@ const scenarios: CommandScenario[] = [
   {
     id: 'ticket-plan',
     label: '/ticket/plan',
-    command: '/ticket/plan #128 rollout the new review workflow',
+    command: '/ticket/plan #128',
     agentName: 'Planner',
     task: 'Turn a request or ticket into a scoped implementation plan',
     steps: [
@@ -85,8 +84,7 @@ const scenarios: CommandScenario[] = [
         output: [
           'Phase 1: Extract reusable review components from existing commands',
           'Phase 2: Update navigator agent to coordinate review workflows',
-          'Phase 3: Add checklist generation and feedback threading',
-          'Plan ready for implementation. No additional steps required.'
+          'Phase 3: Add checklist generation and feedback threading'
         ]
       }
     ]
@@ -118,8 +116,7 @@ const scenarios: CommandScenario[] = [
         output: [
           'Created PR #47: Add workflow visualization to homepage',
           'Linked to ticket #42 with structured checklist',
-          'PR body includes summary, changes, and testing notes',
-          'No additional steps are required.'
+          'PR body includes summary, changes, and testing notes'
         ]
       }
     ]
@@ -151,8 +148,7 @@ const scenarios: CommandScenario[] = [
         output: [
           'Strong separation of concerns between scenarios and rendering',
           'Consider adding error handling for failed tool calls',
-          'Animation timing is appropriate for the UX flow',
-          'No additional steps are required.'
+          'Animation timing is appropriate for the UX flow'
         ]
       }
     ]
@@ -184,8 +180,7 @@ const scenarios: CommandScenario[] = [
         output: [
           'Implemented review workflow in packages/core/commands/pr/',
           'Added navigator coordination and feedback threading',
-          'All validation checks passed successfully',
-          'No additional steps are required.'
+          'All validation checks passed successfully'
         ]
       }
     ]
@@ -217,8 +212,7 @@ const scenarios: CommandScenario[] = [
         output: [
           'Created branch: feature/new-workflow',
           'Committed 3 files with generated message',
-          'Published PR #48: Add new workflow command',
-          'No additional steps are required.'
+          'Published PR #48: Add new workflow command'
         ]
       }
     ]
@@ -250,8 +244,7 @@ const scenarios: CommandScenario[] = [
         output: [
           'Removed 47 lines of duplicate validation logic',
           'Simplified 3 overly-abstract helper functions',
-          'Consolidated similar command patterns into shared components',
-          'No additional steps are required.'
+          'Consolidated similar command patterns into shared components'
         ]
       }
     ]
@@ -284,8 +277,7 @@ const scenarios: CommandScenario[] = [
         output: [
           'Completed: Update command showcase with more examples',
           'Blocked: Waiting for review on PR #47',
-          'Next: Add mobile responsive styling',
-          'No additional steps are required.'
+          'Next: Add mobile responsive styling'
         ]
       }
     ]
@@ -318,14 +310,170 @@ const scenarios: CommandScenario[] = [
         output: [
           'Staged 3 modified files',
           'Created commit: feat: add command showcase with animations',
-          'Pushed to origin/feature/showcase',
-          'No additional steps are required.'
+          'Pushed to origin/feature/showcase'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'branch',
+    label: '/branch',
+    command: '/branch',
+    agentName: 'Worker',
+    task: 'Create categorized branch names',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Creating branch — need to summarize uncommitted work and generate a categorized branch name based on the change themes.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'changes_load', args: 'uncommitted', status: 'complete' },
+          { tool: 'bash', args: 'git checkout -b docs/site-refresh', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Created branch: docs/site-refresh',
+          'Switched from main to the new work branch'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'commit',
+    label: '/commit',
+    command: '/commit',
+    agentName: 'Worker',
+    task: 'Generate why-focused commit messages',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Committing — need to inspect staged and unstaged changes, then generate a commit message focused on why the changes were made.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'changes_load', args: 'uncommitted', status: 'complete' },
+          { tool: 'bash', args: 'git add packages/web/src/', status: 'complete' },
+          { tool: 'bash', args: 'git commit -m "feat: improve command showcase"', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Staged relevant files',
+          'Created a new commit with generated message'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'learn',
+    label: '/learn',
+    command: '/learn',
+    agentName: 'Worker',
+    task: 'Extract patterns into AGENTS.md',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Learning — need to inspect existing patterns in the repo and extract reusable guidance into AGENTS.md targets.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'read', args: 'AGENTS.md', status: 'complete' },
+          { tool: 'grep', args: 'function|const|class', status: 'complete' },
+          { tool: 'apply_patch', args: 'AGENTS.md', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Summarized established conventions',
+          'Updated agent guidance where the pattern belongs'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'pr-fix',
+    label: '/pr/fix',
+    command: '/pr/fix',
+    agentName: 'Navigator',
+    task: 'Fix requested PR changes',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Fixing PR — need to load PR history and outstanding feedback, then review proposed fixes before applying.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'pr_load', args: 'current', status: 'complete' },
+          { tool: 'apply_patch', args: 'requested changes', status: 'complete' },
+          { tool: 'bash', args: 'npm run test', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Fixed requested issues on the branch',
+          'Posted replies to the relevant review threads'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'pr-review',
+    label: '/pr/review',
+    command: '/pr/review',
+    agentName: 'Reviewer',
+    task: 'Review PR with inline comments',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Reviewing PR — need to load PR, reviews, comments, files, and diff context. Will load linked ticket too before reviewing.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'pr_load', args: 'current', status: 'complete' },
+          { tool: 'ticket_load', args: '#42', status: 'complete' },
+          { tool: 'changes_load', args: 'HEAD...main', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Added inline comments and review summary',
+          'Approved or requested changes based on findings'
         ]
       }
     ]
   }
 ];
 
+// Split scenarios into two groups
+const commandScenarios = scenarios.filter(s => ['ask', 'branch', 'commit', 'commit-and-push', 'dev', 'learn', 'reload', 'review', 'rmslop'].includes(s.id));
+const orchestratorScenarios = scenarios.filter(s => ['pr-create', 'pr-fix', 'pr-review', 'ship', 'todo', 'ticket-plan'].includes(s.id));
 
 ---
 
@@ -339,21 +487,39 @@ const scenarios: CommandScenario[] = [
   </div>
 
   <div class="command-showcase__main">
-    <!-- Tab navigation -->
-    <div class="command-strip" role="tablist" aria-label="Command examples">
-      {scenarios.map((scenario, index) => (
-        <button 
-          type="button"
-          class:list={{ "command-tab": true, "is-active": index === 0 }}
-          role="tab"
-          aria-selected={index === 0 ? "true" : "false"}
-          aria-controls={`panel-${scenario.id}`}
-          id={`tab-${scenario.id}`}
-          data-command-tab={scenario.id}
-        >
-          {scenario.label}
-        </button>
-      ))}
+    <!-- Combined Tab navigation with groups -->
+    <div class="command-strip-wrapper">
+      <div class="command-strip" role="tablist" aria-label="Command examples">
+        <span class="command-group-label">Commands</span>
+        {commandScenarios.map((scenario, index) => (
+          <button 
+            type="button"
+            class:list={{ "command-tab": true, "is-active": index === 0 }}
+            role="tab"
+            aria-selected={index === 0 ? "true" : "false"}
+            aria-controls={`panel-${scenario.id}`}
+            id={`tab-${scenario.id}`}
+            data-command-tab={scenario.id}
+          >
+            {scenario.label}
+          </button>
+        ))}
+        <span class="command-group-divider"></span>
+        <span class="command-group-label command-group-label--orchestrators">Orchestrators</span>
+        {orchestratorScenarios.map((scenario) => (
+          <button 
+            type="button"
+            class:list={{ "command-tab command-tab--orchestrator": true }}
+            role="tab"
+            aria-selected="false"
+            aria-controls={`panel-${scenario.id}`}
+            id={`tab-${scenario.id}`}
+            data-command-tab={scenario.id}
+          >
+            {scenario.label}
+          </button>
+        ))}
+      </div>
     </div>
 
     <!-- All scenario panels -->
@@ -375,19 +541,13 @@ const scenarios: CommandScenario[] = [
             </div>
             <div class="session-terminal__meta">
               <span class="session-terminal__status" data-status-dot></span>
-              <span data-session-time>0.0s</span>
             </div>
           </div>
 
           <!-- Subagent Session -->
-          <div class="subagent-session">
+          <div class="subagent-session" data-subagent-session>
             <!-- Subagent Header -->
             <div class="subagent-session__header">
-              <div class="subagent-session__nav">
-                <span>Parent <kbd>↑</kbd></span>
-                <span>Prev <kbd>←</kbd></span>
-                <span>Next <kbd>→</kbd></span>
-              </div>
               <div class="subagent-session__title">
                 <span class="subagent-session__indicator"></span>
                 <span class="subagent-session__agent">{scenario.agentName}</span>
@@ -421,15 +581,28 @@ const scenarios: CommandScenario[] = [
                       <div class="tool-calls-block">
                         <div class="tool-calls-block__header">
                           <span class="tool-calls-block__icon">▸</span>
-                          <span class="tool-calls-block__label">Explored</span>
-                          <span class="tool-calls-block__count">{step.toolCalls.length} reads, 1 search</span>
+                          <span class="tool-calls-block__label">
+                            {step.toolCalls.some(t => t.tool === 'dispatch') ? 'Delegated' : 'Explored'}
+                          </span>
+                          <span class="tool-calls-block__count">
+                            {step.toolCalls.length} {step.toolCalls.some(t => t.tool === 'dispatch') ? 'subagents' : 'reads, 1 search'}
+                          </span>
                         </div>
                         <div class="tool-calls-block__list">
                           {step.toolCalls.map((tool) => (
-                            <div class="tool-call" data-tool-status={tool.status}>
-                              <span class="tool-call__arrow">→</span>
-                              <span class="tool-call__name">{tool.tool}</span>
-                              <span class="tool-call__args">{tool.args}</span>
+                            <div class:list={{ "tool-call": true, "tool-call--dispatch": tool.tool === 'dispatch' }} data-tool-status={tool.status}>
+                              {tool.tool === 'dispatch' ? (
+                                <>
+                                  <span class="tool-call__indicator"></span>
+                                  <span class="tool-call__dispatch-cmd">{tool.args}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span class="tool-call__arrow">→</span>
+                                  <span class="tool-call__name">{tool.tool}</span>
+                                  <span class="tool-call__args">{tool.args}</span>
+                                </>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -447,6 +620,13 @@ const scenarios: CommandScenario[] = [
                 ))}
               </div>
             </div>
+          </div>
+
+          <!-- Parent Session Output -->
+          <div class="parent-output" data-parent-output>
+            {scenario.steps.find(s => s.phase === 'output')?.output?.map((line) => (
+              <p class="parent-output__line">{line}</p>
+            ))}
           </div>
         </div>
       </div>
@@ -479,30 +659,32 @@ const scenarios: CommandScenario[] = [
     const steps = panel.querySelectorAll('[data-step]');
     const statusDot = panel.querySelector('[data-status-dot]') as HTMLElement;
     const toolCount = panel.querySelector('[data-tool-count]') as HTMLElement;
-    const sessionTime = panel.querySelector('[data-session-time]') as HTMLElement;
+    const parentOutput = panel.querySelector('[data-parent-output]') as HTMLElement;
+    const subagentSession = panel.querySelector('[data-subagent-session]') as HTMLElement;
     
     // Reset all animations
     steps.forEach(step => step.classList.remove('is-visible'));
     panel.querySelectorAll('.tool-call').forEach(tool => tool.classList.remove('is-visible'));
     panel.querySelectorAll('.output-block__line').forEach(line => line.classList.remove('is-visible'));
+    panel.querySelectorAll('.parent-output__line').forEach(line => line.classList.remove('is-visible'));
     if (statusDot) statusDot.classList.remove('is-complete');
+    if (parentOutput) parentOutput.classList.remove('is-visible');
+    if (subagentSession) subagentSession.classList.remove('is-visible');
     
     let toolcallCounter = 0;
-    let startTime = Date.now();
-    
-    function updateTimer() {
-      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      if (sessionTime) sessionTime.textContent = `${elapsed}s`;
-    }
-    
-    const timerInterval = window.setInterval(updateTimer, 100);
     
     // Type the command
     if (typewriterEl) {
       await typewriter(typewriterEl, typewriterEl.textContent || '', 35);
     }
     
-    // Animate through each step
+    // Delay then show subagent session
+    await new Promise(resolve => setTimeout(resolve, 600));
+    if (subagentSession) {
+      subagentSession.classList.add('is-visible');
+    }
+    
+    // Animate through each subagent step
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i] as HTMLElement;
       await new Promise(resolve => setTimeout(resolve, 350));
@@ -528,7 +710,17 @@ const scenarios: CommandScenario[] = [
       }
     }
     
-    clearInterval(timerInterval);
+    // Show parent output after subagent completes
+    await new Promise(resolve => setTimeout(resolve, 400));
+    if (parentOutput) {
+      parentOutput.classList.add('is-visible');
+      const lines = parentOutput.querySelectorAll('.parent-output__line');
+      for (let j = 0; j < lines.length; j++) {
+        await new Promise(resolve => setTimeout(resolve, 150));
+        lines[j].classList.add('is-visible');
+      }
+    }
+    
     if (statusDot) statusDot.classList.add('is-complete');
   }
 
@@ -673,16 +865,40 @@ const scenarios: CommandScenario[] = [
     z-index: 1;
   }
 
+  /* Tab Groups */
+  .tab-groups {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .tab-group-divider {
+    width: 1px;
+    height: 1rem;
+    background: rgba(125, 166, 196, 0.3);
+  }
+
   /* Tabs */
   .command-strip {
     display: flex;
     flex-wrap: nowrap;
     gap: 0.6rem;
     justify-content: center;
-    margin-bottom: 1.5rem;
-    padding: 0 1rem;
+    margin-bottom: 0.75rem;
+    padding: 0.25rem 1rem;
     overflow-x: auto;
     scrollbar-width: none;
+  }
+
+  .command-strip--orchestrators {
+    margin-bottom: 1.5rem;
   }
 
   .command-strip::-webkit-scrollbar {
@@ -716,6 +932,18 @@ const scenarios: CommandScenario[] = [
     color: var(--text);
   }
 
+  .command-tab--orchestrator {
+    border-color: rgba(95, 158, 197, 0.25);
+    background: rgba(95, 158, 197, 0.1);
+  }
+
+  .command-tab--orchestrator:hover,
+  .command-tab--orchestrator.is-active {
+    border-color: rgba(95, 158, 197, 0.45);
+    background: rgba(95, 158, 197, 0.18);
+    color: var(--text);
+  }
+
   /* Scenario panels */
   .scenario-panel {
     display: none;
@@ -746,8 +974,36 @@ const scenarios: CommandScenario[] = [
     justify-content: space-between;
     gap: 1rem;
     padding: 1rem 1.2rem;
-    border-bottom: 1px solid rgba(125, 166, 196, 0.1);
     background: rgba(0, 0, 0, 0.3);
+  }
+
+  /* Parent Output */
+  .parent-output {
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid rgba(125, 166, 196, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .parent-output.is-visible {
+    opacity: 1;
+  }
+
+  .parent-output__line {
+    margin: 0.4rem 0;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.35s ease;
+  }
+
+  .parent-output__line.is-visible {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   .session-terminal__parent-info {
@@ -802,6 +1058,14 @@ const scenarios: CommandScenario[] = [
     border-left: 2px solid rgba(248, 184, 78, 0.3);
     margin: 0.5rem;
     border-radius: 0 0.5rem 0.5rem 0;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.5s ease;
+  }
+
+  .subagent-session.is-visible {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   .subagent-session__header {
@@ -899,8 +1163,8 @@ const scenarios: CommandScenario[] = [
 
   .thinking-block {
     padding: 0.75rem 1rem;
-    border-left: 2px solid rgba(248, 184, 78, 0.4);
-    background: rgba(248, 184, 78, 0.05);
+    border-left: 2px solid rgba(159, 179, 195, 0.4);
+    background: rgba(159, 179, 195, 0.08);
     border-radius: 0 0.25rem 0.25rem 0;
   }
 
@@ -921,7 +1185,7 @@ const scenarios: CommandScenario[] = [
     position: absolute;
     inset: 0;
     border-radius: 50%;
-    background: var(--accent);
+    background: var(--muted);
     animation: thinkingPulse 1.5s ease-in-out infinite;
   }
 
@@ -931,7 +1195,7 @@ const scenarios: CommandScenario[] = [
   }
 
   .thinking-block__label {
-    color: var(--accent);
+    color: var(--muted);
     font-size: 0.75rem;
     font-weight: 500;
     letter-spacing: 0.05em;
@@ -1014,6 +1278,31 @@ const scenarios: CommandScenario[] = [
     font-size: 0.8rem;
   }
 
+  .tool-call--dispatch {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.75rem;
+    margin: 0.25rem 0;
+    border-left: 2px solid rgba(95, 158, 197, 0.4);
+    background: rgba(95, 158, 197, 0.1);
+    border-radius: 0 0.25rem 0.25rem 0;
+  }
+
+  .tool-call__indicator {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: rgba(95, 158, 197, 0.8);
+    animation: subagentPulse 1.5s ease-in-out infinite;
+  }
+
+  .tool-call__dispatch-cmd {
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+
   .output-block {
     margin-top: 0.5rem;
     padding: 0.75rem 1rem;
@@ -1035,11 +1324,7 @@ const scenarios: CommandScenario[] = [
   }
 
   .output-block__line:last-child {
-    color: var(--muted);
-    font-size: 0.85rem;
-    margin-top: 0.75rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid rgba(125, 166, 196, 0.08);
+    color: var(--text);
   }
 
   @media (max-width: 640px) {

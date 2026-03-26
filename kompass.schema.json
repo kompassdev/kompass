@@ -32,6 +32,12 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "ask": {
+          "$ref": "#/$defs/commandConfig"
+        },
+        "branch": {
+          "$ref": "#/$defs/commandConfig"
+        },
         "commit": {
           "$ref": "#/$defs/commandConfig"
         },
@@ -68,6 +74,9 @@
         "todo": {
           "$ref": "#/$defs/commandConfig"
         },
+        "ticket/ask": {
+          "$ref": "#/$defs/commandConfig"
+        },
         "ticket/create": {
           "$ref": "#/$defs/commandConfig"
         },
@@ -77,11 +86,16 @@
         "ticket/plan": {
           "$ref": "#/$defs/commandConfig"
         },
+        "ticket/plan-and-sync": {
+          "$ref": "#/$defs/commandConfig"
+        },
         "enabled": {
           "type": "array",
           "items": {
             "type": "string",
             "enum": [
+              "ask",
+              "branch",
               "commit",
               "commit-and-push",
               "dev",
@@ -94,9 +108,11 @@
               "ship",
               "rmslop",
               "todo",
+              "ticket/ask",
               "ticket/create",
               "ticket/dev",
-              "ticket/plan"
+              "ticket/plan",
+              "ticket/plan-and-sync"
             ]
           },
           "uniqueItems": true,
@@ -106,6 +122,8 @@
           "type": "object",
           "propertyNames": {
             "enum": [
+              "ask",
+              "branch",
               "commit",
               "commit-and-push",
               "dev",
@@ -118,9 +136,11 @@
               "ship",
               "rmslop",
               "todo",
+              "ticket/ask",
               "ticket/create",
               "ticket/dev",
-              "ticket/plan"
+              "ticket/plan",
+              "ticket/plan-and-sync"
             ]
           },
           "additionalProperties": {
@@ -197,6 +217,12 @@
         "dev-flow": {
           "$ref": "#/$defs/componentConfig"
         },
+        "load-pr": {
+          "$ref": "#/$defs/componentConfig"
+        },
+        "load-ticket": {
+          "$ref": "#/$defs/componentConfig"
+        },
         "summarize-changes": {
           "$ref": "#/$defs/componentConfig"
         },
@@ -204,7 +230,7 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["change-summary", "changes-summary", "commit", "dev-flow", "summarize-changes"]
+            "enum": ["change-summary", "changes-summary", "commit", "dev-flow", "load-pr", "load-ticket", "summarize-changes"]
           },
           "uniqueItems": true,
           "deprecated": true
@@ -212,7 +238,7 @@
         "paths": {
           "type": "object",
           "propertyNames": {
-            "enum": ["change-summary", "changes-summary", "commit", "dev-flow", "summarize-changes"]
+            "enum": ["change-summary", "changes-summary", "commit", "dev-flow", "load-pr", "load-ticket", "summarize-changes"]
           },
           "additionalProperties": {
             "type": "string"
@@ -306,6 +332,10 @@
             "agentMode": {
               "type": "string",
               "enum": ["subagent", "primary", "all"]
+            },
+            "subtaskCommandMode": {
+              "type": "string",
+              "enum": ["kompass", "all", "off"]
             }
           }
         }

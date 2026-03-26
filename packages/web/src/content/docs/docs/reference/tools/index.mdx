@@ -34,7 +34,7 @@ Loads PR metadata, review history, issue comments, and review threads.
 
 Creates, updates, comments on, or reviews a GitHub pull request.
 
-- notable inputs: `title`, `description`, `base`, `head`, `checklists`, `review`, `replies`, `commentBody`
+- notable inputs: `title`, `body`, `description`, `base`, `head`, `assignees`, `checklists`, `draft`, `refUrl`, `commitId`, `review`, `replies`, `commentBody`
 - used by: `/pr/create`, `/pr/review`, `/pr/fix`
 
 ### `ticket_load`
@@ -42,14 +42,14 @@ Creates, updates, comments on, or reviews a GitHub pull request.
 Loads a ticket from GitHub, a file path, or raw text.
 
 - inputs: `source`, `comments`
-- used by: `/ticket/ask`, `/ticket/dev`, `/ticket/plan`, and sometimes `/pr/review`
+- used by: `/ticket/ask`, `/ticket/dev`, `/ticket/plan`, `/ticket/plan-and-sync`, and sometimes `/pr/review`
 
 ### `ticket_sync`
 
 Creates or updates a GitHub issue with checklist support.
 
-- notable inputs: `title`, `description`, `labels`, `assignees`, `checklists`, `refUrl`, `comments`
-- used by: `/ticket/create`, `/ticket/ask`, `/ticket/plan`, and `/pr/create` when ticket auto-creation is needed
+- notable inputs: `title`, `body`, `description`, `labels`, `assignees`, `checklists`, `refUrl`, `comments`
+- used by: `/ticket/create`, `/ticket/ask`, `/ticket/plan-and-sync`, and `/pr/create` when ticket auto-creation is needed
 
 ### `reload`
 

@@ -11,7 +11,7 @@ Kompass ships workflow-oriented commands authored as explicit templates in `pack
 - Development: `/dev`, `/todo`, `/ship`
 - Review: `/review`, `/pr/review`, `/pr/fix`
 - Git: `/commit`, `/commit-and-push`, `/pr/create`
-- Tickets: `/ticket/create`, `/ticket/ask`, `/ticket/dev`, `/ticket/plan`
+- Tickets: `/ticket/create`, `/ticket/ask`, `/ticket/dev`, `/ticket/plan`, `/ticket/plan-and-sync`
 
 ## What makes them different
 
@@ -168,8 +168,16 @@ Implements a ticket by orchestrating development, branching, commit-and-push, an
 
 ### `/ticket/plan`
 
-Creates a scoped implementation plan from a request or ticket and stores that plan in the ticket flow.
+Creates a scoped implementation plan from a request or ticket without modifying ticket state.
 
 - usage: `/ticket/plan <ticket-reference-or-request>`
+- arguments: ticket reference, URL, request text, or planning guidance
+- expected tools: `ticket_load(comments)` when planning from a ticket, light repo reconnaissance tools
+
+### `/ticket/plan-and-sync`
+
+Creates a scoped implementation plan from a request or ticket and stores that plan in the ticket flow.
+
+- usage: `/ticket/plan-and-sync <ticket-reference-or-request>`
 - arguments: ticket reference, URL, request text, or planning guidance
 - expected tools: `ticket_load(comments)` when planning from a ticket, light repo reconnaissance tools, `ticket_sync`

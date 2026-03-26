@@ -1,11 +1,6 @@
----
-description: Plan work from a request or ticket and display the result
-agent: planner
----
-
 ## Goal
 
-Create a scoped implementation plan from a request or ticket and present it directly without modifying any ticket state.
+Create a scoped implementation plan from a request or ticket, then capture that plan in the relevant ticket flow without losing important technical context.
 
 ## Workflow
 
@@ -25,11 +20,7 @@ $ARGUMENTS
 ### Load Planning Context
 
 - If `<ticket-url>` is defined:
-- Use `kompass_ticket_load` with `source: <ticket-url>` and `comments: true`
-- Store the result as `<planning-context>`
-- Treat the loaded ticket body, discussion, and any attachments or linked artifacts returned by the loader as part of the source context
-- Review attached images, PDFs, and other linked files whenever they can affect requirements, acceptance criteria, reproduction steps, design direction, or the requested answer
-- If any relevant attachment cannot be accessed, note that gap and continue only when the remaining ticket context is still sufficient to proceed reliably
+<%~ include("@load-ticket", { source: "<ticket-url>", result: "<planning-context>", comments: true }) %>
 - Otherwise, treat the relevant request and conversation context as `<planning-context>`
 - If `<planning-context>` is empty or missing, STOP and report that planning context could not be determined
 
@@ -62,9 +53,21 @@ $ARGUMENTS
 - Do not replace material technical guidance with generic outcome language
 - Avoid placeholder-like labels or awkward title formats such as `Ticket`, `Description`, or `Ticket : Description`
 
+### Sync Ticket
+
+- Use `ticket_sync` to store the plan in the ticket flow:
+  - set `title` to `<plan-title>`
+  - set `description` to `<plan-description>`
+  - set `checklists` to two sections:
+    - `Implementation` with `<requirement-items>`
+    - `Validation` with `<validation-items>`
+  - set `refUrl` to `<ticket-url>` when updating an existing ticket
+  - leave `refUrl` unset when creating a new ticket from the request
+- Store the returned ticket URL as `<ticket-url>`
+
 ### Present Plan
 
-- Return the generated title and plan details without creating or updating a ticket
+- Return the generated title, a brief plan summary, and the ticket reference or URL
 - Call out assumptions, risks, or blockers only when they materially matter
 
 ## Additional Context
@@ -76,7 +79,7 @@ $ARGUMENTS
 - For technical tickets, repo inspection is expected unless the request is clearly non-technical or repository context is unavailable.
 - If technical details provided in the conversation are good, keep them.
 - If those details are incomplete, validate and improve them.
-- If a ticket source was provided, use it as planning context only; do not sync updates back automatically.
+- For existing tickets, update the same ticket instead of creating a replacement.
 - Ask only when blocked by a missing or invalid ticket source, or by ambiguity that prevents a reliable plan.
 
 ## Output
@@ -91,6 +94,7 @@ No additional steps are required.
 When the plan is ready, display:
 ```text
 Title: `<plan-title>`
+URL: `<ticket-url>`
 
 Plan:
 <plan-description>

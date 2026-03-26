@@ -157,30 +157,31 @@ const scenarios: CommandScenario[] = [
     id: 'dev',
     label: '/dev',
     command: '/dev implement the approved workflow in packages/core',
-    agentName: 'Worker',
-    task: 'Implement approved plans with validation',
+    agentName: 'Navigator',
+    task: 'Orchestrate implementation with validation and checkpointing',
     steps: [
       {
         id: 'thinking',
         phase: 'thinking',
-        content: 'Implementing workflow — loading ticket context and executing the approved plan. Will edit only relevant files and validate changes as I go.'
+        content: 'Planning implementation — loading ticket context and preparing to delegate tasks to workers. Will coordinate edits and validation checkpoints.'
       },
       {
         id: 'tools',
         phase: 'tool_calls',
         toolCalls: [
           { tool: 'ticket_load', args: '#128', status: 'complete' },
-          { tool: 'apply_patch', args: 'packages/core/commands/pr/review.md', status: 'complete' },
-          { tool: 'bash', args: 'npm run typecheck', status: 'complete' }
+          { tool: 'dispatch', args: '/ticket/plan', status: 'complete' },
+          { tool: 'dispatch', args: '/dev worker', status: 'complete' },
+          { tool: 'dispatch', args: '/commit-and-push', status: 'complete' }
         ]
       },
       {
         id: 'output',
         phase: 'output',
         output: [
-          'Implemented review workflow in packages/core/commands/pr/',
-          'Added navigator coordination and feedback threading',
-          'All validation checks passed successfully'
+          'Planned implementation in coordination with ticket',
+          'Delegated to worker for file edits and validation',
+          'Committed changes and pushed to remote'
         ]
       }
     ]
@@ -472,8 +473,8 @@ const scenarios: CommandScenario[] = [
 ];
 
 // Split scenarios into two groups
-const commandScenarios = scenarios.filter(s => ['ask', 'branch', 'commit', 'commit-and-push', 'dev', 'learn', 'reload', 'review', 'rmslop'].includes(s.id));
-const orchestratorScenarios = scenarios.filter(s => ['pr-create', 'pr-fix', 'pr-review', 'ship', 'todo', 'ticket-plan'].includes(s.id));
+const orchestratorScenarios = scenarios.filter(s => s.agentName === 'Navigator');
+const commandScenarios = scenarios.filter(s => s.agentName !== 'Navigator');
 
 ---
 
@@ -487,38 +488,46 @@ const orchestratorScenarios = scenarios.filter(s => ['pr-create', 'pr-fix', 'pr-
   </div>
 
   <div class="command-showcase__main">
-    <!-- Combined Tab navigation with groups -->
-    <div class="command-strip-wrapper">
-      <div class="command-strip" role="tablist" aria-label="Command examples">
-        <span class="command-group-label">Commands</span>
-        {commandScenarios.map((scenario, index) => (
-          <button 
-            type="button"
-            class:list={{ "command-tab": true, "is-active": index === 0 }}
-            role="tab"
-            aria-selected={index === 0 ? "true" : "false"}
-            aria-controls={`panel-${scenario.id}`}
-            id={`tab-${scenario.id}`}
-            data-command-tab={scenario.id}
-          >
-            {scenario.label}
-          </button>
-        ))}
-        <span class="command-group-divider"></span>
-        <span class="command-group-label command-group-label--orchestrators">Orchestrators</span>
-        {orchestratorScenarios.map((scenario) => (
-          <button 
-            type="button"
-            class:list={{ "command-tab command-tab--orchestrator": true }}
-            role="tab"
-            aria-selected="false"
-            aria-controls={`panel-${scenario.id}`}
-            id={`tab-${scenario.id}`}
-            data-command-tab={scenario.id}
-          >
-            {scenario.label}
-          </button>
-        ))}
+    <!-- Two fieldsets side-by-side, centered, exploding container -->
+    <div class="command-groups-wrapper">
+      <div class="command-groups">
+        <fieldset class="command-group">
+          <legend class="command-group__legend">Commands</legend>
+          <div class="command-group__tabs">
+            {commandScenarios.map((scenario, index) => (
+              <button 
+                type="button"
+                class:list={{ "command-tab": true, "is-active": index === 0 }}
+                role="tab"
+                aria-selected={index === 0 ? "true" : "false"}
+                aria-controls={`panel-${scenario.id}`}
+                id={`tab-${scenario.id}`}
+                data-command-tab={scenario.id}
+              >
+                {scenario.label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+        
+        <fieldset class="command-group command-group--orchestrators">
+          <legend class="command-group__legend">Orchestrators</legend>
+          <div class="command-group__tabs">
+            {orchestratorScenarios.map((scenario) => (
+              <button 
+                type="button"
+                class:list={{ "command-tab command-tab--orchestrator": true }}
+                role="tab"
+                aria-selected="false"
+                aria-controls={`panel-${scenario.id}`}
+                id={`tab-${scenario.id}`}
+                data-command-tab={scenario.id}
+              >
+                {scenario.label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
       </div>
     </div>
 
@@ -773,10 +782,24 @@ const orchestratorScenarios = scenarios.filter(s => ['pr-create', 'pr-fix', 'pr-
     }
   }
 
+  // Center the scroll position on load
+  function centerScroll() {
+    const wrapper = document.querySelector('.command-groups-wrapper') as HTMLElement;
+    if (wrapper) {
+      const scrollWidth = wrapper.scrollWidth;
+      const clientWidth = wrapper.clientWidth;
+      wrapper.scrollLeft = (scrollWidth - clientWidth) / 2;
+    }
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initShowcase);
+    document.addEventListener('DOMContentLoaded', () => {
+      initShowcase();
+      centerScroll();
+    });
   } else {
     initShowcase();
+    centerScroll();
   }
 </script>
 
@@ -865,44 +888,81 @@ const orchestratorScenarios = scenarios.filter(s => ['pr-create', 'pr-fix', 'pr-
     z-index: 1;
   }
 
-  /* Tab Groups */
-  .tab-groups {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    margin-bottom: 0.75rem;
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+  /* Tabs - two fieldsets side-by-side on single line with horizontal scroll */
+  .command-groups-wrapper {
+    position: relative;
+    width: 100vw;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    margin-bottom: 2rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(125, 166, 196, 0.2) transparent;
+    scroll-snap-type: x proximity;
   }
 
-  .tab-group-divider {
-    width: 1px;
-    height: 1rem;
-    background: rgba(125, 166, 196, 0.3);
+  .command-groups-wrapper::-webkit-scrollbar {
+    height: 6px;
   }
 
-  /* Tabs */
-  .command-strip {
+  .command-groups-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .command-groups-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(125, 166, 196, 0.25);
+    border-radius: 3px;
+  }
+
+  .command-groups {
     display: flex;
     flex-wrap: nowrap;
-    gap: 0.6rem;
     justify-content: center;
-    margin-bottom: 0.75rem;
-    padding: 0.25rem 1rem;
-    overflow-x: auto;
-    scrollbar-width: none;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 2rem;
+    min-width: min-content;
   }
 
-  .command-strip--orchestrators {
-    margin-bottom: 1.5rem;
+  .command-group {
+    margin: 0;
+    padding: 1rem 1.25rem 1.25rem;
+    border: 1px solid rgba(125, 166, 196, 0.2);
+    border-radius: 0.75rem;
+    background: rgba(8, 18, 29, 0.5);
+    flex-shrink: 0;
+    scroll-snap-align: center;
   }
 
-  .command-strip::-webkit-scrollbar {
-    display: none;
+  .command-group--orchestrators {
+    border-color: rgba(95, 158, 197, 0.25);
+    background: rgba(95, 158, 197, 0.1);
+  }
+
+  .command-group__legend {
+    padding: 0.25rem 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: rgba(125, 166, 196, 0.15);
+    border-radius: 0.25rem;
+  }
+
+  .command-group--orchestrators .command-group__legend {
+    color: rgba(95, 158, 197, 0.9);
+    background: rgba(95, 158, 197, 0.2);
+  }
+
+  .command-group__tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    justify-content: center;
+    padding-top: 0.5rem;
   }
 
   .command-tab {
@@ -1351,6 +1411,27 @@ const orchestratorScenarios = scenarios.filter(s => ['pr-create', 'pr-fix', 'pr-
     .command-tab {
       padding: 0.45rem 0.7rem;
       font-size: 0.78rem;
+    }
+
+    .command-groups-wrapper {
+      margin-bottom: 1.5rem;
+    }
+
+    .command-groups {
+      padding: 0.75rem 1rem;
+      gap: 0.75rem;
+    }
+
+    .command-group {
+      padding: 0.875rem 1rem 1rem;
+    }
+
+    .command-group__legend {
+      font-size: 0.65rem;
+    }
+
+    .command-group__tabs {
+      gap: 0.4rem;
     }
   }
 </style>

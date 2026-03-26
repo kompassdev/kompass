@@ -33,7 +33,7 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   dev: {
     description: "Implement a request and create a PR",
-    agent: "build",
+    agent: "navigator",
     templatePath: "commands/dev.md",
   },
   learn: {

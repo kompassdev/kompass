@@ -1,6 +1,6 @@
 ---
 description: Implement a request and create a PR
-agent: build
+agent: navigator
 ---
 
 ## Goal

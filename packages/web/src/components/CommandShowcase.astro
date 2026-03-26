@@ -93,7 +93,7 @@ const scenarios: CommandScenario[] = [
     id: 'pr-create',
     label: '/pr/create',
     command: '/pr/create',
-    agentName: 'Navigator',
+    agentName: 'Build',
     task: 'Summarize branch work and publish a structured PR',
     steps: [
       {
@@ -412,7 +412,7 @@ const scenarios: CommandScenario[] = [
     id: 'pr-fix',
     label: '/pr/fix',
     command: '/pr/fix',
-    agentName: 'Navigator',
+    agentName: 'Build',
     task: 'Fix requested PR changes',
     steps: [
       {
@@ -782,24 +782,10 @@ const commandScenarios = scenarios.filter(s => s.agentName !== 'Navigator');
     }
   }
 
-  // Center the scroll position on load
-  function centerScroll() {
-    const wrapper = document.querySelector('.command-groups-wrapper') as HTMLElement;
-    if (wrapper) {
-      const scrollWidth = wrapper.scrollWidth;
-      const clientWidth = wrapper.clientWidth;
-      wrapper.scrollLeft = (scrollWidth - clientWidth) / 2;
-    }
-  }
-
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      initShowcase();
-      centerScroll();
-    });
+    document.addEventListener('DOMContentLoaded', initShowcase);
   } else {
     initShowcase();
-    centerScroll();
   }
 </script>
 
@@ -900,7 +886,6 @@ const commandScenarios = scenarios.filter(s => s.agentName !== 'Navigator');
     overflow-x: auto;
     scrollbar-width: thin;
     scrollbar-color: rgba(125, 166, 196, 0.2) transparent;
-    scroll-snap-type: x proximity;
   }
 
   .command-groups-wrapper::-webkit-scrollbar {
@@ -933,7 +918,6 @@ const commandScenarios = scenarios.filter(s => s.agentName !== 'Navigator');
     border-radius: 0.75rem;
     background: rgba(8, 18, 29, 0.5);
     flex-shrink: 0;
-    scroll-snap-align: center;
   }
 
   .command-group--orchestrators {

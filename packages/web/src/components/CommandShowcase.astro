@@ -1,5 +1,5 @@
 ---
-// Command showcase with working tabs - each command shows its own scenario
+// Command showcase with parent/child session hierarchy
 interface ToolCall {
   tool: string;
   args: string;
@@ -371,86 +371,85 @@ const allCommands = [
         hidden={index !== 0}
       >
         <div class="session-terminal">
-          <div class="session-terminal__header">
-            <div class="session-terminal__window-controls">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-            <div class="session-terminal__title">
-              <span class="session-terminal__status" data-status-dot></span>
-              <span data-session-title>{scenario.agentName}</span>
+          <!-- Parent Session Header -->
+          <div class="session-terminal__header session-terminal__header--parent">
+            <div class="session-terminal__parent-info">
+              <span class="session-terminal__prompt">$</span>
+              <span class="session-terminal__command" data-typewriter>{scenario.command}</span>
             </div>
             <div class="session-terminal__meta">
-              <span data-tool-count>0 toolcalls</span>
+              <span class="session-terminal__status" data-status-dot></span>
               <span data-session-time>0.0s</span>
             </div>
           </div>
 
-          <div class="session-terminal__body">
-            <!-- Command Input -->
-            <div class="session-line session-line--input">
-              <span class="session-line__prompt">$</span>
-              <span class="session-line__command" data-typewriter>{scenario.command}</span>
+          <!-- Subagent Session -->
+          <div class="subagent-session">
+            <!-- Subagent Header -->
+            <div class="subagent-session__header">
+              <div class="subagent-session__nav">
+                <span>Parent <kbd>↑</kbd></span>
+                <span>Prev <kbd>←</kbd></span>
+                <span>Next <kbd>→</kbd></span>
+              </div>
+              <div class="subagent-session__title">
+                <span class="subagent-session__indicator"></span>
+                <span class="subagent-session__agent">{scenario.agentName}</span>
+                <span class="subagent-session__divider">—</span>
+                <span class="subagent-session__task">{scenario.task}</span>
+              </div>
+              <div class="subagent-session__stats">
+                <span data-tool-count>0 toolcalls</span>
+              </div>
             </div>
 
-            <!-- Task Description -->
-            <div class="session-line session-line--task">
-              <span class="session-line__icon">◆</span>
-              <span>{scenario.task}</span>
-            </div>
-
-            <!-- Session Steps -->
-            <div class="session-steps" data-session-steps>
-              {scenario.steps.map((step) => (
-                <div class="session-step" data-step={step.id}>
-                  {step.phase === 'thinking' && step.content && (
-                    <div class="thinking-block">
-                      <div class="thinking-block__header">
-                        <span class="thinking-block__indicator">
-                          <span class="thinking-block__pulse"></span>
-                        </span>
-                        <span class="thinking-block__label">Thinking</span>
+            <!-- Subagent Body -->
+            <div class="subagent-session__body">
+              <!-- Session Steps -->
+              <div class="session-steps" data-session-steps>
+                {scenario.steps.map((step) => (
+                  <div class="session-step" data-step={step.id}>
+                    {step.phase === 'thinking' && step.content && (
+                      <div class="thinking-block">
+                        <div class="thinking-block__header">
+                          <span class="thinking-block__indicator">
+                            <span class="thinking-block__pulse"></span>
+                          </span>
+                          <span class="thinking-block__label">Thinking</span>
+                        </div>
+                        <p class="thinking-block__content">{step.content}</p>
                       </div>
-                      <p class="thinking-block__content">{step.content}</p>
-                    </div>
-                  )}
+                    )}
 
-                  {step.phase === 'tool_calls' && step.toolCalls && (
-                    <div class="tool-calls-block">
-                      <div class="tool-calls-block__header">
-                        <span class="tool-calls-block__icon">▸</span>
-                        <span class="tool-calls-block__label">Explored</span>
-                        <span class="tool-calls-block__count">{step.toolCalls.length} reads, 1 search</span>
+                    {step.phase === 'tool_calls' && step.toolCalls && (
+                      <div class="tool-calls-block">
+                        <div class="tool-calls-block__header">
+                          <span class="tool-calls-block__icon">▸</span>
+                          <span class="tool-calls-block__label">Explored</span>
+                          <span class="tool-calls-block__count">{step.toolCalls.length} reads, 1 search</span>
+                        </div>
+                        <div class="tool-calls-block__list">
+                          {step.toolCalls.map((tool) => (
+                            <div class="tool-call" data-tool-status={tool.status}>
+                              <span class="tool-call__arrow">→</span>
+                              <span class="tool-call__name">{tool.tool}</span>
+                              <span class="tool-call__args">{tool.args}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div class="tool-calls-block__list">
-                        {step.toolCalls.map((tool) => (
-                          <div class="tool-call" data-tool-status={tool.status}>
-                            <span class="tool-call__arrow">→</span>
-                            <span class="tool-call__name">{tool.tool}</span>
-                            <span class="tool-call__args">{tool.args}</span>
-                          </div>
+                    )}
+
+                    {step.phase === 'output' && step.output && (
+                      <div class="output-block">
+                        {step.output.map((line) => (
+                          <p class="output-block__line">{line}</p>
                         ))}
                       </div>
-                    </div>
-                  )}
-
-                  {step.phase === 'output' && step.output && (
-                    <div class="output-block">
-                      {step.output.map((line) => (
-                        <p class="output-block__line">{line}</p>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <!-- Navigation hint -->
-            <div class="session-nav-hint">
-              <span>Parent <kbd>↑</kbd></span>
-              <span>Prev <kbd>←</kbd></span>
-              <span>Next <kbd>→</kbd></span>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -491,14 +490,12 @@ const allCommands = [
     const statusDot = panel.querySelector('[data-status-dot]') as HTMLElement;
     const toolCount = panel.querySelector('[data-tool-count]') as HTMLElement;
     const sessionTime = panel.querySelector('[data-session-time]') as HTMLElement;
-    const navHint = panel.querySelector('.session-nav-hint') as HTMLElement;
     
     // Reset all animations
     steps.forEach(step => step.classList.remove('is-visible'));
     panel.querySelectorAll('.tool-call').forEach(tool => tool.classList.remove('is-visible'));
     panel.querySelectorAll('.output-block__line').forEach(line => line.classList.remove('is-visible'));
     if (statusDot) statusDot.classList.remove('is-complete');
-    if (navHint) navHint.style.opacity = '0';
     
     let toolcallCounter = 0;
     let startTime = Date.now();
@@ -543,7 +540,6 @@ const allCommands = [
     
     clearInterval(timerInterval);
     if (statusDot) statusDot.classList.add('is-complete');
-    if (navHint) navHint.style.opacity = '1';
   }
 
   // Initialize showcase
@@ -739,35 +735,7 @@ const allCommands = [
     display: block;
   }
 
-  /* Decorative command strip */
-  .all-commands {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 0.5rem;
-    justify-content: center;
-    margin-top: 2rem;
-    padding: 0 1rem;
-    overflow-x: auto;
-    opacity: 0.5;
-    scrollbar-width: none;
-  }
-
-  .all-commands::-webkit-scrollbar {
-    display: none;
-  }
-
-  .command-pill-decorative {
-    flex-shrink: 0;
-    padding: 0.4rem 0.7rem;
-    border: 1px solid rgba(125, 166, 196, 0.1);
-    border-radius: 999px;
-    background: rgba(8, 18, 29, 0.4);
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-  }
-
-  /* Terminal styles */
+  /* Terminal container */
   .session-terminal {
     max-width: 900px;
     margin: 0 auto;
@@ -775,42 +743,48 @@ const allCommands = [
     border-radius: 1rem;
     background:
       radial-gradient(circle at 80% 5%, rgba(248, 184, 78, 0.05), transparent 25%),
-      linear-gradient(180deg, rgba(5, 12, 20, 0.9), rgba(7, 17, 28, 0.85));
+      linear-gradient(180deg, rgba(5, 12, 20, 0.95), rgba(7, 17, 28, 0.9));
     box-shadow: 
-      0 24px 80px rgba(0, 0, 0, 0.35),
+      0 24px 80px rgba(0, 0, 0, 0.4),
       inset 0 1px 0 rgba(255, 255, 255, 0.03);
     overflow: hidden;
   }
 
-  .session-terminal__header {
+  /* Parent Session Header */
+  .session-terminal__header--parent {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 1rem;
-    padding: 0.9rem 1.2rem;
-    border-bottom: 1px solid rgba(125, 166, 196, 0.08);
-    background: rgba(0, 0, 0, 0.2);
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid rgba(125, 166, 196, 0.1);
+    background: rgba(0, 0, 0, 0.3);
   }
 
-  .session-terminal__window-controls {
-    display: flex;
-    gap: 0.4rem;
-  }
-
-  .session-terminal__window-controls span {
-    width: 0.7rem;
-    height: 0.7rem;
-    border-radius: 50%;
-    background: rgba(159, 179, 195, 0.4);
-  }
-
-  .session-terminal__title {
+  .session-terminal__parent-info {
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    flex: 1;
     font-family: var(--font-mono);
-    font-size: 0.85rem;
+    font-size: 1rem;
+  }
+
+  .session-terminal__prompt {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .session-terminal__command {
     color: var(--text);
+  }
+
+  .session-terminal__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--muted);
   }
 
   .session-terminal__status {
@@ -833,55 +807,94 @@ const allCommands = [
     50% { opacity: 0.6; transform: scale(0.9); }
   }
 
-  .session-terminal__meta {
+  /* Subagent Session */
+  .subagent-session {
+    background: rgba(0, 0, 0, 0.2);
+    border-left: 2px solid rgba(248, 184, 78, 0.3);
+    margin: 0.5rem;
+    border-radius: 0 0.5rem 0.5rem 0;
+  }
+
+  .subagent-session__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(125, 166, 196, 0.08);
+    background: rgba(248, 184, 78, 0.05);
+  }
+
+  .subagent-session__nav {
     display: flex;
     gap: 1rem;
     font-family: var(--font-mono);
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     color: var(--muted);
   }
 
-  .session-terminal__body {
-    padding: 1.2rem;
+  .subagent-session__nav kbd {
+    padding: 0.1rem 0.35rem;
+    border: 1px solid rgba(125, 166, 196, 0.25);
+    border-radius: 0.25rem;
+    background: rgba(125, 166, 196, 0.1);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+  }
+
+  .subagent-session__title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+
+  .subagent-session__indicator {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: subagentPulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes subagentPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .subagent-session__agent {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .subagent-session__divider {
+    color: var(--muted);
+    opacity: 0.5;
+  }
+
+  .subagent-session__task {
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+
+  .subagent-session__stats {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .subagent-session__body {
+    padding: 1rem;
     font-family: var(--font-mono);
     font-size: 0.9rem;
     line-height: 1.6;
   }
 
-  .session-line {
-    margin-bottom: 0.8rem;
-  }
-
-  .session-line--input {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    color: var(--text);
-  }
-
-  .session-line__prompt {
-    color: var(--accent);
-    font-weight: 500;
-  }
-
-  .session-line__command {
-    color: #d8e5ee;
-  }
-
-  .session-line--task {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--muted);
-    font-size: 0.85rem;
-  }
-
-  .session-line__icon {
-    color: var(--accent);
-  }
-
   .session-steps {
-    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
   }
 
   .session-step {
@@ -896,17 +909,17 @@ const allCommands = [
   }
 
   .thinking-block {
-    margin-bottom: 1rem;
-    padding: 1rem;
+    padding: 0.75rem 1rem;
     border-left: 2px solid rgba(248, 184, 78, 0.4);
     background: rgba(248, 184, 78, 0.05);
+    border-radius: 0 0.25rem 0.25rem 0;
   }
 
   .thinking-block__header {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.5rem;
   }
 
   .thinking-block__indicator {
@@ -945,14 +958,15 @@ const allCommands = [
   }
 
   .tool-calls-block {
-    margin-bottom: 1rem;
+    padding: 0.5rem 0;
   }
 
   .tool-calls-block__header {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.5rem;
+    padding-left: 0.5rem;
     color: var(--accent);
     font-size: 0.8rem;
   }
@@ -974,16 +988,17 @@ const allCommands = [
   .tool-calls-block__list {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 0.3rem;
+    padding-left: 0.5rem;
   }
 
   .tool-call {
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    padding: 0.5rem 0.7rem;
-    border-radius: 0.4rem;
-    background: rgba(125, 166, 196, 0.08);
+    padding: 0.4rem 0.6rem;
+    border-radius: 0.3rem;
+    background: rgba(125, 166, 196, 0.06);
     font-size: 0.85rem;
     opacity: 0;
     transform: translateX(-10px);
@@ -1011,13 +1026,13 @@ const allCommands = [
   }
 
   .output-block {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(125, 166, 196, 0.15);
+    margin-top: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid rgba(125, 166, 196, 0.1);
   }
 
   .output-block__line {
-    margin: 0.5rem 0;
+    margin: 0.4rem 0;
     color: var(--text);
     line-height: 1.7;
     opacity: 0;
@@ -1033,26 +1048,35 @@ const allCommands = [
   .output-block__line:last-child {
     color: var(--muted);
     font-size: 0.85rem;
-    margin-top: 1rem;
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(125, 166, 196, 0.08);
   }
 
-  .session-nav-hint {
+  /* Decorative commands */
+  .all-commands {
     display: flex;
-    gap: 1.5rem;
-    margin-top: 1.5rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(125, 166, 196, 0.1);
-    color: var(--muted);
-    font-size: 0.8rem;
-    opacity: 0;
-    transition: opacity 0.5s ease 0.3s;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 2rem;
+    padding: 0 1rem;
+    overflow-x: auto;
+    opacity: 0.5;
+    scrollbar-width: none;
   }
 
-  .session-nav-hint kbd {
-    padding: 0.15rem 0.4rem;
-    border: 1px solid rgba(125, 166, 196, 0.25);
-    border-radius: 0.3rem;
-    background: rgba(125, 166, 196, 0.1);
+  .all-commands::-webkit-scrollbar {
+    display: none;
+  }
+
+  .command-pill-decorative {
+    flex-shrink: 0;
+    padding: 0.4rem 0.7rem;
+    border: 1px solid rgba(125, 166, 196, 0.1);
+    border-radius: 999px;
+    background: rgba(8, 18, 29, 0.4);
+    color: var(--muted);
     font-family: var(--font-mono);
     font-size: 0.75rem;
   }
@@ -1062,19 +1086,25 @@ const allCommands = [
       margin: 0 0.5rem;
     }
 
-    .session-terminal__body {
-      padding: 1rem;
+    .subagent-session__header {
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .subagent-session__nav {
+      order: 3;
+      width: 100%;
+      font-size: 0.7rem;
+    }
+
+    .subagent-session__body {
+      padding: 0.75rem;
       font-size: 0.85rem;
     }
 
     .command-tab {
       padding: 0.45rem 0.7rem;
       font-size: 0.78rem;
-    }
-
-    .session-nav-hint {
-      gap: 0.8rem;
-      font-size: 0.75rem;
     }
   }
 </style>

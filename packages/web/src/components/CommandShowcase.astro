@@ -189,6 +189,140 @@ const scenarios: CommandScenario[] = [
         ]
       }
     ]
+  },
+  {
+    id: 'ship',
+    label: '/ship',
+    command: '/ship',
+    agentName: 'Navigator',
+    task: 'Fast path from changes to PR',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Shipping — need to create a work branch, commit changes, and publish a PR. Will orchestrate the full workflow from current state to pull request.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'dispatch', args: '/branch feature/new-workflow', status: 'complete' },
+          { tool: 'dispatch', args: '/commit', status: 'complete' },
+          { tool: 'dispatch', args: '/pr/create', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Created branch: feature/new-workflow',
+          'Committed 3 files with generated message',
+          'Published PR #48: Add new workflow command',
+          'No additional steps are required.'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'rmslop',
+    label: '/rmslop',
+    command: '/rmslop',
+    agentName: 'Worker',
+    task: 'Remove unnecessary complexity and duplication',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Inspecting for slop — need to examine the branch for unnecessary complexity, duplicate code, and workflow glue that can be simplified or removed.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'changes_load', args: 'HEAD~3...HEAD', status: 'complete' },
+          { tool: 'read', args: 'packages/core/commands/*.md', status: 'complete' },
+          { tool: 'grep', args: 'TODO|FIXME|XXX', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Removed 47 lines of duplicate validation logic',
+          'Simplified 3 overly-abstract helper functions',
+          'Consolidated similar command patterns into shared components',
+          'No additional steps are required.'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'todo',
+    label: '/todo',
+    command: '/todo @TODO.md',
+    agentName: 'Navigator',
+    task: 'Work through a todo list with checkpoint reviews',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Processing todo — loading the todo list and keeping orchestration local. Will ask for plan approval before implementation starts.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'read', args: 'TODO.md', status: 'complete' },
+          { tool: 'dispatch', args: '/ticket/plan #42', status: 'complete' },
+          { tool: 'dispatch', args: '/dev', status: 'complete' },
+          { tool: 'dispatch', args: '/commit', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Completed: Update command showcase with more examples',
+          'Blocked: Waiting for review on PR #47',
+          'Next: Add mobile responsive styling',
+          'No additional steps are required.'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'commit-and-push',
+    label: '/commit-and-push',
+    command: '/commit-and-push',
+    agentName: 'Worker',
+    task: 'Commit and push in one pass',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Committing and pushing — need to stage relevant files, generate a commit message, and push the branch upstream in a single operation.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'changes_load', args: 'uncommitted', status: 'complete' },
+          { tool: 'bash', args: 'git add packages/web/src/', status: 'complete' },
+          { tool: 'bash', args: 'git commit -m "feat: add command showcase"', status: 'complete' },
+          { tool: 'bash', args: 'git push origin HEAD', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Staged 3 modified files',
+          'Created commit: feat: add command showcase with animations',
+          'Pushed to origin/feature/showcase',
+          'No additional steps are required.'
+        ]
+      }
+    ]
   }
 ];
 

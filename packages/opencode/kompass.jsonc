@@ -65,7 +65,6 @@
   "adapters": {
     "opencode": {
       "agentMode": "all",
-      "subtaskCommandMode": "kompass",
     },
   },
 }

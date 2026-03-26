@@ -6,10 +6,7 @@ import {
   getCommandExecution,
   getTaskToolExecution,
   removeSyntheticAgentHandoff,
-  removeSubtaskCommands,
-  shouldRemoveSubtaskCommand,
 } from "../index.ts";
-import { mergeWithDefaults } from "../../core/lib/config.ts";
 
 describe("getTaskToolExecution", () => {
   test("expands slash commands for task tool calls", async () => {
@@ -167,70 +164,6 @@ describe("getCommandExecution", () => {
     );
 
     assert.equal(execution, undefined);
-  });
-});
-
-describe("removeSubtaskCommands", () => {
-  test("removes command from subtask parts", () => {
-    const output = {
-      parts: [
-        {
-          id: "part-1",
-          sessionID: "session-3",
-          messageID: "message-1",
-          type: "subtask",
-          prompt: "expanded command prompt",
-          description: "Run review command",
-          agent: "general",
-          command: "review",
-        },
-        {
-          id: "part-2",
-          sessionID: "session-3",
-          messageID: "message-1",
-          type: "text",
-          text: "keep this",
-        },
-      ],
-    };
-
-    const removed = removeSubtaskCommands(output as never);
-
-    assert.equal(removed, 1);
-    assert.equal("command" in output.parts[0], false);
-  });
-});
-
-describe("shouldRemoveSubtaskCommand", () => {
-  test("defaults to stripping commands only for Kompass commands", () => {
-    const config = mergeWithDefaults(null);
-
-    assert.equal(shouldRemoveSubtaskCommand("review", config), true);
-    assert.equal(shouldRemoveSubtaskCommand("third-party", config), false);
-  });
-
-  test("supports enabling stripping for all commands", () => {
-    const config = mergeWithDefaults({
-      adapters: {
-        opencode: {
-          subtaskCommandMode: "all",
-        },
-      },
-    });
-
-    assert.equal(shouldRemoveSubtaskCommand("third-party", config), true);
-  });
-
-  test("supports disabling stripping entirely", () => {
-    const config = mergeWithDefaults({
-      adapters: {
-        opencode: {
-          subtaskCommandMode: "off",
-        },
-      },
-    });
-
-    assert.equal(shouldRemoveSubtaskCommand("review", config), false);
   });
 });
 

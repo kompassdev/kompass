@@ -1,16 +1,24 @@
 ---
 title: Configuration Overview
-description: Learn how Kompass merges bundled config with a project override and what each section controls.
+description: Learn how Kompass merges bundled config with home and project overrides and what each section controls.
 ---
 
 ## Loading model
 
-Kompass loads:
+Kompass loads configuration in this order:
 
 1. the bundled base config
-2. the first matching project override file
+2. the first matching home-directory override file
+3. the first matching project override file
 
-The project override replaces or augments the bundled configuration depending on the field.
+For both the home directory and the project root, Kompass checks these file names in order:
+
+1. `.opencode/kompass.jsonc`
+2. `.opencode/kompass.json`
+3. `kompass.jsonc`
+4. `kompass.json`
+
+Later layers replace or augment earlier configuration depending on the field.
 
 ## Main sections
 
@@ -25,8 +33,9 @@ Shared render-time guidance, including:
 
 Controls command availability and template overrides.
 
-- `entries.<name>.enabled`
-- `entries.<name>.template`
+- `<name>.enabled`
+- `<name>.template`
+- legacy `enabled` and `templates` fields are still recognized for compatibility
 
 ### `agents`
 
@@ -58,7 +67,10 @@ Shared defaults such as `baseBranch`.
 
 ### `adapters`
 
-Adapter-specific configuration. Today this includes `adapters.opencode.agentMode`.
+Adapter-specific configuration. Today this includes:
+
+- `adapters.opencode.agentMode`
+- `adapters.opencode.subtaskCommandMode`
 
 ## Tool alias example
 

@@ -42,6 +42,7 @@ describe("applyCommandsConfig", () => {
         "ticket/ask",
         "ticket/create",
         "ticket/plan",
+        "ticket/plan-and-sync",
         "ticket/dev",
         "review",
         "dev",
@@ -64,9 +65,10 @@ describe("applyCommandsConfig", () => {
       assert.equal(cfg.command!["pr/create"]?.agent, "build");
       assert.equal(cfg.command!["ticket/create"]?.agent, "build");
       assert.equal(cfg.command!["ticket/plan"]?.agent, "planner");
+      assert.equal(cfg.command!["ticket/plan-and-sync"]?.agent, "planner");
       assert.equal(cfg.command!["ask"]?.agent, "build");
       assert.equal(cfg.command!["ticket/ask"]?.agent, "build");
-      assert.equal(cfg.command!["dev"]?.agent, "build");
+      assert.equal(cfg.command!["dev"]?.agent, "navigator");
       assert.equal(cfg.command!["ship"]?.agent, "navigator");
       assert.equal(cfg.command!["todo"]?.agent, "navigator");
       assert.ok(cfg.command!["pr/review"]?.description);
@@ -151,14 +153,19 @@ describe("applyCommandsConfig", () => {
         assert.ok(cfg.command);
         const ticketCreateTemplate = cfg.command!["ticket/create"].template;
         const ticketPlanTemplate = cfg.command!["ticket/plan"].template;
+        const ticketPlanAndSyncTemplate = cfg.command!["ticket/plan-and-sync"].template;
 
         assert.match(ticketCreateTemplate, /`custom_ticket_name`/);
         assert.doesNotMatch(ticketCreateTemplate, /`kompass_ticket_sync`/);
         assert.doesNotMatch(ticketCreateTemplate, /`ticket_sync`/);
 
-        assert.match(ticketPlanTemplate, /`custom_ticket_name`/);
+        assert.doesNotMatch(ticketPlanTemplate, /`custom_ticket_name`/);
         assert.doesNotMatch(ticketPlanTemplate, /`kompass_ticket_sync`/);
         assert.doesNotMatch(ticketPlanTemplate, /`ticket_sync`/);
+
+        assert.match(ticketPlanAndSyncTemplate, /`custom_ticket_name`/);
+        assert.doesNotMatch(ticketPlanAndSyncTemplate, /`kompass_ticket_sync`/);
+        assert.doesNotMatch(ticketPlanAndSyncTemplate, /`ticket_sync`/);
       } finally {
         await rm(tempDir, { recursive: true, force: true });
       }
@@ -422,6 +429,7 @@ describe("applyCommandsConfig", () => {
       assert.ok(cfg.command!["pr/review"]?.template);
       assert.ok(cfg.command!["ticket/ask"]?.template);
       assert.ok(cfg.command!["ticket/plan"]?.template);
+      assert.ok(cfg.command!["ticket/plan-and-sync"]?.template);
       assert.ok(cfg.command!["pr/fix"]?.template);
       assert.ok(cfg.command!["ship"]?.template);
       assert.ok(cfg.command!["ticket/dev"]?.template);

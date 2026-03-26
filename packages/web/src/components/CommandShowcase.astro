@@ -1,349 +1,1421 @@
 ---
-const scenarios = [
+// Command showcase with parent/child session hierarchy
+interface ToolCall {
+  tool: string;
+  args: string;
+  status: 'pending' | 'running' | 'complete';
+}
+
+interface SessionStep {
+  id: string;
+  phase: 'thinking' | 'tool_calls' | 'output';
+  content?: string;
+  toolCalls?: ToolCall[];
+  output?: string[];
+}
+
+interface CommandScenario {
+  id: string;
+  label: string;
+  command: string;
+  agentName: string;
+  task: string;
+  steps: SessionStep[];
+}
+
+const scenarios: CommandScenario[] = [
   {
-    id: "ask",
-    label: "/ask",
-    prompt: "/ask how does command config merging work?",
-    notes: [
-      "# load only the relevant project context",
-      "# answer directly without drifting into implementation"
-    ],
-    tools: ["read", "grep", "task(explore)"],
-    output: [
-      "> loaded config and command registry context",
-      "> returned a concise project-grounded answer"
+    id: 'ask',
+    label: '/ask',
+    command: '/ask is this project cool?',
+    agentName: 'Build Agent',
+    task: 'Answer questions about the current project or code',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Evaluating project appeal — need to determine if this project is cool by inspecting repository structure, README, and command architecture. Will check relevant files and keep analysis concise.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'glob', args: 'README* in . (5 matches)', status: 'complete' },
+          { tool: 'read', args: 'package.json', status: 'complete' },
+          { tool: 'read', args: 'README.md [limit=220]', status: 'complete' },
+          { tool: 'read', args: 'packages/core/README.md [limit=220]', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'It has a clear point of view: keep AI coding agents "on course" with token-efficient, composable workflows instead of giant ad-hoc prompts.',
+          'The repo is structured thoughtfully: shared logic lives in packages/core, adapter-specific wiring in packages/opencode.',
+          'The command surface is unusually coherent — /ask, /review, /pr/create, /ticket/plan all fit the same workflow philosophy.'
+        ]
+      }
     ]
   },
   {
-    id: "branch",
-    label: "/branch",
-    prompt: "/branch docs site refresh",
-    notes: [
-      "# summarize uncommitted work",
-      "# create a categorized branch name from the change themes"
-    ],
-    tools: ["changes_load", "bash(git checkout -b)"],
-    output: [
-      "> created branch: docs/site-refresh",
-      "> switched from main to the new work branch"
+    id: 'ticket-plan',
+    label: '/ticket/plan',
+    command: '/ticket/plan #128',
+    agentName: 'Planner',
+    task: 'Turn a request or ticket into a scoped implementation plan',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Planning the rollout — need to break down the review workflow into actionable steps. Will examine existing patterns and create a scoped plan with clear milestones.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'ticket_load', args: '#128', status: 'complete' },
+          { tool: 'read', args: 'packages/core/commands/pr/review.md', status: 'complete' },
+          { tool: 'glob', args: 'packages/core/components/*.md', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Phase 1: Extract reusable review components from existing commands',
+          'Phase 2: Update navigator agent to coordinate review workflows',
+          'Phase 3: Add checklist generation and feedback threading'
+        ]
+      }
     ]
   },
   {
-    id: "commit",
-    label: "/commit",
-    prompt: "/commit",
-    notes: [
-      "# inspect staged and unstaged changes",
-      "# generate a why-focused commit message"
-    ],
-    tools: ["changes_load(uncommitted)", "bash(git add)", "bash(git commit)"],
-    output: [
-      "> staged relevant files",
-      "> created a new commit with generated message"
+    id: 'pr-create',
+    label: '/pr/create',
+    command: '/pr/create',
+    agentName: 'Build',
+    task: 'Summarize branch work and publish a structured PR',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Creating PR — need to load branch changes, check for linked tickets, and generate a structured PR description with checklist sections.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'changes_load', args: 'HEAD...main', status: 'complete' },
+          { tool: 'ticket_load', args: '#42', status: 'complete' },
+          { tool: 'bash', args: 'git push origin HEAD', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Created PR #47: Add workflow visualization to homepage',
+          'Linked to ticket #42 with structured checklist',
+          'PR body includes summary, changes, and testing notes'
+        ]
+      }
     ]
   },
   {
-    id: "commit-and-push",
-    label: "/commit-and-push",
-    prompt: "/commit-and-push",
-    notes: [
-      "# commit the current work",
-      "# push the branch upstream in one pass"
-    ],
-    tools: ["changes_load(uncommitted)", "bash(git add)", "bash(git commit)", "bash(git push)"],
-    output: [
-      "> committed current changes",
-      "> pushed branch to origin"
+    id: 'review',
+    label: '/review',
+    command: '/review',
+    agentName: 'Reviewer',
+    task: 'Review branch changes without editing files',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Reviewing changes — need to load the diff context and examine modified files for potential issues, risks, and improvements without making edits.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'changes_load', args: 'uncommitted', status: 'complete' },
+          { tool: 'read', args: 'packages/web/src/components/CommandShowcase.astro', status: 'complete' },
+          { tool: 'task', args: 'reviewer analysis', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Strong separation of concerns between scenarios and rendering',
+          'Consider adding error handling for failed tool calls',
+          'Animation timing is appropriate for the UX flow'
+        ]
+      }
     ]
   },
   {
-    id: "dev",
-    label: "/dev",
-    prompt: "/dev implement the approved workflow in packages/core",
-    notes: [
-      "# load ticket context only when the request looks like a ticket source",
-      "# edit only the relevant files and validate the result"
-    ],
-    tools: ["read", "apply_patch", "bash(validation)", "task(worker)"],
-    output: [
-      "> implemented focused code changes",
-      "> returned validation results and PR handoff notes"
+    id: 'dev',
+    label: '/dev',
+    command: '/dev implement the approved workflow in packages/core',
+    agentName: 'Navigator',
+    task: 'Orchestrate implementation with validation and checkpointing',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Planning implementation — loading ticket context and preparing to delegate tasks to workers. Will coordinate edits and validation checkpoints.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'ticket_load', args: '#128', status: 'complete' },
+          { tool: 'dispatch', args: '/ticket/plan', status: 'complete' },
+          { tool: 'dispatch', args: '/dev worker', status: 'complete' },
+          { tool: 'dispatch', args: '/commit-and-push', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Planned implementation in coordination with ticket',
+          'Delegated to worker for file edits and validation',
+          'Committed changes and pushed to remote'
+        ]
+      }
     ]
   },
   {
-    id: "learn",
-    label: "/learn",
-    prompt: "/learn how AGENTS.md conventions are used here",
-    notes: [
-      "# inspect existing patterns in the repo",
-      "# extract reusable guidance into AGENTS.md targets"
-    ],
-    tools: ["read(AGENTS.md)", "grep", "apply_patch"],
-    output: [
-      "> summarized established conventions",
-      "> updated agent guidance where the pattern belongs"
+    id: 'ship',
+    label: '/ship',
+    command: '/ship',
+    agentName: 'Navigator',
+    task: 'Fast path from changes to PR',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Shipping — need to create a work branch, commit changes, and publish a PR. Will orchestrate the full workflow from current state to pull request.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'dispatch', args: '/branch feature/new-workflow', status: 'complete' },
+          { tool: 'dispatch', args: '/commit', status: 'complete' },
+          { tool: 'dispatch', args: '/pr/create', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Created branch: feature/new-workflow',
+          'Committed 3 files with generated message',
+          'Published PR #48: Add new workflow command'
+        ]
+      }
     ]
   },
   {
-    id: "reload",
-    label: "/reload",
-    prompt: "/reload",
-    notes: [
-      "# refresh config, commands, agents, and tools",
-      "# use after changing kompass config or templates"
-    ],
-    tools: ["reload"],
-    output: [
-      "> refreshed the active OpenCode project cache",
-      "> new config is ready without restarting"
+    id: 'rmslop',
+    label: '/rmslop',
+    command: '/rmslop',
+    agentName: 'Worker',
+    task: 'Remove unnecessary complexity and duplication',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Inspecting for slop — need to examine the branch for unnecessary complexity, duplicate code, and workflow glue that can be simplified or removed.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'changes_load', args: 'HEAD~3...HEAD', status: 'complete' },
+          { tool: 'read', args: 'packages/core/commands/*.md', status: 'complete' },
+          { tool: 'grep', args: 'TODO|FIXME|XXX', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Removed 47 lines of duplicate validation logic',
+          'Simplified 3 overly-abstract helper functions',
+          'Consolidated similar command patterns into shared components'
+        ]
+      }
     ]
   },
   {
-    id: "pr-create",
-    label: "/pr/create",
-    prompt: "/pr/create",
-    notes: [
-      "# summarize branch work and resolve ticket handling",
-      "# push if needed, then publish a structured PR"
-    ],
-    tools: ["changes_load", "question", "ticket_sync", "bash(git push)", "pr_sync"],
-    output: [
-      "> created PR body with ticket, description, and checklist",
-      "> returned the PR URL and push status"
+    id: 'todo',
+    label: '/todo',
+    command: '/todo @TODO.md',
+    agentName: 'Navigator',
+    task: 'Work through a todo list with checkpoint reviews',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Processing todo — loading the todo list and keeping orchestration local. Will ask for plan approval before implementation starts.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'read', args: 'TODO.md', status: 'complete' },
+          { tool: 'dispatch', args: '/ticket/plan #42', status: 'complete' },
+          { tool: 'dispatch', args: '/dev', status: 'complete' },
+          { tool: 'dispatch', args: '/commit', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Completed: Update command showcase with more examples',
+          'Blocked: Waiting for review on PR #47',
+          'Next: Add mobile responsive styling'
+        ]
+      }
     ]
   },
   {
-    id: "pr-fix",
-    label: "/pr/fix",
-    prompt: "/pr/fix",
-    notes: [
-      "# load PR history and outstanding feedback",
-      "# review proposed fixes with the user unless auto mode was requested"
-    ],
-    tools: ["pr_load", "apply_patch", "bash(validation)", "question", "bash(git push)", "pr_sync"],
-    output: [
-      "> fixed requested issues on the branch",
-      "> posted replies to the relevant review threads"
+    id: 'commit-and-push',
+    label: '/commit-and-push',
+    command: '/commit-and-push',
+    agentName: 'Worker',
+    task: 'Commit and push in one pass',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Committing and pushing — need to stage relevant files, generate a commit message, and push the branch upstream in a single operation.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'changes_load', args: 'uncommitted', status: 'complete' },
+          { tool: 'bash', args: 'git add packages/web/src/', status: 'complete' },
+          { tool: 'bash', args: 'git commit -m "feat: add command showcase"', status: 'complete' },
+          { tool: 'bash', args: 'git push origin HEAD', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Staged 3 modified files',
+          'Created commit: feat: add command showcase with animations',
+          'Pushed to origin/feature/showcase'
+        ]
+      }
     ]
   },
   {
-    id: "pr-review",
-    label: "/pr/review",
-    prompt: "/pr/review",
-    notes: [
-      "# load pr, reviews, comments, files, and diff context",
-      "# if the pr references a ticket, load that ticket too before reviewing"
-    ],
-    tools: ["pr_load", "ticket_load", "changes_load", "task(reviewer)", "pr_sync"],
-    output: [
-      "> added inline comments and review summary",
-      "> approved or requested changes based on the findings"
+    id: 'branch',
+    label: '/branch',
+    command: '/branch',
+    agentName: 'Worker',
+    task: 'Create categorized branch names',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Creating branch — need to summarize uncommitted work and generate a categorized branch name based on the change themes.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'changes_load', args: 'uncommitted', status: 'complete' },
+          { tool: 'bash', args: 'git checkout -b docs/site-refresh', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Created branch: docs/site-refresh',
+          'Switched from main to the new work branch'
+        ]
+      }
     ]
   },
   {
-    id: "review",
-    label: "/review",
-    prompt: "/review",
-    notes: [
-      "# auto-discover uncommitted or branch comparison scope",
-      "# return findings without mutating the working tree"
-    ],
-    tools: ["changes_load", "read(changed files)", "task(reviewer)"],
-    output: [
-      "> produced a concise branch review",
-      "> highlighted issues, risks, and follow-ups"
+    id: 'commit',
+    label: '/commit',
+    command: '/commit',
+    agentName: 'Worker',
+    task: 'Generate why-focused commit messages',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Committing — need to inspect staged and unstaged changes, then generate a commit message focused on why the changes were made.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'changes_load', args: 'uncommitted', status: 'complete' },
+          { tool: 'bash', args: 'git add packages/web/src/', status: 'complete' },
+          { tool: 'bash', args: 'git commit -m "feat: improve command showcase"', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Staged relevant files',
+          'Created a new commit with generated message'
+        ]
+      }
     ]
   },
   {
-    id: "ship",
-    label: "/ship",
-    prompt: "/ship",
-    notes: [
-      "# create a work branch when current changes are still on the base branch",
-      "# delegate commit and pr creation as a fast path to shipping"
-    ],
-    tools: ["dispatch(/branch)", "dispatch(/commit)", "dispatch(/pr/create)"],
-    output: [
-      "> moved the branch through commit and PR creation",
-      "> returned the final PR handoff"
+    id: 'learn',
+    label: '/learn',
+    command: '/learn',
+    agentName: 'Worker',
+    task: 'Extract patterns into AGENTS.md',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Learning — need to inspect existing patterns in the repo and extract reusable guidance into AGENTS.md targets.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'read', args: 'AGENTS.md', status: 'complete' },
+          { tool: 'grep', args: 'function|const|class', status: 'complete' },
+          { tool: 'apply_patch', args: 'AGENTS.md', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Summarized established conventions',
+          'Updated agent guidance where the pattern belongs'
+        ]
+      }
     ]
   },
   {
-    id: "rmslop",
-    label: "/rmslop",
-    prompt: "/rmslop",
-    notes: [
-      "# inspect the branch for unnecessary complexity",
-      "# simplify code, prompts, and workflow glue where possible"
-    ],
-    tools: ["changes_load", "read(changed files)", "apply_patch", "bash(validation)", "bash(git commit)"],
-    output: [
-      "> removed unnecessary code and duplication",
-      "> left a smaller, clearer diff"
+    id: 'pr-fix',
+    label: '/pr/fix',
+    command: '/pr/fix',
+    agentName: 'Build',
+    task: 'Fix requested PR changes',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Fixing PR — need to load PR history and outstanding feedback, then review proposed fixes before applying.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'pr_load', args: 'current', status: 'complete' },
+          { tool: 'apply_patch', args: 'requested changes', status: 'complete' },
+          { tool: 'bash', args: 'npm run test', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Fixed requested issues on the branch',
+          'Posted replies to the relevant review threads'
+        ]
+      }
     ]
   },
   {
-    id: "todo",
-    label: "/todo",
-    prompt: "/todo @TODO.md",
-    notes: [
-      "# load the todo list and keep orchestration local",
-      "# ask for plan approval before implementation starts"
-    ],
-    tools: ["read", "dispatch(/ticket/plan)", "question", "dispatch(/dev)", "dispatch(/commit)"],
-    output: [
-      "> completed the current todo item",
-      "> reported what is done, blocked, or next"
-    ]
-  },
-  {
-    id: "ticket-ask",
-    label: "/ticket/ask",
-    prompt: "/ticket/ask #128 what changed since the first draft?",
-    notes: [
-      "# load the ticket plus discussion history",
-      "# answer with repo-aware context and post back to the ticket"
-    ],
-    tools: ["ticket_load", "read", "grep", "ticket_sync"],
-    output: [
-      "> generated a contextual answer",
-      "> posted the response as a ticket comment"
-    ]
-  },
-  {
-    id: "ticket-create",
-    label: "/ticket/create",
-    prompt: "/ticket/create",
-    notes: [
-      "# auto-discover current change comparison when no base was passed",
-      "# create a structured issue with checklist sections"
-    ],
-    tools: ["changes_load", "ticket_sync"],
-    output: [
-      "> created a GitHub issue with scoped checklist items",
-      "> returned the new ticket reference"
-    ]
-  },
-  {
-    id: "ticket-dev",
-    label: "/ticket/dev",
-    prompt: "/ticket/dev #128",
-    notes: [
-      "# load the ticket, create a plan, then execute the work",
-      "# keep ticket context attached throughout implementation"
-    ],
-    tools: ["ticket_load", "dispatch(/dev)", "dispatch(/branch)", "dispatch(/commit-and-push)", "dispatch(/pr/create)"],
-    output: [
-      "> produced an implementation plan and finished the requested work",
-      "> returned validation notes and PR-ready context"
-    ]
-  },
-  {
-    id: "ticket-plan",
-    label: "/ticket/plan",
-    prompt: "/ticket/plan #128 rollout the new review workflow",
-    notes: [
-      "# load ticket context, comments, and attached constraints",
-      "# draft a scoped plan before any code changes happen"
-    ],
-    tools: ["ticket_load", "changes_load", "task(planner)"],
-    output: [
-      "> created a detailed implementation plan",
-      "> stored the result as a reusable handoff"
+    id: 'pr-review',
+    label: '/pr/review',
+    command: '/pr/review',
+    agentName: 'Reviewer',
+    task: 'Review PR with inline comments',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Reviewing PR — need to load PR, reviews, comments, files, and diff context. Will load linked ticket too before reviewing.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'pr_load', args: 'current', status: 'complete' },
+          { tool: 'ticket_load', args: '#42', status: 'complete' },
+          { tool: 'changes_load', args: 'HEAD...main', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Added inline comments and review summary',
+          'Approved or requested changes based on findings'
+        ]
+      }
     ]
   }
 ];
+
+// Split scenarios into two groups
+const orchestratorScenarios = scenarios.filter(s => s.agentName === 'Navigator');
+const commandScenarios = scenarios.filter(s => s.agentName !== 'Navigator');
+
 ---
 
 <div class="command-showcase" data-command-showcase>
-  <div class="command-showcase__ambient" aria-hidden="true">
-    <div class="command-showcase__glow"></div>
+  <div class="command-showcase__background" aria-hidden="true">
     <div class="command-showcase__grid"></div>
+    <div class="command-showcase__glow command-showcase__glow--top"></div>
+    <div class="command-showcase__glow command-showcase__glow--bottom"></div>
     <div class="command-showcase__orbit command-showcase__orbit--outer"></div>
     <div class="command-showcase__orbit command-showcase__orbit--inner"></div>
-    <div class="command-showcase__beam"></div>
   </div>
 
-  <div class="command-showcase__panel">
-      <div class="command-showcase__tabs" role="tablist" aria-label="Command examples">
-        {scenarios.map((scenario, index) => (
-        <button
-          type="button"
-          class:list={{ "command-tab": true, "is-active": index === 0 }}
-          role="tab"
-          aria-selected={index === 0 ? "true" : "false"}
-          aria-controls={`panel-${scenario.id}`}
-          id={`tab-${scenario.id}`}
-          data-command-tab={scenario.id}
-        >
-          {scenario.label}
-        </button>
-      ))}
+  <div class="command-showcase__main">
+    <!-- Two fieldsets side-by-side, centered, exploding container -->
+    <div class="command-groups-wrapper">
+      <div class="command-groups">
+        <fieldset class="command-group">
+          <legend class="command-group__legend">Commands</legend>
+          <div class="command-group__tabs">
+            {commandScenarios.map((scenario, index) => (
+              <button 
+                type="button"
+                class:list={{ "command-tab": true, "is-active": index === 0 }}
+                role="tab"
+                aria-selected={index === 0 ? "true" : "false"}
+                aria-controls={`panel-${scenario.id}`}
+                id={`tab-${scenario.id}`}
+                data-command-tab={scenario.id}
+              >
+                {scenario.label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+        
+        <fieldset class="command-group command-group--orchestrators">
+          <legend class="command-group__legend">Orchestrators</legend>
+          <div class="command-group__tabs">
+            {orchestratorScenarios.map((scenario) => (
+              <button 
+                type="button"
+                class:list={{ "command-tab command-tab--orchestrator": true }}
+                role="tab"
+                aria-selected="false"
+                aria-controls={`panel-${scenario.id}`}
+                id={`tab-${scenario.id}`}
+                data-command-tab={scenario.id}
+              >
+                {scenario.label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      </div>
     </div>
 
-    <div class="command-terminal">
-      <div class="command-terminal__head">
-        <span></span>
-        <span></span>
-        <span></span>
-        <p>expected run</p>
-      </div>
-
-      {scenarios.map((scenario, index) => (
-        <section
-          class:list={{ "command-terminal__view": true, "is-active": index === 0 }}
-          role="tabpanel"
-          aria-labelledby={`tab-${scenario.id}`}
-          id={`panel-${scenario.id}`}
-          data-command-panel={scenario.id}
-          hidden={index === 0 ? undefined : true}
-        >
-          <p class="command-terminal__prompt"><span>$</span> {scenario.prompt}</p>
-          <div class="command-terminal__notes">
-            {scenario.notes.map((item) => <p>{item}</p>)}
-          </div>
-          <div class="command-terminal__meta">
-            <div>
-              <p class="command-terminal__label">Tool calls</p>
-              <ul class="command-terminal__tool-list">
-                {scenario.tools.map((tool) => <li>{tool}</li>)}
-              </ul>
+    <!-- All scenario panels -->
+    {scenarios.map((scenario, index) => (
+      <div 
+        class:list={{ "scenario-panel": true, "is-active": index === 0 }}
+        role="tabpanel"
+        aria-labelledby={`tab-${scenario.id}`}
+        id={`panel-${scenario.id}`}
+        data-scenario-panel={scenario.id}
+        hidden={index !== 0}
+      >
+        <div class="session-terminal">
+          <!-- Parent Session Header -->
+          <div class="session-terminal__header session-terminal__header--parent">
+            <div class="session-terminal__parent-info">
+              <span class="session-terminal__prompt">$</span>
+              <span class="session-terminal__command" data-typewriter>{scenario.command}</span>
+            </div>
+            <div class="session-terminal__meta">
+              <span class="session-terminal__status" data-status-dot></span>
             </div>
           </div>
-          <div class="command-terminal__output">
-            {scenario.output.map((item) => <p>{item}</p>)}
+
+          <!-- Subagent Session -->
+          <div class="subagent-session" data-subagent-session>
+            <!-- Subagent Header -->
+            <div class="subagent-session__header">
+              <div class="subagent-session__title">
+                <span class="subagent-session__indicator"></span>
+                <span class="subagent-session__agent">{scenario.agentName}</span>
+                <span class="subagent-session__divider">—</span>
+                <span class="subagent-session__task">{scenario.task}</span>
+              </div>
+              <div class="subagent-session__stats">
+                <span data-tool-count>0 toolcalls</span>
+              </div>
+            </div>
+
+            <!-- Subagent Body -->
+            <div class="subagent-session__body">
+              <!-- Session Steps -->
+              <div class="session-steps" data-session-steps>
+                {scenario.steps.map((step) => (
+                  <div class="session-step" data-step={step.id}>
+                    {step.phase === 'thinking' && step.content && (
+                      <div class="thinking-block">
+                        <div class="thinking-block__header">
+                          <span class="thinking-block__indicator">
+                            <span class="thinking-block__pulse"></span>
+                          </span>
+                          <span class="thinking-block__label">Thinking</span>
+                        </div>
+                        <p class="thinking-block__content">{step.content}</p>
+                      </div>
+                    )}
+
+                    {step.phase === 'tool_calls' && step.toolCalls && (
+                      <div class="tool-calls-block">
+                        <div class="tool-calls-block__header">
+                          <span class="tool-calls-block__icon">▸</span>
+                          <span class="tool-calls-block__label">
+                            {step.toolCalls.some(t => t.tool === 'dispatch') ? 'Delegated' : 'Explored'}
+                          </span>
+                          <span class="tool-calls-block__count">
+                            {step.toolCalls.length} {step.toolCalls.some(t => t.tool === 'dispatch') ? 'subagents' : 'reads, 1 search'}
+                          </span>
+                        </div>
+                        <div class="tool-calls-block__list">
+                          {step.toolCalls.map((tool) => (
+                            <div class:list={{ "tool-call": true, "tool-call--dispatch": tool.tool === 'dispatch' }} data-tool-status={tool.status}>
+                              {tool.tool === 'dispatch' ? (
+                                <>
+                                  <span class="tool-call__indicator"></span>
+                                  <span class="tool-call__dispatch-cmd">{tool.args}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span class="tool-call__arrow">→</span>
+                                  <span class="tool-call__name">{tool.tool}</span>
+                                  <span class="tool-call__args">{tool.args}</span>
+                                </>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {step.phase === 'output' && step.output && (
+                      <div class="output-block">
+                        {step.output.map((line) => (
+                          <p class="output-block__line">{line}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </section>
-      ))}
+
+          <!-- Parent Session Output -->
+          <div class="parent-output" data-parent-output>
+            {scenario.steps.find(s => s.phase === 'output')?.output?.map((line) => (
+              <p class="parent-output__line">{line}</p>
+            ))}
+          </div>
+        </div>
+      </div>
+    ))}
+
     </div>
-  </div>
 </div>
 
 <script>
-  const root = document.querySelector<HTMLElement>("[data-command-showcase]");
-
-  if (root) {
-    const tabs = Array.from(root.querySelectorAll<HTMLElement>("[data-command-tab]"));
-    const panels = Array.from(root.querySelectorAll<HTMLElement>("[data-command-panel]"));
-
-    const activate = (id: string | undefined) => {
-      if (!id) return;
-
-      tabs.forEach((tab) => {
-        const active = tab.dataset.commandTab === id;
-        tab.classList.toggle("is-active", active);
-        tab.setAttribute("aria-selected", active ? "true" : "false");
-      });
-
-      panels.forEach((panel) => {
-        const active = panel.dataset.commandPanel === id;
-        panel.classList.toggle("is-active", active);
-        panel.toggleAttribute("hidden", !active);
-      });
-    };
-
-    tabs.forEach((tab) => {
-      tab.addEventListener("click", () => activate(tab.dataset.commandTab));
+  // Typewriter effect
+  function typewriter(element: HTMLElement, text: string, speed: number = 30) {
+    let i = 0;
+    element.textContent = '';
+    return new Promise<void>((resolve) => {
+      const timer = setInterval(() => {
+        if (i < text.length) {
+          element.textContent += text.charAt(i);
+          i++;
+        } else {
+          clearInterval(timer);
+          resolve();
+        }
+      }, speed);
     });
   }
+
+  // Reset and animate a scenario panel
+  async function animateScenario(panel: HTMLElement) {
+    const typewriterEl = panel.querySelector('[data-typewriter]') as HTMLElement;
+    const steps = panel.querySelectorAll('[data-step]');
+    const statusDot = panel.querySelector('[data-status-dot]') as HTMLElement;
+    const toolCount = panel.querySelector('[data-tool-count]') as HTMLElement;
+    const parentOutput = panel.querySelector('[data-parent-output]') as HTMLElement;
+    const subagentSession = panel.querySelector('[data-subagent-session]') as HTMLElement;
+    
+    // Reset all animations
+    steps.forEach(step => step.classList.remove('is-visible'));
+    panel.querySelectorAll('.tool-call').forEach(tool => tool.classList.remove('is-visible'));
+    panel.querySelectorAll('.output-block__line').forEach(line => line.classList.remove('is-visible'));
+    panel.querySelectorAll('.parent-output__line').forEach(line => line.classList.remove('is-visible'));
+    if (statusDot) statusDot.classList.remove('is-complete');
+    if (parentOutput) parentOutput.classList.remove('is-visible');
+    if (subagentSession) subagentSession.classList.remove('is-visible');
+    
+    let toolcallCounter = 0;
+    
+    // Type the command
+    if (typewriterEl) {
+      await typewriter(typewriterEl, typewriterEl.textContent || '', 35);
+    }
+    
+    // Delay then show subagent session
+    await new Promise(resolve => setTimeout(resolve, 600));
+    if (subagentSession) {
+      subagentSession.classList.add('is-visible');
+    }
+    
+    // Animate through each subagent step
+    for (let i = 0; i < steps.length; i++) {
+      const step = steps[i] as HTMLElement;
+      await new Promise(resolve => setTimeout(resolve, 350));
+      step.classList.add('is-visible');
+      
+      if (step.dataset.step === 'tools') {
+        const tools = step.querySelectorAll('.tool-call');
+        for (let j = 0; j < tools.length; j++) {
+          await new Promise(resolve => setTimeout(resolve, 250));
+          tools[j].classList.add('is-visible');
+          toolcallCounter++;
+          if (toolCount) toolCount.textContent = `${toolcallCounter} toolcalls`;
+        }
+        await new Promise(resolve => setTimeout(resolve, 400));
+      }
+      
+      if (step.dataset.step === 'output') {
+        const lines = step.querySelectorAll('.output-block__line');
+        for (let j = 0; j < lines.length; j++) {
+          await new Promise(resolve => setTimeout(resolve, 180));
+          lines[j].classList.add('is-visible');
+        }
+      }
+    }
+    
+    // Show parent output after subagent completes
+    await new Promise(resolve => setTimeout(resolve, 400));
+    if (parentOutput) {
+      parentOutput.classList.add('is-visible');
+      const lines = parentOutput.querySelectorAll('.parent-output__line');
+      for (let j = 0; j < lines.length; j++) {
+        await new Promise(resolve => setTimeout(resolve, 150));
+        lines[j].classList.add('is-visible');
+      }
+    }
+    
+    if (statusDot) statusDot.classList.add('is-complete');
+  }
+
+  // Initialize showcase
+  function initShowcase() {
+    const showcase = document.querySelector('[data-command-showcase]');
+    if (!showcase) return;
+    
+    const tabs = showcase.querySelectorAll('[data-command-tab]');
+    const panels = showcase.querySelectorAll('[data-scenario-panel]');
+    
+    // Tab switching
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const targetId = tab.getAttribute('data-command-tab');
+        if (!targetId) return;
+        
+        // Update tab states
+        tabs.forEach(t => {
+          const isActive = t.getAttribute('data-command-tab') === targetId;
+          t.classList.toggle('is-active', isActive);
+          t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+        
+        // Update panel visibility
+        panels.forEach(panel => {
+          const isActive = panel.getAttribute('data-scenario-panel') === targetId;
+          panel.classList.toggle('is-active', isActive);
+          panel.toggleAttribute('hidden', !isActive);
+          
+          if (isActive) {
+            animateScenario(panel as HTMLElement);
+          }
+        });
+      });
+    });
+    
+    // Animate first panel on load
+    const firstPanel = showcase.querySelector('[data-scenario-panel]') as HTMLElement;
+    if (firstPanel) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            animateScenario(firstPanel);
+            observer.disconnect();
+          }
+        });
+      }, { threshold: 0.2 });
+      observer.observe(showcase);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initShowcase);
+  } else {
+    initShowcase();
+  }
 </script>
+
+<style>
+  .command-showcase {
+    position: relative;
+    width: 100%;
+    min-height: 32rem;
+    padding: 2rem 0;
+  }
+
+  .command-showcase__background {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .command-showcase__grid {
+    position: absolute;
+    inset: 5% 4%;
+    background-image:
+      linear-gradient(rgba(159, 179, 195, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(159, 179, 195, 0.06) 1px, transparent 1px);
+    background-size: 2.4rem 2.4rem;
+    mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+    animation: gridDrift 20s ease-in-out infinite;
+  }
+
+  @keyframes gridDrift {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(8px) rotate(0.5deg); }
+  }
+
+  .command-showcase__glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(40px);
+    opacity: 0.4;
+    animation: glowPulse 8s ease-in-out infinite;
+  }
+
+  .command-showcase__glow--top {
+    inset: -10% 60% auto auto;
+    width: 20rem;
+    height: 20rem;
+    background: radial-gradient(circle, rgba(248, 184, 78, 0.3), transparent 70%);
+  }
+
+  .command-showcase__glow--bottom {
+    inset: auto auto -10% 40%;
+    width: 16rem;
+    height: 16rem;
+    background: radial-gradient(circle, rgba(95, 158, 197, 0.25), transparent 70%);
+    animation-delay: -4s;
+  }
+
+  @keyframes glowPulse {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.1); }
+  }
+
+  .command-showcase__orbit {
+    position: absolute;
+    border: 1px solid rgba(125, 166, 196, 0.1);
+    border-radius: 50%;
+  }
+
+  .command-showcase__orbit--outer {
+    inset: 5% 10% 20% 15%;
+    animation: orbitRotate 30s linear infinite;
+  }
+
+  .command-showcase__orbit--inner {
+    inset: 20% 20% 10% 10%;
+    animation: orbitRotate 20s linear infinite reverse;
+  }
+
+  @keyframes orbitRotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .command-showcase__main {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Tabs - two fieldsets side-by-side on single line with horizontal scroll */
+  .command-groups-wrapper {
+    position: relative;
+    width: 100vw;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    margin-bottom: 2rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(125, 166, 196, 0.2) transparent;
+  }
+
+  .command-groups-wrapper::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .command-groups-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .command-groups-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(125, 166, 196, 0.25);
+    border-radius: 3px;
+  }
+
+  .command-groups {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 2rem;
+    min-width: min-content;
+  }
+
+  .command-group {
+    margin: 0;
+    padding: 1rem 1.25rem 1.25rem;
+    border: 1px solid rgba(125, 166, 196, 0.2);
+    border-radius: 0.75rem;
+    background: rgba(8, 18, 29, 0.5);
+    flex-shrink: 0;
+  }
+
+  .command-group--orchestrators {
+    border-color: rgba(95, 158, 197, 0.25);
+    background: rgba(95, 158, 197, 0.1);
+  }
+
+  .command-group__legend {
+    padding: 0.25rem 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: rgba(125, 166, 196, 0.15);
+    border-radius: 0.25rem;
+  }
+
+  .command-group--orchestrators .command-group__legend {
+    color: rgba(95, 158, 197, 0.9);
+    background: rgba(95, 158, 197, 0.2);
+  }
+
+  .command-group__tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    justify-content: center;
+    padding-top: 0.5rem;
+  }
+
+  .command-tab {
+    flex-shrink: 0;
+    padding: 0.55rem 0.9rem;
+    border: 1px solid rgba(125, 166, 196, 0.15);
+    border-radius: 999px;
+    background: rgba(8, 18, 29, 0.6);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+  }
+
+  .command-tab:hover {
+    border-color: rgba(248, 184, 78, 0.35);
+    background: rgba(248, 184, 78, 0.12);
+    color: var(--text);
+    transform: translateY(-1px);
+  }
+
+  .command-tab.is-active {
+    border-color: rgba(248, 184, 78, 0.45);
+    background: rgba(248, 184, 78, 0.18);
+    color: var(--text);
+  }
+
+  .command-tab--orchestrator {
+    border-color: rgba(95, 158, 197, 0.25);
+    background: rgba(95, 158, 197, 0.1);
+  }
+
+  .command-tab--orchestrator:hover,
+  .command-tab--orchestrator.is-active {
+    border-color: rgba(95, 158, 197, 0.45);
+    background: rgba(95, 158, 197, 0.18);
+    color: var(--text);
+  }
+
+  /* Scenario panels */
+  .scenario-panel {
+    display: none;
+  }
+
+  .scenario-panel.is-active {
+    display: block;
+  }
+
+  /* Terminal container */
+  .session-terminal {
+    width: 100%;
+    border: 1px solid rgba(125, 166, 196, 0.12);
+    border-radius: 1rem;
+    background:
+      radial-gradient(circle at 80% 5%, rgba(248, 184, 78, 0.05), transparent 25%),
+      linear-gradient(180deg, rgba(5, 12, 20, 0.95), rgba(7, 17, 28, 0.9));
+    box-shadow:
+      0 24px 80px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    overflow: hidden;
+  }
+
+  /* Parent Session Header */
+  .session-terminal__header--parent {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.2rem;
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  /* Parent Output */
+  .parent-output {
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid rgba(125, 166, 196, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .parent-output.is-visible {
+    opacity: 1;
+  }
+
+  .parent-output__line {
+    margin: 0.4rem 0;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.35s ease;
+  }
+
+  .parent-output__line.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .session-terminal__parent-info {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+  }
+
+  .session-terminal__prompt {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .session-terminal__command {
+    color: var(--text);
+  }
+
+  .session-terminal__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .session-terminal__status {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: #f8b84e;
+    box-shadow: 0 0 8px rgba(248, 184, 78, 0.6);
+    animation: statusPulse 2s ease-in-out infinite;
+  }
+
+  .session-terminal__status.is-complete {
+    background: #4ade80;
+    box-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
+    animation: none;
+  }
+
+  @keyframes statusPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.9); }
+  }
+
+  /* Subagent Session */
+  .subagent-session {
+    background: rgba(0, 0, 0, 0.2);
+    border-left: 2px solid rgba(248, 184, 78, 0.3);
+    margin: 0.5rem;
+    border-radius: 0 0.5rem 0.5rem 0;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.5s ease;
+  }
+
+  .subagent-session.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .subagent-session__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(125, 166, 196, 0.08);
+    background: rgba(248, 184, 78, 0.05);
+  }
+
+  .subagent-session__nav {
+    display: flex;
+    gap: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .subagent-session__nav kbd {
+    padding: 0.1rem 0.35rem;
+    border: 1px solid rgba(125, 166, 196, 0.25);
+    border-radius: 0.25rem;
+    background: rgba(125, 166, 196, 0.1);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+  }
+
+  .subagent-session__title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+
+  .subagent-session__indicator {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: subagentPulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes subagentPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .subagent-session__agent {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .subagent-session__divider {
+    color: var(--muted);
+    opacity: 0.5;
+  }
+
+  .subagent-session__task {
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+
+  .subagent-session__stats {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .subagent-session__body {
+    padding: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .session-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .session-step {
+    opacity: 0;
+    transform: translateY(12px);
+    transition: all 0.4s ease;
+  }
+
+  .session-step.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .thinking-block {
+    padding: 0.75rem 1rem;
+    border-left: 2px solid rgba(159, 179, 195, 0.4);
+    background: rgba(159, 179, 195, 0.08);
+    border-radius: 0 0.25rem 0.25rem 0;
+  }
+
+  .thinking-block__header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .thinking-block__indicator {
+    position: relative;
+    width: 0.6rem;
+    height: 0.6rem;
+  }
+
+  .thinking-block__pulse {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--muted);
+    animation: thinkingPulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes thinkingPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.5); opacity: 0.5; }
+  }
+
+  .thinking-block__label {
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .thinking-block__content {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.88rem;
+    line-height: 1.7;
+    font-style: italic;
+  }
+
+  .tool-calls-block {
+    padding: 0.5rem 0;
+  }
+
+  .tool-calls-block__header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding-left: 0.5rem;
+    color: var(--accent);
+    font-size: 0.8rem;
+  }
+
+  .tool-calls-block__icon {
+    color: var(--accent);
+  }
+
+  .tool-calls-block__label {
+    font-weight: 500;
+  }
+
+  .tool-calls-block__count {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  .tool-calls-block__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding-left: 0.5rem;
+  }
+
+  .tool-call {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 0.3rem;
+    background: rgba(125, 166, 196, 0.06);
+    font-size: 0.85rem;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.3s ease;
+  }
+
+  .tool-call.is-visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .tool-call__arrow {
+    color: var(--accent);
+    font-size: 0.75rem;
+  }
+
+  .tool-call__name {
+    color: #7ab8d9;
+    font-weight: 500;
+  }
+
+  .tool-call__args {
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+
+  .tool-call--dispatch {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.75rem;
+    margin: 0.25rem 0;
+    border-left: 2px solid rgba(95, 158, 197, 0.4);
+    background: rgba(95, 158, 197, 0.1);
+    border-radius: 0 0.25rem 0.25rem 0;
+  }
+
+  .tool-call__indicator {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: rgba(95, 158, 197, 0.8);
+    animation: subagentPulse 1.5s ease-in-out infinite;
+  }
+
+  .tool-call__dispatch-cmd {
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+
+  .output-block {
+    margin-top: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid rgba(125, 166, 196, 0.1);
+  }
+
+  .output-block__line {
+    margin: 0.4rem 0;
+    color: var(--text);
+    line-height: 1.7;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.35s ease;
+  }
+
+  .output-block__line.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .output-block__line:last-child {
+    color: var(--text);
+  }
+
+  @media (max-width: 640px) {
+    .session-terminal {
+      margin: 0 0.5rem;
+    }
+
+    .subagent-session__header {
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .subagent-session__nav {
+      order: 3;
+      width: 100%;
+      font-size: 0.7rem;
+    }
+
+    .subagent-session__body {
+      padding: 0.75rem;
+      font-size: 0.85rem;
+    }
+
+    .command-tab {
+      padding: 0.45rem 0.7rem;
+      font-size: 0.78rem;
+    }
+
+    .command-groups-wrapper {
+      margin-bottom: 1.5rem;
+    }
+
+    .command-groups {
+      padding: 0.75rem 1rem;
+      gap: 0.75rem;
+    }
+
+    .command-group {
+      padding: 0.875rem 1rem 1rem;
+    }
+
+    .command-group__legend {
+      font-size: 0.65rem;
+    }
+
+    .command-group__tabs {
+      gap: 0.4rem;
+    }
+  }
+</style>

@@ -60,6 +60,9 @@
     },
     "ticket/plan": {
       "enabled": true
+    },
+    "ticket/plan-and-sync": {
+      "enabled": true
     }
   },
   "agents": {

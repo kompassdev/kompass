@@ -1,0 +1,28 @@
+---
+title: /ticket/plan-and-sync
+description: Create an implementation plan from a ticket or request and sync that plan back to the ticket flow.
+---
+
+## Purpose
+
+Use `/ticket/plan-and-sync` when you want a scoped plan before implementation and you also want that plan captured on the ticket.
+
+## Usage
+
+```text
+/ticket/plan-and-sync <ticket-reference-or-request>
+```
+
+## Typical flow
+
+- load the ticket or request context
+- inspect relevant repository context before finalizing the plan
+- shape the implementation and validation checklist items
+- sync the plan back to the existing ticket or create a new ticket when needed
+
+## Common tools
+
+- `ticket_load`
+- `read`
+- `grep`
+- `ticket_sync`

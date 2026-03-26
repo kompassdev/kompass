@@ -1,24 +1,27 @@
 ---
 title: /ticket/create
-description: Create a structured GitHub issue from a description or completed work summary.
+description: Create a structured GitHub issue from the current change comparison.
 ---
 
 ## Purpose
 
-Use `/ticket/create` to turn a request or work summary into a tracked issue.
+Use `/ticket/create` to turn the current branch or working-tree changes into a tracked issue.
 
 ## Usage
 
 ```text
-/ticket/create <description>
+/ticket/create [base-or-context]
 ```
 
 ## Typical flow
 
-- summarize the request or completed work
+- load the current change comparison
+- stop if there is no work to summarize
 - generate a scoped issue title and body
 - add checklist sections for the work to track
+- create the issue and assign it to the author
 
 ## Common tools
 
+- `changes_load`
 - `ticket_sync`

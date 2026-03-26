@@ -23,6 +23,12 @@ bun run test
 - Only run these commands after you edit files in this session.
 - If you are only analyzing an existing branch, reviewing changes, or creating a PR without editing files, do not run them automatically.
 - Do not regenerate `packages/opencode/.opencode/` unless you changed the source that produces it or the user explicitly asked.
+- When you add, remove, or rename commands, agents, components, tools, adapter settings, or bundled config fields, keep every source of truth in sync in the same change:
+  - runtime definitions in `packages/core`
+  - bundled config in `kompass.jsonc`, `packages/core/kompass.jsonc`, and `packages/opencode/kompass.jsonc`
+  - schema in `kompass.schema.json`
+  - user-facing docs in `README.md` and adapter/package docs that describe the changed surface
+  - generated OpenCode output under `packages/opencode/.opencode/` when the source change affects compiled artifacts
 - If no validation was run in the current session, say that clearly instead of implying the branch was tested.
 
 Never edit `packages/opencode/.opencode/` directly.
@@ -45,6 +51,7 @@ packages/opencode/.opencode/ # Generated OpenCode output for review
 ## Command Authoring
 
 - Author command definitions in `packages/core/commands/`; treat `packages/opencode/.opencode/commands/` as generated output only
+- Treat `packages/core/commands/index.ts`, `packages/core/lib/config.ts`, `kompass.schema.json`, the bundled `kompass.jsonc` files, and the relevant docs as a linked surface area; if one changes, verify the others still describe the same command set and config shape
 - Use `packages/core/commands/pr/create.md` as the canonical example for command structure and tone
 - Keep this section order in command docs unless a command has a strong reason not to: `## Goal`, `## Workflow`, `## Additional Context`, `## Output`
 - Start `## Workflow` with a dedicated `### Arguments` subsection that stores the raw `$ARGUMENTS` value inside literal `<arguments>` tags before any normalization

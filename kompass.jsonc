@@ -12,6 +12,7 @@
   // Command config is now object-based so each entry can be toggled or customized.
   "commands": {
     "ask": { "enabled": true },
+    "branch": { "enabled": true },
     "commit": { "enabled": true },
     "commit-and-push": { "enabled": true },
     "dev": { "enabled": true },
@@ -28,6 +29,7 @@
     "ticket/create": { "enabled": true },
     "ticket/dev": { "enabled": true },
     "ticket/plan": { "enabled": true },
+    "ticket/plan-and-sync": { "enabled": true },
   },
 
   "agents": {
@@ -51,6 +53,8 @@
     "changes-summary": { "enabled": true },
     "commit": { "enabled": true },
     "dev-flow": { "enabled": true },
+    "load-pr": { "enabled": true },
+    "load-ticket": { "enabled": true },
     "summarize-changes": { "enabled": true },
   },
 

@@ -20,7 +20,8 @@ Kompass adds focused repository workflows to OpenCode through built-in commands,
 - Use `/pr/review` for GitHub PR review flows.
 - Use `/pr/create` to summarize work and create a PR.
 - Use `/pr/fix` to address PR feedback.
-- Use `/ticket/plan` to turn a request or ticket into a scoped implementation plan.
+- Use `/ticket/plan` to turn a request or ticket into a scoped implementation plan without syncing it.
+- Use `/ticket/plan-and-sync` to turn a request or ticket into a scoped implementation plan and store it in the ticket flow.
 - Use `/ticket/dev` or `/dev` for focused implementation work.
 - Use `/commit` or `/commit-and-push` when the user explicitly asks to commit.
 

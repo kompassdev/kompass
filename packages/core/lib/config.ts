@@ -40,6 +40,7 @@ export const DEFAULT_COMMAND_NAMES = [
   "ticket/create",
   "ticket/dev",
   "ticket/plan",
+  "ticket/plan-and-sync",
 ] as const;
 
 export const DEFAULT_AGENT_NAMES = ["worker", "navigator", "planner", "reviewer"] as const;
@@ -122,6 +123,7 @@ export interface KompassConfig {
     "ticket/create"?: CommandConfig;
     "ticket/dev"?: CommandConfig;
     "ticket/plan"?: CommandConfig;
+    "ticket/plan-and-sync"?: CommandConfig;
     enabled?: string[];
     templates?: Record<string, string>;
   };

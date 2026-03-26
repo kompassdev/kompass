@@ -33,7 +33,7 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   dev: {
     description: "Implement a request and create a PR",
-    agent: "build",
+    agent: "navigator",
     templatePath: "commands/dev.md",
   },
   learn: {
@@ -99,9 +99,14 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     templatePath: "commands/ticket/create.md",
   },
   "ticket/plan": {
-    description: "Plan work from a request or ticket and sync the result",
+    description: "Plan work from a request or ticket and display the result",
     agent: "planner",
     templatePath: "commands/ticket/plan.md",
+  },
+  "ticket/plan-and-sync": {
+    description: "Plan work from a request or ticket and sync the result",
+    agent: "planner",
+    templatePath: "commands/ticket/plan-and-sync.md",
   },
 };
 

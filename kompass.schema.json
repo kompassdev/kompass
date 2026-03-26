@@ -332,10 +332,6 @@
             "agentMode": {
               "type": "string",
               "enum": ["subagent", "primary", "all"]
-            },
-            "subtaskCommandMode": {
-              "type": "string",
-              "enum": ["kompass", "all", "off"]
             }
           }
         }

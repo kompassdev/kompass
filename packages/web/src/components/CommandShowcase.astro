@@ -326,11 +326,7 @@ const scenarios: CommandScenario[] = [
   }
 ];
 
-const allCommands = [
-  "/ask", "/branch", "/commit", "/commit-and-push", "/dev", "/learn", 
-  "/reload", "/pr/create", "/pr/fix", "/pr/review", "/review", "/ship",
-  "/rmslop", "/todo", "/ticket/ask", "/ticket/create", "/ticket/dev", "/ticket/plan"
-];
+
 ---
 
 <div class="command-showcase" data-command-showcase>
@@ -456,13 +452,7 @@ const allCommands = [
       </div>
     ))}
 
-    <!-- All commands strip (decorative) -->
-    <div class="all-commands" aria-hidden="true">
-      {allCommands.map((cmd) => (
-        <span class="command-pill-decorative">{cmd}</span>
-      ))}
     </div>
-  </div>
 </div>
 
 <script>
@@ -737,14 +727,13 @@ const allCommands = [
 
   /* Terminal container */
   .session-terminal {
-    max-width: 900px;
-    margin: 0 auto;
+    width: 100%;
     border: 1px solid rgba(125, 166, 196, 0.12);
     border-radius: 1rem;
     background:
       radial-gradient(circle at 80% 5%, rgba(248, 184, 78, 0.05), transparent 25%),
       linear-gradient(180deg, rgba(5, 12, 20, 0.95), rgba(7, 17, 28, 0.9));
-    box-shadow: 
+    box-shadow:
       0 24px 80px rgba(0, 0, 0, 0.4),
       inset 0 1px 0 rgba(255, 255, 255, 0.03);
     overflow: hidden;
@@ -1051,34 +1040,6 @@ const allCommands = [
     margin-top: 0.75rem;
     padding-top: 0.5rem;
     border-top: 1px solid rgba(125, 166, 196, 0.08);
-  }
-
-  /* Decorative commands */
-  .all-commands {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 0.5rem;
-    justify-content: center;
-    margin-top: 2rem;
-    padding: 0 1rem;
-    overflow-x: auto;
-    opacity: 0.5;
-    scrollbar-width: none;
-  }
-
-  .all-commands::-webkit-scrollbar {
-    display: none;
-  }
-
-  .command-pill-decorative {
-    flex-shrink: 0;
-    padding: 0.4rem 0.7rem;
-    border: 1px solid rgba(125, 166, 196, 0.1);
-    border-radius: 999px;
-    background: rgba(8, 18, 29, 0.4);
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
   }
 
   @media (max-width: 640px) {

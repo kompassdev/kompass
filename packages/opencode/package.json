@@ -3,9 +3,9 @@
   "version": "0.9.0",
   "description": "OpenCode plugin for navigating repos with fewer wrong turns",
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist/plugin.js",
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/plugin.js"
   },
   "files": [
     "agents",

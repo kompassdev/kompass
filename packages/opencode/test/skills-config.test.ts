@@ -42,4 +42,18 @@ describe("applySkillsConfig", () => {
     assert.equal(cfg.skills?.paths?.length, 2);
     assert.equal(typeof cfg.skills?.paths?.[1], "string");
   });
+
+  test("preserves valid configured skill paths when no bundled skills root exists", async () => {
+    const cfg: { skills?: { paths?: unknown[] } } = {
+      skills: {
+        paths: [undefined, "", "/tmp/custom-skills"],
+      },
+    };
+
+    await applySkillsConfig(cfg as never, {
+      resolveBundledSkillsRoot: async () => undefined,
+    });
+
+    assert.deepEqual(cfg.skills?.paths, ["/tmp/custom-skills"]);
+  });
 });

@@ -5,6 +5,7 @@ permission:
   edit: deny
   task: allow
   question: allow
+  todowrite: allow
 ---
 
 You are a navigation specialist for structured, multi-step workflows.

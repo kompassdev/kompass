@@ -5,7 +5,7 @@ description: Create and switch to a categorized work branch from current uncommi
 
 ## Purpose
 
-Use `/branch` to generate a concise feature branch name from the current uncommitted work.
+Use `/branch` to create a short categorized branch name from current uncommitted work.
 
 ## Usage
 
@@ -15,11 +15,19 @@ Use `/branch` to generate a concise feature branch name from the current uncommi
 
 ## Typical flow
 
-- summarize uncommitted changes with `changes_load`
-- skip if there is nothing to branch from or you are already on a work branch
-- create and checkout a categorized branch such as `feature/...` or `docs/...`
+- load uncommitted changes with `changes_load`
+- stop with `Nothing to branch from` when there is no work
+- skip when the current branch already looks like a work branch
+- choose a category such as `feature`, `fix`, `refactor`, `docs`, `test`, or `chore`
+- create and checkout `<category>/<slug>`, retrying once with a numeric suffix if needed
 
 ## Common tools
 
 - `changes_load`
 - `bash(git checkout -b)`
+
+## Output
+
+- `Nothing to branch from`
+- `Already on work branch: <current-branch>`
+- `Created branch: <new-branch>` with the prior branch name

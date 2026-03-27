@@ -1,6 +1,6 @@
 ---
 description: Fix PR feedback, push updates, and reply
-agent: build
+agent: worker
 ---
 
 ## Goal

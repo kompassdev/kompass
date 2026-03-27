@@ -1,6 +1,12 @@
 ---
 title: change-summary
-description: Shared partial for loading and summarizing change context.
+description: Shared partial for loading changes and summarizing them into themes.
 ---
 
-Used in workflows that need a compact branch or working-tree summary before taking action.
+## Behavior
+
+- calls `changes_load`
+- accepts optional extra rules through `it.rules`
+- stores the result as `<changes>`
+- analyzes paths, statuses, and diffs
+- groups related work into concise what/why themes

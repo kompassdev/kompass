@@ -10,11 +10,11 @@ Kompass keeps AI coding agents on course with token-efficient, composable workfl
 
 ## Docs
 
-- Main docs: `https://kompassdev.ai/docs/`
-- Getting started: `https://kompassdev.ai/docs/getting-started/`
-- OpenCode adapter: `https://kompassdev.ai/docs/adapters/opencode/`
-- Config reference: `https://kompassdev.ai/docs/config/overview/`
-- Command, agent, and tool reference: `https://kompassdev.ai/docs/reference/commands/`, `https://kompassdev.ai/docs/reference/agents/`, `https://kompassdev.ai/docs/reference/tools/`
+- Main docs: https://kompassdev.ai/docs/
+- Getting started: https://kompassdev.ai/docs/getting-started/
+- OpenCode adapter: https://kompassdev.ai/docs/adapters/opencode/
+- Config reference: https://kompassdev.ai/docs/config/overview/
+- Command, agent, tool, and component reference: https://kompassdev.ai/docs/reference/commands/, https://kompassdev.ai/docs/reference/agents/, https://kompassdev.ai/docs/reference/tools/, https://kompassdev.ai/docs/reference/components/
 
 ## Installation
 

@@ -372,6 +372,11 @@ export function createPrSyncTool($: Shell) {
         optional: true,
         description: "Base branch to merge into (defaults to repo default branch)",
       },
+      head: {
+        type: "string",
+        optional: true,
+        description: "Head branch to open the PR from when creating a new pull request",
+      },
       assignees: {
         type: "string[]",
         optional: true,

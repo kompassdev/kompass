@@ -10,20 +10,22 @@ Use `/pr/create` to move current branch work into a reviewable pull request.
 ## Usage
 
 ```text
-/pr/create [title-or-context]
+/pr/create [base-or-ticket-context]
 ```
 
 ## Typical flow
 
 - load branch changes against the base branch
-- stop if there are uncommitted changes or no branch work to include
-- resolve whether to attach or create a ticket
+- stop if there are uncommitted changes, no branch work, or you are still on the base branch
+- resolve ticket handling explicitly when the interaction tool is available
+- auto-create a ticket when requested, otherwise use the provided ticket or literal `SKIPPED`
 - push the branch if needed
-- create the PR with a compact description and checklist structure
+- create the PR with `Ticket`, `Description`, and `Checklist` sections in that order
 
 ## Common tools
 
 - `changes_load`
+- `question`
 - `ticket_sync`
 - `pr_sync`
 - `bash(git push)`

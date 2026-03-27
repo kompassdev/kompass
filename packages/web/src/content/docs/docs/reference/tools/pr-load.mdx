@@ -1,17 +1,26 @@
 ---
 title: pr_load
-description: Load PR metadata and review history.
+description: Load normalized PR metadata, review history, and thread context from GitHub.
 ---
 
 ## Purpose
 
-Load normalized pull request context before reviewing or summarizing a PR.
+Use `pr_load` when a workflow needs one grounded PR context payload instead of separate GitHub calls.
 
 ## Inputs
 
-- `pr` optional
+- `pr` optional; accepts a PR number or URL
+
+## Returns
+
+- `repo`
+- `viewerLogin`
+- `pr` metadata including title, body, URL, refs, commit count, and author
+- `reviews`
+- `issueComments`
+- `threads`
 
 ## Useful for
 
-- PR review
-- PR fix workflows
+- `/pr/review`
+- `/pr/fix`

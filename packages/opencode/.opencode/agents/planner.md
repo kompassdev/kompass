@@ -3,6 +3,7 @@ description: Turn requests or tickets into scoped implementation plans.
 permission:
   edit: deny
   question: allow
+  todowrite: allow
 ---
 
 You are a planning specialist. Turn requests, tickets, and gathered context into concise, human-friendly plans that stay grounded in real technical context when needed.

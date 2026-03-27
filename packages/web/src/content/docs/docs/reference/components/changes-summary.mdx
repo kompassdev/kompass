@@ -1,6 +1,12 @@
 ---
 title: changes-summary
-description: Shared partial for rendering grouped change summaries.
+description: Shared partial for turning change themes into ticket- or PR-ready summary structure.
 ---
 
-Used when ticket or PR bodies need a human-readable checklist or grouped summary of delivered work.
+## Behavior
+
+- reuses the current change themes and rationale
+- generates a concise title and short description
+- produces 2-4 functional checklist sections
+- always ends with one `Validation` section
+- avoids file-by-file restatement and execution-status filler

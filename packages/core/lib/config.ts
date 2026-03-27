@@ -410,25 +410,25 @@ function removeTrailingCommas(input: string): string {
 
 const defaultAgentWorker: AgentDefinition = {
   description: "Generic worker agent.",
-  permission: { question: "allow" },
+  permission: { question: "allow", todowrite: "allow" },
 };
 
 const defaultAgentReviewer: AgentDefinition = {
   description: "Review diffs, PRs, and existing feedback without editing files.",
   promptPath: "agents/reviewer.md",
-  permission: { edit: "deny", question: "allow" },
+  permission: { edit: "deny", question: "allow", todowrite: "allow" },
 };
 
 const defaultAgentNavigator: AgentDefinition = {
   description: "Coordinate structured multi-step workflows by delegating focused leaf work to subagents.",
   promptPath: "agents/navigator.md",
-  permission: { edit: "deny", task: "allow", question: "allow" },
+  permission: { edit: "deny", task: "allow", question: "allow", todowrite: "allow" },
 };
 
 const defaultAgentPlanner: AgentDefinition = {
   description: "Turn requests or tickets into scoped implementation plans.",
   promptPath: "agents/planner.md",
-  permission: { edit: "deny", question: "allow" },
+  permission: { edit: "deny", question: "allow", todowrite: "allow" },
 };
 
 const defaultComponentPaths: Record<string, string> = {

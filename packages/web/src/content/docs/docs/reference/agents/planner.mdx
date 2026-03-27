@@ -1,14 +1,21 @@
 ---
 title: planner
-description: Planning agent for turning requests and tickets into scoped implementation plans.
+description: No-edit planning specialist for requests and tickets.
 ---
 
 ## Role
 
-Turns a request or ticket into a scoped implementation plan.
+`planner` turns requests, tickets, and gathered context into concise human-friendly plans that stay grounded in real repository context when the work is technical.
 
 ## Best for
 
-- ticket planning
-- acceptance-criteria breakdown
-- implementation sequencing
+- planning tickets before implementation
+- refining technical direction from repo reality
+- producing requirement and validation checklists
+
+## Key behavior
+
+- does not edit files or make repository changes
+- performs light targeted repo inspection for technical work
+- validates technical direction from conversation or tickets instead of repeating it blindly
+- asks follow-up questions only when a reliable plan cannot be produced otherwise

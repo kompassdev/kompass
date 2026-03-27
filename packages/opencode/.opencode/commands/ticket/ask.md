@@ -1,6 +1,6 @@
 ---
 description: Answer a question on a ticket and post the response
-agent: build
+agent: worker
 ---
 
 ## Goal

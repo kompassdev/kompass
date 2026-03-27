@@ -1,11 +1,11 @@
 ---
 title: /ship
-description: Move branch work through summary, commit, and PR creation as a fast shipping path.
+description: Move current work through branch, commit, and PR creation as a fast shipping path.
 ---
 
 ## Purpose
 
-Use `/ship` when you want a fast path from current changes to a PR.
+Use `/ship` when you want a fast path from current work to a PR through local orchestration.
 
 ## Usage
 
@@ -15,13 +15,13 @@ Use `/ship` when you want a fast path from current changes to a PR.
 
 ## Typical flow
 
-- summarize current changes
-- create a work branch if you are still on the base branch
-- delegate commit and PR creation as focused follow-up steps
+- ensure there is a suitable work branch
+- delegate `/commit`
+- delegate `/pr/create`
+- stop on blockers and report `Nothing to ship` when PR creation finds no shippable work
 
 ## Common tools
 
-- `changes_load`
-- `task(navigator)`
-- `pr_sync`
-- `bash(git checkout -b)`
+- `dispatch(/branch)`
+- `dispatch(/commit)`
+- `dispatch(/pr/create)`

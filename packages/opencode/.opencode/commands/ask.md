@@ -1,6 +1,6 @@
 ---
 description: Answer questions about the current project or code
-agent: build
+agent: worker
 ---
 
 ## Goal

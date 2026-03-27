@@ -15,9 +15,9 @@ Kompass ships workflow-oriented commands authored as explicit templates in `pack
 ## What makes them different
 
 - each command is a documented workflow, not an opaque prompt
-- placeholders like `<arguments>` and `<plan>` are normalized before execution
-- navigator workflows orchestrate locally and delegate focused leaf work
-- outputs are written to be deterministic and reviewable
+- placeholders like `<arguments>`, `<plan>`, and `<ticket-url>` are normalized before execution
+- navigator workflows orchestrate locally and delegate focused leaf work with literal `<dispatch>` blocks
+- outputs are deterministic, reviewable, and usually terminal
 
 ## Core workflows
 
@@ -34,7 +34,7 @@ Answers a project or code question using only the relevant repository context.
 Creates and switches to a categorized work branch from current uncommitted changes.
 
 - usage: `/branch [context]`
-- arguments: optional branch naming guidance
+- arguments: optional naming guidance that can steer the category and slug
 - expected tools: `changes_load(uncommitted)`, `git checkout -b`
 
 ### `/commit`
@@ -51,15 +51,15 @@ Creates a commit and immediately pushes it to the remote repository.
 
 - usage: `/commit-and-push [message-guidance]`
 - arguments: optional commit message guidance
-- expected tools: `changes_load(uncommitted)`, git commit, `git push`
+- expected tools: `changes_load(uncommitted)`, git commit, `git push` with upstream fallback when needed
 
 ### `/learn`
 
-Extracts non-obvious learnings from the current session and documents them appropriately.
+Extracts non-obvious learnings from the current session and documents them into the right `AGENTS.md` scope.
 
 - usage: `/learn [focus]`
-- arguments: optional scope or extra guidance
-- expected tools: `read`, `grep`, `apply_patch`
+- arguments: optional focus scope or extra guidance
+- expected tools: `read`, file edit tools
 
 ### `/rmslop`
 
@@ -89,7 +89,7 @@ Creates a ticket summarizing the current change comparison.
 
 ### `/ticket/dev`
 
-Implements a ticket by orchestrating development, branching, commit-and-push, and PR creation.
+Implements a ticket by orchestrating `/dev`, `/branch`, `/commit-and-push`, and `/pr/create`.
 
 - usage: `/ticket/dev <ticket-reference>`
 - arguments: ticket reference, URL, file path, or raw request
@@ -115,17 +115,17 @@ Creates a scoped implementation plan from a request or ticket and stores that pl
 
 ### `/pr/create`
 
-Creates a pull request for the current branch, including ticket handling when needed.
+Creates a pull request for the current branch, including mandatory ticket resolution when the interaction tool is available.
 
-- usage: `/pr/create [context]`
-- arguments: optional base branch, ticket directive, ticket reference, or additional context
+- usage: `/pr/create [base-or-ticket-context]`
+- arguments: optional base branch, ticket directive, ticket reference, skip directive, or additional context
 - expected tools: `changes_load`, `question` when ticket handling is unresolved, `ticket_sync` when auto-creating a ticket, `git push`, `pr_sync`
 
 ### `/pr/fix`
 
 Addresses PR feedback by making fixes and responding to review threads.
 
-- usage: `/pr/fix [context]`
+- usage: `/pr/fix [pr-or-auto-or-context]`
 - arguments: optional PR ref, `auto`, or additional fix guidance
 - expected tools: `pr_load`, file-edit tools, validation commands, `question` unless `auto`, `git push`, `pr_sync`
 
@@ -139,7 +139,7 @@ Reviews a GitHub pull request and publishes findings as a formal review.
 
 ### `/review`
 
-Reviews code changes and provides actionable feedback with a grade and risk assessment.
+Reviews code changes and returns a grade, verdict, and severity-counted findings summary without publishing comments.
 
 - usage: `/review [base-or-uncommitted]`
 - arguments: optional base branch, `uncommitted`, or review focus guidance
@@ -165,7 +165,7 @@ Ships current work by delegating branch creation, commit creation, and PR creati
 
 ### `/todo`
 
-Works through a todo file one pending item at a time with planning, approval, implementation, and commit loops.
+Works through a todo file one pending item at a time with planning, approval, implementation, commit, checklist update, and repeat loops.
 
 - usage: `/todo [@todo-file]`
 - arguments: optional `@file` reference and execution guidance; defaults to `@TODO.md`

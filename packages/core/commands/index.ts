@@ -13,43 +13,43 @@ interface CommandDefinition {
 export const commandDefinitions: Record<string, CommandDefinition> = {
   ask: {
     description: "Answer questions about the current project or code",
-    agent: "build",
+    agent: "worker",
     templatePath: "commands/ask.md",
   },
   branch: {
     description: "Create a feature branch from current changes",
-    agent: "build",
+    agent: "worker",
     templatePath: "commands/branch.md",
   },
   commit: {
     description: "Commit current changes with a message",
-    agent: "build",
+    agent: "worker",
     templatePath: "commands/commit.md",
   },
   "commit-and-push": {
     description: "Commit and push current changes",
-    agent: "build",
+    agent: "worker",
     templatePath: "commands/commit-and-push.md",
   },
   dev: {
-    description: "Implement a request and create a PR",
+    description: "Implement a request and prepare it for PR creation",
     agent: "navigator",
     templatePath: "commands/dev.md",
   },
   learn: {
     description: "Extract learnings from session to AGENTS.md files",
-    agent: "build",
+    agent: "worker",
     templatePath: "commands/learn.md",
     subtask: false,
   },
   "pr/create": {
     description: "Summarize branch work and create a PR",
-    agent: "build",
+    agent: "worker",
     templatePath: "commands/pr/create.md",
   },
   "pr/fix": {
     description: "Fix PR feedback, push updates, and reply",
-    agent: "build",
+    agent: "worker",
     templatePath: "commands/pr/fix.md",
   },
   "pr/review": {
@@ -69,7 +69,7 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   rmslop: {
     description: "Remove AI code slop from current branch",
-    agent: "build",
+    agent: "worker",
     templatePath: "commands/rmslop.md",
   },
   todo: {
@@ -79,17 +79,17 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   "ticket/ask": {
     description: "Answer a question on a ticket and post the response",
-    agent: "build",
+    agent: "worker",
     templatePath: "commands/ticket/ask.md",
   },
   "ticket/dev": {
     description: "Implement a ticket and create a PR",
-    agent: "build",
+    agent: "worker",
     templatePath: "commands/ticket/dev.md",
   },
   "ticket/create": {
-    description: "Summarize completed work and create a ticket",
-    agent: "build",
+    description: "Summarize current change comparison and create a ticket",
+    agent: "worker",
     templatePath: "commands/ticket/create.md",
   },
   "ticket/plan": {

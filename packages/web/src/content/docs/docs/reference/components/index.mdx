@@ -19,28 +19,28 @@ Bundled components:
 
 ### `change-summary`
 
-Shared partial for loading and summarizing change context.
+Loads changes with `changes_load`, analyzes file-level diffs, and groups the work into concise what/why themes.
 
 ### `changes-summary`
 
-Shared partial for rendering grouped change summaries.
+Turns current change themes into a title, short description, grouped checklist sections, and a final validation section.
 
 ### `commit`
 
-Shared partial for commit-oriented workflow steps.
+Defines commit message formatting plus the stage-and-commit workflow shared by commit-oriented commands.
 
 ### `dev-flow`
 
-Shared partial for implementation-oriented execution flow.
+Provides a short navigation guide for implementation work from request orientation through targeted validation and handoff notes.
 
 ### `load-pr`
 
-Shared partial for loading PR context in review-oriented workflows.
+Loads PR context through `pr_load` and treats returned discussion, review history, and relevant attachments as source context.
 
 ### `load-ticket`
 
-Shared partial for loading ticket context from GitHub, files, or text.
+Loads ticket context through `ticket_load`, with optional comments, and treats returned discussion and relevant attachments as source context.
 
 ### `summarize-changes`
 
-Shared partial for PR and ticket summary generation.
+Guides commands to inspect comparison metadata, commit history, and changed files before grouping the work into themes.

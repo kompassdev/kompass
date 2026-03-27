@@ -1,6 +1,6 @@
 ---
-description: Summarize completed work and create a ticket
-agent: build
+description: Summarize current change comparison and create a ticket
+agent: worker
 ---
 
 ## Goal

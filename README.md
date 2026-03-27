@@ -10,11 +10,18 @@ Kompass keeps AI coding agents on course with token-efficient, composable workfl
 
 ## Docs
 
-- Main docs: `https://kompassdev.ai/docs/`
-- Getting started: `https://kompassdev.ai/docs/getting-started/`
-- OpenCode adapter: `https://kompassdev.ai/docs/adapters/opencode/`
-- Config reference: `https://kompassdev.ai/docs/config/overview/`
-- Command, agent, and tool reference: `https://kompassdev.ai/docs/reference/commands/`, `https://kompassdev.ai/docs/reference/agents/`, `https://kompassdev.ai/docs/reference/tools/`
+- Main docs: https://kompassdev.ai/docs/
+- Getting started: https://kompassdev.ai/docs/getting-started/
+- OpenCode adapter: https://kompassdev.ai/docs/adapters/opencode/
+- Config reference: https://kompassdev.ai/docs/config/overview/
+- Command, agent, tool, and component reference: https://kompassdev.ai/docs/reference/commands/, https://kompassdev.ai/docs/reference/agents/, https://kompassdev.ai/docs/reference/tools/, https://kompassdev.ai/docs/reference/components/
+
+## Bundled Surface
+
+- Commands cover direct work (`/ask`, `/commit`), orchestration (`/dev`, `/ship`, `/todo`), ticket planning/sync, and PR review/shipping flows.
+- Agents are intentionally narrow: `worker` is generic, `planner` is no-edit planning, `navigator` owns multi-step orchestration, and `reviewer` is a no-edit review specialist.
+- Structured tools keep workflows grounded in repo and GitHub state: `changes_load`, `pr_load`, `pr_sync`, `ticket_load`, `ticket_sync`.
+- Reusable command-template components live in `packages/core/components/` and are documented in the components reference.
 
 ## Installation
 

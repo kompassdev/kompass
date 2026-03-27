@@ -1,6 +1,12 @@
 ---
 title: load-ticket
-description: Shared partial for loading ticket context from GitHub, files, or text.
+description: Shared partial for loading ticket context through `ticket_load`.
 ---
 
-Used when workflows start from a ticket reference and need one normalized ticket context object.
+## Behavior
+
+- calls `ticket_load` with the provided source
+- can opt into `comments: true`
+- stores the result in the caller-provided placeholder
+- treats ticket discussion and linked artifacts as source context
+- notes inaccessible attachments as a context gap instead of assuming they do not matter

@@ -1,6 +1,6 @@
 ---
 description: Implement a ticket and create a PR
-agent: build
+agent: worker
 ---
 
 ## Goal

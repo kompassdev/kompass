@@ -35,7 +35,6 @@ export default defineConfig({
             "docs/reference/agents",
             "docs/reference/tools",
             "docs/reference/components",
-            "docs/reference/skills"
           ]
         },
         {

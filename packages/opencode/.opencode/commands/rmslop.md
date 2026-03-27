@@ -1,6 +1,6 @@
 ---
 description: Remove AI code slop from current branch
-agent: build
+agent: worker
 ---
 
 ## Goal

@@ -105,11 +105,51 @@ a {
   flex-wrap: wrap;
   gap: 1.15rem;
   color: var(--muted);
+  align-items: center;
 }
 
 .site-header nav a:hover,
 .site-header nav a:focus-visible {
   color: var(--text);
+}
+
+.nav-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid rgba(125, 166, 196, 0.2);
+  border-radius: 999px;
+  background: rgba(9, 20, 31, 0.42);
+  color: var(--text);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.nav-button svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+}
+
+.nav-button:hover,
+.nav-button:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(248, 184, 78, 0.34);
+  background: rgba(248, 184, 78, 0.12);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+}
+
+.nav-button--docs {
+  background: linear-gradient(180deg, rgba(11, 28, 43, 0.86), rgba(9, 20, 31, 0.58));
+}
+
+.nav-button--github {
+  border-color: rgba(248, 184, 78, 0.26);
 }
 
 .hero__content {

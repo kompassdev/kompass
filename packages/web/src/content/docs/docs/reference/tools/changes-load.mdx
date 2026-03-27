@@ -1,11 +1,11 @@
 ---
 title: changes_load
-description: Load branch changes against a base branch.
+description: Load uncommitted worktree changes or a branch comparison in structured form.
 ---
 
 ## Purpose
 
-Load committed branch changes or uncommitted work in a structured form.
+Use `changes_load` when a workflow needs the changed-file set and structured diffs without inferring git state manually.
 
 ## Inputs
 
@@ -14,8 +14,15 @@ Load committed branch changes or uncommitted work in a structured form.
 - `depthHint` optional
 - `uncommitted` optional
 
+## Returns
+
+- `comparison` as either `uncommitted` or `<base>...<head>`
+- `branch` when the current branch is known
+- `files` with status and diff data
+- `commits` for branch comparisons when commit history is available
+
 ## Useful for
 
 - branch review
 - PR creation
-- change summaries
+- commit and summary workflows

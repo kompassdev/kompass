@@ -1,11 +1,11 @@
 ---
 title: /ticket/dev
-description: Load a ticket, create a plan, execute the work, and prepare the result for shipping.
+description: Implement a ticket by orchestrating development, branching, commit-and-push, and PR creation.
 ---
 
 ## Purpose
 
-Use `/ticket/dev` when implementation starts from a tracked ticket.
+Use `/ticket/dev` when implementation starts from a tracked ticket and should run through shipping.
 
 ## Usage
 
@@ -16,13 +16,15 @@ Use `/ticket/dev` when implementation starts from a tracked ticket.
 ## Typical flow
 
 - load the ticket and its surrounding context
-- create an implementation plan
-- execute the work against that plan
-- run relevant validation and return PR-ready context
+- delegate `/dev` for implementation and validation
+- delegate `/branch` for branch naming from the ticket summary
+- delegate `/commit-and-push`
+- delegate `/pr/create` and return the resulting PR URL
 
 ## Common tools
 
 - `ticket_load`
-- `task(planner)`
-- `task(worker)`
-- `bash(...)`
+- `dispatch(/dev)`
+- `dispatch(/branch)`
+- `dispatch(/commit-and-push)`
+- `dispatch(/pr/create)`

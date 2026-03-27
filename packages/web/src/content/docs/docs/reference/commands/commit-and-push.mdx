@@ -1,26 +1,29 @@
 ---
 title: /commit-and-push
-description: Commit current changes and push the branch in one workflow.
+description: Create a commit from current work and push it immediately.
 ---
 
 ## Purpose
 
-Use `/commit-and-push` when you want to move current work through commit creation and branch push in one pass.
+Use `/commit-and-push` when current uncommitted work should become a commit and an updated remote branch in one pass.
 
 ## Usage
 
 ```text
-/commit-and-push [message]
+/commit-and-push [message-guidance]
 ```
 
 ## Typical flow
 
-- inspect the current diff
-- create a commit with a provided or generated message
-- push the branch upstream
+- load uncommitted changes with `changes_load`
+- stop with `Nothing to commit or push` when there is no work
+- stage the relevant changes and create a commit
+- run `git push`
+- if no upstream is configured, retry with upstream setup
 
 ## Common tools
 
-- `bash(git status)`
+- `changes_load`
+- `bash(git add)`
 - `bash(git commit)`
 - `bash(git push)`

@@ -49,23 +49,20 @@ async function hasBundledSkillDirectories(root: string): Promise<boolean> {
 }
 
 async function resolveBundledSkillsRoot(): Promise<string | undefined> {
-  let firstExistingCandidate: string | undefined;
-
   for (const candidate of BUNDLED_SKILL_ROOT_CANDIDATES) {
     if (!await pathExists(candidate)) continue;
-
-    firstExistingCandidate ??= candidate;
 
     if (await hasBundledSkillDirectories(candidate)) {
       return candidate;
     }
   }
 
-  return firstExistingCandidate;
+  return undefined;
 }
 
 type ApplyConfigOptions = {
   logger?: PluginLogger;
+  resolveBundledSkillsRoot?: () => Promise<string | undefined>;
 };
 
 function normalizeSkillPaths(paths: unknown): string[] {
@@ -145,23 +142,28 @@ export async function applyCommandsConfig(
 }
 
 export async function applySkillsConfig(cfg: Config, options?: ApplyConfigOptions) {
-  const bundledSkillsRoot = await resolveBundledSkillsRoot();
+  const bundledSkillsRoot = options?.resolveBundledSkillsRoot
+    ? await options.resolveBundledSkillsRoot()
+    : await resolveBundledSkillsRoot();
+  const skillsConfig = cfg as ConfigWithSkillsPaths;
+  const normalizedPaths = normalizeSkillPaths(skillsConfig.skills?.paths);
 
   if (!bundledSkillsRoot) {
     await options?.logger?.warn("Skipping Kompass skills registration", {
       reason: "No bundled skills directory found",
     });
 
-    const skillsConfig = cfg as ConfigWithSkillsPaths;
-    if (skillsConfig.skills && "paths" in skillsConfig.skills) {
+    if (normalizedPaths.length > 0) {
+      skillsConfig.skills ??= {};
+      skillsConfig.skills.paths = normalizedPaths;
+    } else if (skillsConfig.skills && "paths" in skillsConfig.skills) {
       delete skillsConfig.skills.paths;
     }
     return;
   }
 
-  const skillsConfig = cfg as ConfigWithSkillsPaths;
   skillsConfig.skills ??= {};
-  skillsConfig.skills.paths = normalizeSkillPaths(skillsConfig.skills.paths);
+  skillsConfig.skills.paths = normalizedPaths;
 
   if (!skillsConfig.skills.paths.includes(bundledSkillsRoot)) {
     skillsConfig.skills.paths.push(bundledSkillsRoot);

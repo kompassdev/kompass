@@ -67,9 +67,7 @@ Following the reviewer agent guidance:
    - clearly missed material defects with a concrete failure mode
    Exclude anything already covered by `<settled-threads>` or `<prior-review-baseline>` on the same effective diff.
 
-
 Derive `<already-approved>` from existing approvals on `<pr-context.pr.headRefOid>`.
-
 
 Before publishing, derive: `<has-inline-comments>`, `<has-body-note>`, `<publish-grade>`, and whether each proposed finding is included in `<eligible-findings>`.
 

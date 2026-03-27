@@ -51,11 +51,7 @@ Following the reviewer agent guidance:
    - clearly missed material defects with a concrete failure mode
    Exclude anything already covered by `<settled-threads>` or `<prior-review-baseline>` on the same effective diff.
 
-<% if (it.config.shared.prApprove === true) { %>
-Derive `<already-approved>` from existing approvals on `<pr-context.pr.headRefOid>`.
-<% } %>
-
-Before publishing, derive: `<has-inline-comments>`, `<has-body-note>`, `<publish-grade>`, and whether each proposed finding is included in `<eligible-findings>`.
+<%= it.config.shared.prApprove === true ? "Derive `<already-approved>` from existing approvals on `<pr-context.pr.headRefOid>`.\n\n" : "" %>Before publishing, derive: `<has-inline-comments>`, `<has-body-note>`, `<publish-grade>`, and whether each proposed finding is included in `<eligible-findings>`.
 
 **Grading and Publishing Rules:**
 1. Assign a grade based on code quality (1-5 stars)

@@ -54,20 +54,22 @@ Call `kompass_changes_load` with `base: <pr-context.pr.baseRefName>`, `head: <pr
 ### Review Changes
 
 Following the reviewer agent guidance:
-1. Read every changed file for full context before finalizing findings
-2. Check `<pr-context.reviews>`, `<pr-context.issueComments>`, and `<pr-context.threads>`
-3. Derive `<settled-threads>` from `<pr-context.threads>`:
+1. Check `<pr-context.reviews>`, `<pr-context.issueComments>`, and `<pr-context.threads>`
+2. Derive `<settled-threads>` from `<pr-context.threads>`:
    - Treat resolved threads as settled
-   - Treat threads as settled when they already contain feedback from `<pr-context.viewerLogin>` and a later reply from another participant makes it clear the suggestion was intentionally declined, deferred, or answered without a code change request
-   - Only revive a settled thread when the new diff adds concrete evidence that the underlying concern is still a material bug, security issue, or broken contract
-4. Prefer inline comments for file-specific findings; use the review body only for high-level summaries
-5. Use diff hunks in `<changes>` to map inline comments to the correct lines
-6. Do NOT duplicate findings already raised or settled
+   - Treat threads as settled when they already contain feedback from `<pr-context.viewerLogin>` and a later reply makes it clear the concern was intentionally declined, deferred, or answered without a code change request
+   - Treat threads as settled when the author's reply directly answers the concern and the current diff does not add a materially different failure mode
+3. Derive `<prior-review-baseline>` from `<pr-context.reviews>` authored by `<pr-context.viewerLogin>`
+4. Use diff hunks in `<changes>` to map inline comments to the correct lines
+5. Derive `<eligible-findings>` as findings that are:
+   - new in this diff
+   - from a previously unreviewed changed area
+   - clearly missed material defects with a concrete failure mode
+   Exclude anything already covered by `<settled-threads>` or `<prior-review-baseline>` on the same effective diff.
 
-Derive `<previous-grade>` from prior reviews.
 Derive `<already-approved>` from existing approvals on `<pr-context.pr.headRefOid>`.
 
-Before publishing, derive: `<has-inline-comments>`, `<has-body-note>`, `<publish-grade>`, and `<grade-changed>`.
+Before publishing, derive: `<has-inline-comments>`, `<has-body-note>`, `<publish-grade>`, and whether each proposed finding is included in `<eligible-findings>`.
 
 **Grading and Publishing Rules:**
 1. Assign a grade based on code quality (1-5 stars)
@@ -98,7 +100,8 @@ For multi-line: add `startLine`. For deleted lines: use `side: "LEFT"`.
 - Call `kompass_pr_sync` with:
   - `refUrl: <pr-context.pr.url>`
   - `review.body`: the grade line first (for example `★★★☆☆`), followed by any non-inline notes
-  - `review.comments`: inline comments (changed lines only) - **skip lines or concerns already covered by open or settled threads in `<pr-context.threads>` unless the new diff introduces a materially different failure mode**
+  - `review.comments`: inline comments (changed lines only) - **skip lines or concerns already covered by open threads in `<pr-context.threads>` unless the new diff introduces a materially different failure mode**
+  - Include only findings from `<eligible-findings>`
 - Never omit the grade from `review.body` in this branch
 - Do not pass any other fields
 

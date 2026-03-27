@@ -42,11 +42,8 @@ If `<changes>.comparison` is not "uncommitted":
 ### Review Changes
 
 Following the reviewer agent guidance:
-1. Read each changed file for full context in the current session before drafting findings
-2. Analyze for bugs, security issues, and correctness problems
-3. Formulate findings ordered by impact
-4. Store the overall rating as `<star-rating>`, the top-line conclusion as `<short-verdict>`, and the severity counts as `<critical>`, `<high>`, `<medium>`, and `<low>`
-5. Store the total number of findings as `<count>`
+1. Store the overall rating as `<star-rating>`, the top-line conclusion as `<short-verdict>`, and the severity counts as `<critical>`, `<high>`, `<medium>`, and `<low>`
+2. Store the total number of findings as `<count>`
 
 While reading files:
 - Load any relevant nested `AGENTS.md` in the current session before applying review criteria

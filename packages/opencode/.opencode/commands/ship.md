@@ -9,7 +9,7 @@ Ship the current work by delegating branch creation, commit creation, and PR cre
 
 ## Additional Context
 
-Use `<branch-context>` to steer delegated branch naming. Use `<additional-context>` to refine the delegated commit and PR summaries. Pass `<base>` through to PR creation when it was provided.
+Use `<branch-context>` to steer delegated branch naming. Use `<additional-context>` to refine the delegated commit and PR summaries. Pass `<base>` through to PR creation when it was provided. This command is delegation-first: send each `<dispatch>` body literally and use the subagent result as the source of truth for the next step.
 
 ## Workflow
 
@@ -21,10 +21,10 @@ $ARGUMENTS
 
 ### Interpret Arguments
 
-- **Branch name**: If `<arguments>` looks like a branch reference (for example `main` or `origin/develop`), store it as `<base>`
-- **Branch naming guidance**: If `<arguments>` includes wording that should influence the generated feature branch name, store it as `<branch-context>`
-- **Additional context**: If `<arguments>` provides commit or PR guidance, store it as `<additional-context>`
-- **Empty**: If no `<arguments>` provided, proceed with defaults
+- Initialize `<base>`, `<branch-context>`, and `<additional-context>` as empty
+- If `<arguments>` is empty, proceed with defaults
+- If the trimmed `<arguments>` is only a branch reference (for example `main` or `origin/develop`), store it as `<base>` and leave the context fields empty
+- Otherwise, store `<arguments>` as both `<branch-context>` and `<additional-context>`
 
 ### Ensure Feature Branch
 

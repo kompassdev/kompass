@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { isSkillEnabled, loadKompassConfig, mergeWithDefaults } from "../lib/config.ts";
+import { loadKompassConfig, mergeWithDefaults } from "../lib/config.ts";
 
 const originalHome = process.env.HOME;
 
@@ -267,28 +267,6 @@ describe("object-based config", () => {
     assert.equal(config.components.enabled.includes("dev-flow"), false);
     assert.equal(config.components.paths.commit, "components/custom-commit.md");
   });
-
-  test("supports skill entry maps", () => {
-    const config = mergeWithDefaults({
-      skills: {
-        entries: {
-          "release-checklist": { enabled: true },
-          "legacy-release-flow": { enabled: false },
-        },
-        plugins: {
-          entries: {
-            "@acme/opencode-release": { enabled: true },
-            "@acme/opencode-experimental": { enabled: false },
-          },
-        },
-      },
-    });
-
-    assert.deepEqual(config.skills.enabled, ["release-checklist"]);
-    assert.deepEqual(config.skills.disabled, ["legacy-release-flow"]);
-    assert.deepEqual(config.skills.plugins.include, ["@acme/opencode-release"]);
-    assert.deepEqual(config.skills.plugins.exclude, ["@acme/opencode-experimental"]);
-  });
 });
 
 describe("command defaults", () => {
@@ -312,140 +290,5 @@ describe("command defaults", () => {
     const config = mergeWithDefaults(null);
 
     assert.equal(config.commands.enabled.includes("todo"), true);
-  });
-});
-
-describe("skills config", () => {
-  test("defaults to all skills enabled when no allowlist is configured", () => {
-    const config = mergeWithDefaults(null);
-
-    assert.equal(
-      isSkillEnabled(config.skills, {
-        id: "@acme/opencode-release/release-checklist",
-        name: "release-checklist",
-        pluginId: "@acme/opencode-release",
-      }),
-      true,
-    );
-  });
-
-  test("allows a skill by short name", () => {
-    const config = mergeWithDefaults({
-      skills: {
-        enabled: ["release-checklist"],
-      },
-    });
-
-    assert.equal(
-      isSkillEnabled(config.skills, {
-        id: "@acme/opencode-release/release-checklist",
-        name: "release-checklist",
-        pluginId: "@acme/opencode-release",
-      }),
-      true,
-    );
-    assert.equal(
-      isSkillEnabled(config.skills, {
-        id: "@acme/opencode-release/hotfix-triage",
-        name: "hotfix-triage",
-        pluginId: "@acme/opencode-release",
-      }),
-      false,
-    );
-  });
-
-  test("allows a skill by fully-qualified id", () => {
-    const config = mergeWithDefaults({
-      skills: {
-        enabled: ["@acme/opencode-release/hotfix-triage"],
-      },
-    });
-
-    assert.equal(
-      isSkillEnabled(config.skills, {
-        id: "@acme/opencode-release/hotfix-triage",
-        name: "hotfix-triage",
-        pluginId: "@acme/opencode-release",
-      }),
-      true,
-    );
-  });
-
-  test("disabled takes precedence over enabled", () => {
-    const config = mergeWithDefaults({
-      skills: {
-        enabled: ["release-checklist"],
-        disabled: ["release-checklist"],
-      },
-    });
-
-    assert.equal(
-      isSkillEnabled(config.skills, {
-        id: "@acme/opencode-release/release-checklist",
-        name: "release-checklist",
-        pluginId: "@acme/opencode-release",
-      }),
-      false,
-    );
-  });
-
-  test("plugin exclude disables plugin skills", () => {
-    const config = mergeWithDefaults({
-      skills: {
-        plugins: {
-          exclude: ["@acme/opencode-experimental"],
-        },
-      },
-    });
-
-    assert.equal(
-      isSkillEnabled(config.skills, {
-        id: "@acme/opencode-experimental/release-checklist",
-        name: "release-checklist",
-        pluginId: "@acme/opencode-experimental",
-      }),
-      false,
-    );
-    assert.equal(
-      isSkillEnabled(config.skills, {
-        id: "project/release-checklist",
-        name: "release-checklist",
-      }),
-      true,
-    );
-  });
-
-  test("plugin include acts as an allowlist for plugin skills only", () => {
-    const config = mergeWithDefaults({
-      skills: {
-        plugins: {
-          include: ["@acme/opencode-release"],
-        },
-      },
-    });
-
-    assert.equal(
-      isSkillEnabled(config.skills, {
-        id: "@acme/opencode-release/release-checklist",
-        name: "release-checklist",
-        pluginId: "@acme/opencode-release",
-      }),
-      true,
-    );
-    assert.equal(
-      isSkillEnabled(config.skills, {
-        id: "@acme/opencode-experimental/release-checklist",
-        name: "release-checklist",
-        pluginId: "@acme/opencode-experimental",
-      }),
-      false,
-    );
-    assert.equal(
-      isSkillEnabled(config.skills, {
-        id: "project/release-checklist",
-        name: "release-checklist",
-      }),
-      true,
-    );
   });
 });

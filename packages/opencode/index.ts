@@ -14,7 +14,7 @@ import {
   type MergedKompassConfig,
   type Shell,
 } from "../core/index.ts";
-import { applyAgentsConfig, applyCommandsConfig, applySkillsConfig } from "./config.ts";
+import { applyAgentsConfig, applyCommandsConfig } from "./config.ts";
 import { createPluginLogger, getErrorDetails, type PluginLogger } from "./logging.ts";
 import {
   getConfiguredOpenCodeToolName,
@@ -391,7 +391,6 @@ export const OpenCodeCompassPlugin: Plugin = async (input: PluginInput) => {
     async config(cfg) {
       await runConfigStep("agents", () => applyAgentsConfig(cfg, worktree, { logger }));
       await runConfigStep("commands", () => applyCommandsConfig(cfg, worktree, { logger }));
-      await runConfigStep("skills", () => applySkillsConfig(cfg, { logger }));
     },
     async "chat.message"(input, output) {
       try {
@@ -445,5 +444,5 @@ export const OpenCodeCompassPlugin: Plugin = async (input: PluginInput) => {
   };
 };
 
-export { applyAgentsConfig, applyCommandsConfig, applySkillsConfig };
+export { applyAgentsConfig, applyCommandsConfig };
 export default OpenCodeCompassPlugin;

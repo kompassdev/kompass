@@ -20,16 +20,19 @@ interface CommandScenario {
   command: string;
   agentName: string;
   task: string;
+  group: 'core' | 'ticket' | 'pr' | 'orchestration';
   steps: SessionStep[];
 }
 
 const scenarios: CommandScenario[] = [
+  // Core commands
   {
     id: 'ask',
     label: '/ask',
     command: '/ask is this project cool?',
     agentName: 'Build Agent',
     task: 'Answer questions about the current project or code',
+    group: 'core',
     steps: [
       {
         id: 'thinking',
@@ -58,11 +61,277 @@ const scenarios: CommandScenario[] = [
     ]
   },
   {
+    id: 'branch',
+    label: '/branch',
+    command: '/branch',
+    agentName: 'Worker',
+    task: 'Create categorized branch names',
+    group: 'core',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Creating branch — need to summarize uncommitted work and generate a categorized branch name based on the change themes.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'changes_load', args: 'uncommitted', status: 'complete' },
+          { tool: 'bash', args: 'git checkout -b docs/site-refresh', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Created branch: docs/site-refresh',
+          'Switched from main to the new work branch'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'commit',
+    label: '/commit',
+    command: '/commit',
+    agentName: 'Worker',
+    task: 'Generate why-focused commit messages',
+    group: 'core',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Committing — need to inspect staged and unstaged changes, then generate a commit message focused on why the changes were made.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'changes_load', args: 'uncommitted', status: 'complete' },
+          { tool: 'bash', args: 'git add packages/web/src/', status: 'complete' },
+          { tool: 'bash', args: 'git commit -m "feat: improve command showcase"', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Staged relevant files',
+          'Created a new commit with generated message'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'commit-and-push',
+    label: '/commit-and-push',
+    command: '/commit-and-push',
+    agentName: 'Worker',
+    task: 'Commit and push in one pass',
+    group: 'core',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Committing and pushing — need to stage relevant files, generate a commit message, and push the branch upstream in a single operation.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'changes_load', args: 'uncommitted', status: 'complete' },
+          { tool: 'bash', args: 'git add packages/web/src/', status: 'complete' },
+          { tool: 'bash', args: 'git commit -m "feat: add command showcase"', status: 'complete' },
+          { tool: 'bash', args: 'git push origin HEAD', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Staged 3 modified files',
+          'Created commit: feat: add command showcase with animations',
+          'Pushed to origin/feature/showcase'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'learn',
+    label: '/learn',
+    command: '/learn',
+    agentName: 'Worker',
+    task: 'Extract patterns into AGENTS.md',
+    group: 'core',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Learning — need to inspect existing patterns in the repo and extract reusable guidance into AGENTS.md targets.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'read', args: 'AGENTS.md', status: 'complete' },
+          { tool: 'grep', args: 'function|const|class', status: 'complete' },
+          { tool: 'apply_patch', args: 'AGENTS.md', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Summarized established conventions',
+          'Updated agent guidance where the pattern belongs'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'rmslop',
+    label: '/rmslop',
+    command: '/rmslop',
+    agentName: 'Worker',
+    task: 'Remove unnecessary complexity and duplication',
+    group: 'core',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Inspecting for slop — need to examine the branch for unnecessary complexity, duplicate code, and workflow glue that can be simplified or removed.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'changes_load', args: 'HEAD~3...HEAD', status: 'complete' },
+          { tool: 'read', args: 'packages/core/commands/*.md', status: 'complete' },
+          { tool: 'grep', args: 'TODO|FIXME|XXX', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Removed 47 lines of duplicate validation logic',
+          'Simplified 3 overly-abstract helper functions',
+          'Consolidated similar command patterns into shared components'
+        ]
+      }
+    ]
+  },
+
+  // Ticket commands
+  {
+    id: 'ticket-ask',
+    label: '/ticket/ask',
+    command: '/ticket/ask #42 how do I test this?',
+    agentName: 'Build Agent',
+    task: 'Answer questions about a ticket and post the response',
+    group: 'ticket',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Answering ticket question — loading ticket #42 with discussion to understand the testing requirements, then providing a clear answer.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'ticket_load', args: '#42', status: 'complete' },
+          { tool: 'read', args: 'packages/core/package.json', status: 'complete' },
+          { tool: 'glob', args: '**/*.test.ts', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Loaded ticket #42 and discussion history',
+          'Posted answer with test examples and setup instructions',
+          'Answer now visible on the ticket for the team'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'ticket-create',
+    label: '/ticket/create',
+    command: '/ticket/create',
+    agentName: 'Build Agent',
+    task: 'Create a ticket from current changes',
+    group: 'ticket',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Creating ticket — loading branch changes, reading modified files to understand themes, then creating a structured issue.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'changes_load', args: 'HEAD...main', status: 'complete' },
+          { tool: 'read', args: 'packages/web/src/components/*.astro', status: 'complete' },
+          { tool: 'ticket_sync', args: 'create with checklists', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Analyzed 5 changed files, grouped into 3 themes',
+          'Created issue #43: Add workflow documentation',
+          'Assigned to @me with implementation checklist'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'ticket-dev',
+    label: '/ticket/dev',
+    command: '/ticket/dev #128',
+    agentName: 'Navigator',
+    task: 'Implement a ticket end-to-end',
+    group: 'ticket',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Implementing ticket — loading context and preparing to orchestrate the full workflow: branch creation, development, validation, commit, and PR.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'ticket_load', args: '#128', status: 'complete' },
+          { tool: 'dispatch', args: '/branch', status: 'complete' },
+          { tool: 'dispatch', args: '/dev', status: 'complete' },
+          { tool: 'dispatch', args: '/commit-and-push', status: 'complete' },
+          { tool: 'dispatch', args: '/pr/create', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Created branch: feature/ticket-128-workflow',
+          'Implemented changes with validation',
+          'Published PR #49 linked to ticket #128'
+        ]
+      }
+    ]
+  },
+  {
     id: 'ticket-plan',
     label: '/ticket/plan',
     command: '/ticket/plan #128',
     agentName: 'Planner',
     task: 'Turn a request or ticket into a scoped implementation plan',
+    group: 'ticket',
     steps: [
       {
         id: 'thinking',
@@ -90,33 +359,144 @@ const scenarios: CommandScenario[] = [
     ]
   },
   {
-    id: 'pr-create',
-    label: '/pr/create',
-    command: '/pr/create',
-    agentName: 'Build',
-    task: 'Summarize branch work and publish a structured PR',
+    id: 'ticket-plan-and-sync',
+    label: '/ticket/plan-and-sync',
+    command: '/ticket/plan-and-sync #128',
+    agentName: 'Planner',
+    task: 'Load ticket, create plan, sync it back',
+    group: 'ticket',
     steps: [
       {
         id: 'thinking',
         phase: 'thinking',
-        content: 'Creating PR — need to load branch changes, check for linked tickets, and generate a structured PR description with checklist sections.'
+        content: 'Planning from ticket #128 — loading the ticket context with discussion, inspecting repo patterns, then syncing the scoped plan back to update the ticket.'
       },
       {
         id: 'tools',
         phase: 'tool_calls',
         toolCalls: [
-          { tool: 'changes_load', args: 'HEAD...main', status: 'complete' },
-          { tool: 'ticket_load', args: '#42', status: 'complete' },
-          { tool: 'bash', args: 'git push origin HEAD', status: 'complete' }
+          { tool: 'ticket_load', args: '#128 (with comments)', status: 'complete' },
+          { tool: 'read', args: 'packages/core/commands/pr/review.md', status: 'complete' },
+          { tool: 'glob', args: 'packages/core/components/*.md', status: 'complete' },
+          { tool: 'ticket_sync', args: 'update #128 with plan', status: 'complete' }
         ]
       },
       {
         id: 'output',
         phase: 'output',
         output: [
-          'Created PR #47: Add workflow visualization to homepage',
-          'Linked to ticket #42 with structured checklist',
-          'PR body includes summary, changes, and testing notes'
+          'Loaded ticket #128 and discussion history',
+          'Created scoped implementation plan',
+          'Synced plan back to ticket #128 with checklists'
+        ]
+      }
+    ]
+  },
+
+  // PR commands
+  {
+    id: 'pr-create',
+    label: '/pr/create',
+    command: '/pr/create',
+    agentName: 'Build',
+    task: 'Summarize branch work and publish a structured PR',
+    group: 'pr',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Creating PR — loading branch changes and reading modified files to group themes. Will resolve ticket handling before publishing.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'changes_load', args: 'HEAD...main', status: 'complete' },
+          { tool: 'read', args: 'packages/web/src/components/*.astro', status: 'complete' },
+          { tool: 'question', args: 'Auto-create ticket, skip, or provide ticket?', status: 'complete' },
+          { tool: 'ticket_sync', args: 'auto-create ticket #43', status: 'complete' },
+          { tool: 'bash', args: 'git push origin HEAD', status: 'complete' },
+          { tool: 'pr_sync', args: 'create PR with checklists', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Analyzed changes and grouped into functional themes',
+          'Auto-created ticket #43 for tracking',
+          'Created PR #47: Add workflow visualization to homepage'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'pr-fix',
+    label: '/pr/fix',
+    command: '/pr/fix',
+    agentName: 'Build',
+    task: 'Fix requested PR changes',
+    group: 'pr',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Fixing PR — loading PR #47 with review comments and feedback threads, then proposing fixes for approval before applying.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'pr_load', args: '#47', status: 'complete' },
+          { tool: 'question', args: 'Apply these 3 fixes?', status: 'complete' },
+          { tool: 'apply_patch', args: 'fix error handling in utils.ts', status: 'complete' },
+          { tool: 'bash', args: 'git commit -m "fix: address review feedback"', status: 'complete' },
+          { tool: 'bash', args: 'git push origin HEAD', status: 'complete' },
+          { tool: 'pr_sync', args: 'reply to review threads', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Proposed 3 fixes for review feedback',
+          'Applied fixes after user approval',
+          'Pushed commit and replied to inline comments'
+        ]
+      }
+    ]
+  },
+  {
+    id: 'pr-review',
+    label: '/pr/review',
+    command: '/pr/review',
+    agentName: 'Reviewer',
+    task: 'Review PR with inline comments',
+    group: 'pr',
+    steps: [
+      {
+        id: 'thinking',
+        phase: 'thinking',
+        content: 'Reviewing PR — loading PR #47, linked ticket, and diff context. Will analyze changes and publish a formal review with inline comments and grade.'
+      },
+      {
+        id: 'tools',
+        phase: 'tool_calls',
+        toolCalls: [
+          { tool: 'pr_load', args: '#47', status: 'complete' },
+          { tool: 'ticket_load', args: '#42', status: 'complete' },
+          { tool: 'changes_load', args: 'HEAD...main', status: 'complete' },
+          { tool: 'pr_sync', args: 'publish review with comments', status: 'complete' }
+        ]
+      },
+      {
+        id: 'output',
+        phase: 'output',
+        output: [
+          'Grade: ★★★★☆ — solid implementation with minor issues',
+          'Line 45: Consider extracting this into a helper function',
+          'Line 78: Add null check before accessing property',
+          'Line 124: Typo in variable name "recieve" → "receive"'
         ]
       }
     ]
@@ -127,11 +507,12 @@ const scenarios: CommandScenario[] = [
     command: '/review',
     agentName: 'Reviewer',
     task: 'Review branch changes without editing files',
+    group: 'pr',
     steps: [
       {
         id: 'thinking',
         phase: 'thinking',
-        content: 'Reviewing changes — need to load the diff context and examine modified files for potential issues, risks, and improvements without making edits.'
+        content: 'Reviewing changes — loading diff context and reading modified files to provide inline feedback and risk assessment without making edits.'
       },
       {
         id: 'tools',
@@ -146,19 +527,23 @@ const scenarios: CommandScenario[] = [
         id: 'output',
         phase: 'output',
         output: [
-          'Strong separation of concerns between scenarios and rendering',
-          'Consider adding error handling for failed tool calls',
-          'Animation timing is appropriate for the UX flow'
+          'Grade: ★★★★☆ — clean implementation, minor suggestions',
+          'Line 45: Consider extracting this into a helper function',
+          'Line 78: Add null check before accessing property',
+          'Line 124: Typo in variable name "recieve" → "receive"'
         ]
       }
     ]
   },
+
+  // Orchestration commands
   {
     id: 'dev',
     label: '/dev',
     command: '/dev implement the approved workflow in packages/core',
     agentName: 'Navigator',
     task: 'Orchestrate implementation with validation and checkpointing',
+    group: 'orchestration',
     steps: [
       {
         id: 'thinking',
@@ -192,6 +577,7 @@ const scenarios: CommandScenario[] = [
     command: '/ship',
     agentName: 'Navigator',
     task: 'Fast path from changes to PR',
+    group: 'orchestration',
     steps: [
       {
         id: 'thinking',
@@ -219,43 +605,12 @@ const scenarios: CommandScenario[] = [
     ]
   },
   {
-    id: 'rmslop',
-    label: '/rmslop',
-    command: '/rmslop',
-    agentName: 'Worker',
-    task: 'Remove unnecessary complexity and duplication',
-    steps: [
-      {
-        id: 'thinking',
-        phase: 'thinking',
-        content: 'Inspecting for slop — need to examine the branch for unnecessary complexity, duplicate code, and workflow glue that can be simplified or removed.'
-      },
-      {
-        id: 'tools',
-        phase: 'tool_calls',
-        toolCalls: [
-          { tool: 'changes_load', args: 'HEAD~3...HEAD', status: 'complete' },
-          { tool: 'read', args: 'packages/core/commands/*.md', status: 'complete' },
-          { tool: 'grep', args: 'TODO|FIXME|XXX', status: 'complete' }
-        ]
-      },
-      {
-        id: 'output',
-        phase: 'output',
-        output: [
-          'Removed 47 lines of duplicate validation logic',
-          'Simplified 3 overly-abstract helper functions',
-          'Consolidated similar command patterns into shared components'
-        ]
-      }
-    ]
-  },
-  {
     id: 'todo',
     label: '/todo',
     command: '/todo @TODO.md',
     agentName: 'Navigator',
     task: 'Work through a todo list with checkpoint reviews',
+    group: 'orchestration',
     steps: [
       {
         id: 'thinking',
@@ -282,199 +637,14 @@ const scenarios: CommandScenario[] = [
         ]
       }
     ]
-  },
-  {
-    id: 'commit-and-push',
-    label: '/commit-and-push',
-    command: '/commit-and-push',
-    agentName: 'Worker',
-    task: 'Commit and push in one pass',
-    steps: [
-      {
-        id: 'thinking',
-        phase: 'thinking',
-        content: 'Committing and pushing — need to stage relevant files, generate a commit message, and push the branch upstream in a single operation.'
-      },
-      {
-        id: 'tools',
-        phase: 'tool_calls',
-        toolCalls: [
-          { tool: 'changes_load', args: 'uncommitted', status: 'complete' },
-          { tool: 'bash', args: 'git add packages/web/src/', status: 'complete' },
-          { tool: 'bash', args: 'git commit -m "feat: add command showcase"', status: 'complete' },
-          { tool: 'bash', args: 'git push origin HEAD', status: 'complete' }
-        ]
-      },
-      {
-        id: 'output',
-        phase: 'output',
-        output: [
-          'Staged 3 modified files',
-          'Created commit: feat: add command showcase with animations',
-          'Pushed to origin/feature/showcase'
-        ]
-      }
-    ]
-  },
-  {
-    id: 'branch',
-    label: '/branch',
-    command: '/branch',
-    agentName: 'Worker',
-    task: 'Create categorized branch names',
-    steps: [
-      {
-        id: 'thinking',
-        phase: 'thinking',
-        content: 'Creating branch — need to summarize uncommitted work and generate a categorized branch name based on the change themes.'
-      },
-      {
-        id: 'tools',
-        phase: 'tool_calls',
-        toolCalls: [
-          { tool: 'changes_load', args: 'uncommitted', status: 'complete' },
-          { tool: 'bash', args: 'git checkout -b docs/site-refresh', status: 'complete' }
-        ]
-      },
-      {
-        id: 'output',
-        phase: 'output',
-        output: [
-          'Created branch: docs/site-refresh',
-          'Switched from main to the new work branch'
-        ]
-      }
-    ]
-  },
-  {
-    id: 'commit',
-    label: '/commit',
-    command: '/commit',
-    agentName: 'Worker',
-    task: 'Generate why-focused commit messages',
-    steps: [
-      {
-        id: 'thinking',
-        phase: 'thinking',
-        content: 'Committing — need to inspect staged and unstaged changes, then generate a commit message focused on why the changes were made.'
-      },
-      {
-        id: 'tools',
-        phase: 'tool_calls',
-        toolCalls: [
-          { tool: 'changes_load', args: 'uncommitted', status: 'complete' },
-          { tool: 'bash', args: 'git add packages/web/src/', status: 'complete' },
-          { tool: 'bash', args: 'git commit -m "feat: improve command showcase"', status: 'complete' }
-        ]
-      },
-      {
-        id: 'output',
-        phase: 'output',
-        output: [
-          'Staged relevant files',
-          'Created a new commit with generated message'
-        ]
-      }
-    ]
-  },
-  {
-    id: 'learn',
-    label: '/learn',
-    command: '/learn',
-    agentName: 'Worker',
-    task: 'Extract patterns into AGENTS.md',
-    steps: [
-      {
-        id: 'thinking',
-        phase: 'thinking',
-        content: 'Learning — need to inspect existing patterns in the repo and extract reusable guidance into AGENTS.md targets.'
-      },
-      {
-        id: 'tools',
-        phase: 'tool_calls',
-        toolCalls: [
-          { tool: 'read', args: 'AGENTS.md', status: 'complete' },
-          { tool: 'grep', args: 'function|const|class', status: 'complete' },
-          { tool: 'apply_patch', args: 'AGENTS.md', status: 'complete' }
-        ]
-      },
-      {
-        id: 'output',
-        phase: 'output',
-        output: [
-          'Summarized established conventions',
-          'Updated agent guidance where the pattern belongs'
-        ]
-      }
-    ]
-  },
-  {
-    id: 'pr-fix',
-    label: '/pr/fix',
-    command: '/pr/fix',
-    agentName: 'Build',
-    task: 'Fix requested PR changes',
-    steps: [
-      {
-        id: 'thinking',
-        phase: 'thinking',
-        content: 'Fixing PR — need to load PR history and outstanding feedback, then review proposed fixes before applying.'
-      },
-      {
-        id: 'tools',
-        phase: 'tool_calls',
-        toolCalls: [
-          { tool: 'pr_load', args: 'current', status: 'complete' },
-          { tool: 'apply_patch', args: 'requested changes', status: 'complete' },
-          { tool: 'bash', args: 'npm run test', status: 'complete' }
-        ]
-      },
-      {
-        id: 'output',
-        phase: 'output',
-        output: [
-          'Fixed requested issues on the branch',
-          'Posted replies to the relevant review threads'
-        ]
-      }
-    ]
-  },
-  {
-    id: 'pr-review',
-    label: '/pr/review',
-    command: '/pr/review',
-    agentName: 'Reviewer',
-    task: 'Review PR with inline comments',
-    steps: [
-      {
-        id: 'thinking',
-        phase: 'thinking',
-        content: 'Reviewing PR — need to load PR, reviews, comments, files, and diff context. Will load linked ticket too before reviewing.'
-      },
-      {
-        id: 'tools',
-        phase: 'tool_calls',
-        toolCalls: [
-          { tool: 'pr_load', args: 'current', status: 'complete' },
-          { tool: 'ticket_load', args: '#42', status: 'complete' },
-          { tool: 'changes_load', args: 'HEAD...main', status: 'complete' }
-        ]
-      },
-      {
-        id: 'output',
-        phase: 'output',
-        output: [
-          'Added inline comments and review summary',
-          'Approved or requested changes based on findings'
-        ]
-      }
-    ]
   }
 ];
 
-// Split scenarios into two groups
-const orchestratorScenarios = scenarios.filter(s => s.agentName === 'Navigator');
-const commandScenarios = scenarios.filter(s => s.agentName !== 'Navigator');
+// Group scenarios
+const coreScenarios = scenarios.filter(s => s.group === 'core');
+const ticketScenarios = scenarios.filter(s => s.group === 'ticket');
+const prScenarios = scenarios.filter(s => s.group === 'pr');
+const orchestrationScenarios = scenarios.filter(s => s.group === 'orchestration');
 
 ---
 
@@ -488,13 +658,13 @@ const commandScenarios = scenarios.filter(s => s.agentName !== 'Navigator');
   </div>
 
   <div class="command-showcase__main">
-    <!-- Two fieldsets side-by-side, centered, exploding container -->
+    <!-- Four fieldsets side-by-side, centered, exploding container -->
     <div class="command-groups-wrapper">
       <div class="command-groups">
         <fieldset class="command-group">
-          <legend class="command-group__legend">Commands</legend>
+          <legend class="command-group__legend">Core</legend>
           <div class="command-group__tabs">
-            {commandScenarios.map((scenario, index) => (
+            {coreScenarios.map((scenario, index) => (
               <button 
                 type="button"
                 class:list={{ "command-tab": true, "is-active": index === 0 }}
@@ -510,13 +680,51 @@ const commandScenarios = scenarios.filter(s => s.agentName !== 'Navigator');
           </div>
         </fieldset>
         
-        <fieldset class="command-group command-group--orchestrators">
-          <legend class="command-group__legend">Orchestrators</legend>
+        <fieldset class="command-group command-group--ticket">
+          <legend class="command-group__legend">Ticket</legend>
           <div class="command-group__tabs">
-            {orchestratorScenarios.map((scenario) => (
+            {ticketScenarios.map((scenario) => (
               <button 
                 type="button"
-                class:list={{ "command-tab command-tab--orchestrator": true }}
+                class:list={{ "command-tab command-tab--ticket": true }}
+                role="tab"
+                aria-selected="false"
+                aria-controls={`panel-${scenario.id}`}
+                id={`tab-${scenario.id}`}
+                data-command-tab={scenario.id}
+              >
+                {scenario.label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset class="command-group command-group--pr">
+          <legend class="command-group__legend">PR</legend>
+          <div class="command-group__tabs">
+            {prScenarios.map((scenario) => (
+              <button 
+                type="button"
+                class:list={{ "command-tab command-tab--pr": true }}
+                role="tab"
+                aria-selected="false"
+                aria-controls={`panel-${scenario.id}`}
+                id={`tab-${scenario.id}`}
+                data-command-tab={scenario.id}
+              >
+                {scenario.label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+        
+        <fieldset class="command-group command-group--orchestration">
+          <legend class="command-group__legend">Orchestration</legend>
+          <div class="command-group__tabs">
+            {orchestrationScenarios.map((scenario) => (
+              <button 
+                type="button"
+                class:list={{ "command-tab command-tab--orchestration": true }}
                 role="tab"
                 aria-selected="false"
                 aria-controls={`panel-${scenario.id}`}
@@ -740,6 +948,7 @@ const commandScenarios = scenarios.filter(s => s.agentName !== 'Navigator');
     
     const tabs = showcase.querySelectorAll('[data-command-tab]');
     const panels = showcase.querySelectorAll('[data-scenario-panel]');
+    const groupsWrapper = showcase.querySelector('.command-groups-wrapper') as HTMLElement;
     
     // Tab switching
     tabs.forEach(tab => {
@@ -767,13 +976,44 @@ const commandScenarios = scenarios.filter(s => s.agentName !== 'Navigator');
       });
     });
     
-    // Animate first panel on load
-    const firstPanel = showcase.querySelector('[data-scenario-panel]') as HTMLElement;
-    if (firstPanel) {
+    // Default to ticket-dev
+    const defaultTab = showcase.querySelector('[data-command-tab="ticket-dev"]') as HTMLElement;
+    const defaultPanel = showcase.querySelector('[data-scenario-panel="ticket-dev"]') as HTMLElement;
+    
+    if (defaultTab && defaultPanel) {
+      // Reset all tabs and panels
+      tabs.forEach(t => {
+        t.classList.remove('is-active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      panels.forEach(p => {
+        p.classList.remove('is-active');
+        p.setAttribute('hidden', '');
+      });
+      
+      // Activate default
+      defaultTab.classList.add('is-active');
+      defaultTab.setAttribute('aria-selected', 'true');
+      defaultPanel.classList.add('is-active');
+      defaultPanel.removeAttribute('hidden');
+      
+      // Center scroll on the active tab's group
+      if (groupsWrapper) {
+        const tabGroup = defaultTab.closest('.command-group') as HTMLElement;
+        if (tabGroup) {
+          const wrapperWidth = groupsWrapper.offsetWidth;
+          const groupWidth = tabGroup.offsetWidth;
+          const groupLeft = tabGroup.offsetLeft;
+          const scrollLeft = groupLeft - (wrapperWidth / 2) + (groupWidth / 2);
+          groupsWrapper.scrollLeft = scrollLeft;
+        }
+      }
+      
+      // Animate when visible
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
-            animateScenario(firstPanel);
+            animateScenario(defaultPanel);
             observer.disconnect();
           }
         });
@@ -874,7 +1114,7 @@ const commandScenarios = scenarios.filter(s => s.agentName !== 'Navigator');
     z-index: 1;
   }
 
-  /* Tabs - two fieldsets side-by-side on single line with horizontal scroll */
+  /* Tabs - four fieldsets side-by-side on single line with horizontal scroll */
   .command-groups-wrapper {
     position: relative;
     width: 100vw;
@@ -920,7 +1160,17 @@ const commandScenarios = scenarios.filter(s => s.agentName !== 'Navigator');
     flex-shrink: 0;
   }
 
-  .command-group--orchestrators {
+  .command-group--ticket {
+    border-color: rgba(139, 92, 246, 0.25);
+    background: rgba(139, 92, 246, 0.1);
+  }
+
+  .command-group--pr {
+    border-color: rgba(34, 197, 94, 0.25);
+    background: rgba(34, 197, 94, 0.1);
+  }
+
+  .command-group--orchestration {
     border-color: rgba(95, 158, 197, 0.25);
     background: rgba(95, 158, 197, 0.1);
   }
@@ -936,7 +1186,17 @@ const commandScenarios = scenarios.filter(s => s.agentName !== 'Navigator');
     border-radius: 0.25rem;
   }
 
-  .command-group--orchestrators .command-group__legend {
+  .command-group--ticket .command-group__legend {
+    color: rgba(139, 92, 246, 0.9);
+    background: rgba(139, 92, 246, 0.2);
+  }
+
+  .command-group--pr .command-group__legend {
+    color: rgba(34, 197, 94, 0.9);
+    background: rgba(34, 197, 94, 0.2);
+  }
+
+  .command-group--orchestration .command-group__legend {
     color: rgba(95, 158, 197, 0.9);
     background: rgba(95, 158, 197, 0.2);
   }
@@ -976,13 +1236,37 @@ const commandScenarios = scenarios.filter(s => s.agentName !== 'Navigator');
     color: var(--text);
   }
 
-  .command-tab--orchestrator {
+  .command-tab--ticket {
+    border-color: rgba(139, 92, 246, 0.25);
+    background: rgba(139, 92, 246, 0.1);
+  }
+
+  .command-tab--ticket:hover,
+  .command-tab--ticket.is-active {
+    border-color: rgba(139, 92, 246, 0.45);
+    background: rgba(139, 92, 246, 0.18);
+    color: var(--text);
+  }
+
+  .command-tab--pr {
+    border-color: rgba(34, 197, 94, 0.25);
+    background: rgba(34, 197, 94, 0.1);
+  }
+
+  .command-tab--pr:hover,
+  .command-tab--pr.is-active {
+    border-color: rgba(34, 197, 94, 0.45);
+    background: rgba(34, 197, 94, 0.18);
+    color: var(--text);
+  }
+
+  .command-tab--orchestration {
     border-color: rgba(95, 158, 197, 0.25);
     background: rgba(95, 158, 197, 0.1);
   }
 
-  .command-tab--orchestrator:hover,
-  .command-tab--orchestrator.is-active {
+  .command-tab--orchestration:hover,
+  .command-tab--orchestration.is-active {
     border-color: rgba(95, 158, 197, 0.45);
     background: rgba(95, 158, 197, 0.18);
     color: var(--text);

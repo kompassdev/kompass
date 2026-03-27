@@ -20,7 +20,6 @@
     "pr/create": { "enabled": true },
     "pr/fix": { "enabled": true },
     "pr/review": { "enabled": true },
-    "reload": { "enabled": true },
     "review": { "enabled": true },
     "ship": { "enabled": true },
     "rmslop": { "enabled": true },
@@ -45,7 +44,6 @@
     "pr_sync": { "enabled": true },
     "ticket_load": { "enabled": true },
     "ticket_sync": { "enabled": true },
-    "reload": { "enabled": true },
   },
 
   "components": {

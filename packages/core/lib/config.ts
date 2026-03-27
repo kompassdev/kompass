@@ -18,7 +18,6 @@ export const DEFAULT_TOOL_NAMES = [
   "pr_sync",
   "ticket_sync",
   "ticket_load",
-  "reload",
 ] as const;
 
 export const DEFAULT_COMMAND_NAMES = [
@@ -31,7 +30,6 @@ export const DEFAULT_COMMAND_NAMES = [
   "pr/create",
   "pr/fix",
   "pr/review",
-  "reload",
   "review",
   "ship",
   "rmslop",
@@ -114,7 +112,6 @@ export interface KompassConfig {
     "pr/create"?: CommandConfig;
     "pr/fix"?: CommandConfig;
     "pr/review"?: CommandConfig;
-    reload?: CommandConfig;
     review?: CommandConfig;
     ship?: CommandConfig;
     rmslop?: CommandConfig;
@@ -140,7 +137,6 @@ export interface KompassConfig {
     pr_sync?: ToolConfig;
     ticket_sync?: ToolConfig;
     ticket_load?: ToolConfig;
-    reload?: ToolConfig;
   };
   components?: {
     "change-summary"?: ComponentConfig;
@@ -189,7 +185,6 @@ export interface MergedKompassConfig {
     pr_sync: ToolConfig;
     ticket_sync: ToolConfig;
     ticket_load: ToolConfig;
-    reload: ToolConfig;
   };
   components: {
     enabled: string[];
@@ -480,7 +475,6 @@ const defaultToolConfig: Record<ToolName, ToolConfig> = {
   pr_sync: { enabled: true },
   ticket_sync: { enabled: true },
   ticket_load: { enabled: true },
-  reload: { enabled: true },
 };
 
 function getToggleEntry<T extends ToggleConfig>(
@@ -666,7 +660,6 @@ export function mergeWithDefaults(
       pr_sync: { ...defaultToolConfig.pr_sync, ...config?.tools?.pr_sync },
       ticket_sync: { ...defaultToolConfig.ticket_sync, ...config?.tools?.ticket_sync },
       ticket_load: { ...defaultToolConfig.ticket_load, ...config?.tools?.ticket_load },
-      reload: { ...defaultToolConfig.reload, ...config?.tools?.reload },
     },
     components: {
       enabled: getEnabledNames(

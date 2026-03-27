@@ -216,27 +216,6 @@ export function removeSyntheticAgentHandoff(output: ChatMessageOutput): boolean 
   return true;
 }
 
-function createReloadTool(client: PluginInput["client"]) {
-  return tool({
-    description: "Reload the current OpenCode project cache",
-    args: {},
-    async execute(_, context) {
-      // Defer dispose so the tool returns before the session is torn down
-      setTimeout(() => {
-        void client.instance.dispose({ query: { directory: context.directory } }).catch((error) => {
-          console.error("[kompass] Failed to dispose instance during reload:", error);
-        });
-      }, 500);
-      return JSON.stringify({
-        scope: "project",
-        directory: context.directory,
-        status: "reload-requested",
-        nextLoad: "config, commands, agents, custom tools, and plugins rebuild on next access",
-      }, null, 2);
-    },
-  });
-}
-
 const opencodeToolCreators = {
   changes_load($: PluginInput["$"], _: PluginInput["client"], __: MergedKompassConfig) {
     const definition = createChangesLoadTool(asShell($));
@@ -344,9 +323,6 @@ const opencodeToolCreators = {
       },
       execute: (args, context) => definition.execute(args, context),
     });
-  },
-  reload(_: PluginInput["$"], client: PluginInput["client"], __: MergedKompassConfig) {
-    return createReloadTool(client);
   },
 } as const;
 

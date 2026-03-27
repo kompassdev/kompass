@@ -34,9 +34,6 @@
     "pr/review": {
       "enabled": true
     },
-    "reload": {
-      "enabled": true
-    },
     "review": {
       "enabled": true
     },
@@ -93,9 +90,6 @@
       "enabled": true
     },
     "ticket_load": {
-      "enabled": true
-    },
-    "reload": {
       "enabled": true
     }
   },

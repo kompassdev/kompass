@@ -2,6 +2,10 @@
 
 Create a commit and immediately push it to the remote repository.
 
+## Additional Context
+
+Consider `<additional-context>` when analyzing changes and writing the commit message.
+
 ## Workflow
 
 ### Arguments
@@ -36,11 +40,7 @@ $ARGUMENTS
 - Store the successful destination as `<push-target>`
 - If push fails, STOP and report the push error
 
-## Additional Context
-
-Consider `<additional-context>` when analyzing changes and writing the commit message.
-
-## Output
+### Output
 
 If there is nothing to commit, display:
 ```

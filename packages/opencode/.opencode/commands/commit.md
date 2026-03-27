@@ -7,6 +7,10 @@ agent: build
 
 Create a commit with an appropriate message summarizing the uncommitted changes.
 
+## Additional Context
+
+Consider `<additional-context>` when analyzing changes and writing the commit message.
+
 ## Workflow
 
 ### Arguments
@@ -70,11 +74,7 @@ type: summary
 7. Only run `git status` if the commit fails and needs diagnosis
 - Store the created commit hash as `<hash>`
 
-## Additional Context
-
-Consider `<additional-context>` when analyzing changes and writing the commit message.
-
-## Output
+### Output
 
 If there is nothing to commit, display:
 ```

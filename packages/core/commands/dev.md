@@ -2,6 +2,10 @@
 
 Implement a feature or fix based on a ticket or request, then prepare for PR creation.
 
+## Additional Context
+
+Use `<additional-context>` to refine priorities, scope, and tradeoffs while implementing `<request-context>`.
+
 ## Workflow
 
 ### Arguments
@@ -46,11 +50,7 @@ $ARGUMENTS
 - Store the current branch name as `<branch>`
 - Do not create the pull request in this command; stop when the branch is ready for `pr/create`
 
-## Additional Context
-
-Use `<additional-context>` to refine priorities, scope, and tradeoffs while implementing `<request-context>`.
-
-## Output
+### Output
 
 When the implementation is ready for PR creation, display:
 ```

@@ -7,6 +7,13 @@ agent: navigator
 
 Work through a todo file one pending item at a time by planning, getting approval, implementing, committing, and marking completed tasks.
 
+## Additional Context
+
+- Keep the loop focused on one checklist item at a time
+- Do not merge separate todo items unless the file explicitly frames them as one task
+- If implementation reveals scope that materially changes the approved plan, pause and re-plan before marking the task complete
+- Use `<additional-context>` to prioritize tradeoffs, constraints, or validation expectations during planning and implementation
+
 ## Workflow
 
 ### Arguments
@@ -105,14 +112,7 @@ Additional context: <additional-context>
 - Save the updated todo file
 - Return to `### Load Todo Context` and repeat the workflow for the next pending task
 
-## Additional Context
-
-- Keep the loop focused on one checklist item at a time
-- Do not merge separate todo items unless the file explicitly frames them as one task
-- If implementation reveals scope that materially changes the approved plan, pause and re-plan before marking the task complete
-- Use `<additional-context>` to prioritize tradeoffs, constraints, or validation expectations during planning and implementation
-
-## Output
+### Output
 
 When presenting a task plan for approval, display:
 ```

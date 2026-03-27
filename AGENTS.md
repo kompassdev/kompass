@@ -53,7 +53,8 @@ packages/opencode/.opencode/ # Generated OpenCode output for review
 - Author command definitions in `packages/core/commands/`; treat `packages/opencode/.opencode/commands/` as generated output only
 - Treat `packages/core/commands/index.ts`, `packages/core/lib/config.ts`, `kompass.schema.json`, the bundled `kompass.jsonc` files, and the relevant docs as a linked surface area; if one changes, verify the others still describe the same command set and config shape
 - Use `packages/core/commands/pr/create.md` as the canonical example for command structure and tone
-- Keep this section order in command docs unless a command has a strong reason not to: `## Goal`, `## Workflow`, `## Additional Context`, `## Output`
+- Keep this section order in command docs unless a command has a strong reason not to: `## Goal`, `## Additional Context`, `## Workflow`
+- Keep `### Output` as the final subsection inside `## Workflow`; do not use a separate top-level `## Output` section
 - Start `## Workflow` with a dedicated `### Arguments` subsection that stores the raw `$ARGUMENTS` value inside literal `<arguments>` tags before any normalization
 - Follow `### Arguments` with `### Interpret Arguments`, and normalize `<arguments>` into any additional named placeholders before execution steps
 - Use angle-bracket placeholders consistently for derived values and stored context, such as `<arguments>`, `<base>`, `<additional-context>`, `<pr-url>`, and define each placeholder before it is referenced later in the command
@@ -66,9 +67,9 @@ packages/opencode/.opencode/ # Generated OpenCode output for review
 - Use literal `<dispatch>` tags when the workflow must forward exact text as the next user message to a subagent session; `agent` is required, the block body is the exact rendered message to send, and slash commands belong on the first line of the body when needed
 - Do not use `<task>` blocks in command docs; author navigator delegation with `<dispatch>` blocks only
 - When a command can pause for approval or loop over repeated work, describe the resume condition and the exact cases that must STOP without mutating state
-- Use `## Additional Context` for instructions about how optional guidance, related tickets, focus areas, or other stored context should influence analysis and output
-- Use `## Output` to define the exact user-facing response shape, including placeholders for generated values
-- Make success, blocked, and no-op outcomes explicit in `## Output` or the surrounding workflow so navigator-led flows report deterministic end states
+- Use `## Additional Context` for instructions about how optional guidance, related tickets, focus areas, or other stored context should influence analysis and response formatting
+- Use `### Output` as the final workflow step to define the exact user-facing response shape, including placeholders for generated values
+- Make success, blocked, and no-op outcomes explicit in `### Output` or the surrounding workflow so navigator-led flows report deterministic end states
 - For terminal command outcomes, prefer an explicit final line inside the output block: `No additional steps are required.`
 - For one-off commands that do not orchestrate follow-up work, make every success, blocked, or no-op output explicitly terminal with that final line
 - Command-specific extra sections are fine, but they should support this core structure rather than replace it
@@ -79,6 +80,10 @@ Example command structure:
 ## Goal
 
 Describe the command's purpose in one short paragraph.
+
+## Additional Context
+
+- Explain how optional guidance should influence planning or execution
 
 ## Workflow
 
@@ -122,11 +127,7 @@ Constraints: <additional-context>
 
 - STOP if implementation is blocked or incomplete
 
-## Additional Context
-
-- Explain how optional guidance should influence planning or execution
-
-## Output
+### Output
 
 - Define the exact success, blocked, and no-op response shapes
 - For terminal outcomes, end the output block with `No additional steps are required.`

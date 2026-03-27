@@ -7,6 +7,10 @@ agent: build
 
 Create a ticket that summarizes the work returned by the current change comparison.
 
+## Additional Context
+
+Consider `<additional-context>` when analyzing the work and writing the ticket title and body.
+
 ## Workflow
 
 ### Arguments
@@ -71,11 +75,7 @@ Use `kompass_ticket_sync` with `refUrl` unset to create the ticket:
 - Store the generated title as `<ticket-title>`
 - Store the created issue URL as `<ticket-url>`
 
-## Additional Context
-
-Consider `<additional-context>` when analyzing the work and writing the ticket title and body.
-
-## Output
+### Output
 
 If there is no work to summarize, display:
 ```

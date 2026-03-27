@@ -2,6 +2,10 @@
 
 Remove AI-generated code slop and inconsistencies from the branch changes.
 
+## Additional Context
+
+Use `<additional-context>` to decide which kinds of slop to prioritize and which areas should remain untouched.
+
 ## Workflow
 
 ### Arguments
@@ -61,11 +65,7 @@ $ARGUMENTS
 - Create a focused commit describing the cleanup
 - Store the created commit hash as `<hash>`
 
-## Additional Context
-
-Use `<additional-context>` to decide which kinds of slop to prioritize and which areas should remain untouched.
-
-## Output
+### Output
 
 If there is no branch work to clean up, display:
 ```

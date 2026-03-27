@@ -2,6 +2,10 @@
 
 Ship the current work by delegating branch creation, commit creation, and PR creation.
 
+## Additional Context
+
+Use `<branch-context>` to steer delegated branch naming. Use `<additional-context>` to refine the delegated commit and PR summaries. Pass `<base>` through to PR creation when it was provided.
+
 ## Workflow
 
 ### Arguments
@@ -56,11 +60,7 @@ Additional context: <additional-context>
 - If `<pr-result>` says there is nothing to include in a PR, STOP and report that there is nothing to ship
 - Otherwise, continue with the created or existing PR
 
-## Additional Context
-
-Use `<branch-context>` to steer delegated branch naming. Use `<additional-context>` to refine the delegated commit and PR summaries. Pass `<base>` through to PR creation when it was provided.
-
-## Output
+### Output
 
 If there is nothing to ship, display:
 ```

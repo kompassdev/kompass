@@ -20,7 +20,6 @@
     "pr/create": { "enabled": true },
     "pr/fix": { "enabled": true },
     "pr/review": { "enabled": true },
-    "reload": { "enabled": true },
     "review": { "enabled": true },
     "ship": { "enabled": true },
     "rmslop": { "enabled": true },

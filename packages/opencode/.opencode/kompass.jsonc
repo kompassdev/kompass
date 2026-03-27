@@ -34,9 +34,6 @@
     "pr/review": {
       "enabled": true
     },
-    "reload": {
-      "enabled": true
-    },
     "review": {
       "enabled": true
     },

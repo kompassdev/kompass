@@ -1,6 +1,6 @@
 ---
 description: Summarize branch work and create a PR
-agent: build
+agent: worker
 ---
 
 ## Goal

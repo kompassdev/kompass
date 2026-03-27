@@ -1,6 +1,12 @@
 ---
 title: load-pr
-description: Shared partial for loading PR context in review-oriented workflows.
+description: Shared partial for loading PR context through `pr_load`.
 ---
 
-Used in commands that need PR metadata, review history, and associated state before acting.
+## Behavior
+
+- calls `pr_load` with an optional explicit PR ref
+- stores the result in the caller-provided placeholder
+- treats PR body, discussion, review history, and linked artifacts as source context
+- asks commands to review relevant screenshots, PDFs, and other attachments when they matter
+- notes inaccessible attachments as a context gap instead of ignoring them silently

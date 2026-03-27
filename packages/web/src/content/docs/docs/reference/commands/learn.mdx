@@ -1,26 +1,26 @@
 ---
 title: /learn
-description: Extract repo conventions and operational guidance into AGENTS.md files.
+description: Capture non-obvious learnings from the current session in the right documentation scope.
 ---
 
 ## Purpose
 
-Use `/learn` to study patterns in the repository and encode the useful guidance where agents can reuse it.
+Use `/learn` to document durable session discoveries in the most useful `AGENTS.md` scope.
 
 ## Usage
 
 ```text
-/learn <what-to-learn>
+/learn [focus]
 ```
 
 ## Typical flow
 
-- inspect current conventions in the repo
-- summarize reusable rules and practices
-- write the guidance into the appropriate `AGENTS.md` surface
+- review the current session for non-obvious discoveries and repeated friction
+- choose the narrowest useful scope such as root or package-level `AGENTS.md`
+- read existing guidance before editing to avoid duplication
+- add concise learnings and report which files were updated
 
 ## Common tools
 
 - `read`
-- `grep`
 - `apply_patch`

@@ -1,6 +1,6 @@
 ---
 description: Commit current changes with a message
-agent: build
+agent: worker
 ---
 
 ## Goal

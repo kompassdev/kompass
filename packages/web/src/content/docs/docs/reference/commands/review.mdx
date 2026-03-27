@@ -1,25 +1,26 @@
 ---
 title: /review
-description: Review branch changes without publishing comments to GitHub.
+description: Review current branch or uncommitted work and return a graded findings summary.
 ---
 
 ## Purpose
 
-Use `/review` for a local branch review pass.
+Use `/review` for a local review pass that does not publish comments.
 
 ## Usage
 
 ```text
-/review [base]
+/review [base-or-uncommitted]
 ```
 
 ## Typical flow
 
-- load the branch delta against the chosen base branch
+- load branch or working-tree changes
 - inspect the changed files with repository-aware context
-- return findings without mutating the branch or posting comments
+- assign a grade and top-line verdict
+- return severity-counted findings without mutating the branch or posting comments
 
 ## Common tools
 
 - `changes_load`
-- `task(reviewer)`
+- `read`

@@ -30,6 +30,7 @@ describe("applyAgentsConfig", () => {
     );
     assert.deepEqual(cfg.agent.worker?.permission, {
       question: "allow",
+      todowrite: "allow",
     });
     assert.equal(cfg.agent.worker?.mode, undefined);
     assert.equal(
@@ -40,14 +41,17 @@ describe("applyAgentsConfig", () => {
       edit: "deny",
       task: "allow",
       question: "allow",
+      todowrite: "allow",
     });
     assert.deepEqual(cfg.agent.reviewer?.permission, {
       edit: "deny",
       question: "allow",
+      todowrite: "allow",
     });
     assert.deepEqual(cfg.agent.planner?.permission, {
       edit: "deny",
       question: "allow",
+      todowrite: "allow",
     });
     assert.equal(cfg.agent.worker?.prompt, undefined);
     assert.match(cfg.agent.navigator?.prompt ?? "", /navigation specialist/i);
@@ -83,6 +87,7 @@ describe("applyAgentsConfig", () => {
     assert.equal(cfg.agent?.worker?.prompt, undefined);
     assert.deepEqual(cfg.agent?.worker?.permission, {
       question: "allow",
+      todowrite: "allow",
     });
   });
 });

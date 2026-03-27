@@ -1,14 +1,20 @@
 ---
 title: worker
-description: Generic implementation agent for focused execution work.
+description: Generic worker role used for focused execution.
 ---
 
 ## Role
 
-Handles generic implementation work and can ask targeted follow-up questions when execution is blocked.
+`worker` is the default generic worker agent. In the bundled config it has no specialized prompt and only minimal built-in policy beyond normal execution rules.
 
 ## Best for
 
-- editing files
-- implementing tasks from a plan
-- making focused changes with validation
+- focused implementation or follow-up work
+- direct command execution that does not need planner, navigator, or reviewer specialization
+- asking a targeted question when a command allows it and execution is blocked
+
+## Notes
+
+- bundled description: `Generic worker agent.`
+- bundled permission: `question: allow`
+- no dedicated bundled prompt file is loaded for this role

@@ -1,26 +1,27 @@
 ---
 title: /ticket/plan
-description: Create an implementation plan from a ticket or request before any code changes happen.
+description: Create a scoped implementation plan from a request or ticket without syncing ticket state.
 ---
 
 ## Purpose
 
-Use `/ticket/plan` to produce a scoped plan without executing changes.
+Use `/ticket/plan` to shape a grounded implementation plan before any code changes happen.
 
 ## Usage
 
 ```text
-/ticket/plan <ticket-reference>
+/ticket/plan <ticket-reference-or-request>
 ```
 
 ## Typical flow
 
-- load the ticket, comments, and constraints
-- inspect the relevant repository context
-- draft a detailed implementation plan and handoff
+- load ticket comments when planning from a ticket, otherwise use the request and conversation
+- derive the planning objective, constraints, technical direction, and open questions
+- do light repo reconnaissance for technical work
+- return a title, short plan description, implementation checklist, and validation checklist without syncing ticket state
 
 ## Common tools
 
 - `ticket_load`
-- `changes_load`
-- `task(planner)`
+- `read`
+- `grep`

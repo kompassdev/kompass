@@ -1,6 +1,6 @@
 ---
 description: Commit and push current changes
-agent: build
+agent: worker
 ---
 
 ## Goal

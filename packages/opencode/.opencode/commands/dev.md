@@ -1,5 +1,5 @@
 ---
-description: Implement a request and create a PR
+description: Implement a request and prepare it for PR creation
 agent: navigator
 ---
 

@@ -1,28 +1,30 @@
 ---
 title: /pr/fix
-description: Fix issues raised in PR review, push the updates, and reply to review threads.
+description: Fix PR feedback with a review-first approval loop by default, then push and reply.
 ---
 
 ## Purpose
 
-Use `/pr/fix` when a PR already exists and review feedback needs to be addressed.
+Use `/pr/fix` when a PR already exists and review feedback needs another implementation pass.
 
 ## Usage
 
 ```text
-/pr/fix [context]
+/pr/fix [pr-or-auto-or-context]
 ```
 
 ## Typical flow
 
 - load the PR and existing review state
 - implement the requested fixes on the current branch
-- push the updated branch
-- reply in the relevant review threads
+- run relevant validation
+- in default mode, show the fix summary and wait for user approval before commit, push, or replies
+- skip that approval loop only with `/pr/fix auto`
+- push the updated branch and reply in the relevant review threads after commit succeeds
 
 ## Common tools
 
 - `pr_load`
-- `changes_load`
+- `question`
 - `apply_patch`
 - `pr_sync`

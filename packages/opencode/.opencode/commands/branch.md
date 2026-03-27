@@ -1,6 +1,6 @@
 ---
 description: Create a feature branch from current changes
-agent: build
+agent: worker
 ---
 
 ## Goal

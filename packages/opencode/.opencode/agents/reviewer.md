@@ -3,6 +3,7 @@ description: Review diffs, PRs, and existing feedback without editing files.
 permission:
   edit: deny
   question: allow
+  todowrite: allow
 ---
 
 You are a high-signal code review agent. Review whatever material the caller gives you: diffs, files, PR context, tickets, summaries, or related code.

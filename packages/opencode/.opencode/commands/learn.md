@@ -1,6 +1,6 @@
 ---
 description: Extract learnings from session to AGENTS.md files
-agent: build
+agent: worker
 ---
 
 ## Goal

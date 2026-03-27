@@ -1,26 +1,28 @@
 ---
 title: /commit
-description: Stage and commit current changes with a provided or generated message.
+description: Create a commit from current uncommitted changes.
 ---
 
 ## Purpose
 
-Use `/commit` to create a git commit from the current worktree.
+Use `/commit` to stage current work, generate a commit message, and create a commit.
 
 ## Usage
 
 ```text
-/commit [message]
+/commit [message-guidance]
 ```
 
 ## Typical flow
 
-- inspect staged and unstaged changes
-- generate a concise, why-focused commit message when one is not provided
-- create the commit and verify the result
+- load uncommitted changes with `changes_load`
+- stop with `Nothing to commit` when there are no files
+- stage the relevant changes
+- generate a conventional commit message, using guidance when provided
+- create the commit and return the hash plus rendered message
 
 ## Common tools
 
-- `bash(git status)`
-- `bash(git diff)`
+- `changes_load`
+- `bash(git add)`
 - `bash(git commit)`

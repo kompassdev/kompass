@@ -276,6 +276,7 @@ describe("command defaults", () => {
     assert.equal(config.agents.enabled.includes("worker"), true);
     assert.deepEqual(config.agents.worker.permission, {
       question: "allow",
+      todowrite: "allow",
     });
     assert.equal(config.agents.enabled.includes("navigator"), true);
     assert.deepEqual(config.shared.validation, []);
@@ -283,6 +284,7 @@ describe("command defaults", () => {
       edit: "deny",
       task: "allow",
       question: "allow",
+      todowrite: "allow",
     });
   });
 

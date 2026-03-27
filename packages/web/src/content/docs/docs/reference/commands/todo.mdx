@@ -1,27 +1,30 @@
 ---
 title: /todo
-description: Work through a todo file one item at a time with local orchestration.
+description: Work through a todo file one item at a time with planning, approval, implementation, and commit loops.
 ---
 
 ## Purpose
 
-Use `/todo` for structured, pause-and-resume work from a todo file.
+Use `/todo` for structured pause-and-resume work from a checklist file.
 
 ## Usage
 
 ```text
-/todo [todo-file]
+/todo [@todo-file]
 ```
 
 ## Typical flow
 
-- load the todo file
-- keep orchestration local
-- delegate one focused task at a time
-- report what is done, blocked, or next
+- load `@TODO.md` by default or a provided `@file`
+- take the first unchecked item only
+- delegate `/ticket/plan`, show the plan, and require explicit approval before implementation
+- delegate `/dev`, then `/commit`, then mark the checklist item complete
+- repeat until there are no pending tasks left
 
 ## Common tools
 
 - `read`
-- `task(navigator)`
-- `task(worker)`
+- `question`
+- `dispatch(/ticket/plan)`
+- `dispatch(/dev)`
+- `dispatch(/commit)`

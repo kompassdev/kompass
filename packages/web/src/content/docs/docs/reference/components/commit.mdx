@@ -1,6 +1,12 @@
 ---
 title: commit
-description: Shared partial for commit-oriented workflow steps.
+description: Shared partial for commit message formatting and commit execution.
 ---
 
-Used by commit-related command flows to keep staging, message generation, and git safety wording consistent.
+## Behavior
+
+- prefers conventional commit subjects
+- uses a subject-plus-bullets format for non-trivial changes
+- stages changes with `git add`
+- stores `<commit-message>` and `<hash>`
+- only falls back to `git status` when commit creation fails

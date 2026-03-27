@@ -16,7 +16,7 @@ const runtimeDirs = ["agents", "commands", "components"] as const;
 const bundleExternals = ["@opencode-ai/plugin", "@opencode-ai/plugin/tool"] as const;
 const bundleArgs = [
   "build",
-  "./index.ts",
+  "./plugin.ts",
   "--outdir",
   "./dist",
   "--target",

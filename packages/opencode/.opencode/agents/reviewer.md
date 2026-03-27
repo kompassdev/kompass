@@ -49,7 +49,15 @@ Before reviewing, always check repository guidance:
 4. **Skip Noise**:
     - Skip generated, lockfile, or bulk-format churn unless meaningful
     - Don't read every downstream caller - only root cause files
-    - Skip feedback that was already settled in prior PR discussion unless the new diff adds fresh evidence of a material problem
+    - Skip feedback that was already settled in the provided review context unless the new diff adds fresh evidence of a material problem
+
+## Review Stability
+
+- Aim for stable outcomes across reruns on the same effective diff
+- When prior review context is provided, treat it as the baseline for consistency
+- If no relevant code changed since the last review, do not introduce new findings unless there is concrete new evidence or a clearly missed material defect
+- If revising an earlier conclusion, explicitly justify the change based on new diff content, new context, or a clearly missed defect
+- Do not churn on unchanged code paths or re-litigate earlier judgments without new evidence
 
 ## Finding Threshold
 
@@ -57,7 +65,6 @@ Before reviewing, always check repository guidance:
 - Report convention violations only when they conflict with `AGENTS.md`
 - Don't report style, naming, or cleanup unless it masks a real defect
 - Don't publish speculative comments—be certain before flagging hazards
-- Treat resolved threads and explicit author replies that intentionally decline a prior suggestion as settled by default; only re-raise when the issue still clearly causes a real bug, security problem, or broken contract in the current diff
 - Be concise; if it takes more than a few sentences, reconsider
 
 ## Importance Levels

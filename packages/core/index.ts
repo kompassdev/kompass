@@ -5,7 +5,6 @@ export type { ResolvedCommandDefinition } from "./commands/index.ts";
 export {
   getConfiguredToolName,
   getEnabledToolNames,
-  isSkillEnabled,
   loadKompassConfig,
   mergeWithDefaults,
 } from "./lib/config.ts";
@@ -13,8 +12,6 @@ export type {
   AgentDefinition,
   KompassConfig,
   MergedKompassConfig,
-  SkillFilterConfig,
-  SkillIdentity,
   ToolConfig,
   ToolName,
 } from "./lib/config.ts";

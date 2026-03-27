@@ -239,66 +239,6 @@
         }
       }
     },
-    "skills": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "entries": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/skillEntryConfig"
-          }
-        },
-        "enabled": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "uniqueItems": true,
-          "deprecated": true
-        },
-        "disabled": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "uniqueItems": true,
-          "deprecated": true
-        },
-        "plugins": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "entries": {
-              "type": "object",
-              "additionalProperties": {
-                "$ref": "#/$defs/skillEntryConfig"
-              }
-            },
-            "include": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 1
-              },
-              "uniqueItems": true,
-              "deprecated": true
-            },
-            "exclude": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 1
-              },
-              "uniqueItems": true,
-              "deprecated": true
-            }
-          }
-        }
-      }
-    },
     "defaults": {
       "type": "object",
       "additionalProperties": false,
@@ -393,15 +333,6 @@
         "path": {
           "type": "string",
           "minLength": 1
-        }
-      }
-    },
-    "skillEntryConfig": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "enabled": {
-          "type": "boolean"
         }
       }
     },

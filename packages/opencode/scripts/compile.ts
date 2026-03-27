@@ -7,7 +7,7 @@
  * package at runtime.
  */
 
-import { mkdir, writeFile, rm, access, cp } from "node:fs/promises";
+import { mkdir, writeFile, rm, access } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import YAML from "yaml";
@@ -16,8 +16,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PACKAGE_ROOT = path.resolve(__dirname, "..");
 const WORKSPACE_ROOT = path.resolve(PACKAGE_ROOT, "..", "..");
 const OUTPUT_DIR = path.resolve(PACKAGE_ROOT, ".opencode");
-const CORE_SKILLS_DIR = path.resolve(WORKSPACE_ROOT, "packages", "core", "skills");
-
 import {
   getEnabledToolNames,
   loadKompassConfig,
@@ -70,8 +68,6 @@ async function main() {
   // Create output directories
   await mkdir(path.join(OUTPUT_DIR, "commands"), { recursive: true });
   await mkdir(path.join(OUTPUT_DIR, "agents"), { recursive: true });
-  await mkdir(path.join(OUTPUT_DIR, "skills"), { recursive: true });
-
   // Write compiled commands
   console.log("\nWriting compiled commands...");
   for (const [name, command] of Object.entries(compiledCommands)) {
@@ -126,28 +122,6 @@ async function main() {
 
   // Write configuration
   console.log("\nWriting configuration...");
-  const compiledSkillEntries = Object.fromEntries(
-    [
-      ...(config.skills.enabled ?? []).map((name) => [name, { enabled: true }] as const),
-      ...config.skills.disabled.map((name) => [name, { enabled: false }] as const),
-    ],
-  );
-  const compiledSkillPluginEntries = Object.fromEntries(
-    [
-      ...(config.skills.plugins.include ?? []).map((name) => [name, { enabled: true }] as const),
-      ...config.skills.plugins.exclude.map((name) => [name, { enabled: false }] as const),
-    ],
-  );
-  const compiledSkills = {
-    ...(Object.keys(compiledSkillEntries).length > 0 ? { entries: compiledSkillEntries } : {}),
-    ...(Object.keys(compiledSkillPluginEntries).length > 0
-      ? {
-          plugins: {
-            entries: compiledSkillPluginEntries,
-          },
-        }
-      : {}),
-  };
   const configOutput = {
     shared: config.shared,
     commands: Object.fromEntries(
@@ -171,7 +145,6 @@ async function main() {
         },
       ]),
     ),
-    ...(Object.keys(compiledSkills).length > 0 ? { skills: compiledSkills } : {}),
     defaults: config.defaults,
     adapters: config.adapters,
   };
@@ -180,13 +153,6 @@ async function main() {
     ensureTrailingNewline(JSON.stringify(configOutput, null, 2)),
   );
   console.log("  kompass.jsonc");
-
-  try {
-    await cp(CORE_SKILLS_DIR, path.join(OUTPUT_DIR, "skills"), { recursive: true });
-    console.log("  skills/");
-  } catch {
-    console.warn("  Warning: Could not copy bundled skills");
-  }
 
   console.log("\n✓ Compilation complete!");
   console.log(`\nOutput directory: ${OUTPUT_DIR}`);

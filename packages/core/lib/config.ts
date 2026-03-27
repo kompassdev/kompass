@@ -78,25 +78,6 @@ export interface ComponentConfig extends ToggleConfig {
   path?: string;
 }
 
-export interface SkillEntryConfig extends ToggleConfig {}
-
-export interface SkillFilterConfig {
-  enabled?: string[];
-  disabled?: string[];
-  entries?: Record<string, SkillEntryConfig>;
-  plugins?: {
-    include?: string[];
-    exclude?: string[];
-    entries?: Record<string, SkillEntryConfig>;
-  };
-}
-
-export interface SkillIdentity {
-  id: string;
-  name: string;
-  pluginId?: string;
-}
-
 export interface KompassConfig {
   shared?: {
     prApprove?: boolean;
@@ -149,7 +130,6 @@ export interface KompassConfig {
     enabled?: string[];
     paths?: Record<string, string>;
   };
-  skills?: SkillFilterConfig;
   defaults?: {
     baseBranch?: string;
     // Deprecated: prefer adapters.opencode.agentMode.
@@ -189,14 +169,6 @@ export interface MergedKompassConfig {
   components: {
     enabled: string[];
     paths: Record<string, string>;
-  };
-  skills: {
-    enabled: string[] | null;
-    disabled: string[];
-    plugins: {
-      include: string[] | null;
-      exclude: string[];
-    };
   };
   defaults: {
     baseBranch: string;
@@ -529,38 +501,6 @@ function getComponentPath(
   return entry?.path ?? config?.components?.paths?.[name];
 }
 
-function getMergedSkillLists(config: KompassConfig | null): {
-  enabled: string[] | null;
-  disabled: string[];
-  pluginInclude: string[] | null;
-  pluginExclude: string[];
-} {
-  const skillEntries = config?.skills?.entries ?? {};
-  const enabledEntries = Object.entries(skillEntries)
-    .filter(([, value]) => value?.enabled !== false)
-    .map(([name]) => name);
-  const disabledEntries = Object.entries(skillEntries)
-    .filter(([, value]) => value?.enabled === false)
-    .map(([name]) => name);
-  const pluginEntries = config?.skills?.plugins?.entries ?? {};
-  const includedPlugins = Object.entries(pluginEntries)
-    .filter(([, value]) => value?.enabled !== false)
-    .map(([name]) => name);
-  const excludedPlugins = Object.entries(pluginEntries)
-    .filter(([, value]) => value?.enabled === false)
-    .map(([name]) => name);
-
-  const enabled = [...new Set([...(config?.skills?.enabled ?? []), ...enabledEntries])];
-  const pluginInclude = [...new Set([...(config?.skills?.plugins?.include ?? []), ...includedPlugins])];
-
-  return {
-    enabled: enabled.length > 0 ? enabled : null,
-    disabled: [...new Set([...(config?.skills?.disabled ?? []), ...disabledEntries])],
-    pluginInclude: pluginInclude.length > 0 ? pluginInclude : null,
-    pluginExclude: [...new Set([...(config?.skills?.plugins?.exclude ?? []), ...excludedPlugins])],
-  };
-}
-
 export function getEnabledToolNames(tools: MergedKompassConfig["tools"]): ToolName[] {
   return DEFAULT_TOOL_NAMES.filter((toolName) => tools[toolName].enabled !== false);
 }
@@ -572,46 +512,10 @@ export function getConfiguredToolName(
   return tools[toolName].name ?? toolName;
 }
 
-function normalizeSkillKey(value: string): string {
-  return value.trim().toLowerCase();
-}
-
-export function isSkillEnabled(
-  skills: MergedKompassConfig["skills"],
-  skill: SkillIdentity,
-): boolean {
-  if (skill.pluginId) {
-    const excludedPlugins = new Set(skills.plugins.exclude.map(normalizeSkillKey));
-    if (excludedPlugins.has(normalizeSkillKey(skill.pluginId))) return false;
-
-    if (skills.plugins.include) {
-      const includedPlugins = new Set(skills.plugins.include.map(normalizeSkillKey));
-      if (!includedPlugins.has(normalizeSkillKey(skill.pluginId))) return false;
-    }
-  }
-
-  const disabled = new Set(skills.disabled.map(normalizeSkillKey));
-  if (
-    disabled.has(normalizeSkillKey(skill.id)) ||
-    disabled.has(normalizeSkillKey(skill.name))
-  ) {
-    return false;
-  }
-
-  if (!skills.enabled) return true;
-
-  const enabled = new Set(skills.enabled.map(normalizeSkillKey));
-  return (
-    enabled.has(normalizeSkillKey(skill.id)) ||
-    enabled.has(normalizeSkillKey(skill.name))
-  );
-}
-
 export function mergeWithDefaults(
   config: KompassConfig | null,
 ): MergedKompassConfig {
   const { enabled: _workerEnabled, ...workerOverrides } = config?.agents?.worker ?? {};
-  const mergedSkills = getMergedSkillLists(config);
   const { enabled: _navigatorEnabled, ...navigatorOverrides } =
     config?.agents?.navigator ?? {};
   const { enabled: _reviewerEnabled, ...reviewerOverrides } = config?.agents?.reviewer ?? {};
@@ -674,14 +578,6 @@ export function mergeWithDefaults(
           getComponentPath(config, name) ?? defaultComponentPaths[name],
         ]),
       ),
-    },
-    skills: {
-      enabled: mergedSkills.enabled,
-      disabled: mergedSkills.disabled,
-      plugins: {
-        include: mergedSkills.pluginInclude,
-        exclude: mergedSkills.pluginExclude,
-      },
     },
     defaults: {
       baseBranch: config?.defaults?.baseBranch ?? "main",

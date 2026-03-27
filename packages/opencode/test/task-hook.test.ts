@@ -38,6 +38,31 @@ describe("getTaskToolExecution", () => {
     assert.equal(output.args.prompt, execution?.prompt);
   });
 
+  test("prefers the raw prompt over summarized command metadata", async () => {
+    const output = {
+      args: {
+        prompt: "/review auth bug with multiline\nextra context",
+        description: "Run review command",
+        subagent_type: "reviewer",
+        command: "@reviewer /review auth bug",
+      },
+    };
+
+    const execution = await getTaskToolExecution(
+      {
+        tool: "task",
+        sessionID: "session-1",
+        callID: "call-1",
+      },
+      output,
+      process.cwd(),
+    );
+
+    assert.equal(execution?.command_name, "review");
+    assert.equal(execution?.command_arguments, "auth bug with multiline\nextra context");
+    assert.match(execution?.prompt ?? "", /<arguments>\s*auth bug with multiline\nextra context\s*<\/arguments>/);
+  });
+
   test("ignores non-task tool calls", async () => {
     const execution = await getTaskToolExecution(
       {
@@ -100,6 +125,34 @@ describe("getTaskToolExecution", () => {
       description: undefined,
       subagent_type: undefined,
     });
+  });
+
+  test("falls back to command metadata when prompt is missing", async () => {
+    const output = {
+      args: {
+        prompt: undefined,
+        command: "/branch Branch naming guidance: fix login redirect",
+        description: "Create feature branch",
+        subagent_type: "worker",
+      },
+    };
+
+    const execution = await getTaskToolExecution(
+      {
+        tool: "task",
+        sessionID: "session-1",
+        callID: "call-1",
+      },
+      output,
+      process.cwd(),
+    );
+
+    assert.equal(execution?.command, "/branch Branch naming guidance: fix login redirect");
+    assert.equal(execution?.command_name, "branch");
+    assert.equal(execution?.command_arguments, "Branch naming guidance: fix login redirect");
+    assert.match(execution?.prompt ?? "", /## Goal/);
+    assert.match(execution?.prompt ?? "", /<arguments>\s*Branch naming guidance: fix login redirect\s*<\/arguments>/);
+    assert.equal(output.args.prompt, execution?.prompt);
   });
 });
 

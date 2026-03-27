@@ -155,10 +155,10 @@ export async function getTaskToolExecution(
 
   let expandedCommand: CommandExecution | undefined;
   try {
-    expandedCommand = command
-      ? await expandSlashCommandPrompt(projectRoot, command, logger)
-      : prompt
-        ? await expandSlashCommandPrompt(projectRoot, prompt, logger)
+    expandedCommand = prompt
+      ? await expandSlashCommandPrompt(projectRoot, prompt, logger)
+      : command
+        ? await expandSlashCommandPrompt(projectRoot, command, logger)
         : undefined;
   } catch (error) {
     if (logger) {

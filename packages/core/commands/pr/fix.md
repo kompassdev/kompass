@@ -2,6 +2,12 @@
 
 Address feedback on a pull request by making fixes and responding to review threads.
 
+## Additional Context
+
+Use `<additional-context>` when prioritizing which review feedback to address first and when deciding how much scope to take on in this pass.
+- Default `/pr/fix` behavior is review-first: show the proposed fix, gather feedback, and loop until the user approves before committing, pushing, or replying on the PR.
+- Treat `/pr/fix auto` as the explicit opt-in to skip the approval loop and proceed directly from passing validation to commit, push, and PR replies.
+
 ## Workflow
 
 ### Arguments
@@ -113,13 +119,7 @@ pr_sync refUrl="<pr-context.pr.url>" commitId="<commit-sha>" review={"comments":
 Confirm which feedback was addressed and which was intentionally not followed.
 - Store the number of resolved threads as `<threads-resolved>`
 
-## Additional Context
-
-Use `<additional-context>` when prioritizing which review feedback to address first and when deciding how much scope to take on in this pass.
-- Default `/pr/fix` behavior is review-first: show the proposed fix, gather feedback, and loop until the user approves before committing, pushing, or replying on the PR.
-- Treat `/pr/fix auto` as the explicit opt-in to skip the approval loop and proceed directly from passing validation to commit, push, and PR replies.
-
-## Output
+### Output
 
 When waiting for approval or revision feedback, display:
 ```

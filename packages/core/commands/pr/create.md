@@ -2,6 +2,15 @@
 
 Create a pull request for the current branch, handling the entire workflow from change detection to PR submission.
 
+## Additional Context
+
+Consider `<additional-context>` when analyzing changes and writing the PR description.
+- Always include the `Ticket`, `Description`, and `Checklist` sections in that order.
+- Use the literal `SKIPPED` when ticket mention was skipped.
+- Keep the description focused on intent, not implementation details.
+- Mark checklist validation items as completed if validation was performed.
+- Uncommitted changes and being on the base branch block PR creation entirely.
+
 ## Workflow
 
 ### Arguments
@@ -117,16 +126,7 @@ Use `pr_sync` to create the pull request:
 - If `pr_sync` reports that a PR already exists for the branch, treat the result as an existing PR
 - Track whether the branch was pushed during this run and report that status in the final response
 
-## Additional Context
-
-Consider `<additional-context>` when analyzing changes and writing the PR description.
-- Always include the `Ticket`, `Description`, and `Checklist` sections in that order.
-- Use the literal `SKIPPED` when ticket mention was skipped.
-- Keep the description focused on intent, not implementation details.
-- Mark checklist validation items as completed if validation was performed.
-- Uncommitted changes and being on the base branch block PR creation entirely.
-
-## Output
+### Output
 
 If PR creation stops because there is nothing to include, display:
 ```

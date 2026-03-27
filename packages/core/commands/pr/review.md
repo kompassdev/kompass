@@ -2,6 +2,10 @@
 
 Review a GitHub pull request and publish findings as a formal review with inline comments.
 
+## Additional Context
+
+Use `<ticket-context>` and `<additional-context>` to judge whether the PR meets its stated intent without over-indexing on stylistic preferences.
+
 ## Workflow
 
 ### Arguments
@@ -95,11 +99,8 @@ For multi-line: add `startLine`. For deleted lines: use `side: "LEFT"`.
 
 If `pr_sync` returns a review URL, store it as `<review-url>`.
 
-## Additional Context
+### Output
 
-Use `<ticket-context>` and `<additional-context>` to judge whether the PR meets its stated intent without over-indexing on stylistic preferences.
-
-## Output
 <% if (it.config.shared.prApprove === true) { -%>
 When approved:
 ```

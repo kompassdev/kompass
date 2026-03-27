@@ -2,6 +2,10 @@
 
 Review code changes and provide actionable feedback with a grade and risk assessment.
 
+## Additional Context
+
+Use `<additional-context>` to prioritize specific risks, feature areas, or related concerns while reviewing `<changes>`.
+
 ## Workflow
 
 ### Arguments
@@ -49,11 +53,7 @@ While reading files:
 - For deleted files, inspect prior contents from git because `changes_load` does not provide full deleted-file contents
 - Use a helper agent only if the changed-file set is too large to review comfortably in one session after the changed paths are already known
 
-## Additional Context
-
-Use `<additional-context>` to prioritize specific risks, feature areas, or related concerns while reviewing `<changes>`.
-
-## Output
+### Output
 
 When the review is complete, display:
 ```

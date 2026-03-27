@@ -7,6 +7,12 @@ agent: build
 
 Load a ticket and its discussion, answer the user's question, and post that answer back to the ticket.
 
+## Additional Context
+
+- Use `<additional-context>` to shape tone, depth, and focus for `<ticket-answer>`
+- Keep the posted answer grounded in the actual ticket discussion; do not invent missing facts
+- Ask only when the ticket source or question cannot be determined reliably
+
 ## Workflow
 
 ### Arguments
@@ -44,13 +50,7 @@ $ARGUMENTS
   - `comments: [<ticket-answer>]`
 - Store the returned ticket URL as `<ticket-url>`
 
-## Additional Context
-
-- Use `<additional-context>` to shape tone, depth, and focus for `<ticket-answer>`
-- Keep the posted answer grounded in the actual ticket discussion; do not invent missing facts
-- Ask only when the ticket source or question cannot be determined reliably
-
-## Output
+### Output
 
 If the ticket context or question cannot be determined, display:
 ```

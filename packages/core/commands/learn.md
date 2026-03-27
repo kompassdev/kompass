@@ -2,6 +2,13 @@
 
 Extract non-obvious learnings from this session and document them appropriately.
 
+## Additional Context
+
+- Document non-obvious discoveries only
+- Skip obvious facts, standard behavior, and already-documented items
+- Avoid verbose explanations and session-specific details
+- Use `<focus-scope>` and `<additional-context>` to decide where to look more closely
+
 ## Workflow
 
 ### Arguments
@@ -57,14 +64,7 @@ $ARGUMENTS
 - Report which files were created or updated and how many learnings were added to each
 - Store those summary lines as `<file-update-lines>` in the format `- <file-path>: <learning-count> learnings`
 
-## Additional Context
-
-- Document non-obvious discoveries only
-- Skip obvious facts, standard behavior, and already-documented items
-- Avoid verbose explanations and session-specific details
-- Use `<focus-scope>` and `<additional-context>` to decide where to look more closely
-
-## Output
+### Output
 
 When the documentation update is complete, display:
 ```

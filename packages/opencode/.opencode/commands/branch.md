@@ -7,6 +7,10 @@ agent: build
 
 Create and switch to a categorized branch whose name summarizes the current uncommitted work.
 
+## Additional Context
+
+Use `<branch-context>` to steer the branch category and slug while keeping the final name short, descriptive, and aligned with the change type.
+
 ## Workflow
 
 ### Arguments
@@ -54,11 +58,7 @@ $ARGUMENTS
 - If that name already exists, retry once with a short numeric suffix
 - Store the checked-out branch as `<new-branch>`
 
-## Additional Context
-
-Use `<branch-context>` to steer the branch category and slug while keeping the final name short, descriptive, and aligned with the change type.
-
-## Output
+### Output
 
 If there is nothing to branch from, display:
 ```

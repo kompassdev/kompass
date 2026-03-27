@@ -2,6 +2,11 @@
 
 Answer a question about the current project or codebase using the repository and available context.
 
+## Additional Context
+
+- Use `<additional-context>` to prioritize the most relevant files, subsystems, or concerns
+- Ask only when the question cannot be determined from `<arguments>` and the conversation
+
 ## Workflow
 
 ### Arguments
@@ -29,12 +34,7 @@ $ARGUMENTS
 - Include file references when they materially help the answer
 - Keep the response concise unless the question requires more detail
 
-## Additional Context
-
-- Use `<additional-context>` to prioritize the most relevant files, subsystems, or concerns
-- Ask only when the question cannot be determined from `<arguments>` and the conversation
-
-## Output
+### Output
 
 If the question cannot be determined, display:
 ```

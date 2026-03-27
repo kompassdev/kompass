@@ -2,6 +2,10 @@
 
 Implement a ticket by orchestrating development, branching, commit-and-push, and PR creation.
 
+## Additional Context
+
+Use `<additional-context>` to refine scope, sequencing, and tradeoffs across the delegated `/dev`, `/branch`, `/commit-and-push`, and `/pr/create` steps.
+
 ## Workflow
 
 ### Arguments
@@ -83,11 +87,7 @@ Additional context: <additional-context>
 - If `<pr-result>` is blocked or incomplete, STOP and report the PR blocker
 - Otherwise, continue and store the resulting PR URL as `<pr-url>`
 
-## Additional Context
-
-Use `<additional-context>` to refine scope, sequencing, and tradeoffs across the delegated `/dev`, `/branch`, `/commit-and-push`, and `/pr/create` steps.
-
-## Output
+### Output
 
 When the ticket work is complete, display:
 ```

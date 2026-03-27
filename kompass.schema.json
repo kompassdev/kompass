@@ -59,9 +59,6 @@
         "pr/review": {
           "$ref": "#/$defs/commandConfig"
         },
-        "reload": {
-          "$ref": "#/$defs/commandConfig"
-        },
         "review": {
           "$ref": "#/$defs/commandConfig"
         },
@@ -103,7 +100,6 @@
               "pr/create",
               "pr/fix",
               "pr/review",
-              "reload",
               "review",
               "ship",
               "rmslop",
@@ -131,7 +127,6 @@
               "pr/create",
               "pr/fix",
               "pr/review",
-              "reload",
               "review",
               "ship",
               "rmslop",

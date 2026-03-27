@@ -34,7 +34,6 @@ describe("applyCommandsConfig", () => {
       const expectedCommands = [
         "ask",
         "branch",
-        "reload",
         "pr/create",
         "pr/review",
         "pr/fix",
@@ -61,7 +60,6 @@ describe("applyCommandsConfig", () => {
       assert.ok(cfg.command);
       assert.equal(cfg.command!["pr/review"]?.agent, "reviewer");
       assert.equal(cfg.command!["branch"]?.agent, "build");
-      assert.equal(cfg.command!["reload"]?.agent, "build");
       assert.equal(cfg.command!["pr/create"]?.agent, "build");
       assert.equal(cfg.command!["ticket/create"]?.agent, "build");
       assert.equal(cfg.command!["ticket/plan"]?.agent, "planner");
@@ -72,7 +70,6 @@ describe("applyCommandsConfig", () => {
       assert.equal(cfg.command!["ship"]?.agent, "navigator");
       assert.equal(cfg.command!["todo"]?.agent, "navigator");
       assert.ok(cfg.command!["pr/review"]?.description);
-      assert.ok(cfg.command!["reload"]?.template);
       assert.ok(cfg.command!["dev"]?.template);
       assert.ok(cfg.command!["branch"]?.template);
     });
@@ -110,19 +107,6 @@ describe("applyCommandsConfig", () => {
       assert.match(fixTemplate, /`kompass_pr_sync`/);
       assert.doesNotMatch(fixTemplate, /`kompass_pr_review`/);
       assert.doesNotMatch(fixTemplate, /`pr_review`/);
-    });
-
-    test("rewrites project reload tool name with opencode prefix", async () => {
-      delete process.env.CI;
-      const cfg: { command?: Record<string, { template: string }> } = {};
-
-      await applyCommandsConfig(cfg as never, process.cwd());
-
-      assert.ok(cfg.command);
-      const reloadTemplate = cfg.command!["reload"].template;
-
-      assert.match(reloadTemplate, /`kompass_reload`/);
-      assert.doesNotMatch(reloadTemplate, /Call `reload` with no parameters\./);
     });
 
     test("rewrites tool references with configured aliases", async () => {

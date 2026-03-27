@@ -91,9 +91,6 @@
     },
     "ticket_load": {
       "enabled": true
-    },
-    "reload": {
-      "enabled": true
     }
   },
   "defaults": {

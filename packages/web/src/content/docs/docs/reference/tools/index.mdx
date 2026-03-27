@@ -12,7 +12,6 @@ Current built-in tools:
 - `pr_sync`
 - `ticket_load`
 - `ticket_sync`
-- `reload`
 
 ## Built-in tools
 
@@ -50,10 +49,3 @@ Creates or updates a GitHub issue with checklist support.
 
 - notable inputs: `title`, `body`, `description`, `labels`, `assignees`, `checklists`, `refUrl`, `comments`
 - used by: `/ticket/create`, `/ticket/ask`, `/ticket/plan-and-sync`, and `/pr/create` when ticket auto-creation is needed
-
-### `reload`
-
-Refreshes the active OpenCode project cache.
-
-- inputs: none
-- used by: internal refresh (no longer has a user-facing command)

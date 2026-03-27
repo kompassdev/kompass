@@ -190,9 +190,6 @@
         },
         "ticket_load": {
           "$ref": "#/$defs/toolConfig"
-        },
-        "reload": {
-          "$ref": "#/$defs/toolConfig"
         }
       }
     },
@@ -428,8 +425,7 @@
         "pr_load",
         "pr_sync",
         "ticket_sync",
-        "ticket_load",
-        "reload"
+        "ticket_load"
       ]
     }
   }

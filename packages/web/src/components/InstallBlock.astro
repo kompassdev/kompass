@@ -1,0 +1,276 @@
+---
+// Installation block with integrated terminal tabs
+---
+
+<div class="install-block" data-install-block>
+  <p class="install-label">How to install</p>
+  <div class="install-terminal">
+    <div class="install-terminal__head">
+      <div class="install-terminal__controls">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="install-terminal__tabs" role="tablist" aria-label="Config files">
+        <button
+          type="button"
+          class="install-terminal-tab is-active"
+          role="tab"
+          aria-selected="true"
+          aria-controls="install-panel-opencode"
+          id="install-tab-opencode"
+          data-install-tab="opencode"
+        >
+          opencode.jsonc
+        </button>
+        <button
+          type="button"
+          class="install-terminal-tab"
+          role="tab"
+          aria-selected="false"
+          aria-controls="install-panel-claude"
+          id="install-tab-claude"
+          data-install-tab="claude"
+        >
+          .claude/settings.local.json
+        </button>
+      </div>
+    </div>
+    
+    <div class="install-terminal__body">
+      <div
+        class="install-panel is-active"
+        role="tabpanel"
+        aria-labelledby="install-tab-opencode"
+        id="install-panel-opencode"
+        data-install-panel="opencode"
+      >
+        <pre class="install-config"><code>{"{"}
+  "$schema": "https://opencode.ai/config.json",
+  "plugins": ["@kompassdev/opencode"]
+{"}"}</code></pre>
+        <p class="install-note">Add Kompass to your OpenCode config and restart the app.</p>
+      </div>
+
+      <div
+        class="install-panel"
+        role="tabpanel"
+        aria-labelledby="install-tab-claude"
+        id="install-panel-claude"
+        data-install-panel="claude"
+        hidden
+      >
+        <div class="install-coming-soon">
+          <p class="install-coming-soon__text">Planned</p>
+          <p class="install-coming-soon__sub">Claude adapter is on the roadmap.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function initInstallBlock() {
+    const block = document.querySelector('[data-install-block]');
+    if (!block) return;
+
+    const tabs = block.querySelectorAll('[data-install-tab]');
+    const panels = block.querySelectorAll('[data-install-panel]');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const targetId = tab.getAttribute('data-install-tab');
+        if (!targetId) return;
+
+        // Update tab states
+        tabs.forEach(t => {
+          const isActive = t.getAttribute('data-install-tab') === targetId;
+          t.classList.toggle('is-active', isActive);
+          t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+
+        // Update panel visibility
+        panels.forEach(panel => {
+          const isActive = panel.getAttribute('data-install-panel') === targetId;
+          panel.classList.toggle('is-active', isActive);
+          panel.toggleAttribute('hidden', !isActive);
+        });
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initInstallBlock);
+  } else {
+    initInstallBlock();
+  }
+</script>
+
+<style>
+  .install-block {
+    width: 100%;
+    margin: 0 auto;
+    animation: rise 700ms ease-out both;
+    animation-delay: 200ms;
+  }
+
+  .install-label {
+    margin: 0 0 0.75rem;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .install-terminal {
+    border: 1px solid rgba(125, 166, 196, 0.12);
+    border-radius: 1rem;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(248, 184, 78, 0.05), transparent 30%),
+      linear-gradient(180deg, rgba(5, 12, 20, 0.9), rgba(7, 17, 28, 0.85));
+    box-shadow: 0 16px 50px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+  }
+
+  .install-terminal__head {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.875rem 1rem;
+    background: rgba(0, 0, 0, 0.25);
+    border-bottom: 1px solid rgba(125, 166, 196, 0.08);
+  }
+
+  .install-terminal__controls {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+  }
+
+  .install-terminal__controls span {
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 50%;
+  }
+
+  .install-terminal__controls span:nth-child(1) { background: #ff5f56; }
+  .install-terminal__controls span:nth-child(2) { background: #ffbd2e; }
+  .install-terminal__controls span:nth-child(3) { background: #27ca40; }
+
+  .install-terminal__tabs {
+    display: flex;
+    gap: 0.25rem;
+    flex: 1;
+  }
+
+  .install-terminal-tab {
+    padding: 0.35rem 0.9rem;
+    border: none;
+    border-radius: 0.4rem;
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .install-terminal-tab:hover {
+    background: rgba(125, 166, 196, 0.1);
+    color: var(--text);
+  }
+
+  .install-terminal-tab.is-active {
+    background: rgba(125, 166, 196, 0.15);
+    color: var(--text);
+  }
+
+  .install-terminal__body {
+    padding: 1.25rem 1.5rem;
+    min-height: 160px;
+  }
+
+  .install-panel {
+    display: none;
+  }
+
+  .install-panel.is-active {
+    display: block;
+  }
+
+  .install-config {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--text);
+    background: transparent;
+    overflow-x: auto;
+  }
+
+  .install-config code {
+    font-family: inherit;
+    color: inherit;
+  }
+
+  .install-note {
+    margin: 0.75rem 0 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+
+  .install-coming-soon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  .install-coming-soon__text {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .install-coming-soon__sub {
+    margin: 0.35rem 0 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 640px) {
+    .install-terminal__head {
+      padding: 0.75rem 0.875rem;
+    }
+
+    .install-terminal-tab {
+      padding: 0.3rem 0.7rem;
+      font-size: 0.75rem;
+    }
+
+    .install-terminal__body {
+      padding: 1rem 1.25rem;
+      min-height: 140px;
+    }
+
+    .install-config {
+      font-size: 0.85rem;
+    }
+  }
+</style>

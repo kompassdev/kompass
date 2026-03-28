@@ -5,17 +5,17 @@ description: Orchestrator agent for structured multi-step workflows.
 
 ## Role
 
-`navigator` owns multi-step command workflows locally. It keeps state, ordering, approval gates, and stop conditions in one place instead of handing orchestration off to subagents.
+`navigator` is the orchestrator. It keeps state, ordering, approval gates, and stop conditions, while delegating leaf work to subagents.
 
 ## Best for
 
 - pause-and-resume workflows
-- stepwise orchestration such as `/ship` and `/todo`
+- stepwise orchestration such as `/ship`, `/todo`, and `/ticket/dev`
 - commands that mix local state handling with delegated leaf work
 
 ## Key behavior
 
-- forwards literal `<dispatch>` bodies exactly after variable substitution
+- forwards literal `<dispatch-command>` bodies after placeholder substitution only
 - delegates only explicit focused leaf work
-- preserves workflow ownership even when subagents are used
+- does not expand slash commands inside dispatch bodies
 - stops and reports blockers when a delegated step fails or returns incomplete work

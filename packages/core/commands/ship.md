@@ -4,7 +4,7 @@ Ship the current work by delegating branch creation, commit creation, and PR cre
 
 ## Additional Context
 
-Use `<branch-context>` to steer delegated branch naming. Use `<additional-context>` to refine the delegated commit and PR summaries. Pass `<base>` through to PR creation when it was provided. This command is delegation-first: send each `<dispatch>` body literally and use the subagent result as the source of truth for the next step.
+Use `<branch-context>` to steer delegated branch naming. Use `<additional-context>` to refine the delegated commit and PR summaries. Pass `<base>` through to PR creation when it was provided.
 
 ## Workflow
 
@@ -23,10 +23,10 @@ $ARGUMENTS
 
 ### Ensure Feature Branch
 
-<dispatch agent="worker">
+<dispatch-command agent="worker">
 /branch
 Branch naming guidance: <branch-context>
-</dispatch>
+</dispatch-command>
 
 - Store the subagent result as `<branch-result>`
 - If `<branch-result>` is blocked or incomplete, STOP and report the branch blocker
@@ -35,10 +35,10 @@ Branch naming guidance: <branch-context>
 
 ### Delegate Commit
 
-<dispatch agent="worker">
+<dispatch-command agent="worker">
 /commit
 Additional context: <additional-context>
-</dispatch>
+</dispatch-command>
 
 - Store the subagent result as `<commit-result>`
 
@@ -48,11 +48,11 @@ Additional context: <additional-context>
 
 ### Delegate PR Creation
 
-<dispatch agent="worker">
+<dispatch-command agent="worker">
 /pr/create
 Base branch: <base>
 Additional context: <additional-context>
-</dispatch>
+</dispatch-command>
 
 - Store the subagent result as `<pr-result>`
 

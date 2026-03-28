@@ -54,9 +54,9 @@ describe("applyAgentsConfig", () => {
       todowrite: "allow",
     });
     assert.equal(cfg.agent.worker?.prompt, undefined);
-    assert.match(cfg.agent.navigator?.prompt ?? "", /navigation specialist/i);
-    assert.match(cfg.agent.navigator?.prompt ?? "", /delegate only explicit leaf tasks/i);
-    assert.match(cfg.agent.navigator?.prompt ?? "", /complete the local steps first/i);
+    assert.match(cfg.agent.navigator?.prompt ?? "", /orchestrator/i);
+    assert.match(cfg.agent.navigator?.prompt ?? "", /do not do implementation, planning, or review work yourself/i);
+    assert.match(cfg.agent.navigator?.prompt ?? "", /do not look up or expand slash commands/i);
     assert.match(cfg.agent.reviewer?.prompt ?? "", /Never switch branches/i);
   });
 

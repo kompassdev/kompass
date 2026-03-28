@@ -64,8 +64,8 @@ packages/opencode/.opencode/ # Generated OpenCode output for review
 - Prefer explicit subsection names like `### Load ... Context`, `### Check Blockers`, `### Delegate ...`, and `### Mark Complete And Loop` when the command coordinates multiple phases or subagents
 - Treat loader tools and provided attachments as the source of truth for orchestration inputs; avoid extra exploratory commands when an existing tool result already answers the question
 - Before delegating to a subagent, say what result should be stored and whether the workflow must stop, pause, or continue based on that result
-- Use literal `<dispatch>` tags when the workflow must forward exact text as the next user message to a subagent session; `agent` is required, the block body is the exact rendered message to send, and slash commands belong on the first line of the body when needed
-- Do not use `<task>` blocks in command docs; author navigator delegation with `<dispatch>` blocks only
+- Use literal `<dispatch-command>` tags when the workflow must forward exact text as the next user message to a subagent session; `agent` is required, the block body is the exact rendered message to send, slash commands stay literal, and only placeholders inside the body should be substituted
+- Do not use `<task>` blocks in command docs; author navigator delegation with `<dispatch-command>` blocks only
 - When a command can pause for approval or loop over repeated work, describe the resume condition and the exact cases that must STOP without mutating state
 - Use `## Additional Context` for instructions about how optional guidance, related tickets, focus areas, or other stored context should influence analysis and response formatting
 - Use `### Output` as the final workflow step to define the exact user-facing response shape, including placeholders for generated values
@@ -105,25 +105,25 @@ $ARGUMENTS
 
 ### Delegate Planning
 
-<dispatch agent="planner">
+<dispatch-command agent="planner">
 /ticket/plan
 
 Task: <task>
 Task context: <task-context>
 Additional context: <additional-context>
-</dispatch>
+</dispatch-command>
 
 - Store the result as `<plan>`
 - STOP if planning is blocked or unusable
 
 ### Delegate Implementation
 
-<dispatch agent="worker">
+<dispatch-command agent="worker">
 /dev
 
 Plan: <plan>
 Constraints: <additional-context>
-</dispatch>
+</dispatch-command>
 
 - STOP if implementation is blocked or incomplete
 
@@ -136,13 +136,13 @@ Constraints: <additional-context>
 Example delegation rule:
 
 ```text
-Before delegating, write the exact `<dispatch ...>...</dispatch>` block, say what result should be stored, and whether the workflow should continue or STOP based on that result.
+Before delegating, write the exact `<dispatch-command ...>...</dispatch-command>` block, say what result should be stored, and whether the workflow should continue or STOP based on that result.
 ```
 
 Example literal dispatch rule:
 
 ```text
-Before literal command forwarding, write the exact `<dispatch ...>...</dispatch>` block, put the slash command on the first line of the body when needed, and say what result should be stored and whether the workflow should continue or STOP based on that result.
+Before literal command forwarding, write the exact `<dispatch-command ...>...</dispatch-command>` block, put the slash command on the first line of the body when needed, substitute placeholders only, and say what result should be stored and whether the workflow should continue or STOP based on that result.
 ```
 
 ## Component Authoring

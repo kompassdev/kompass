@@ -16,7 +16,7 @@ Kompass ships workflow-oriented commands authored as explicit templates in `pack
 
 - each command is a documented workflow, not an opaque prompt
 - placeholders like `<arguments>`, `<plan>`, and `<ticket-url>` are normalized before execution
-- navigator workflows orchestrate locally and delegate focused leaf work with literal `<dispatch>` blocks
+- navigator workflows orchestrate locally and delegate focused leaf work with literal `<dispatch-command>` blocks
 - outputs are deterministic, reviewable, and usually terminal
 
 ## Core workflows
@@ -89,11 +89,11 @@ Creates a ticket summarizing the current change comparison.
 
 ### `/ticket/dev`
 
-Implements a ticket by orchestrating `/dev`, `/branch`, `/commit-and-push`, and `/pr/create`.
+Implements a ticket with navigator-managed orchestration across `/dev`, `/branch`, `/commit-and-push`, and `/pr/create`.
 
 - usage: `/ticket/dev <ticket-reference>`
 - arguments: ticket reference, URL, file path, or raw request
-- expected tools: `ticket_load`, delegated `/dev`, delegated `/branch`, delegated `/commit-and-push`, delegated `/pr/create`
+- expected tools: `ticket_load`, `<dispatch-command>` to `/dev`, `<dispatch-command>` to `/branch`, `<dispatch-command>` to `/commit-and-push`, `<dispatch-command>` to `/pr/create`
 
 ### `/ticket/plan`
 

@@ -62,6 +62,7 @@ describe("applyCommandsConfig", () => {
       assert.equal(cfg.command!["branch"]?.agent, "worker");
       assert.equal(cfg.command!["pr/create"]?.agent, "worker");
       assert.equal(cfg.command!["ticket/create"]?.agent, "worker");
+      assert.equal(cfg.command!["ticket/dev"]?.agent, "navigator");
       assert.equal(cfg.command!["ticket/plan"]?.agent, "planner");
       assert.equal(cfg.command!["ticket/plan-and-sync"]?.agent, "planner");
       assert.equal(cfg.command!["ask"]?.agent, "worker");
@@ -420,7 +421,7 @@ describe("applyCommandsConfig", () => {
       assert.ok(cfg.command!["review"]?.template);
     });
 
-    test("embeds literal dispatch blocks in ship command", async () => {
+    test("embeds literal dispatch-command blocks in ship command", async () => {
       delete process.env.CI;
       const cfg: { command?: Record<string, { template: string }> } = {};
 
@@ -432,13 +433,13 @@ describe("applyCommandsConfig", () => {
       assert.match(shipTemplate, /## Goal/);
       assert.match(shipTemplate, /Ship the current work by delegating/);
       assert.match(shipTemplate, /Ensure Feature Branch/);
-      assert.match(shipTemplate, /<dispatch agent="worker">/);
-      assert.match(shipTemplate, /\n\/branch\nBranch naming guidance: <branch-context>\n<\/dispatch>/);
+      assert.match(shipTemplate, /<dispatch-command agent="worker">/);
+      assert.match(shipTemplate, /\n\/branch\nBranch naming guidance: <branch-context>\n<\/dispatch-command>/);
       assert.match(shipTemplate, /Store the subagent result as `<branch-result>`/);
       assert.match(shipTemplate, /Store the subagent result as `<commit-result>`/);
-      assert.match(shipTemplate, /\n\/commit\nAdditional context: <additional-context>\n<\/dispatch>/);
+      assert.match(shipTemplate, /\n\/commit\nAdditional context: <additional-context>\n<\/dispatch-command>/);
       assert.match(shipTemplate, /Store the subagent result as `<pr-result>`/);
-      assert.match(shipTemplate, /\n\/pr\/create\nBase branch: <base>\nAdditional context: <additional-context>\n<\/dispatch>/);
+      assert.match(shipTemplate, /\n\/pr\/create\nBase branch: <base>\nAdditional context: <additional-context>\n<\/dispatch-command>/);
 
       assert.doesNotMatch(shipTemplate, /<%/);
     });
@@ -451,13 +452,13 @@ describe("applyCommandsConfig", () => {
 
       assert.ok(cfg.command);
       const devTemplate = cfg.command!["dev"].template;
-      
+
       // Should have replaced components
       assert.match(devTemplate, /Development Flow Navigation Guide/);
       // PR Author content is now inline in pr/create, not embedded in dev
       assert.match(devTemplate, /## Goal/);
       assert.match(devTemplate, /Implement a feature or fix/);
-      
+
       assert.doesNotMatch(devTemplate, /<%/);
     });
 
@@ -509,17 +510,17 @@ describe("applyCommandsConfig", () => {
       // PR Author content is now inline in pr/create, not embedded here
       assert.match(ticketDevTemplate, /## Goal/);
       assert.match(ticketDevTemplate, /Implement a ticket/);
-      assert.match(ticketDevTemplate, /<dispatch agent="worker">/);
-      assert.match(ticketDevTemplate, /\n\/dev\nTicket reference: <ticket-ref>\nTicket context: <ticket-context>\nAdditional context: <additional-context>\n<\/dispatch>/);
-      assert.match(ticketDevTemplate, /\n\/branch\nBranch naming guidance: <ticket-summary>\nAdditional context: <additional-context>\n<\/dispatch>/);
-      assert.match(ticketDevTemplate, /\n\/commit-and-push\nTicket reference: <ticket-ref>\nTicket summary: <ticket-summary>\nAdditional context: <additional-context>\n<\/dispatch>/);
-      assert.match(ticketDevTemplate, /\n\/pr\/create\nTicket reference: <ticket-ref>\nTicket context: <ticket-context>\nAdditional context: <additional-context>\n<\/dispatch>/);
+      assert.match(ticketDevTemplate, /<dispatch-command agent="worker">/);
+      assert.match(ticketDevTemplate, /\n\/dev\nTicket reference: <ticket-ref>\nTicket context: <ticket-context>\nAdditional context: <additional-context>\n<\/dispatch-command>/);
+      assert.match(ticketDevTemplate, /\n\/branch\nBranch naming guidance: <ticket-summary>\nAdditional context: <additional-context>\n<\/dispatch-command>/);
+      assert.match(ticketDevTemplate, /\n\/commit-and-push\nTicket reference: <ticket-ref>\nTicket summary: <ticket-summary>\nAdditional context: <additional-context>\n<\/dispatch-command>/);
+      assert.match(ticketDevTemplate, /\n\/pr\/create\nTicket reference: <ticket-ref>\nTicket context: <ticket-context>\nAdditional context: <additional-context>\n<\/dispatch-command>/);
       assert.doesNotMatch(ticketDevTemplate, /<task agent=/);
 
       assert.doesNotMatch(ticketDevTemplate, /<%/);
     });
 
-    test("embeds literal dispatch blocks in todo command", async () => {
+    test("embeds literal dispatch-command blocks in todo command", async () => {
       delete process.env.CI;
       const cfg: { command?: Record<string, { template: string }> } = {};
 
@@ -530,12 +531,12 @@ describe("applyCommandsConfig", () => {
 
       assert.match(todoTemplate, /## Goal/);
       assert.match(todoTemplate, /Work through a todo file one pending item at a time/);
-      assert.match(todoTemplate, /<dispatch agent="planner">/);
-      assert.match(todoTemplate, /\n\/ticket\/plan\nTask: <task>\nTask context: <task-context>\nAdditional context: <additional-context>\n<\/dispatch>/);
-      assert.match(todoTemplate, /<dispatch agent="worker">/);
+      assert.match(todoTemplate, /<dispatch-command agent="planner">/);
+      assert.match(todoTemplate, /\n\/ticket\/plan\nTask: <task>\nTask context: <task-context>\nAdditional context: <additional-context>\n<\/dispatch-command>/);
+      assert.match(todoTemplate, /<dispatch-command agent="worker">/);
       assert.match(todoTemplate, /Current plan: <plan>\nPlan feedback: <user-answer>/);
-      assert.match(todoTemplate, /\n\/dev\nPlan: <plan>\nTask: <task>\nTask context: <task-context>\nAdditional context: <additional-context>\n<\/dispatch>/);
-      assert.match(todoTemplate, /\n\/commit\nTask: <task>\nAdditional context: <additional-context>\n<\/dispatch>/);
+      assert.match(todoTemplate, /\n\/dev\nPlan: <plan>\nTask: <task>\nTask context: <task-context>\nAdditional context: <additional-context>\n<\/dispatch-command>/);
+      assert.match(todoTemplate, /\n\/commit\nTask: <task>\nAdditional context: <additional-context>\n<\/dispatch-command>/);
       assert.doesNotMatch(todoTemplate, /<task agent=/);
 
       assert.doesNotMatch(todoTemplate, /<%/);

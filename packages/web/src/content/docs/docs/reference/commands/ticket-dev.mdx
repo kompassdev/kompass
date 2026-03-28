@@ -5,7 +5,7 @@ description: Implement a ticket by orchestrating development, branching, commit-
 
 ## Purpose
 
-Use `/ticket/dev` when implementation starts from a tracked ticket and should run through shipping.
+Use `/ticket/dev` when implementation starts from a tracked ticket and should run through shipping under navigator-managed orchestration.
 
 ## Usage
 
@@ -16,15 +16,14 @@ Use `/ticket/dev` when implementation starts from a tracked ticket and should ru
 ## Typical flow
 
 - load the ticket and its surrounding context
-- delegate `/dev` for implementation and validation
-- delegate `/branch` for branch naming from the ticket summary
-- delegate `/commit-and-push`
-- delegate `/pr/create` and return the resulting PR URL
+- keep orchestration local in `navigator`
+- forward literal `<dispatch-command>` calls to `/dev`, `/branch`, `/commit-and-push`, and `/pr/create`
+- stop on blockers at any delegated step and return the resulting PR URL on success
 
 ## Common tools
 
 - `ticket_load`
-- `dispatch(/dev)`
-- `dispatch(/branch)`
-- `dispatch(/commit-and-push)`
-- `dispatch(/pr/create)`
+- `dispatch-command(/dev)`
+- `dispatch-command(/branch)`
+- `dispatch-command(/commit-and-push)`
+- `dispatch-command(/pr/create)`

@@ -37,7 +37,7 @@ a {
 }
 
 .landing-page {
-  overflow: clip;
+  overflow: visible;
 }
 
 .hero {
@@ -156,7 +156,7 @@ a {
   display: grid;
   grid-template-columns: minmax(0, 0.82fr) minmax(480px, 0.88fr);
   gap: clamp(2rem, 5vw, 5rem);
-  align-items: end;
+  align-items: center;
   width: min(calc(100% - 2rem), var(--hero-max));
   margin: 0 auto;
   padding: 4.6rem 0 2.4rem;
@@ -317,10 +317,18 @@ a {
   background: rgba(9, 20, 31, 0.4);
 }
 
+.hero__install {
+  padding: 0;
+}
+
+.hero__install .install-block {
+  padding: 0;
+}
+
 .hero__showcase {
   width: min(calc(100% - 2rem), var(--hero-max));
   margin: 0 auto;
-  padding-top: 0.6rem;
+  padding-top: 1rem;
   padding-bottom: 3rem;
 }
 
@@ -763,5 +771,31 @@ a {
 
   .command-showcase__panel {
     padding: 0.85rem;
+  }
+}
+
+/* Hero highlights below command showcase */
+.hero__highlights {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  width: min(calc(100% - 2rem), var(--hero-max));
+  margin: 2rem auto 0;
+  padding-bottom: 2rem;
+}
+
+.hero__highlights .hero-highlight {
+  padding: 1.25rem;
+}
+
+.hero__highlights .hero-highlight h2 {
+  font-size: clamp(1rem, 1.4vw, 1.25rem);
+  white-space: normal;
+}
+
+@media (max-width: 960px) {
+  .hero__highlights {
+    grid-template-columns: 1fr;
+    margin-top: 1.5rem;
   }
 }

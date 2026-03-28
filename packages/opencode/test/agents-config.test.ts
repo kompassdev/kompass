@@ -56,7 +56,7 @@ describe("applyAgentsConfig", () => {
     assert.equal(cfg.agent.worker?.prompt, undefined);
     assert.match(cfg.agent.navigator?.prompt ?? "", /orchestrator/i);
     assert.match(cfg.agent.navigator?.prompt ?? "", /do not do implementation, planning, or review work yourself/i);
-    assert.match(cfg.agent.navigator?.prompt ?? "", /do not look up or expand slash commands/i);
+    assert.match(cfg.agent.navigator?.prompt ?? "", /do not look up command documentation/i);
     assert.match(cfg.agent.reviewer?.prompt ?? "", /Never switch branches/i);
   });
 

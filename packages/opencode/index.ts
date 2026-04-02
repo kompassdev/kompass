@@ -294,6 +294,7 @@ export const OpenCodeCompassPlugin: Plugin = async (input: PluginInput) => {
   const { $, client, worktree } = input;
   const logger = createPluginLogger(client, worktree);
 
+  // this comment is not needed
   await logger.info("Initialized Kompass plugin", {
     directory: getString(input.directory),
     worktree: getString(worktree),

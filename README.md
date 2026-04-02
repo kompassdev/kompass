@@ -8,24 +8,29 @@
 
 Kompass keeps AI coding agents on course with token-efficient, composable workflows.
 
+It provides commands, agents, tools, and reusable prompt components for planning, development, review, and shipping.
+
 ## Docs
 
-- Main docs: https://kompassdev.ai/docs/
+- Docs home: https://kompassdev.ai/docs/
 - Getting started: https://kompassdev.ai/docs/getting-started/
 - OpenCode adapter: https://kompassdev.ai/docs/adapters/opencode/
 - Config reference: https://kompassdev.ai/docs/config/overview/
-- Command, agent, tool, and component reference: https://kompassdev.ai/docs/reference/commands/, https://kompassdev.ai/docs/reference/agents/, https://kompassdev.ai/docs/reference/tools/, https://kompassdev.ai/docs/reference/components/
+- Command reference: https://kompassdev.ai/docs/reference/commands/
+- Agent reference: https://kompassdev.ai/docs/reference/agents/
+- Tool reference: https://kompassdev.ai/docs/reference/tools/
+- Component reference: https://kompassdev.ai/docs/reference/components/
 
-## Bundled Surface
+## What Ships Today
 
-- Commands cover direct work (`/ask`, `/commit`, `/merge`), orchestration (`/dev`, `/ship`, `/todo`), ticket planning/sync, and PR review/shipping flows.
-- Agents are intentionally narrow: `worker` is generic, `planner` is no-edit planning, `navigator` owns multi-step orchestration, and `reviewer` is a no-edit review specialist.
-- Structured tools keep workflows grounded in repo and GitHub state: `changes_load`, `command_expansion` (resolve a slash command and return the expanded prompt for immediate delegation), `pr_load`, `pr_sync`, `ticket_load`, `ticket_sync`.
-- Reusable command-template components live in `packages/core/components/` and are documented in the components reference.
+- Commands for direct work, orchestration, tickets, PRs, review, and shipping.
+- Narrow agents with clear roles: `worker`, `planner`, `navigator`, and `reviewer`.
+- Structured tools for repo and GitHub state: `changes_load`, `command_expansion`, `pr_load`, `pr_sync`, `ticket_load`, and `ticket_sync`.
+- Reusable command-template components in `packages/core/components/`.
 
 ## Installation
 
-For OpenCode, add the adapter package to your config:
+OpenCode is the current adapter. Add the plugin to your config:
 
 ```json
 {

@@ -269,7 +269,6 @@ export async function createOpenCodeTools(
   client: PluginInput["client"],
   projectRoot: string,
 ): Promise<Record<string, ToolDefinition>> {
-  // this comment is not needed
   const userConfig = await loadKompassConfig(projectRoot);
   const config = mergeWithDefaults(userConfig);
   const tools: Record<string, ToolDefinition> = {};
@@ -294,7 +293,6 @@ export const OpenCodeCompassPlugin: Plugin = async (input: PluginInput) => {
   const { $, client, worktree } = input;
   const logger = createPluginLogger(client, worktree);
 
-  // this comment is not needed
   await logger.info("Initialized Kompass plugin", {
     directory: getString(input.directory),
     worktree: getString(worktree),

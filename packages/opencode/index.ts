@@ -269,6 +269,7 @@ export async function createOpenCodeTools(
   client: PluginInput["client"],
   projectRoot: string,
 ): Promise<Record<string, ToolDefinition>> {
+  // this comment is not needed
   const userConfig = await loadKompassConfig(projectRoot);
   const config = mergeWithDefaults(userConfig);
   const tools: Record<string, ToolDefinition> = {};

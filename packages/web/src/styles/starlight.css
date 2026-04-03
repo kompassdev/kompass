@@ -32,6 +32,10 @@ h3 {
   letter-spacing: -0.03em;
 }
 
+.site-title {
+  color: #fff;
+}
+
 .hero {
   border: 1px solid rgba(125, 166, 196, 0.14);
   border-radius: 1.5rem;

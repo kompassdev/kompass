@@ -23,6 +23,10 @@ Kompass keeps AI coding agents on course with token-efficient, composable workfl
 - Structured tools keep workflows grounded in repo and GitHub state: `changes_load`, `command_expansion` (resolve a slash command and return the expanded prompt for immediate delegation), `pr_load`, `pr_sync`, `ticket_load`, `ticket_sync`.
 - Reusable command-template components live in `packages/core/components/` and are documented in the components reference.
 
+## Prerequisites
+
+- **GitHub CLI** (`gh`) must be installed and authenticated. Kompass uses `gh` for all GitHub operations (PRs, issues, reviews). Install from [cli.github.com](https://cli.github.com/) and run `gh auth login`.
+
 ## Installation
 
 For OpenCode, add the adapter package to your config:

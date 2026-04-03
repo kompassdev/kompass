@@ -3,6 +3,10 @@ title: Getting Started
 description: Install Kompass for OpenCode and start using the bundled workflow system.
 ---
 
+## Prerequisites
+
+- **GitHub CLI** (`gh`) must be installed and authenticated. Kompass uses `gh` for all GitHub operations (PRs, issues, reviews). Install from [cli.github.com](https://cli.github.com/) and run `gh auth login`.
+
 ## Quick start
 
 Kompass currently ships an OpenCode adapter package: `@kompassdev/opencode`.
@@ -15,7 +19,7 @@ Add it to your OpenCode config:
 }
 ```
 
-## Add optional project config
+## Optional project config
 
 If you want to customize commands, agents, tools, or defaults for a project, add one project override file.
 
@@ -33,6 +37,15 @@ To start from the published base config:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/kompassdev/kompass/main/kompass.jsonc -o .opencode/kompass.jsonc
 ```
+
+### What the override can control
+
+- shared validation guidance
+- enabled commands and custom templates
+- agent enablement and prompt overrides
+- tool enablement and tool-name remapping
+- component path overrides
+- default base branch and adapter settings
 
 ## Start using workflows
 
@@ -58,6 +71,11 @@ opencode export <sessionID>
 
 - shared workflow logic stays in the Kompass package rather than your project repo
 - project overrides are layered on top of the bundled base config
+
+## Current adapter support
+
+- **OpenCode**: supported now
+- **Claude Code**: planned, not shipped yet
 
 ## Next steps
 

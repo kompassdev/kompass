@@ -8,6 +8,11 @@ export default defineConfig({
       title: "Kompass Docs",
       description: "Guided workflows for AI coding agents.",
       favicon: "/kompass-icon.png",
+      logo: {
+        src: "./public/kompass-icon.png",
+        alt: "Kompass",
+        replacesTitle: false
+      },
       social: {
         github: "https://github.com/kompassdev/kompass"
       },
@@ -15,7 +20,6 @@ export default defineConfig({
       sidebar: [
         "docs",
         "docs/getting-started",
-        "docs/installation",
         {
           label: "Concepts",
           items: ["docs/concepts/modes", "docs/concepts/architecture"]

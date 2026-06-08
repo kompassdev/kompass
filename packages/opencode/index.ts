@@ -1,5 +1,7 @@
 import type { Hooks, Plugin, PluginInput } from "@opencode-ai/plugin";
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 
 import {
   createChangesLoadTool,
@@ -11,6 +13,7 @@ import {
   getEnabledToolNames,
   type MergedKompassConfig,
   type Shell,
+  type ShellPromise,
 } from "../core/index.ts";
 import { loadConfiguredNames, loadMergedKompassConfig } from "./cache.ts";
 import { applyAgentsConfig, applyCommandsConfig } from "./config.ts";
@@ -20,6 +23,7 @@ import {
 } from "./tool-names.ts";
 
 const AGENT_HANDOFF_MARKER = "generate a prompt and call the task tool with subagent:";
+const execFileAsync = promisify(execFile);
 
 type ToolExecuteBeforeHook = NonNullable<Hooks["tool.execute.before"]>;
 type ToolExecuteBeforeInput = Parameters<ToolExecuteBeforeHook>[0];
@@ -30,14 +34,122 @@ type CommandExecuteBeforeOutput = Parameters<CommandExecuteBeforeHook>[1];
 type ChatMessageHook = NonNullable<Hooks["chat.message"]>;
 type ChatMessageOutput = Parameters<ChatMessageHook>[1];
 type OpenCodeToolCreator = (
-  $: PluginInput["$"],
   client: PluginInput["client"],
   config: MergedKompassConfig,
   projectRoot: string,
+  shell: Shell,
 ) => ToolDefinition;
 
-function asShell(shell: PluginInput["$"]): Shell {
-  return shell as unknown as Shell;
+type ShellResult = ShellPromise & {
+  stdout: Buffer;
+};
+
+function shellEscape(value: unknown): string {
+  return `'${String(value).replaceAll("'", `'\\''`)}'`;
+}
+
+function shellResult(stdout: string, stderr: string, exitCode: number): ShellResult {
+  return {
+    cwd: () => {
+      throw new Error("Cannot change cwd after execution");
+    },
+    quiet: () => {
+      throw new Error("Cannot change quiet after execution");
+    },
+    nothrow: () => {
+      throw new Error("Cannot change nothrow after execution");
+    },
+    text: () => stdout,
+    json: () => JSON.parse(stdout),
+    exitCode,
+    stderr: Buffer.from(stderr),
+    stdout: Buffer.from(stdout),
+  };
+}
+
+class NodeShellCommand implements PromiseLike<ShellResult> {
+  #command: string;
+  #cwd: string;
+  #quiet = false;
+  #nothrow = false;
+  #result?: Promise<ShellResult>;
+
+  constructor(command: string, cwd: string) {
+    this.#command = command;
+    this.#cwd = cwd;
+  }
+
+  cwd(dir: string) {
+    this.#cwd = dir;
+    return this;
+  }
+
+  quiet() {
+    this.#quiet = true;
+    return this;
+  }
+
+  nothrow() {
+    this.#nothrow = true;
+    return this;
+  }
+
+  then<TResult1 = ShellResult, TResult2 = never>(
+    onfulfilled?: ((value: ShellResult) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ) {
+    return this.run().then(onfulfilled, onrejected);
+  }
+
+  private run() {
+    this.#result ??= this.execute();
+    return this.#result;
+  }
+
+  private async execute() {
+    try {
+      const { stdout, stderr } = await execFileAsync("/bin/bash", ["-lc", this.#command], {
+        cwd: this.#cwd,
+        encoding: "utf8",
+        maxBuffer: 10 * 1024 * 1024,
+      });
+
+      this.write(stdout, stderr);
+      return shellResult(stdout, stderr, 0);
+    } catch (error) {
+      const failed = error as { stdout?: unknown; stderr?: unknown; message?: unknown; code?: unknown };
+      const stdout = String(failed.stdout ?? "");
+      const stderr = String(failed.stderr ?? failed.message ?? "");
+      const exitCode = typeof failed.code === "number" ? failed.code : 1;
+      const result = shellResult(stdout, stderr, exitCode);
+
+      this.write(stdout, stderr);
+      if (this.#nothrow) return result;
+
+      throw new Error(stderr || `Command failed: ${this.#command}`);
+    }
+  }
+
+  private write(stdout: string, stderr: string) {
+    if (this.#quiet) return;
+    if (stdout) process.stdout.write(stdout);
+    if (stderr) process.stderr.write(stderr);
+  }
+}
+
+function createNodeShell(defaultDirectory: string): Shell {
+  return (strings: TemplateStringsArray, ...expressions: unknown[]) => {
+    let command = strings[0] ?? "";
+
+    expressions.forEach((expression, index) => {
+      command += Array.isArray(expression)
+        ? expression.map((item) => shellEscape(item)).join(" ")
+        : shellEscape(expression);
+      command += strings[index + 1] ?? "";
+    });
+
+    return new NodeShellCommand(command, defaultDirectory) as unknown as ShellPromise;
+  };
 }
 
 export type TaskToolExecution = {
@@ -124,8 +236,8 @@ export function removeSyntheticAgentHandoff(output: ChatMessageOutput): boolean 
 }
 
 const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
-  changes_load($: PluginInput["$"], _: PluginInput["client"], __: MergedKompassConfig, _projectRoot: string) {
-    const definition = createChangesLoadTool(asShell($));
+  changes_load(_: PluginInput["client"], __: MergedKompassConfig, _projectRoot: string, shell: Shell) {
+    const definition = createChangesLoadTool(shell);
     return tool({
       description: definition.description,
       args: {
@@ -141,7 +253,7 @@ const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
-  command_expansion(_: PluginInput["$"], _client: PluginInput["client"], config: MergedKompassConfig, projectRoot: string) {
+  command_expansion(_client: PluginInput["client"], config: MergedKompassConfig, projectRoot: string, _shell: Shell) {
     return tool({
       description: "Expand a delegated command body into a runnable prompt for immediate task execution.",
       args: {
@@ -163,8 +275,8 @@ const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
       },
     });
   },
-  pr_load($: PluginInput["$"], _: PluginInput["client"], __: MergedKompassConfig, _projectRoot: string) {
-    const definition = createPrLoadTool(asShell($));
+  pr_load(_: PluginInput["client"], __: MergedKompassConfig, _projectRoot: string, shell: Shell) {
+    const definition = createPrLoadTool(shell);
     return tool({
       description: definition.description,
       args: {
@@ -173,8 +285,8 @@ const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
-  pr_sync($: PluginInput["$"], _: PluginInput["client"], config: MergedKompassConfig, _projectRoot: string) {
-    const definition = createPrSyncTool(asShell($));
+  pr_sync(_: PluginInput["client"], config: MergedKompassConfig, _projectRoot: string, shell: Shell) {
+    const definition = createPrSyncTool(shell);
 
     return tool({
       description: definition.description,
@@ -219,8 +331,8 @@ const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
-  ticket_sync($: PluginInput["$"], _: PluginInput["client"], __: MergedKompassConfig, _projectRoot: string) {
-    const definition = createTicketSyncTool(asShell($));
+  ticket_sync(_: PluginInput["client"], __: MergedKompassConfig, _projectRoot: string, shell: Shell) {
+    const definition = createTicketSyncTool(shell);
     return tool({
       description: definition.description,
       args: {
@@ -242,8 +354,8 @@ const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
-  ticket_load($: PluginInput["$"], _: PluginInput["client"], __: MergedKompassConfig, _projectRoot: string) {
-    const definition = createTicketLoadTool(asShell($));
+  ticket_load(_: PluginInput["client"], __: MergedKompassConfig, _projectRoot: string, shell: Shell) {
+    const definition = createTicketLoadTool(shell);
     return tool({
       description: definition.description,
       args: {
@@ -256,19 +368,19 @@ const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
 };
 
 export async function createOpenCodeTools(
-  $: PluginInput["$"],
   client: PluginInput["client"],
   projectRoot: string,
 ): Promise<Record<string, ToolDefinition>> {
   const config = await loadMergedKompassConfig(projectRoot);
   const tools: Record<string, ToolDefinition> = {};
   const logger = createPluginLogger(client, projectRoot);
+  const shell = createNodeShell(projectRoot);
 
   for (const toolName of getEnabledToolNames(config.tools)) {
     const creator = opencodeToolCreators[toolName as keyof typeof opencodeToolCreators];
     if (creator) {
       const registeredName = getConfiguredOpenCodeToolName(toolName, config.tools[toolName].name);
-      tools[registeredName] = creator($, client, config, projectRoot);
+      tools[registeredName] = creator(client, config, projectRoot, shell);
       logger.info("Loaded Kompass tool", {
         tool: toolName,
         registeredName,
@@ -280,7 +392,7 @@ export async function createOpenCodeTools(
 }
 
 export const OpenCodeCompassPlugin: Plugin = async (input: PluginInput) => {
-  const { $, client, worktree } = input;
+  const { client, worktree } = input;
   const logger = createPluginLogger(client, worktree);
 
   logger.info("Initialized Kompass plugin", {
@@ -291,7 +403,7 @@ export const OpenCodeCompassPlugin: Plugin = async (input: PluginInput) => {
 
   async function createToolsSafely() {
     try {
-      return await createOpenCodeTools($, client, worktree);
+      return await createOpenCodeTools(client, worktree);
     } catch (error) {
       logger.warn("Skipping Kompass tool registration", {
         ...getErrorDetails(error),

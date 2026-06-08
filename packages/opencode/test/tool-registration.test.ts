@@ -1,10 +1,14 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { promisify } from "node:util";
 
 import { createOpenCodeTools, OpenCodeCompassPlugin } from "../index.ts";
+
+const execFileAsync = promisify(execFile);
 
 type MockLogEntry = {
   query?: { directory?: string };
@@ -105,12 +109,27 @@ function createMockClient(): MockClient {
   };
 }
 
+async function git(cwd: string, args: string[]) {
+  await execFileAsync("git", args, { cwd });
+}
+
+async function createTempGitRepo() {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-tools-git-"));
+
+  await git(tempDir, ["init", "-b", "main"]);
+  await git(tempDir, ["config", "user.email", "test@example.com"]);
+  await git(tempDir, ["config", "user.name", "Test User"]);
+  await writeFile(path.join(tempDir, "README.md"), "test\n");
+  await git(tempDir, ["add", "README.md"]);
+  await git(tempDir, ["commit", "-m", "initial"]);
+
+  return tempDir;
+}
+
 describe("createOpenCodeTools", () => {
   test("registers Kompass tools with prefixed names", async () => {
     await withTempHome(async () => {
-      const tools = await createOpenCodeTools((() => {
-        throw new Error("not implemented");
-      }) as never, createMockClient() as never, process.cwd());
+      const tools = await createOpenCodeTools(createMockClient() as never, process.cwd());
 
       assert.ok(tools.kompass_changes_load);
       assert.ok(tools.kompass_command_expansion);
@@ -124,6 +143,27 @@ describe("createOpenCodeTools", () => {
       assert.equal(tools.pr_sync, undefined);
       assert.equal(tools.ticket_load, undefined);
       assert.equal(tools.ticket_sync, undefined);
+    });
+  });
+
+  test("runs shell tools with the Kompass shell runner", async () => {
+    await withTempHome(async () => {
+      const tempDir = await createTempGitRepo();
+
+      try {
+        const tools = await createOpenCodeTools(createMockClient() as never, tempDir);
+        const output = await (tools.kompass_changes_load as any).execute(
+          { base: "HEAD" },
+          {
+            directory: tempDir,
+            worktree: tempDir,
+          },
+        );
+
+        assert.deepEqual(JSON.parse(output).files, []);
+      } finally {
+        await rm(tempDir, { recursive: true, force: true });
+      }
     });
   });
 
@@ -150,9 +190,7 @@ describe("createOpenCodeTools", () => {
           }`,
         );
 
-        const tools = await createOpenCodeTools((() => {
-          throw new Error("not implemented");
-        }) as never, createMockClient() as never, tempDir);
+        const tools = await createOpenCodeTools(createMockClient() as never, tempDir);
 
         assert.ok(tools.custom_ticket_name);
         assert.equal(tools.kompass_ticket_sync, undefined);
@@ -185,9 +223,7 @@ describe("createOpenCodeTools", () => {
           }`,
         );
 
-        const tools = await createOpenCodeTools((() => {
-          throw new Error("not implemented");
-        }) as never, createMockClient() as never, tempDir);
+        const tools = await createOpenCodeTools(createMockClient() as never, tempDir);
 
         assert.ok(tools.pull_request_context);
         assert.equal(tools.kompass_pr_load, undefined);
@@ -202,9 +238,7 @@ describe("createOpenCodeTools", () => {
       const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-tools-no-approve-"));
 
       try {
-        const tools = await createOpenCodeTools((() => {
-          throw new Error("not implemented");
-        }) as never, createMockClient() as never, tempDir);
+        const tools = await createOpenCodeTools(createMockClient() as never, tempDir);
 
         const reviewShape = (tools.kompass_pr_sync as any).args.review.unwrap().shape;
         assert.equal(reviewShape.approve, undefined);
@@ -229,9 +263,7 @@ describe("createOpenCodeTools", () => {
           }`,
         );
 
-        const tools = await createOpenCodeTools((() => {
-          throw new Error("not implemented");
-        }) as never, createMockClient() as never, tempDir);
+        const tools = await createOpenCodeTools(createMockClient() as never, tempDir);
 
         const reviewShape = (tools.kompass_pr_sync as any).args.review.unwrap().shape;
         assert.ok(reviewShape.approve);
@@ -243,9 +275,7 @@ describe("createOpenCodeTools", () => {
 
   test("exposes ticket assignees and comments, and PR assignees", async () => {
     await withTempHome(async () => {
-      const tools = await createOpenCodeTools((() => {
-        throw new Error("not implemented");
-      }) as never, createMockClient() as never, process.cwd());
+      const tools = await createOpenCodeTools(createMockClient() as never, process.cwd());
 
       const prSyncArgs = (tools.kompass_pr_sync as any).args;
       const ticketSyncArgs = (tools.kompass_ticket_sync as any).args;
@@ -259,9 +289,7 @@ describe("createOpenCodeTools", () => {
   test("command_expansion returns expanded prompts for delegated task execution", async () => {
     await withTempHome(async () => {
       const client = createMockClient();
-      const tools = await createOpenCodeTools((() => {
-        throw new Error("not implemented");
-      }) as never, client as never, process.cwd());
+      const tools = await createOpenCodeTools(client as never, process.cwd());
 
       const output = await (tools.kompass_command_expansion as any).execute(
         { command: "review", body: "auth bug" },
@@ -289,9 +317,7 @@ describe("createOpenCodeTools", () => {
   test("command tool rejects missing commands", async () => {
     await withTempHome(async () => {
       const client = createMockClient();
-      const tools = await createOpenCodeTools((() => {
-        throw new Error("not implemented");
-      }) as never, client as never, process.cwd());
+      const tools = await createOpenCodeTools(client as never, process.cwd());
 
       await assert.rejects(
         (tools.kompass_command_expansion as any).execute(
@@ -311,6 +337,32 @@ describe("createOpenCodeTools", () => {
       );
       assert.equal(client.sessionCommands.length, 0);
       assert.equal(client.sessionPrompts.length, 0);
+    });
+  });
+
+  test("plugin registers shell-backed tools that execute in the worktree", async () => {
+    await withTempHome(async () => {
+      const tempDir = await createTempGitRepo();
+
+      try {
+        const plugin = await OpenCodeCompassPlugin({
+          client: createMockClient() as never,
+          directory: tempDir,
+          worktree: tempDir,
+        } as never);
+
+        const output = await (plugin.tool?.kompass_changes_load as any).execute(
+          { base: "HEAD" },
+          {
+            directory: tempDir,
+            worktree: tempDir,
+          },
+        );
+
+        assert.deepEqual(JSON.parse(output).files, []);
+      } finally {
+        await rm(tempDir, { recursive: true, force: true });
+      }
     });
   });
 

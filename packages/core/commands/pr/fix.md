@@ -30,7 +30,7 @@ $ARGUMENTS
 
 ### Align Local Branch
 
-<%~ include("@align-pr-branch", { action: "analyzing repository files or making code changes for this PR", scope: "inspect or modify local code for this PR" }) %>
+<%~ include("@align-pr-branch", { action: "analyzing repository files or making code changes for this PR", scope: "inspect or modify local code for this PR", requiresBranch: true }) -%>
 
 ### Load Changes
 

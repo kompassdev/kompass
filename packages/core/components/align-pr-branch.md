@@ -1,5 +1,8 @@
 - If `<pr-branch>` is unavailable, STOP and report that the PR head branch could not be determined
-- Run `gh pr checkout <pr-context.pr.number>` before <%= it.action %>
-- After checkout, store the active branch as `<active-branch>`
-- If checkout fails, STOP and report that the PR branch could not be checked out locally
-- Do not <%= it.scope %> until `<active-branch>` equals `<pr-branch>`
+- If `<current-branch>` equals `<pr-branch>`, store `<current-branch>` as `<active-branch>` and do not checkout again
+- If `<current-branch>` differs from `<pr-branch>` and `<current-head>` equals `<pr-context.pr.headRefOid>`, store `<current-head>` as `<active-branch>` and do not checkout because the worktree is already at the PR head commit
+- If `<current-branch>` differs from `<pr-branch>` and `<current-head>` differs from `<pr-context.pr.headRefOid>`:
+  - Run `gh pr checkout <pr-context.pr.number>` before <%= it.action %>
+  - After checkout, store the active branch as `<active-branch>`
+  - If checkout fails or times out, STOP and report that the PR branch could not be checked out locally; do not retry checkout unless the user explicitly asks
+- Do not <%= it.scope %> until `<active-branch>` equals `<pr-branch>` or `<active-branch>` equals `<pr-context.pr.headRefOid>`

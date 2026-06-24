@@ -38,6 +38,7 @@ $ARGUMENTS
 - Store the result as `<pr-context>`
 - Store the PR head branch as `<pr-branch>` from `<pr-context>.pr.headRefName` when it is available
 - Run `git branch --show-current` and store the trimmed result as `<current-branch>` when it is available
+- Run `git rev-parse HEAD` and store the trimmed result as `<current-head>` when it is available
 - Treat the loaded PR body, discussion, review history, and any attachments or linked artifacts returned by the loader as part of the source context
 - Review attached images, screenshots, videos, PDFs, and other linked files whenever they can affect the requested fix, review outcome, reproduction steps, or acceptance criteria
 - If any relevant attachment cannot be accessed, note that gap and continue only when the remaining PR context is still sufficient to proceed reliably
@@ -45,10 +46,13 @@ $ARGUMENTS
 ### Align Local Branch
 
 - If `<pr-branch>` is unavailable, STOP and report that the PR head branch could not be determined
-- Run `gh pr checkout <pr-context.pr.number>` before analyzing repository files or making code changes for this PR
-- After checkout, store the active branch as `<active-branch>`
-- If checkout fails, STOP and report that the PR branch could not be checked out locally
-- Do not inspect or modify local code for this PR until `<active-branch>` equals `<pr-branch>`
+- If `<current-branch>` equals `<pr-branch>`, store `<current-branch>` as `<active-branch>` and do not checkout again
+- If `<current-branch>` differs from `<pr-branch>` and `<current-head>` equals `<pr-context.pr.headRefOid>`, store `<current-head>` as `<active-branch>` and do not checkout because the worktree is already at the PR head commit
+- If `<current-branch>` differs from `<pr-branch>` and `<current-head>` differs from `<pr-context.pr.headRefOid>`:
+  - Run `gh pr checkout <pr-context.pr.number>` before analyzing repository files or making code changes for this PR
+  - After checkout, store the active branch as `<active-branch>`
+  - If checkout fails or times out, STOP and report that the PR branch could not be checked out locally; do not retry checkout unless the user explicitly asks
+- Do not inspect or modify local code for this PR until `<active-branch>` equals `<pr-branch>` or `<active-branch>` equals `<pr-context.pr.headRefOid>`
 
 ### Load Changes
 

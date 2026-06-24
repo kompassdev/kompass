@@ -26,7 +26,7 @@ $ARGUMENTS
 
 ### Align Local Branch
 
-<%~ include("@align-pr-branch", { action: "inspecting local repository files for this PR review", scope: "inspect local repository code for this PR" }) %>
+<%~ include("@align-pr-branch", { action: "inspecting local repository files for this PR review", scope: "inspect local repository code for this PR", requiresBranch: false }) -%>
 
 ### Load Ticket Context
 

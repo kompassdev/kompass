@@ -46,13 +46,13 @@ $ARGUMENTS
 ### Align Local Branch
 
 - If `<pr-branch>` is unavailable, STOP and report that the PR head branch could not be determined
-- If `<current-branch>` equals `<pr-branch>`, store `<current-branch>` as `<active-branch>` and do not checkout again
-- If `<current-branch>` differs from `<pr-branch>` and `<current-head>` equals `<pr-context.pr.headRefOid>`, store `<current-head>` as `<active-branch>` and do not checkout because the worktree is already at the PR head commit
-- If `<current-branch>` differs from `<pr-branch>` and `<current-head>` differs from `<pr-context.pr.headRefOid>`:
+- If `<current-branch>` equals `<pr-branch>` and `<current-head>` equals `<pr-context.pr.headRefOid>`, store `<current-branch>` as `<active-branch>` and do not checkout again
+- If `<current-branch>` differs from `<pr-branch>` or `<current-head>` differs from `<pr-context.pr.headRefOid>`:
   - Run `gh pr checkout <pr-context.pr.number>` before analyzing repository files or making code changes for this PR
   - After checkout, store the active branch as `<active-branch>`
+  - Run `git rev-parse HEAD` again and store the trimmed result as `<current-head>`
   - If checkout fails or times out, STOP and report that the PR branch could not be checked out locally; do not retry checkout unless the user explicitly asks
-- Do not inspect or modify local code for this PR until `<active-branch>` equals `<pr-branch>` or `<active-branch>` equals `<pr-context.pr.headRefOid>`
+- Do not inspect or modify local code for this PR until `<active-branch>` equals `<pr-branch>` and `<current-head>` equals `<pr-context.pr.headRefOid>`
 
 ### Load Changes
 

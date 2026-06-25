@@ -30,7 +30,11 @@ $ARGUMENTS
 
 ### Align Local Branch
 
-<%~ include("@align-pr-branch", { action: "analyzing repository files or making code changes for this PR", scope: "inspect or modify local code for this PR", requiresBranch: true }) -%>
+- If `<pr-branch>` is unavailable, STOP and report that the PR head branch could not be determined
+- Run `gh pr checkout <pr-context.pr.number>` before analyzing repository files or making code changes for this PR
+- After checkout, store the active branch as `<active-branch>`
+- If checkout fails or times out, STOP and report that the PR branch could not be checked out locally; do not retry checkout unless the user explicitly asks
+- Do not inspect or modify local code for this PR until `<active-branch>` equals `<pr-branch>`
 
 ### Load Changes
 

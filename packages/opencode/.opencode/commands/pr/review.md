@@ -39,17 +39,6 @@ $ARGUMENTS
 - Review attached images, screenshots, videos, PDFs, and other linked files whenever they can affect the requested fix, review outcome, reproduction steps, or acceptance criteria
 - If any relevant attachment cannot be accessed, note that gap and continue only when the remaining PR context is still sufficient to proceed reliably
 
-### Align Local Branch
-
-- If `<pr-branch>` is unavailable, STOP and report that the PR head branch could not be determined
-- If `<current-head>` equals `<pr-context.pr.headRefOid>`, store `<current-branch>` as `<active-branch>` when `<current-branch>` is available; otherwise store `<current-head>` as `<active-branch>`. Do not checkout because the worktree is already at the PR head commit.
-- If `<current-head>` differs from `<pr-context.pr.headRefOid>`:
-  - Run `gh pr checkout <pr-context.pr.number>` before inspecting local repository files for this PR review
-  - After checkout, store the active branch as `<active-branch>`
-  - Run `git rev-parse HEAD` again and store the trimmed result as `<current-head>`
-  - If checkout fails or times out, STOP and report that the PR branch could not be checked out locally; do not retry checkout unless the user explicitly asks
-- Do not inspect local repository code for this PR until `<current-head>` equals `<pr-context.pr.headRefOid>`
-
 ### Load Ticket Context
 
 If `<pr-context.pr.body>` links to exactly one clear ticket:
@@ -63,13 +52,13 @@ If `<pr-context.pr.body>` links to exactly one clear ticket:
 
 ### Load Changes
 
-Call `kompass_changes_load` with `base: <pr-context.pr.baseRefName>`, `head: <active-branch>`, and `depthHint: <pr-context.pr.commitCount>` only when it is a positive integer. Store as `<changes>`.
+Call `kompass_changes_load` with `base: <pr-context.pr.baseRefName>`, `head: <pr-context.pr.headRefName>`, and `depthHint: <pr-context.pr.commitCount>` only when it is a positive integer. Store as `<changes>`.
 
 ### Review Changes
 
 Following the reviewer agent guidance:
 1. Check `<pr-context.reviews>`, `<pr-context.issueComments>`, and `<pr-context.threads>`
-2. Use `<active-branch>` whenever local repository files need to be inspected alongside the diff
+2. Use `<changes>` as the source of truth for changed files and diff hunks
 3. Derive `<author-decisions>` from `<pr-context.issueComments>` and `<pr-context.threads>`:
    - Include direct author replies that explicitly decline, defer, or intentionally narrow a suggestion and explain why they do not plan to implement it
    - Treat each matching author reply as higher priority than `<ticket-context>` for that same concern, unless the current diff introduces a materially different defect with a concrete failure mode

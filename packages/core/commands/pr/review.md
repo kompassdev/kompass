@@ -24,10 +24,6 @@ $ARGUMENTS
 
 <%~ include("@load-pr", { config: it.config, ref: "<pr-ref>", result: "<pr-context>" }) %>
 
-### Align Local Branch
-
-<%~ include("@align-pr-branch", { action: "inspecting local repository files for this PR review", scope: "inspect local repository code for this PR", requiresBranch: false }) -%>
-
 ### Load Ticket Context
 
 If `<pr-context.pr.body>` links to exactly one clear ticket:
@@ -37,13 +33,13 @@ If `<pr-context.pr.body>` links to exactly one clear ticket:
 
 ### Load Changes
 
-Call `<%= it.config.tools.changes_load.name %>` with `base: <pr-context.pr.baseRefName>`, `head: <active-branch>`, and `depthHint: <pr-context.pr.commitCount>` only when it is a positive integer. Store as `<changes>`.
+Call `<%= it.config.tools.changes_load.name %>` with `base: <pr-context.pr.baseRefName>`, `head: <pr-context.pr.headRefName>`, and `depthHint: <pr-context.pr.commitCount>` only when it is a positive integer. Store as `<changes>`.
 
 ### Review Changes
 
 Following the reviewer agent guidance:
 1. Check `<pr-context.reviews>`, `<pr-context.issueComments>`, and `<pr-context.threads>`
-2. Use `<active-branch>` whenever local repository files need to be inspected alongside the diff
+2. Use `<changes>` as the source of truth for changed files and diff hunks
 3. Derive `<author-decisions>` from `<pr-context.issueComments>` and `<pr-context.threads>`:
    - Include direct author replies that explicitly decline, defer, or intentionally narrow a suggestion and explain why they do not plan to implement it
    - Treat each matching author reply as higher priority than `<ticket-context>` for that same concern, unless the current diff introduces a materially different defect with a concrete failure mode

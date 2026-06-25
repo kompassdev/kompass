@@ -51,7 +51,6 @@
   },
 
   "components": {
-    "align-pr-branch": { "enabled": true },
     "change-summary": { "enabled": true },
     "changes-summary": { "enabled": true },
     "commit": { "enabled": true },

@@ -48,6 +48,7 @@
     "pr_sync": { "enabled": true },
     "ticket_load": { "enabled": true },
     "ticket_sync": { "enabled": true },
+    "worktree_load": { "enabled": true },
   },
 
   "components": {

@@ -28,6 +28,7 @@ export { createPrLoadTool } from "./tools/pr-load.ts";
 export { createPrSyncTool } from "./tools/pr-sync.ts";
 export { createTicketLoadTool } from "./tools/ticket-load.ts";
 export { createTicketSyncTool } from "./tools/ticket-sync.ts";
+export { createWorktreeLoadTool } from "./tools/worktree-load.ts";
 export type {
   Shell,
   ShellPromise,

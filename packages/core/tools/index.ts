@@ -10,6 +10,7 @@ import { createPrLoadTool } from "./pr-load.ts";
 import { createPrSyncTool } from "./pr-sync.ts";
 import { createTicketLoadTool } from "./ticket-load.ts";
 import { createTicketSyncTool } from "./ticket-sync.ts";
+import { createWorktreeLoadTool } from "./worktree-load.ts";
 import type { Shell, ToolDefinition } from "./shared.ts";
 
 const toolCreators: Record<string, ($: Shell, projectRoot: string) => ToolDefinition> = {
@@ -19,6 +20,7 @@ const toolCreators: Record<string, ($: Shell, projectRoot: string) => ToolDefini
   pr_sync: ($) => createPrSyncTool($),
   ticket_sync: ($) => createTicketSyncTool($),
   ticket_load: ($) => createTicketLoadTool($),
+  worktree_load: ($) => createWorktreeLoadTool($),
 };
 
 export async function createTools($: Shell, projectRoot: string) {

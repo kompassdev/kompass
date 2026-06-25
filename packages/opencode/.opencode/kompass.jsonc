@@ -103,6 +103,9 @@
     },
     "ticket_load": {
       "enabled": true
+    },
+    "worktree_load": {
+      "enabled": true
     }
   },
   "defaults": {

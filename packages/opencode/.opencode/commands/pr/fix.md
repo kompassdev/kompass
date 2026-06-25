@@ -37,8 +37,9 @@ $ARGUMENTS
 - Do not run separate git or GitHub commands just to discover the PR before calling `kompass_pr_load`
 - Store the result as `<pr-context>`
 - Store the PR head branch as `<pr-branch>` from `<pr-context>.pr.headRefName` when it is available
-- Run `git branch --show-current` and store the trimmed result as `<current-branch>` when it is available
-- Run `git rev-parse HEAD` and store the trimmed result as `<current-head>` when it is available
+- Call `kompass_worktree_load` and store the result as `<worktree-context>`
+- Store the local branch as `<current-branch>` from `<worktree-context>.branch` when it is available
+- Store the local HEAD commit as `<current-head>` from `<worktree-context>.headOid` when it is available
 - Treat the loaded PR body, discussion, review history, and any attachments or linked artifacts returned by the loader as part of the source context
 - Review attached images, screenshots, videos, PDFs, and other linked files whenever they can affect the requested fix, review outcome, reproduction steps, or acceptance criteria
 - If any relevant attachment cannot be accessed, note that gap and continue only when the remaining PR context is still sufficient to proceed reliably

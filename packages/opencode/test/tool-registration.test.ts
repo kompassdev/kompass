@@ -137,12 +137,14 @@ describe("createOpenCodeTools", () => {
       assert.ok(tools.kompass_pr_sync);
       assert.ok(tools.kompass_ticket_load);
       assert.ok(tools.kompass_ticket_sync);
+      assert.ok(tools.kompass_worktree_load);
       assert.equal(tools.changes_load, undefined);
       assert.equal(tools.command_expansion, undefined);
       assert.equal(tools.pr_load, undefined);
       assert.equal(tools.pr_sync, undefined);
       assert.equal(tools.ticket_load, undefined);
       assert.equal(tools.ticket_sync, undefined);
+      assert.equal(tools.worktree_load, undefined);
     });
   });
 
@@ -185,7 +187,8 @@ describe("createOpenCodeTools", () => {
                 "enabled": true,
                 "name": "custom_ticket_name"
               },
-              "ticket_load": { "enabled": false }
+              "ticket_load": { "enabled": false },
+              "worktree_load": { "enabled": false }
             }
           }`,
         );
@@ -215,7 +218,10 @@ describe("createOpenCodeTools", () => {
                "command_expansion": {
                  "enabled": false
                },
-              "pr_load": {
+               "worktree_load": {
+                 "enabled": false
+               },
+               "pr_load": {
                 "enabled": true,
                 "name": "pull_request_context",
               },

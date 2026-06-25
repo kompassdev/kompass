@@ -208,6 +208,9 @@
         },
         "ticket_load": {
           "$ref": "#/$defs/toolConfig"
+        },
+        "worktree_load": {
+          "$ref": "#/$defs/toolConfig"
         }
       }
     },
@@ -393,7 +396,8 @@
         "pr_load",
         "pr_sync",
         "ticket_sync",
-        "ticket_load"
+        "ticket_load",
+        "worktree_load"
       ]
     }
   }

@@ -1,0 +1,23 @@
+---
+title: worktree_load
+description: Load local git worktree branch and HEAD state.
+---
+
+## Purpose
+
+Use `worktree_load` when a workflow needs local checkout state without mixing that state into PR or ticket payloads.
+
+## Inputs
+
+- none
+
+## Returns
+
+- `branch` when the worktree is on a named branch
+- `headOid` for the current local `HEAD`
+- `isDetached`
+
+## Useful for
+
+- PR branch alignment checks
+- Detecting detached CI checkouts

@@ -18,7 +18,9 @@ describe("resolveCommands", () => {
     const commands = await resolveCommands(process.cwd());
     const template = commands["pr/review"]?.template ?? "";
 
-    assert.match(template, /git rev-parse HEAD/);
+    assert.match(template, /worktree_load/);
+    assert.match(template, /<worktree-context>\.headOid/);
+    assert.doesNotMatch(template, /Run `git rev-parse HEAD` and store/);
     assert.match(template, /`<current-head>` equals `<pr-context\.pr\.headRefOid>`/);
     assert.match(template, /Run `gh pr checkout <pr-context\.pr\.number>`/);
     assert.match(template, /do not retry checkout unless the user explicitly asks/);

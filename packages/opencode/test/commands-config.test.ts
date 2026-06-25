@@ -96,10 +96,12 @@ describe("applyCommandsConfig", () => {
       assert.match(reviewTemplate, /`kompass_changes_load`/);
       assert.match(reviewTemplate, /`kompass_pr_sync`/);
       assert.match(reviewTemplate, /`kompass_ticket_load`/);
+      assert.match(reviewTemplate, /`kompass_worktree_load`/);
       assert.doesNotMatch(reviewTemplate, /`pr_load`/);
       assert.doesNotMatch(reviewTemplate, /`changes_load`/);
       assert.doesNotMatch(reviewTemplate, /`pr_sync`/);
       assert.doesNotMatch(reviewTemplate, /`ticket_load`/);
+      assert.doesNotMatch(reviewTemplate, /`worktree_load`/);
     });
 
     test("pr/fix template uses pr_sync only", async () => {
@@ -128,6 +130,7 @@ describe("applyCommandsConfig", () => {
             "tools": {
               "changes_load": { "enabled": false },
               "pr_load": { "enabled": false },
+              "worktree_load": { "enabled": false },
               "ticket_sync": {
                 "enabled": true,
                 "name": "custom_ticket_name"

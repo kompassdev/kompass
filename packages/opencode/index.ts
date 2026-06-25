@@ -10,6 +10,7 @@ import {
   createPrSyncTool,
   createTicketLoadTool,
   createTicketSyncTool,
+  createWorktreeLoadTool,
   getEnabledToolNames,
   type MergedKompassConfig,
   type Shell,
@@ -362,6 +363,14 @@ const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
         source: tool.schema.string().describe("Issue URL, repo#id, #id, file path, or raw text"),
         comments: tool.schema.boolean().describe("Include issue comments").optional(),
       },
+      execute: (args, context) => definition.execute(args, context),
+    });
+  },
+  worktree_load(_: PluginInput["client"], __: MergedKompassConfig, _projectRoot: string, shell: Shell) {
+    const definition = createWorktreeLoadTool(shell);
+    return tool({
+      description: definition.description,
+      args: {},
       execute: (args, context) => definition.execute(args, context),
     });
   },

@@ -28,9 +28,13 @@ $ARGUMENTS
 
 <%~ include("@load-pr", { config: it.config, ref: "<pr-ref>", result: "<pr-context>" }) %>
 
+### Load Worktree Context
+
+- Call `<%= it.config.tools.worktree_load.name %>` and store the result as `<worktree-context>`
+
 ### Align Local Branch
 
-<%~ include("@align-pr-branch", { action: "analyzing repository files or making code changes for this PR", scope: "inspect or modify local code for this PR", requiresBranch: true }) -%>
+<%~ include("@align-pr-branch", { config: it.config, action: "analyzing repository files or making code changes for this PR", scope: "inspect or modify local code for this PR", requiresBranch: true }) -%>
 
 ### Load Changes
 

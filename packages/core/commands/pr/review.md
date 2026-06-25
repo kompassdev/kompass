@@ -24,9 +24,13 @@ $ARGUMENTS
 
 <%~ include("@load-pr", { config: it.config, ref: "<pr-ref>", result: "<pr-context>" }) %>
 
-### Align Local Branch
+### Load Worktree Context
 
-<%~ include("@align-pr-branch", { action: "inspecting local repository files for this PR review", scope: "inspect local repository code for this PR", requiresBranch: false }) -%>
+- Call `<%= it.config.tools.worktree_load.name %>` and store the result as `<worktree-context>`
+
+### Align Review Context
+
+<%~ include("@align-pr-branch", { config: it.config, action: "inspecting local repository files for this PR review", scope: "inspect local repository code for this PR", requiresBranch: false }) -%>
 
 ### Load Ticket Context
 
@@ -43,18 +47,19 @@ Call `<%= it.config.tools.changes_load.name %>` with `base: <pr-context.pr.baseR
 
 Following the reviewer agent guidance:
 1. Check `<pr-context.reviews>`, `<pr-context.issueComments>`, and `<pr-context.threads>`
-2. Use `<active-branch>` whenever local repository files need to be inspected alongside the diff
-3. Derive `<author-decisions>` from `<pr-context.issueComments>` and `<pr-context.threads>`:
+2. Use `<changes>` as the source of truth for the PR head diff
+3. Inspect local repository files only when `<current-head>` equals `<pr-context.pr.headRefOid>` after review alignment; otherwise rely on `<changes>` and avoid treating local checkout files as PR-head files
+4. Derive `<author-decisions>` from `<pr-context.issueComments>` and `<pr-context.threads>`:
    - Include direct author replies that explicitly decline, defer, or intentionally narrow a suggestion and explain why they do not plan to implement it
    - Treat each matching author reply as higher priority than `<ticket-context>` for that same concern, unless the current diff introduces a materially different defect with a concrete failure mode
    - Do not re-raise the same concern solely because `<ticket-context>` still implies a broader scope
-4. Derive `<settled-threads>` from `<pr-context.threads>`:
+5. Derive `<settled-threads>` from `<pr-context.threads>`:
    - Treat resolved threads as settled
    - Treat threads as settled when they already contain feedback from `<pr-context.viewerLogin>` and a later reply makes it clear the concern was intentionally declined, deferred, or answered without a code change request
    - Treat threads as settled when the author's reply directly answers the concern and the current diff does not add a materially different failure mode
-5. Derive `<prior-review-baseline>` from `<pr-context.reviews>` authored by `<pr-context.viewerLogin>`
-6. Use diff hunks in `<changes>` to map inline comments to the correct lines
-7. Derive `<eligible-findings>` as findings that are:
+6. Derive `<prior-review-baseline>` from `<pr-context.reviews>` authored by `<pr-context.viewerLogin>`
+7. Use diff hunks in `<changes>` to map inline comments to the correct lines
+8. Derive `<eligible-findings>` as findings that are:
     - new in this diff
     - from a previously unreviewed changed area
     - clearly missed material defects with a concrete failure mode

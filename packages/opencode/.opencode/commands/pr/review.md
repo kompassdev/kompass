@@ -33,23 +33,29 @@ $ARGUMENTS
 - Do not run separate git or GitHub commands just to discover the PR before calling `kompass_pr_load`
 - Store the result as `<pr-context>`
 - Store the PR head branch as `<pr-branch>` from `<pr-context>.pr.headRefName` when it is available
-- Call `kompass_worktree_load` and store the result as `<worktree-context>`
-- Store the local branch as `<current-branch>` from `<worktree-context>.branch` when it is available
-- Store the local HEAD commit as `<current-head>` from `<worktree-context>.headOid` when it is available
 - Treat the loaded PR body, discussion, review history, and any attachments or linked artifacts returned by the loader as part of the source context
 - Review attached images, screenshots, videos, PDFs, and other linked files whenever they can affect the requested fix, review outcome, reproduction steps, or acceptance criteria
 - If any relevant attachment cannot be accessed, note that gap and continue only when the remaining PR context is still sufficient to proceed reliably
 
-### Align Local Branch
+### Load Worktree Context
+
+- Call `kompass_worktree_load` and store the result as `<worktree-context>`
+
+### Align Review Context
 
 - If `<pr-branch>` is unavailable, STOP and report that the PR head branch could not be determined
-- If `<current-head>` equals `<pr-context.pr.headRefOid>`, store `<current-branch>` as `<active-branch>` when `<current-branch>` is available; otherwise store `<current-head>` as `<active-branch>`. Do not checkout because the worktree is already at the PR head commit.
-- If `<current-head>` differs from `<pr-context.pr.headRefOid>`:
+- Store the local branch as `<current-branch>` from `<worktree-context>.branch` when it is available
+- Store the local HEAD commit as `<current-head>` from `<worktree-context>.headOid` when it is available
+- If `<current-branch>` equals `<pr-branch>` and `<current-head>` equals `<pr-context.pr.headRefOid>`, store `<current-branch>` as `<active-branch>` and do not checkout again
+- If `<current-branch>` is available and (`<current-branch>` differs from `<pr-branch>` or `<current-head>` differs from `<pr-context.pr.headRefOid>`):
   - Run `gh pr checkout <pr-context.pr.number>` before inspecting local repository files for this PR review
-  - After checkout, store the active branch as `<active-branch>`
-  - Run `git rev-parse HEAD` again and store the trimmed result as `<current-head>`
+  - Call `kompass_worktree_load` again and store the result as `<worktree-context>`
+  - Store the local branch as `<current-branch>` from `<worktree-context>.branch` when it is available
+  - Store the local HEAD commit as `<current-head>` from `<worktree-context>.headOid` when it is available
+  - Store `<current-branch>` as `<active-branch>` when it is available
   - If checkout fails or times out, STOP and report that the PR branch could not be checked out locally; do not retry checkout unless the user explicitly asks
-- Do not inspect local repository code for this PR until `<current-head>` equals `<pr-context.pr.headRefOid>`
+- If `<current-branch>` is unavailable, store `<pr-context.pr.headRefOid>` as `<active-branch>` when it is available; otherwise store `<pr-branch>` as `<active-branch>`. Do not checkout from detached HEAD for read-only PR review.
+- Do not inspect local repository code for this PR from local files unless `<current-head>` equals `<pr-context.pr.headRefOid>`; use `<active-branch>` and `<changes>` as the source of truth for the PR head diff when local HEAD differs
 
 ### Load Ticket Context
 
@@ -70,18 +76,19 @@ Call `kompass_changes_load` with `base: <pr-context.pr.baseRefName>`, `head: <ac
 
 Following the reviewer agent guidance:
 1. Check `<pr-context.reviews>`, `<pr-context.issueComments>`, and `<pr-context.threads>`
-2. Use `<active-branch>` whenever local repository files need to be inspected alongside the diff
-3. Derive `<author-decisions>` from `<pr-context.issueComments>` and `<pr-context.threads>`:
+2. Use `<changes>` as the source of truth for the PR head diff
+3. Inspect local repository files only when `<current-head>` equals `<pr-context.pr.headRefOid>` after review alignment; otherwise rely on `<changes>` and avoid treating local checkout files as PR-head files
+4. Derive `<author-decisions>` from `<pr-context.issueComments>` and `<pr-context.threads>`:
    - Include direct author replies that explicitly decline, defer, or intentionally narrow a suggestion and explain why they do not plan to implement it
    - Treat each matching author reply as higher priority than `<ticket-context>` for that same concern, unless the current diff introduces a materially different defect with a concrete failure mode
    - Do not re-raise the same concern solely because `<ticket-context>` still implies a broader scope
-4. Derive `<settled-threads>` from `<pr-context.threads>`:
+5. Derive `<settled-threads>` from `<pr-context.threads>`:
    - Treat resolved threads as settled
    - Treat threads as settled when they already contain feedback from `<pr-context.viewerLogin>` and a later reply makes it clear the concern was intentionally declined, deferred, or answered without a code change request
    - Treat threads as settled when the author's reply directly answers the concern and the current diff does not add a materially different failure mode
-5. Derive `<prior-review-baseline>` from `<pr-context.reviews>` authored by `<pr-context.viewerLogin>`
-6. Use diff hunks in `<changes>` to map inline comments to the correct lines
-7. Derive `<eligible-findings>` as findings that are:
+6. Derive `<prior-review-baseline>` from `<pr-context.reviews>` authored by `<pr-context.viewerLogin>`
+7. Use diff hunks in `<changes>` to map inline comments to the correct lines
+8. Derive `<eligible-findings>` as findings that are:
     - new in this diff
     - from a previously unreviewed changed area
     - clearly missed material defects with a concrete failure mode

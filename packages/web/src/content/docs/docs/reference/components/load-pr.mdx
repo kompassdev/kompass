@@ -6,7 +6,7 @@ description: Shared partial for loading PR context through `pr_load`.
 ## Behavior
 
 - calls `pr_load` with an optional explicit PR ref
-- calls `worktree_load` with the PR head commit when available so PR workflows can align local checkout state
+- calls `worktree_load` to read local branch and HEAD state for checkout alignment
 - stores the result in the caller-provided placeholder
 - treats PR body, discussion, review history, and linked artifacts as source context
 - asks commands to review relevant screenshots, PDFs, and other attachments when they matter

@@ -437,6 +437,29 @@ const scenarios: CommandScenario[] = [
     ]
   },
   {
+    id: 'loop-pr-fix',
+    label: '/loop/pr/fix',
+    command: '/loop/pr/fix 51',
+    agentName: 'Navigator',
+    task: 'Watch PR CI and comments, then fix both hands-off',
+    group: 'orchestration',
+    steps: [
+      { id: 'thinking', phase: 'thinking', content: 'Load the PR, wait for checks to finish, reload comments, delegate a non-interactive fix pass for CI and feedback, then repeat until clean.' },
+      { id: 'tools', phase: 'tool_calls', toolCalls: [
+        { tool: 'pr_load', args: 'PR #51', status: 'complete' },
+        { tool: 'bash', args: 'gh pr checks 51 --watch', status: 'complete' },
+        { tool: 'pr_load', args: 'refresh PR feedback', status: 'complete' },
+        { tool: 'command_expansion', args: 'worker · pr/fix auto', status: 'complete' }
+      ] },
+      { id: 'output', phase: 'output', output: [
+        'PR loop complete for #51',
+        'CI failures remaining: 0',
+        'Actionable feedback remaining: 0',
+        'Fix passes completed: 1'
+      ] }
+    ]
+  },
+  {
     id: 'todo',
     label: '/todo',
     command: '/todo @TODO.md',

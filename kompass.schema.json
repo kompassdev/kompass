@@ -50,6 +50,9 @@
         "learn": {
           "$ref": "#/$defs/commandConfig"
         },
+        "loop/pr/fix": {
+          "$ref": "#/$defs/commandConfig"
+        },
         "merge": {
           "$ref": "#/$defs/commandConfig"
         },
@@ -106,6 +109,7 @@
               "commit-and-push",
               "dev",
               "learn",
+              "loop/pr/fix",
               "merge",
               "pr/create",
               "pr/fix",
@@ -136,6 +140,7 @@
               "commit-and-push",
               "dev",
               "learn",
+              "loop/pr/fix",
               "merge",
               "pr/create",
               "pr/fix",

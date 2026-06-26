@@ -17,6 +17,7 @@
     "commit-and-push": { "enabled": true },
     "dev": { "enabled": true },
     "learn": { "enabled": true },
+    "loop/pr/fix": { "enabled": true },
     "merge": { "enabled": true },
     "pr/create": { "enabled": true },
     "pr/fix": { "enabled": true },

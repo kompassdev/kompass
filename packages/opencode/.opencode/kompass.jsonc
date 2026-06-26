@@ -25,6 +25,9 @@
     "learn": {
       "enabled": true
     },
+    "loop/pr/fix": {
+      "enabled": true
+    },
     "merge": {
       "enabled": true
     },

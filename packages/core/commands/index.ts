@@ -51,6 +51,11 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     templatePath: "commands/learn.md",
     subtask: false,
   },
+  "loop/pr/fix": {
+    description: "Watch PR CI and comments, repeatedly fixing both without approval prompts",
+    agent: "navigator",
+    templatePath: "commands/loop/pr/fix.md",
+  },
   merge: {
     description: "Merge a branch and auto-resolve conflicts best-effort",
     agent: "worker",
@@ -62,7 +67,7 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     templatePath: "commands/pr/create.md",
   },
   "pr/fix": {
-    description: "Fix PR feedback, push updates, and reply",
+    description: "Fix PR feedback or CI failures, push updates, and reply",
     agent: "worker",
     templatePath: "commands/pr/fix.md",
     subtask: false,

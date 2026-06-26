@@ -29,6 +29,7 @@ export const DEFAULT_COMMAND_NAMES = [
   "commit-and-push",
   "dev",
   "learn",
+  "loop/pr/fix",
   "merge",
   "pr/create",
   "pr/fix",
@@ -97,6 +98,7 @@ export interface KompassConfig {
     "commit-and-push"?: CommandConfig;
     dev?: CommandConfig;
     learn?: CommandConfig;
+    "loop/pr/fix"?: CommandConfig;
     merge?: CommandConfig;
     "pr/create"?: CommandConfig;
     "pr/fix"?: CommandConfig;

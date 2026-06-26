@@ -1,10 +1,10 @@
 ## Goal
 
-Address feedback on a pull request by making fixes and responding to review threads.
+Address feedback or CI failures on a pull request by making fixes and responding to review threads.
 
 ## Additional Context
 
-Use `<additional-context>` when prioritizing which review feedback to address first and when deciding how much scope to take on in this pass.
+Use `<additional-context>` when prioritizing which review feedback or CI failure to address first and when deciding how much scope to take on in this pass.
 - Default `/pr/fix` behavior is review-first: show the proposed fix, gather feedback, and loop until the user approves before committing, pushing, or replying on the PR.
 - Treat `/pr/fix auto` as the explicit opt-in to skip the approval loop and proceed directly from passing validation to commit, push, and PR replies.
 
@@ -45,9 +45,10 @@ Call `<%= it.config.tools.changes_load.name %>` with `base: <pr-context.pr.baseR
 Separate true course corrections from noise or already-resolved feedback:
 1. Review `<pr-context.threads>` for open, unresolved conversations
 2. Check `<pr-context.reviews>` for state changes (CHANGES_REQUESTED, etc.)
-3. Use `<changes>` to understand the current PR diff before deciding what to adjust
-4. Prioritize critical issues (bugs, security, broken contracts)
-5. Identify which files need changes
+3. Include any CI failures, logs, failing check names, or reproduction details provided in `<additional-context>` as actionable feedback
+4. Use `<changes>` to understand the current PR diff before deciding what to adjust
+5. Prioritize critical issues (bugs, security, broken contracts, failing required checks)
+6. Identify which files need changes
 
 Do not blindly follow every suggestion—some may lead you off course.
 
@@ -85,7 +86,7 @@ Run the most relevant available validation for the fixes:
     - Keep custom answers enabled so the user can provide concrete feedback
   - If `<changes-count>` is `0`, ask exactly one `question` with:
     - header `Need Feedback`
-    - question `I did not make any changes for this PR feedback. What should I revise or investigate next?`
+    - question `I did not make any changes for this PR feedback or CI failure. What should I revise or investigate next?`
     - options:
       - `Revise` - provide feedback for another pass
       - `Stop Here` - stop without committing, pushing, or replying on the PR

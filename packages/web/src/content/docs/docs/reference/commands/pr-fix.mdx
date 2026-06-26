@@ -1,11 +1,11 @@
 ---
 title: /pr/fix
-description: Fix PR feedback with a review-first approval loop by default, then push and reply.
+description: Fix PR feedback or CI failures with a review-first approval loop by default, then push and reply.
 ---
 
 ## Purpose
 
-Use `/pr/fix` when a PR already exists and review feedback needs another implementation pass.
+Use `/pr/fix` when a PR already exists and review feedback or CI failures need another implementation pass.
 
 ## Usage
 
@@ -16,7 +16,7 @@ Use `/pr/fix` when a PR already exists and review feedback needs another impleme
 ## Typical flow
 
 - load the PR and existing review state
-- implement the requested fixes on the current branch
+- implement the requested review or CI fixes on the current branch
 - run relevant validation
 - in default mode, show the fix summary and wait for user approval before commit, push, or replies
 - skip that approval loop only with `/pr/fix auto`

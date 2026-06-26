@@ -34,6 +34,7 @@ describe("applyCommandsConfig", () => {
       const expectedCommands = [
         "ask",
         "branch",
+        "loop/pr/fix",
         "merge",
         "pr/create",
         "pr/review",
@@ -73,11 +74,13 @@ describe("applyCommandsConfig", () => {
       assert.equal(cfg.command!["ask"]?.agent, "worker");
       assert.equal(cfg.command!["ticket/ask"]?.agent, "worker");
       assert.equal(cfg.command!["dev"]?.agent, "navigator");
+      assert.equal(cfg.command!["loop/pr/fix"]?.agent, "navigator");
       assert.equal(cfg.command!["ship"]?.agent, "navigator");
       assert.equal(cfg.command!["todo"]?.agent, "navigator");
       assert.equal(cfg.command!["ticket/dev"]?.agent, "navigator");
       assert.ok(cfg.command!["pr/review"]?.description);
       assert.ok(cfg.command!["dev"]?.template);
+      assert.ok(cfg.command!["loop/pr/fix"]?.template);
       assert.ok(cfg.command!["branch"]?.template);
     });
   });
@@ -377,6 +380,7 @@ describe("applyCommandsConfig", () => {
       assert.equal(cfg.command!["pr/fix"]?.subtask, false);
       assert.equal(cfg.command!["pr/review"]?.subtask, true);
       assert.equal(cfg.command!["dev"]?.subtask, true);
+      assert.equal(cfg.command!["loop/pr/fix"]?.subtask, true);
       assert.equal(cfg.command!["ship"]?.subtask, true);
       assert.equal(cfg.command!["todo"]?.subtask, true);
     });
@@ -391,6 +395,7 @@ describe("applyCommandsConfig", () => {
       assert.equal(cfg.command!["pr/fix"]?.subtask, false);
       assert.equal(cfg.command!["pr/review"]?.subtask, false);
       assert.equal(cfg.command!["dev"]?.subtask, false);
+      assert.equal(cfg.command!["loop/pr/fix"]?.subtask, false);
       assert.equal(cfg.command!["ship"]?.subtask, false);
       assert.equal(cfg.command!["todo"]?.subtask, false);
     });
@@ -456,6 +461,7 @@ describe("applyCommandsConfig", () => {
       assert.ok(cfg.command!["pr/fix"]?.template);
       assert.ok(cfg.command!["skill/create"]?.template);
       assert.ok(cfg.command!["skill/optimize"]?.template);
+      assert.ok(cfg.command!["loop/pr/fix"]?.template);
       assert.ok(cfg.command!["ship"]?.template);
       assert.ok(cfg.command!["ticket/dev"]?.template);
       assert.ok(cfg.command!["review"]?.template);

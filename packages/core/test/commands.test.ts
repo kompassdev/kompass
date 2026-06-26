@@ -32,4 +32,14 @@ describe("resolveCommands", () => {
     assert.match(template, /Do not inspect or modify local code for this PR until `<active-branch>` equals `<pr-branch>`/);
     assert.doesNotMatch(template, /`<current-branch>` differs from `<pr-branch>` or `<current-head>` differs from `<pr-context\.pr\.headRefOid>`/);
   });
+
+  test("orchestrates loop pr fix through ci and delegated auto fixes", async () => {
+    const commands = await resolveCommands(process.cwd());
+    const template = commands["loop/pr/fix"]?.template ?? "";
+
+    assert.match(template, /gh pr checks <pr-number> --watch/);
+    assert.match(template, /command="pr\/fix"/);
+    assert.match(template, /auto <pr-url>/);
+    assert.doesNotMatch(template, /question/);
+  });
 });

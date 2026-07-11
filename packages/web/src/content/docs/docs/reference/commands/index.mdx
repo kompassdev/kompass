@@ -10,7 +10,7 @@ Kompass ships workflow-oriented commands authored as explicit templates in `pack
 - Workflow: `/ask`, `/branch`, `/commit`, `/commit-and-push`, `/merge`, `/rmslop`
 - Guidelines: `/learn`, `/skill/create`, `/skill/optimize`
 - Ticket: `/ticket/ask`, `/ticket/create`, `/ticket/dev`, `/ticket/plan`, `/ticket/plan-and-sync`
-- PR: `/pr/create`, `/pr/fix`, `/pr/review`, `/review`
+- PR: `/pr/create`, `/pr/fix`, `/pr/analyze`, `/pr/review`, `/review`
 - Orchestration: `/dev`, `/ship`, `/todo`, `/loop/pr/fix`
 
 ## What makes them different
@@ -154,7 +154,15 @@ Addresses PR feedback or CI failures by making fixes and responding to review th
 
 - usage: `/pr/fix [pr-or-auto-or-context]`
 - arguments: optional PR ref, `auto`, or additional fix guidance
-- expected tools: `pr_load`, file-edit tools, validation commands, `question` unless `auto`, `git push`, `pr_sync`
+- expected tools: `command_expansion(pr/analyze)`, file-edit tools, validation commands, `question` unless `auto`, `git push`, `pr_sync`
+
+### `/pr/analyze`
+
+Loads and filters PR review history into an actionable brief, excluding resolved and outdated threads.
+
+- usage: `/pr/analyze [pr-or-context]`
+- arguments: optional PR ref or analysis guidance
+- expected tools: `pr_load`
 
 ### `/loop/pr/fix`
 

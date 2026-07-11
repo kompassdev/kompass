@@ -1,0 +1,33 @@
+---
+title: /pr/analyze
+description: Load and filter PR review history into an actionable brief.
+---
+
+## Purpose
+
+Use `/pr/analyze` to load a pull request's full review history, filter out resolved and outdated threads, and return a compact actionable brief. The full thread history stays in the subagent's isolated context window — only filtered, actionable feedback reaches the caller.
+
+## Usage
+
+```text
+/pr/analyze [pr-or-context]
+```
+
+## Typical flow
+
+- load the PR and full review history via `pr_load`
+- filter out resolved and outdated threads
+- detect effectively-resolved threads (author reply + later commit)
+- categorize remaining threads by severity (critical, important, style, noise, question)
+- partition actionable threads into file-disjoint groups for parallel implementation
+- return a structured markdown brief with PR metadata, thread list, and group partition
+
+## Common tools
+
+- `pr_load`
+
+## Related
+
+- `/pr/fix`
+- `/loop/pr/fix`
+- `/pr/review`

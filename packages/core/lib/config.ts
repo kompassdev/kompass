@@ -33,6 +33,7 @@ export const DEFAULT_COMMAND_NAMES = [
   "merge",
   "pr/create",
   "pr/fix",
+  "pr/analyze",
   "pr/review",
   "review",
   "skill/create",

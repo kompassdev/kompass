@@ -15,7 +15,7 @@ Use `/pr/fix` when a PR already exists and review feedback or CI failures need a
 
 ## Typical flow
 
-- load the PR and existing review state
+- delegate PR analysis to `/pr/analyze` to load and filter review history into an actionable brief
 - implement the requested review or CI fixes on the current branch
 - run relevant validation
 - in default mode, show the fix summary and wait for user approval before commit, push, or replies
@@ -24,7 +24,7 @@ Use `/pr/fix` when a PR already exists and review feedback or CI failures need a
 
 ## Common tools
 
-- `pr_load`
+- `command_expansion(pr/analyze)`
 - `question`
 - `apply_patch`
 - `pr_sync`

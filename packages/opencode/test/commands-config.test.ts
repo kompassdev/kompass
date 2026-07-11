@@ -39,6 +39,7 @@ describe("applyCommandsConfig", () => {
         "pr/create",
         "pr/review",
         "pr/fix",
+        "pr/analyze",
         "skill/create",
         "skill/optimize",
         "ship",
@@ -63,6 +64,7 @@ describe("applyCommandsConfig", () => {
 
       assert.ok(cfg.command);
       assert.equal(cfg.command!["pr/review"]?.agent, "reviewer");
+      assert.equal(cfg.command!["pr/analyze"]?.agent, "reviewer");
       assert.equal(cfg.command!["branch"]?.agent, "worker");
       assert.equal(cfg.command!["merge"]?.agent, "worker");
       assert.equal(cfg.command!["pr/create"]?.agent, "worker");
@@ -501,13 +503,13 @@ describe("applyCommandsConfig", () => {
 
       assert.ok(cfg.command);
       const devTemplate = cfg.command!["dev"].template;
-      
+
       // Should have replaced components
       assert.match(devTemplate, /Development Flow Navigation Guide/);
       // PR Author content is now inline in pr/create, not embedded in dev
       assert.match(devTemplate, /## Goal/);
       assert.match(devTemplate, /Implement a feature or fix/);
-      
+
       assert.doesNotMatch(devTemplate, /<%/);
     });
 
@@ -519,13 +521,13 @@ describe("applyCommandsConfig", () => {
 
       assert.ok(cfg.command);
       const prCreateTemplate = cfg.command!["pr/create"].template;
-      
+
       // Should have inline workflow content (no longer uses PR Author component)
       assert.match(prCreateTemplate, /## Goal/);
       assert.match(prCreateTemplate, /Create a pull request/);
       assert.match(prCreateTemplate, /Interpret Arguments/);
       assert.match(prCreateTemplate, /Load & Analyze Changes/);
-      
+
       assert.doesNotMatch(prCreateTemplate, /<%/);
     });
 
@@ -577,7 +579,7 @@ describe("applyCommandsConfig", () => {
 
       assert.ok(cfg.command);
       const ticketDevTemplate = cfg.command!["ticket/dev"].template;
-      
+
       // Should have replaced components
       assert.match(ticketDevTemplate, /Development Flow Navigation Guide/);
       // PR Author content is now inline in pr/create, not embedded here
@@ -637,7 +639,7 @@ describe("applyCommandsConfig", () => {
       await applyCommandsConfig(cfg as never, process.cwd());
 
       assert.ok(cfg.command);
-      
+
       const commitTemplate = cfg.command!["commit"].template;
       assert.match(commitTemplate, /pass `uncommitted: true`/);
       assert.doesNotMatch(commitTemplate, /<%/);
@@ -650,10 +652,10 @@ describe("applyCommandsConfig", () => {
       await applyCommandsConfig(cfg as never, process.cwd());
 
       assert.ok(cfg.command);
-      
+
       const commitTemplate = cfg.command!["commit"].template;
       const prCreateTemplate = cfg.command!["pr/create"].template;
-      
+
       assert.match(commitTemplate, /pass `uncommitted: true`/);
       assert.match(prCreateTemplate, /base branch/);
     });

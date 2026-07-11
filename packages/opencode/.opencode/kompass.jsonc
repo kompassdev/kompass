@@ -37,6 +37,9 @@
     "pr/fix": {
       "enabled": true
     },
+    "pr/analyze": {
+      "enabled": true
+    },
     "pr/review": {
       "enabled": true
     },

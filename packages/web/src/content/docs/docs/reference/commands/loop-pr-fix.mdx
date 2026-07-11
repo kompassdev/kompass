@@ -11,9 +11,9 @@ Use `/loop/pr/fix` when a PR should be advanced hands-off until both CI and revi
 
 ## Behavior
 
-- loads the PR and stores the PR URL and number
+- delegates PR analysis to `/pr/analyze` to load and filter review history
 - watches `gh pr checks <number> --watch` until the latest checks finish
-- reloads the PR after checks finish
+- reloads PR feedback via `/pr/analyze` after checks finish
 - delegates actionable CI failures and PR feedback to `/pr/fix auto`
 - repeats after each push until no actionable CI failures or PR feedback remain
 - stops on failing validation, failed push, failed PR replies, or no-change feedback loops
@@ -21,4 +21,5 @@ Use `/loop/pr/fix` when a PR should be advanced hands-off until both CI and revi
 ## Related
 
 - `/pr/fix`
+- `/pr/analyze`
 - `/pr/review`

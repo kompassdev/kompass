@@ -21,6 +21,7 @@
     "merge": { "enabled": true },
     "pr/create": { "enabled": true },
     "pr/fix": { "enabled": true },
+    "pr/analyze": { "enabled": true },
     "pr/review": { "enabled": true },
     "review": { "enabled": true },
     "skill/create": { "enabled": true },

@@ -23,12 +23,17 @@ $ARGUMENTS
 - If empty, leave `<pr-ref>` undefined and let `<%= it.config.tools.pr_load.name %>` resolve the default PR context
 - Initialize `<completed-fix-passes>` as `0`
 
-### Load PR Context
+### Delegate PR Analysis
 
-<%~ include("@load-pr", { config: it.config, ref: "<pr-ref>", result: "<pr-context>" }) %>
+<delegate agent="<%= it.config.agents.reviewer.name %>" command="<%= it.config.commands["pr/analyze"].name %>">
+<pr-ref>
 
-- Store `<pr-url>` as `<pr-context.pr.url>`
-- Store `<pr-number>` as `<pr-context.pr.number>`
+Additional context: <additional-context>
+</delegate>
+
+- Store the delegated result as `<pr-analysis>`
+- Extract `<pr-url>` from the PR_URL section of `<pr-analysis>`
+- Extract `<pr-number>` from the PR_NUMBER section of `<pr-analysis>`
 - STOP if `<pr-url>` or `<pr-number>` is unavailable
 
 ### Watch CI And Comments
@@ -41,10 +46,14 @@ $ARGUMENTS
 
 ### Reload PR Feedback
 
-Call `<%= it.config.tools.pr_load.name %>` with `<pr-url>` and store the refreshed result as `<fresh-pr-context>`.
+<delegate agent="<%= it.config.agents.reviewer.name %>" command="<%= it.config.commands["pr/analyze"].name %>">
+<pr-url>
 
-- Review `<fresh-pr-context.threads>`, `<fresh-pr-context.reviews>`, and `<fresh-pr-context.issueComments>`
-- Identify open, unresolved, actionable reviewer feedback that has not already been answered by the author or superseded by later commits
+Additional context: <additional-context>
+</delegate>
+
+- Store the refreshed result as `<fresh-pr-analysis>`
+- Use the THREADS and SUMMARY sections from `<fresh-pr-analysis>` to identify open, unresolved, actionable reviewer feedback that has not already been answered by the author or superseded by later commits
 - Combine actionable reviewer feedback and `<ci-failures>` into `<actionable-work>`
 - Store the number of actionable reviewer items as `<actionable-feedback-count>`
 - Store the number of actionable CI failures as `<actionable-ci-count>`

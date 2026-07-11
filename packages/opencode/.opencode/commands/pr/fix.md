@@ -29,41 +29,41 @@ $ARGUMENTS
 - Otherwise, store `<execution-mode>` as `review`
 - If empty, leave `<pr-ref>` undefined and let `kompass_pr_load` resolve the default PR context
 
-### Load PR Context
+### Delegate PR Analysis
 
-- Use `kompass_pr_load` as the source of truth for PR selection
-- If `<pr-ref>` is defined, call `kompass_pr_load` with `pr: <pr-ref>`
-- Otherwise, call `kompass_pr_load` with no arguments
-- Do not run separate git or GitHub commands just to discover the PR before calling `kompass_pr_load`
-- Store the result as `<pr-context>`
-- Store the PR head branch as `<pr-branch>` from `<pr-context>.pr.headRefName` when it is available
-- Run `git branch --show-current` and store the trimmed result as `<current-branch>` when it is available
-- Run `git rev-parse HEAD` and store the trimmed result as `<current-head>` when it is available
-- Treat the loaded PR body, discussion, review history, and any attachments or linked artifacts returned by the loader as part of the source context
-- Review attached images, screenshots, videos, PDFs, and other linked files whenever they can affect the requested fix, review outcome, reproduction steps, or acceptance criteria
-- If any relevant attachment cannot be accessed, note that gap and continue only when the remaining PR context is still sufficient to proceed reliably
+<delegate agent="reviewer" command="pr/analyze">
+<pr-ref>
+
+Additional context: <additional-context>
+</delegate>
+
+- Store the delegated result as `<pr-analysis>`
+- Extract `<pr-number>` from the PR_NUMBER section of `<pr-analysis>`
+- Extract `<pr-branch>` from the PR_BRANCH section of `<pr-analysis>`
+- Extract `<base-branch>` from the BASE_BRANCH section of `<pr-analysis>`
+- Extract `<pr-url>` from the PR_URL section of `<pr-analysis>`
+- Extract `<commit-count>` from the COMMIT_COUNT section of `<pr-analysis>`
+- STOP if `<pr-analysis>` is unavailable or reports no actionable feedback
 
 ### Align Local Branch
 
 - If `<pr-branch>` is unavailable, STOP and report that the PR head branch could not be determined
-- Run `gh pr checkout <pr-context.pr.number>` before analyzing repository files or making code changes for this PR
+- Run `gh pr checkout <pr-number>` before analyzing repository files or making code changes for this PR
 - After checkout, store the active branch as `<active-branch>`
 - If checkout fails or times out, STOP and report that the PR branch could not be checked out locally; do not retry checkout unless the user explicitly asks
 - Do not inspect or modify local code for this PR until `<active-branch>` equals `<pr-branch>`
 
 ### Load Changes
 
-Call `kompass_changes_load` with `base: <pr-context.pr.baseRefName>`, `head: <active-branch>`, and `depthHint: <pr-context.pr.commitCount>` only when it is a positive integer. Store as `<changes>`.
+Call `kompass_changes_load` with `base: <base-branch>`, `head: <active-branch>`, and `depthHint: <commit-count>` only when it is a positive integer. Store as `<changes>`.
 
 ### Analyze Feedback
 
-Separate true course corrections from noise or already-resolved feedback:
-1. Review `<pr-context.threads>` for open, unresolved conversations
-2. Check `<pr-context.reviews>` for state changes (CHANGES_REQUESTED, etc.)
-3. Include any CI failures, logs, failing check names, or reproduction details provided in `<additional-context>` as actionable feedback
-4. Use `<changes>` to understand the current PR diff before deciding what to adjust
-5. Prioritize critical issues (bugs, security, broken contracts, failing required checks)
-6. Identify which files need changes
+- Use the THREADS, SUMMARY, and GROUPS sections from `<pr-analysis>` as the filtered, actionable feedback source
+- Include any CI failures, logs, failing check names, or reproduction details provided in `<additional-context>` as actionable feedback
+- Use `<changes>` to understand the current PR diff before deciding what to adjust
+- Prioritize critical issues (bugs, security, broken contracts, failing required checks)
+- Identify which files need changes
 
 Do not blindly follow every suggestion—some may lead you off course.
 
@@ -136,13 +136,13 @@ Only after commit and push succeed, reply to addressed threads:
 
 ```
 # General PR comment
-kompass_pr_sync refUrl="<pr-context.pr.url>" commentBody="<reply-text>"
+kompass_pr_sync refUrl="<pr-url>" commentBody="<reply-text>"
 
 # Reply to a specific review thread (use comment.id from threads.comments)
-kompass_pr_sync refUrl="<pr-context.pr.url>" replies=[{"inReplyTo": <comment-id>, "body": "<reply-text>"}]
+kompass_pr_sync refUrl="<pr-url>" replies=[{"inReplyTo": <comment-id>, "body": "<reply-text>"}]
 
 # Follow-up inline review comment on a specific line
-kompass_pr_sync refUrl="<pr-context.pr.url>" commitId="<commit-sha>" review={"comments": [{"path": "<file-path>", "line": <line-number>, "body": "<reply-text>"}]}
+kompass_pr_sync refUrl="<pr-url>" commitId="<commit-sha>" review={"comments": [{"path": "<file-path>", "line": <line-number>, "body": "<reply-text>"}]}
 ```
 
 Confirm which feedback was addressed and which was intentionally not followed.
@@ -152,7 +152,7 @@ Confirm which feedback was addressed and which was intentionally not followed.
 
 When waiting for approval or revision feedback, display:
 ```
-Review fixes for PR #<pr-context.pr.number>
+Review fixes for PR #<pr-number>
 
 - Changes made: <changes-count> files modified
 - Validation passing: <validation-passing>
@@ -161,7 +161,7 @@ Review fixes for PR #<pr-context.pr.number>
 
 If the workflow stops after a no-change pass, display:
 ```
-No changes made for PR #<pr-context.pr.number>
+No changes made for PR #<pr-number>
 
 - Changes made: 0 files modified
 - Validation passing: <validation-passing>
@@ -172,7 +172,7 @@ No additional steps are required.
 
 When fixes are complete, display exactly this final completion summary and stop. Do not continue with extra analysis, planning, or follow-up tasks unless the workflow is blocked or the user asked for more:
 ```
-PR fix complete for #<pr-context.pr.number>
+PR fix complete for #<pr-number>
 
 - Changes made: <changes-count> files modified
 - Threads resolved: <threads-resolved>

@@ -28,22 +28,17 @@ $ARGUMENTS
 - If empty, leave `<pr-ref>` undefined and let `kompass_pr_load` resolve the default PR context
 - Initialize `<completed-fix-passes>` as `0`
 
-### Load PR Context
+### Delegate PR Analysis
 
-- Use `kompass_pr_load` as the source of truth for PR selection
-- If `<pr-ref>` is defined, call `kompass_pr_load` with `pr: <pr-ref>`
-- Otherwise, call `kompass_pr_load` with no arguments
-- Do not run separate git or GitHub commands just to discover the PR before calling `kompass_pr_load`
-- Store the result as `<pr-context>`
-- Store the PR head branch as `<pr-branch>` from `<pr-context>.pr.headRefName` when it is available
-- Run `git branch --show-current` and store the trimmed result as `<current-branch>` when it is available
-- Run `git rev-parse HEAD` and store the trimmed result as `<current-head>` when it is available
-- Treat the loaded PR body, discussion, review history, and any attachments or linked artifacts returned by the loader as part of the source context
-- Review attached images, screenshots, videos, PDFs, and other linked files whenever they can affect the requested fix, review outcome, reproduction steps, or acceptance criteria
-- If any relevant attachment cannot be accessed, note that gap and continue only when the remaining PR context is still sufficient to proceed reliably
+<delegate agent="reviewer" command="pr/analyze">
+<pr-ref>
 
-- Store `<pr-url>` as `<pr-context.pr.url>`
-- Store `<pr-number>` as `<pr-context.pr.number>`
+Additional context: <additional-context>
+</delegate>
+
+- Store the delegated result as `<pr-analysis>`
+- Extract `<pr-url>` from the PR_URL section of `<pr-analysis>`
+- Extract `<pr-number>` from the PR_NUMBER section of `<pr-analysis>`
 - STOP if `<pr-url>` or `<pr-number>` is unavailable
 
 ### Watch CI And Comments
@@ -56,10 +51,14 @@ $ARGUMENTS
 
 ### Reload PR Feedback
 
-Call `kompass_pr_load` with `<pr-url>` and store the refreshed result as `<fresh-pr-context>`.
+<delegate agent="reviewer" command="pr/analyze">
+<pr-url>
 
-- Review `<fresh-pr-context.threads>`, `<fresh-pr-context.reviews>`, and `<fresh-pr-context.issueComments>`
-- Identify open, unresolved, actionable reviewer feedback that has not already been answered by the author or superseded by later commits
+Additional context: <additional-context>
+</delegate>
+
+- Store the refreshed result as `<fresh-pr-analysis>`
+- Use the THREADS and SUMMARY sections from `<fresh-pr-analysis>` to identify open, unresolved, actionable reviewer feedback that has not already been answered by the author or superseded by later commits
 - Combine actionable reviewer feedback and `<ci-failures>` into `<actionable-work>`
 - Store the number of actionable reviewer items as `<actionable-feedback-count>`
 - Store the number of actionable CI failures as `<actionable-ci-count>`

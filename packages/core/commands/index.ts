@@ -72,6 +72,11 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     templatePath: "commands/pr/fix.md",
     subtask: false,
   },
+  "pr/analyze": {
+    description: "Load and filter PR review history into an actionable brief",
+    agent: "reviewer",
+    templatePath: "commands/pr/analyze.md",
+  },
   "pr/review": {
     description: "Review the current PR and publish review feedback",
     agent: "reviewer",

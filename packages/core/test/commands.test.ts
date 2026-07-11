@@ -28,7 +28,7 @@ describe("resolveCommands", () => {
     const commands = await resolveCommands(process.cwd());
     const template = commands["pr/fix"]?.template ?? "";
 
-    assert.match(template, /Run `gh pr checkout <pr-context\.pr\.number>` before analyzing repository files or making code changes for this PR/);
+    assert.match(template, /Run `gh pr checkout <pr-number>` before analyzing repository files or making code changes for this PR/);
     assert.match(template, /Do not inspect or modify local code for this PR until `<active-branch>` equals `<pr-branch>`/);
     assert.doesNotMatch(template, /`<current-branch>` differs from `<pr-branch>` or `<current-head>` differs from `<pr-context\.pr\.headRefOid>`/);
   });

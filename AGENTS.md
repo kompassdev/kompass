@@ -61,17 +61,14 @@ packages/opencode/.opencode/ # Generated OpenCode output for review
 - Use angle-bracket placeholders consistently for derived values and stored context, such as `<arguments>`, `<base>`, `<additional-context>`, `<pr-url>`, and define each placeholder before it is referenced later in the command
 - When referring to placeholders literally in prose, always wrap them in backticks, such as `<arguments>` or `<pr-url>`; keep output examples plain when the placeholder represents substituted user-facing text
 - If arguments can mean different things, explicitly disambiguate them in `### Interpret Arguments` and store each interpretation in a separate placeholder
-- For navigator-style commands, separate context loading, blocker checks, delegated execution, and final reporting into distinct workflow subsections so the control flow is easy to follow
-- Prefer explicit subsection names like `### Load ... Context`, `### Check Blockers`, `### Delegate ...`, and `### Mark Complete And Loop` when the command coordinates multiple phases or subagents
+- For multi-step commands, separate context loading, blocker checks, execution, and final reporting into distinct workflow subsections so the control flow is easy to follow
+- Prefer explicit subsection names like `### Load ... Context`, `### Check Blockers`, and `### Mark Complete And Loop` when a command coordinates multiple phases
 - Treat loader tools and provided attachments as the source of truth for orchestration inputs; avoid extra exploratory commands when an existing tool result already answers the question
-- Before dispatching a same-session command step, say what delegated result should be stored and whether the workflow must stop, pause, or continue based on that result
-- Use literal `<delegate>` tags when the workflow must delegate exact text through `command_expansion`; `agent` and `command` are required, and the block body is the exact rendered body to send for that command
-- Do not use `<task>` blocks in command docs; author navigator delegation with `<delegate>` blocks only
-- Do not restate `command_expansion` or `task` mechanics inside command docs; navigator owns that execution flow
+- Reuse component phases within a command so state can be carried forward without repeated loader calls
 - When a command can pause for approval or loop over repeated work, describe the resume condition and the exact cases that must STOP without mutating state
 - Use `## Additional Context` for instructions about how optional guidance, related tickets, focus areas, or other stored context should influence analysis and response formatting
 - Use `### Output` as the final workflow step to define the exact user-facing response shape, including placeholders for generated values
-- Make success, blocked, no-op, waiting, and resume-required outcomes explicit in `### Output` or the surrounding workflow so navigator-led flows report deterministic end states
+- Make success, blocked, no-op, waiting, and resume-required outcomes explicit in `### Output` or the surrounding workflow so multi-step flows report deterministic end states
 - For terminal command outcomes, prefer an explicit final line inside the output block: `No additional steps are required.`
 - Omit that final line for outputs that intentionally wait for approval, pause for resume, loop to the next task, or otherwise continue beyond the current checkpoint
 - For one-off commands that do not orchestrate follow-up work, make every success, blocked, or no-op output explicitly terminal with that final line
@@ -106,45 +103,15 @@ $ARGUMENTS
 - Load the required file, ticket, or PR context
 - STOP if the source of truth cannot be loaded
 
-### Delegate Planning
+### Execute Workflow
 
-<delegate agent="planner" command="ticket/plan">
-
-Task: <task>
-Task context: <task-context>
-Additional context: <additional-context>
-</delegate>
-
-- Store the delegated result as `<plan>`
-- STOP if planning is blocked or unusable
-
-### Delegate Implementation
-
-<delegate agent="worker" command="dev">
-
-Plan: <plan>
-Constraints: <additional-context>
-</delegate>
-
-- Store the delegated result as `<implementation-result>`
-- STOP if implementation is blocked or incomplete
+- Run reusable component phases inline and preserve their named results
+- STOP if a required phase is blocked or incomplete
 
 ### Output
 
 - Define the exact success, blocked, and no-op response shapes
 - For terminal outcomes, end the output block with `No additional steps are required.` Omit that line when the command is intentionally waiting, looping, or continuing.
-```
-
-Example delegation rule:
-
-```text
-Before delegation, write the exact `<delegate ...>...</delegate>` block, say what delegated result should be stored, and whether the workflow should continue or STOP based on that result.
-```
-
-Example literal session command rule:
-
-```text
-Before literal command forwarding, write the exact `<delegate ...>...</delegate>` block, then let navigator expand and execute it, and say what delegated result should be stored and whether the workflow should continue or STOP based on that result.
 ```
 
 ## Component Authoring

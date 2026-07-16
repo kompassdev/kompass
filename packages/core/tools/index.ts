@@ -5,8 +5,8 @@ import {
   mergeWithDefaults,
 } from "../lib/config.ts";
 import { createChangesLoadTool } from "./changes-load.ts";
-import { createCommandExpansionTool } from "./dispatch.ts";
 import { createPrLoadTool } from "./pr-load.ts";
+import { createPrLoadReviewTool } from "./pr-load-review.ts";
 import { createPrSyncTool } from "./pr-sync.ts";
 import { createTicketLoadTool } from "./ticket-load.ts";
 import { createTicketSyncTool } from "./ticket-sync.ts";
@@ -14,8 +14,8 @@ import type { Shell, ToolDefinition } from "./shared.ts";
 
 const toolCreators: Record<string, ($: Shell, projectRoot: string) => ToolDefinition> = {
   changes_load: ($) => createChangesLoadTool($),
-  command_expansion: (_, projectRoot) => createCommandExpansionTool(projectRoot),
   pr_load: ($) => createPrLoadTool($),
+  pr_load_review: ($) => createPrLoadReviewTool($),
   pr_sync: ($) => createPrSyncTool($),
   ticket_sync: ($) => createTicketSyncTool($),
   ticket_load: ($) => createTicketLoadTool($),

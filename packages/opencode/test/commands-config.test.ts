@@ -34,14 +34,16 @@ describe("applyCommandsConfig", () => {
       const expectedCommands = [
         "ask",
         "branch",
-        "loop/pr/fix",
+        "commit/inline",
         "merge",
         "pr/create",
         "pr/review",
         "pr/fix",
+        "pr/fix/loop",
         "skill/create",
         "skill/optimize",
         "ship",
+        "ship/inline",
         "ticket/ask",
         "ticket/create",
         "ticket/plan",
@@ -73,14 +75,14 @@ describe("applyCommandsConfig", () => {
       assert.equal(cfg.command!["ticket/plan-and-sync"]?.agent, "planner");
       assert.equal(cfg.command!["ask"]?.agent, "worker");
       assert.equal(cfg.command!["ticket/ask"]?.agent, "worker");
-      assert.equal(cfg.command!["dev"]?.agent, "navigator");
-      assert.equal(cfg.command!["loop/pr/fix"]?.agent, "navigator");
-      assert.equal(cfg.command!["ship"]?.agent, "navigator");
-      assert.equal(cfg.command!["todo"]?.agent, "navigator");
-      assert.equal(cfg.command!["ticket/dev"]?.agent, "navigator");
+      assert.equal(cfg.command!["dev"]?.agent, "worker");
+      assert.equal(cfg.command!["pr/fix/loop"]?.agent, "worker");
+      assert.equal(cfg.command!["ship"]?.agent, "worker");
+      assert.equal(cfg.command!["todo"]?.agent, "worker");
+      assert.equal(cfg.command!["ticket/dev"]?.agent, "worker");
       assert.ok(cfg.command!["pr/review"]?.description);
       assert.ok(cfg.command!["dev"]?.template);
-      assert.ok(cfg.command!["loop/pr/fix"]?.template);
+      assert.ok(cfg.command!["pr/fix/loop"]?.template);
       assert.ok(cfg.command!["branch"]?.template);
     });
   });
@@ -189,7 +191,7 @@ describe("applyCommandsConfig", () => {
 
         assert.ok(cfg.command?.["open-pr"]);
         assert.equal(cfg.command?.["pr/create"], undefined);
-        assert.match(cfg.command?.ship.template ?? "", /command="open-pr"/);
+        assert.doesNotMatch(cfg.command?.ship.template ?? "", /<delegate/);
       } finally {
         await rm(tempDir, { recursive: true, force: true });
       }
@@ -377,11 +379,13 @@ describe("applyCommandsConfig", () => {
       await applyCommandsConfig(cfg as never, process.cwd());
 
       assert.ok(cfg.command);
-      assert.equal(cfg.command!["pr/fix"]?.subtask, false);
+      assert.equal(cfg.command!["pr/fix"]?.subtask, true);
       assert.equal(cfg.command!["pr/review"]?.subtask, true);
       assert.equal(cfg.command!["dev"]?.subtask, true);
-      assert.equal(cfg.command!["loop/pr/fix"]?.subtask, true);
+      assert.equal(cfg.command!["pr/fix/loop"]?.subtask, true);
       assert.equal(cfg.command!["ship"]?.subtask, true);
+      assert.equal(cfg.command!["commit/inline"]?.subtask, false);
+      assert.equal(cfg.command!["ship/inline"]?.subtask, false);
       assert.equal(cfg.command!["todo"]?.subtask, true);
     });
 
@@ -395,8 +399,10 @@ describe("applyCommandsConfig", () => {
       assert.equal(cfg.command!["pr/fix"]?.subtask, false);
       assert.equal(cfg.command!["pr/review"]?.subtask, false);
       assert.equal(cfg.command!["dev"]?.subtask, false);
-      assert.equal(cfg.command!["loop/pr/fix"]?.subtask, false);
+      assert.equal(cfg.command!["pr/fix/loop"]?.subtask, false);
       assert.equal(cfg.command!["ship"]?.subtask, false);
+      assert.equal(cfg.command!["commit/inline"]?.subtask, false);
+      assert.equal(cfg.command!["ship/inline"]?.subtask, false);
       assert.equal(cfg.command!["todo"]?.subtask, false);
     });
   });
@@ -461,13 +467,13 @@ describe("applyCommandsConfig", () => {
       assert.ok(cfg.command!["pr/fix"]?.template);
       assert.ok(cfg.command!["skill/create"]?.template);
       assert.ok(cfg.command!["skill/optimize"]?.template);
-      assert.ok(cfg.command!["loop/pr/fix"]?.template);
+      assert.ok(cfg.command!["pr/fix/loop"]?.template);
       assert.ok(cfg.command!["ship"]?.template);
       assert.ok(cfg.command!["ticket/dev"]?.template);
       assert.ok(cfg.command!["review"]?.template);
     });
 
-    test("embeds literal delegate blocks in ship command", async () => {
+    test("embeds inline reusable phases in ship command", async () => {
       delete process.env.CI;
       const cfg: { command?: Record<string, { template: string }> } = {};
 
@@ -477,17 +483,11 @@ describe("applyCommandsConfig", () => {
       const shipTemplate = cfg.command!["ship"].template;
 
       assert.match(shipTemplate, /## Goal/);
-      assert.match(shipTemplate, /Ship the current work by dispatching/);
-      assert.match(shipTemplate, /Delegate Branch Creation/);
-      assert.match(shipTemplate, /<delegate agent="worker" command="branch">/);
-      assert.match(shipTemplate, /\nBranch naming guidance: <branch-context>\n<\/delegate>/);
-      assert.match(shipTemplate, /Store the delegated result as `<branch-result>`/);
-      assert.match(shipTemplate, /<delegate agent="worker" command="commit">/);
-      assert.match(shipTemplate, /\nAdditional context: <additional-context>\n<\/delegate>/);
-      assert.match(shipTemplate, /Store the delegated result as `<commit-result>`/);
-      assert.match(shipTemplate, /<delegate agent="worker" command="pr\/create">/);
-      assert.match(shipTemplate, /\nBase branch: <base>\nAdditional context: <additional-context>\n<\/delegate>/);
-      assert.match(shipTemplate, /Store the delegated result as `<pr-result>`/);
+      assert.match(shipTemplate, /Load Uncommitted Changes Once/);
+      assert.match(shipTemplate, /Check Branch/);
+      assert.match(shipTemplate, /Create Commit/);
+      assert.match(shipTemplate, /Create PR/);
+      assert.doesNotMatch(shipTemplate, /<delegate/);
       assert.match(shipTemplate, /Ship flow complete/);
 
       assert.doesNotMatch(shipTemplate, /<%/);
@@ -524,7 +524,7 @@ describe("applyCommandsConfig", () => {
       assert.match(prCreateTemplate, /## Goal/);
       assert.match(prCreateTemplate, /Create a pull request/);
       assert.match(prCreateTemplate, /Interpret Arguments/);
-      assert.match(prCreateTemplate, /Load & Analyze Changes/);
+      assert.match(prCreateTemplate, /Load And Analyze Changes/);
       
       assert.doesNotMatch(prCreateTemplate, /<%/);
     });
@@ -580,27 +580,17 @@ describe("applyCommandsConfig", () => {
       
       // Should have replaced components
       assert.match(ticketDevTemplate, /Development Flow Navigation Guide/);
-      // PR Author content is now inline in pr/create, not embedded here
       assert.match(ticketDevTemplate, /## Goal/);
       assert.match(ticketDevTemplate, /Implement a ticket/);
-      assert.match(ticketDevTemplate, /<delegate agent="worker" command="dev">/);
-      assert.match(ticketDevTemplate, /\nTicket reference: <ticket-ref>\nTicket context: <ticket-context>\nAdditional context: <additional-context>\n<\/delegate>/);
-      assert.match(ticketDevTemplate, /Store the delegated result as `<implementation-result>`/);
-      assert.match(ticketDevTemplate, /<delegate agent="worker" command="branch">/);
-      assert.match(ticketDevTemplate, /\nBranch naming guidance: <ticket-summary>\nAdditional context: <additional-context>\n<\/delegate>/);
-      assert.match(ticketDevTemplate, /Store the delegated result as `<branch-result>`/);
-      assert.match(ticketDevTemplate, /<delegate agent="worker" command="commit-and-push">/);
-      assert.match(ticketDevTemplate, /\nTicket reference: <ticket-ref>\nTicket summary: <ticket-summary>\nAdditional context: <additional-context>\n<\/delegate>/);
-      assert.match(ticketDevTemplate, /Store the delegated result as `<commit-result>`/);
-      assert.match(ticketDevTemplate, /<delegate agent="worker" command="pr\/create">/);
-      assert.match(ticketDevTemplate, /\nTicket reference: <ticket-ref>\nTicket context: <ticket-context>\nAdditional context: <additional-context>\n<\/delegate>/);
-      assert.match(ticketDevTemplate, /Store the delegated result as `<pr-result>`/);
-      assert.doesNotMatch(ticketDevTemplate, /<task agent=/);
+      assert.match(ticketDevTemplate, /Load Uncommitted Changes Once/);
+      assert.match(ticketDevTemplate, /Check Branch/);
+      assert.match(ticketDevTemplate, /Create PR/);
+      assert.doesNotMatch(ticketDevTemplate, /<delegate/);
 
       assert.doesNotMatch(ticketDevTemplate, /<%/);
     });
 
-    test("embeds literal delegate blocks in todo command", async () => {
+    test("embeds inline planning and implementation in todo command", async () => {
       delete process.env.CI;
       const cfg: { command?: Record<string, { template: string }> } = {};
 
@@ -611,18 +601,11 @@ describe("applyCommandsConfig", () => {
 
       assert.match(todoTemplate, /## Goal/);
       assert.match(todoTemplate, /Work through a todo file one pending item at a time by planning/);
-      assert.match(todoTemplate, /<delegate agent="planner" command="ticket\/plan">/);
-      assert.match(todoTemplate, /\nTask: <task>\nTask context: <task-context>\nAdditional context: <additional-context>\n<\/delegate>/);
-      assert.match(todoTemplate, /Store the delegated result as `<plan>`/);
-      assert.match(todoTemplate, /<delegate agent="worker" command="dev">/);
-      assert.match(todoTemplate, /Current plan: <plan>\nPlan feedback: <user-answer>/);
-      assert.match(todoTemplate, /\nPlan: <plan>\nTask: <task>\nTask context: <task-context>\nAdditional context: <additional-context>\n<\/delegate>/);
-      assert.match(todoTemplate, /Store the revised delegated result as `<plan>`/);
-      assert.match(todoTemplate, /<delegate agent="worker" command="commit">/);
-      assert.match(todoTemplate, /\nTask: <task>\nAdditional context: <additional-context>\n<\/delegate>/);
-      assert.match(todoTemplate, /Store the delegated result as `<implementation-result>`/);
-      assert.match(todoTemplate, /Store the delegated result as `<commit-result>`/);
-      assert.match(todoTemplate, /Todo: <todo-file>/);
+      assert.match(todoTemplate, /Plan Task/);
+      assert.match(todoTemplate, /Implement Task/);
+      assert.match(todoTemplate, /Load And Commit Task Changes/);
+      assert.doesNotMatch(todoTemplate, /<delegate/);
+      assert.match(todoTemplate, /Todo complete: <todo-file>/);
       assert.doesNotMatch(todoTemplate, /<task agent=/);
 
       assert.doesNotMatch(todoTemplate, /<%/);

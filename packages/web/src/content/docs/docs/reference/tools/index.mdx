@@ -8,8 +8,8 @@ Kompass uses structured tools to keep workflows grounded in repository and GitHu
 Current built-in tools:
 
 - `changes_load`
-- `command_expansion`
 - `pr_load`
+- `pr_load_review`
 - `pr_sync`
 - `ticket_load`
 - `ticket_sync`
@@ -20,13 +20,13 @@ Current built-in tools:
 
 Loads either uncommitted worktree changes or a base/head git comparison, returning structured file diffs and optional commit metadata.
 
-### `command_expansion`
-
-Resolves an explicit command plus body into a rendered prompt so a navigator can delegate it immediately through `task`.
-
 ### `pr_load`
 
 Loads normalized PR metadata, review history, issue comments, review threads, repo identity, and viewer identity from GitHub.
+
+### `pr_load_review`
+
+Loads reviews, issue comments, and complete review threads changed after an exclusive ISO-8601 checkpoint. It returns a new `loadedAt` checkpoint for polling loops.
 
 ### `pr_sync`
 

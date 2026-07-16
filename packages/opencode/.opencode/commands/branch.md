@@ -46,20 +46,21 @@ $ARGUMENTS
 - Store the loaded change result as `<changes>`
 - Store the current branch as `<current-branch>` when it is available
 
-### Check Blockers
+### Check Branch
 
-- If `<changes>` contains no files, STOP and report that there is nothing to branch from
-- If `<current-branch>` already starts with a conventional work-branch category such as `feature/`, `fix/`, `refactor/`, `docs/`, `test/`, `chore/`, `feat/`, `bugfix/`, `hotfix/`, `perf/`, `build/`, or `ci/`, STOP and report that branching was skipped because the current branch already looks like a work branch
+- Store the current branch from `<changes>` as `<current-branch>` when available
+- If `<changes>` contains no files, store `<branch-result>` as `nothing to branch from` and skip branch creation
+- If `<current-branch>` starts with a conventional work category such as `feature/`, `fix/`, `refactor/`, `docs/`, `test/`, `chore/`, `feat/`, `bugfix/`, `hotfix/`, `perf/`, `build/`, or `ci/`, store `<branch-result>` as `kept <current-branch>` and skip branch creation
 
 ### Create Branch
 
-- Choose a branch category from the summarized change themes and `<branch-context>`
-- Prefer conventional categories such as `feature`, `fix`, `refactor`, `docs`, `test`, or `chore`
-- Store the chosen category as `<branch-category>`
-- Generate a concise kebab-case slug from the summarized change themes and `<branch-context>` when available, then store it as `<branch-slug>`
+When branch creation was not skipped:
+- Choose a conventional category such as `feature`, `fix`, `refactor`, `docs`, `test`, or `chore` from the change themes and `<branch-context>`
+- Generate a concise kebab-case slug from the same context
 - Create and checkout `<branch-category>/<branch-slug>` with `git checkout -b`
-- If that name already exists, retry once with a short numeric suffix
-- Store the checked-out branch as `<new-branch>`
+- If that name exists, retry once with a short numeric suffix
+- Store the checked-out branch as `<current-branch>` and `<branch-result>` as `created <current-branch>`
+- If branch creation fails, STOP and report the blocker
 
 ### Output
 
@@ -81,7 +82,7 @@ No additional steps are required.
 
 When the branch is created, display:
 ```
-Created branch: <new-branch>
+Created branch: <current-branch>
 
 From: <current-branch>
 

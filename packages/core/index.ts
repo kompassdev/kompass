@@ -22,9 +22,8 @@ export type {
 } from "./lib/config.ts";
 export { createTools } from "./tools/index.ts";
 export { createChangesLoadTool } from "./tools/changes-load.ts";
-export { createCommandExpansionTool, resolveCommandExpansion } from "./tools/dispatch.ts";
-export type { CommandExpansion } from "./tools/dispatch.ts";
 export { createPrLoadTool } from "./tools/pr-load.ts";
+export { createPrLoadReviewTool } from "./tools/pr-load-review.ts";
 export { createPrSyncTool } from "./tools/pr-sync.ts";
 export { createTicketLoadTool } from "./tools/ticket-load.ts";
 export { createTicketSyncTool } from "./tools/ticket-sync.ts";

@@ -11,6 +11,8 @@ Kompass is built around three working styles:
 
 The same command and agent structure can support each mode without forcing one interaction pattern.
 
+OpenCode normally runs commands as subtasks outside CI. Use `/commit/inline` or `/ship/inline` when the invoking session already has the required change context and should retain execution instead; these variants force `subtask: false` and skip their initial change load.
+
 ## Manual steering
 
 Use this when you want the tightest control.
@@ -31,6 +33,6 @@ Use this when you want shared planning and execution.
 
 Use this when you want the agent to run further on its own.
 
-- let navigator-style workflows orchestrate multiple phases
+- let stateful commands orchestrate multiple phases inline
 - rely on structured tools instead of ad-hoc context guessing
 - review artifacts such as plans, tickets, and PRs at checkpoints

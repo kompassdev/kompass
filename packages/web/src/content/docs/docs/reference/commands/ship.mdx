@@ -5,22 +5,26 @@ description: Move current work through branch, commit, and PR creation as a fast
 
 ## Purpose
 
-Use `/ship` when you want a fast path from current work to a PR through local orchestration and delegated command steps.
+Use `/ship` when you want a fast path from current work to a PR in one stateful workflow.
 
 ## Usage
 
 ```text
 /ship [base-or-context]
+/ship/inline [base-or-context]
 ```
+
+Use `/ship/inline` to run in the invoking session with `subtask: false`. It reuses known uncommitted-change context for branch and commit phases, while still loading the post-commit branch comparison required to create the PR.
 
 ## Typical flow
 
 - ensure there is a suitable work branch
-- expand and delegate `branch`, `commit`, and `pr/create`
+- load uncommitted changes once for branch naming and commit creation
+- reload the committed branch comparison only when preparing the PR
 - stop on blockers and report `Nothing to ship` when PR creation finds no shippable work
 
 ## Common tools
 
-- `command_expansion(worker, branch)`
-- `command_expansion(worker, commit)`
-- `command_expansion(worker, pr/create)`
+- `changes_load`
+- `ticket_sync`
+- `pr_sync`

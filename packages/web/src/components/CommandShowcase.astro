@@ -66,15 +66,14 @@ const scenarios: CommandScenario[] = [
   },
   {
     id: 'commit',
-    label: '/commit',
-    command: '/commit tighten command docs',
+    label: '/commit/inline',
+    command: '/commit/inline tighten command docs',
     agentName: 'Worker',
     task: 'Create a commit from uncommitted work',
     group: 'workflow',
     steps: [
-      { id: 'thinking', phase: 'thinking', content: 'Load uncommitted changes, stop if there is nothing to commit, then stage the work and write a conventional message.' },
+      { id: 'thinking', phase: 'thinking', content: 'Reuse the current session change context, stop if there is nothing to commit, then stage the work and write a conventional message.' },
       { id: 'tools', phase: 'tool_calls', toolCalls: [
-        { tool: 'changes_load', args: 'uncommitted: true', status: 'complete' },
         { tool: 'bash', args: 'git add -A', status: 'complete' },
         { tool: 'bash', args: 'git commit', status: 'complete' }
       ] },
@@ -249,17 +248,16 @@ const scenarios: CommandScenario[] = [
     id: 'ticket-dev',
     label: '/ticket/dev',
     command: '/ticket/dev #42',
-    agentName: 'Navigator',
+    agentName: 'Worker',
     task: 'Implement a ticket through PR creation',
     group: 'ticket',
     steps: [
-      { id: 'thinking', phase: 'thinking', content: 'Load the ticket, then orchestrate implementation, branch creation, commit-and-push, and PR creation in order.' },
+      { id: 'thinking', phase: 'thinking', content: 'Load the ticket, implement it, then reuse change context through branch, commit, push, and PR creation.' },
       { id: 'tools', phase: 'tool_calls', toolCalls: [
         { tool: 'ticket_load', args: '#42', status: 'complete' },
-        { tool: 'command_expansion', args: 'worker · dev', status: 'complete' },
-        { tool: 'command_expansion', args: 'worker · branch', status: 'complete' },
-        { tool: 'command_expansion', args: 'worker · commit-and-push', status: 'complete' },
-        { tool: 'command_expansion', args: 'worker · pr/create', status: 'complete' }
+        { tool: 'changes_load', args: 'uncommitted', status: 'complete' },
+        { tool: 'changes_load', args: 'branch comparison', status: 'complete' },
+        { tool: 'pr_sync', args: 'create PR', status: 'complete' }
       ] },
       { id: 'output', phase: 'output', output: [
         'Implemented ticket: refresh command docs',
@@ -338,9 +336,10 @@ const scenarios: CommandScenario[] = [
     task: 'Fix review feedback, then push and reply',
     group: 'pr',
     steps: [
-      { id: 'thinking', phase: 'thinking', content: 'Address the feedback, validate the fixes, then in default mode wait for approval before committing, pushing, or replying on the PR.' },
+      { id: 'thinking', phase: 'thinking', content: 'Update the PR branch from its base when needed, address the feedback, validate the fixes, then wait for approval before pushing or replying.' },
       { id: 'tools', phase: 'tool_calls', toolCalls: [
         { tool: 'pr_load', args: 'current PR', status: 'complete' },
+        { tool: 'bash', args: 'fetch and merge PR base when behind', status: 'complete' },
         { tool: 'apply_patch', args: 'implement requested fixes', status: 'complete' },
         { tool: 'question', args: 'Review Fixes', status: 'complete' },
         { tool: 'bash', args: 'git push', status: 'complete' },
@@ -417,17 +416,16 @@ const scenarios: CommandScenario[] = [
   },
   {
     id: 'ship',
-    label: '/ship',
-    command: '/ship',
-    agentName: 'Navigator',
-    task: 'Ship current work through delegated steps',
+    label: '/ship/inline',
+    command: '/ship/inline',
+    agentName: 'Worker',
+    task: 'Ship current work in one stateful workflow',
     group: 'orchestration',
     steps: [
-      { id: 'thinking', phase: 'thinking', content: 'Ensure a work branch, delegate commit creation, then delegate PR creation and stop on blockers.' },
+      { id: 'thinking', phase: 'thinking', content: 'Reuse current-session work for branch and commit phases, then load the committed branch comparison for PR creation.' },
       { id: 'tools', phase: 'tool_calls', toolCalls: [
-        { tool: 'command_expansion', args: 'worker · branch', status: 'complete' },
-        { tool: 'command_expansion', args: 'worker · commit', status: 'complete' },
-        { tool: 'command_expansion', args: 'worker · pr/create', status: 'complete' }
+        { tool: 'changes_load', args: 'branch comparison', status: 'complete' },
+        { tool: 'pr_sync', args: 'create PR', status: 'complete' }
       ] },
       { id: 'output', phase: 'output', output: [
         'Ship flow complete',
@@ -438,18 +436,18 @@ const scenarios: CommandScenario[] = [
   },
   {
     id: 'loop-pr-fix',
-    label: '/loop/pr/fix',
-    command: '/loop/pr/fix 51',
-    agentName: 'Navigator',
+    label: '/pr/fix/loop',
+    command: '/pr/fix/loop 51',
+    agentName: 'Worker',
     task: 'Watch PR CI and comments, then fix both hands-off',
     group: 'orchestration',
     steps: [
-      { id: 'thinking', phase: 'thinking', content: 'Load the PR, wait for checks to finish, reload comments, delegate a non-interactive fix pass for CI and feedback, then repeat until clean.' },
+      { id: 'thinking', phase: 'thinking', content: 'Load the PR once, wait for checks, incrementally load review activity, apply fixes inline, then repeat until clean.' },
       { id: 'tools', phase: 'tool_calls', toolCalls: [
         { tool: 'pr_load', args: 'PR #51', status: 'complete' },
         { tool: 'bash', args: 'gh pr checks 51 --watch', status: 'complete' },
-        { tool: 'pr_load', args: 'refresh PR feedback', status: 'complete' },
-        { tool: 'command_expansion', args: 'worker · pr/fix auto', status: 'complete' }
+        { tool: 'pr_load_review', args: 'since last checkpoint', status: 'complete' },
+        { tool: 'pr_sync', args: 'reply to addressed feedback', status: 'complete' }
       ] },
       { id: 'output', phase: 'output', output: [
         'PR loop complete for #51',
@@ -463,17 +461,16 @@ const scenarios: CommandScenario[] = [
     id: 'todo',
     label: '/todo',
     command: '/todo @TODO.md',
-    agentName: 'Navigator',
+    agentName: 'Worker',
     task: 'Work through a todo file one item at a time',
     group: 'orchestration',
     steps: [
       { id: 'thinking', phase: 'thinking', content: 'Take the first unchecked item only, plan it, get approval, implement it, commit it, mark it complete, and loop.' },
       { id: 'tools', phase: 'tool_calls', toolCalls: [
         { tool: 'read', args: '@TODO.md', status: 'complete' },
-        { tool: 'command_expansion', args: 'planner · ticket/plan', status: 'complete' },
         { tool: 'question', args: 'Plan Review', status: 'complete' },
-        { tool: 'command_expansion', args: 'worker · dev', status: 'complete' },
-        { tool: 'command_expansion', args: 'worker · commit', status: 'complete' }
+        { tool: 'changes_load', args: 'uncommitted', status: 'complete' },
+        { tool: 'bash', args: 'git commit', status: 'complete' }
       ] },
       { id: 'output', phase: 'output', output: [
         'Todo complete: @TODO.md',
@@ -662,27 +659,18 @@ const orchestrationScenarios = scenarios.filter(s => s.group === 'orchestration'
                         <div class="tool-calls-block__header">
                           <span class="tool-calls-block__icon">▸</span>
                           <span class="tool-calls-block__label">
-                            {step.toolCalls.some(t => t.tool === 'command_expansion') ? 'Delegated' : 'Explored'}
+                            Tools
                           </span>
                           <span class="tool-calls-block__count">
-                            {step.toolCalls.length} {step.toolCalls.some(t => t.tool === 'command_expansion') ? 'delegations' : 'reads, 1 search'}
+                            {step.toolCalls.length} calls
                           </span>
                         </div>
                         <div class="tool-calls-block__list">
                           {step.toolCalls.map((tool) => (
-                            <div class:list={{ "tool-call": true, "tool-call--session-command": tool.tool === 'command_expansion' }} data-tool-status={tool.status}>
-                              {tool.tool === 'command_expansion' ? (
-                                <>
-                                  <span class="tool-call__indicator"></span>
-                                  <span class="tool-call__session-command">{tool.args}</span>
-                                </>
-                              ) : (
-                                <>
-                                  <span class="tool-call__arrow">→</span>
-                                  <span class="tool-call__name">{tool.tool}</span>
-                                  <span class="tool-call__args">{tool.args}</span>
-                                </>
-                              )}
+                            <div class="tool-call" data-tool-status={tool.status}>
+                              <span class="tool-call__arrow">→</span>
+                              <span class="tool-call__name">{tool.tool}</span>
+                              <span class="tool-call__args">{tool.args}</span>
                             </div>
                           ))}
                         </div>

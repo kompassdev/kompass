@@ -21,7 +21,6 @@ export interface ResolvedAgentDefinition
 export function getAgentDefinitions(config: ReturnType<typeof mergeWithDefaults>): Record<string, AgentDefinition> {
   return {
     worker: config.agents.worker,
-    navigator: config.agents.navigator,
     reviewer: config.agents.reviewer,
     planner: config.agents.planner,
   };

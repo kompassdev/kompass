@@ -11,7 +11,10 @@ Use `/commit` to stage current work, generate a commit message, and create a com
 
 ```text
 /commit [message-guidance]
+/commit/inline [message-guidance]
 ```
+
+Use `/commit/inline` to run in the invoking session with `subtask: false`. It reuses the session's known uncommitted-change context and only inspects the worktree when that context is insufficient.
 
 ## Typical flow
 

@@ -7,17 +7,17 @@ Kompass ships workflow-oriented commands authored as explicit templates in `pack
 
 ## Groups
 
-- Workflow: `/ask`, `/branch`, `/commit`, `/commit-and-push`, `/merge`, `/rmslop`
+- Workflow: `/ask`, `/branch`, `/commit`, `/commit/inline`, `/commit-and-push`, `/merge`, `/rmslop`
 - Guidelines: `/learn`, `/skill/create`, `/skill/optimize`
 - Ticket: `/ticket/ask`, `/ticket/create`, `/ticket/dev`, `/ticket/plan`, `/ticket/plan-and-sync`
 - PR: `/pr/create`, `/pr/fix`, `/pr/review`, `/review`
-- Orchestration: `/dev`, `/ship`, `/todo`, `/loop/pr/fix`
+- Orchestration: `/dev`, `/ship`, `/ship/inline`, `/todo`, `/pr/fix/loop`
 
 ## What makes them different
 
 - each command is a documented workflow, not an opaque prompt
 - placeholders like `<arguments>`, `<plan>`, and `<ticket-url>` are normalized before execution
-- navigator workflows orchestrate locally and delegate focused leaf work with literal `<delegate>` blocks
+- multi-step commands preserve state and reuse shared component phases in one workflow
 - outputs are deterministic, reviewable, and usually terminal
 
 ## Workflow Commands
@@ -45,6 +45,14 @@ Creates a commit with an appropriate message summarizing uncommitted changes.
 - usage: `/commit [message-guidance]`
 - arguments: optional commit message guidance
 - expected tools: `changes_load(uncommitted)`, staging/commit git commands
+
+### `/commit/inline`
+
+Creates a commit in the invoking session, reusing its known uncommitted-change context instead of loading changes again.
+
+- usage: `/commit/inline [message-guidance]`
+- arguments: optional commit message guidance
+- expected tools: staging/commit git commands; worktree inspection only when session context is insufficient
 
 ### `/commit-and-push`
 
@@ -116,11 +124,11 @@ Creates a ticket summarizing the current change comparison.
 
 ### `/ticket/dev`
 
-Implements a ticket through a navigator-led orchestration of `/dev`, `/branch`, `/commit-and-push`, and `/pr/create`.
+Implements and ships a ticket in one stateful workflow.
 
 - usage: `/ticket/dev <ticket-reference>`
 - arguments: ticket reference, URL, file path, or raw request
-- expected tools: `ticket_load`, `command_expansion(dev)`, `command_expansion(branch)`, `command_expansion(commit-and-push)`, `command_expansion(pr/create)`
+- expected tools: `ticket_load`, `changes_load`, validation commands, `ticket_sync`, `pr_sync`
 
 ### `/ticket/plan`
 
@@ -156,13 +164,13 @@ Addresses PR feedback or CI failures by making fixes and responding to review th
 - arguments: optional PR ref, `auto`, or additional fix guidance
 - expected tools: `pr_load`, file-edit tools, validation commands, `question` unless `auto`, `git push`, `pr_sync`
 
-### `/loop/pr/fix`
+### `/pr/fix/loop`
 
-Watches PR CI and comments, then repeatedly delegates non-interactive CI and feedback fixes through `/pr/fix auto` until no actionable work remains.
+Watches PR CI and incrementally loads review activity, then repeatedly applies the shared non-interactive fix phase until no actionable work remains.
 
-- usage: `/loop/pr/fix [pr-or-context]`
+- usage: `/pr/fix/loop [pr-or-context]`
 - arguments: optional PR ref, CI guidance, or fix scope constraints
-- expected tools: `pr_load`, `gh pr checks --watch`, `command_expansion(pr/fix)`
+- expected tools: `pr_load`, `pr_load_review`, `gh pr checks --watch`, validation commands, `pr_sync`
 
 ### `/pr/review`
 
@@ -192,11 +200,19 @@ Implements a feature or fix, validates the result, and prepares a PR handoff.
 
 ### `/ship`
 
-Ships current work by delegating branch creation, commit creation, and PR creation.
+Ships current work through inline branch, commit, and PR phases.
 
 - usage: `/ship [context]`
 - arguments: optional base branch, branch naming guidance, or additional shipping context
-- expected tools: `command_expansion(branch)`, `command_expansion(commit)`, `command_expansion(pr/create)`
+- expected tools: `changes_load`, `ticket_sync`, `pr_sync`
+
+### `/ship/inline`
+
+Ships current work in the invoking session, reusing known uncommitted-change context for branch naming and commit creation before loading the post-commit PR comparison.
+
+- usage: `/ship/inline [context]`
+- arguments: optional base branch, branch naming guidance, or additional shipping context
+- expected tools: `changes_load` for the post-commit comparison, `ticket_sync`, `pr_sync`
 
 ### `/todo`
 
@@ -204,4 +220,4 @@ Works through a todo file one pending item at a time with planning, approval, im
 
 - usage: `/todo [@todo-file]`
 - arguments: optional `@file` reference and execution guidance; defaults to `@TODO.md`
-- expected tools: `read`, `question`, `command_expansion(ticket/plan)`, `command_expansion(dev)`, `command_expansion(commit)`
+- expected tools: `read`, `question`, `changes_load`, validation and git commands

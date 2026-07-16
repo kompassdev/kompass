@@ -1,10 +1,10 @@
 ## Goal
 
-Implement a ticket by orchestrating development, branching, commit-and-push, and PR creation.
+Implement a ticket, create a branch and commit, push it, and create a pull request in one workflow.
 
 ## Additional Context
 
-Use `<additional-context>` to refine scope, sequencing, and tradeoffs across the delegated `/<%= it.config.commands.dev.name %>`, `/<%= it.config.commands.branch.name %>`, `/<%= it.config.commands["commit-and-push"].name %>`, and `/<%= it.config.commands["pr/create"].name %>` steps.
+Use `<additional-context>` to refine scope and delivery. Reuse loaded change state across adjacent phases.
 
 ## Workflow
 
@@ -16,74 +16,54 @@ $ARGUMENTS
 
 ### Interpret Arguments
 
-- Interpret `<arguments>` as `<ticket-source>` (ticket reference, URL, file path, or raw request)
-- If `<arguments>` includes extra delivery guidance, scope constraints, or notes, store them as `<additional-context>`
-- If `<ticket-source>` is empty, derive it from the conversation before continuing
+- Store the ticket reference, URL, file, or request as `<ticket-source>`
+- Store extra delivery guidance as `<additional-context>`
 
 ### Load Ticket Context
 
 <%~ include("@load-ticket", { config: it.config, source: "<ticket-source>", result: "<ticket-context>" }) %>
-- Store the ticket reference for PR creation as `<ticket-ref>` by preferring the original reference, otherwise using the canonical ticket URL from `<ticket-context>` when one is available, otherwise using `SKIPPED`
-- Store a concise ticket summary as `<ticket-summary>`
-- If `<ticket-context>` cannot be loaded, STOP and report that the ticket source is missing or invalid
+- Store a concise `<ticket-summary>` and canonical `<ticket-url>` when available
+- STOP if ticket context cannot be loaded
+
+### Implement Ticket
 
 <%~ include("@dev-flow") %>
+- Implement the smallest complete change for `<ticket-context>` and `<additional-context>`
+- Run the most relevant available validation
+<% for (const line of it.config.shared.validation) { -%>
+- <%= line %>
+<% } -%>
+- Store results as `<validation-results>` and STOP if required validation fails
 
-### Delegate Implementation
+### Load Uncommitted Changes Once
 
-<delegate agent="<%= it.config.agents.worker.name %>" command="<%= it.config.commands.dev.name %>">
-Ticket reference: <ticket-ref>
-Ticket context: <ticket-context>
-Additional context: <additional-context>
-</delegate>
+<%~ include("@change-summary", { config: it.config, rules: "- pass `uncommitted: true` to get uncommitted changes only" }) %>
+- Store the result as `<changes>` and set `<branch-context>` to `<ticket-summary>`
 
-- Store the delegated result as `<implementation-result>`
-- If `<implementation-result>` is blocked or incomplete, STOP and report the implementation blocker
+<%~ include("@branch") %>
 
-### Delegate Branch Creation
+### Commit Changes
 
-<delegate agent="<%= it.config.agents.worker.name %>" command="<%= it.config.commands.branch.name %>">
-Branch naming guidance: <ticket-summary>
-Additional context: <additional-context>
-</delegate>
+- If `<changes>` contains files:
+<%~ include("@commit") %>
+- Otherwise, continue so previously committed ticket work can still be shipped
 
-- Store the delegated result as `<branch-result>`
-- If `<branch-result>` is blocked or incomplete, STOP and report the branch blocker
-- If `<branch-result>` says branching was skipped because the current branch already looks like a work branch, continue
+### Load Branch Changes
 
-### Delegate Commit And Push
+- Call `<%= it.config.tools.changes_load.name %>` with no parameters and store the result as `<changes>`
+- Store `<ticket-mode>` as `provided` when `<ticket-url>` exists, otherwise `skip`
 
-<delegate agent="<%= it.config.agents.worker.name %>" command="<%= it.config.commands["commit-and-push"].name %>">
-Ticket reference: <ticket-ref>
-Ticket summary: <ticket-summary>
-Additional context: <additional-context>
-</delegate>
-
-- Store the delegated result as `<commit-result>`
-- If `<commit-result>` is blocked or incomplete, STOP and report the commit or push blocker
-- If `<commit-result>` says there was nothing to commit or push, continue to PR creation so already-committed branch work can still be shipped
-
-### Delegate PR Creation
-
-<delegate agent="<%= it.config.agents.worker.name %>" command="<%= it.config.commands["pr/create"].name %>">
-Ticket reference: <ticket-ref>
-Ticket context: <ticket-context>
-Additional context: <additional-context>
-</delegate>
-
-- Store the delegated result as `<pr-result>`
-- If `<pr-result>` is blocked or incomplete, STOP and report the PR blocker
-- Otherwise, continue and store the resulting PR URL as `<pr-url>`
+<%~ include("@pr-create", { config: it.config }) %>
 
 ### Output
 
-When the ticket work is complete, display:
+When complete, display:
 ```
 Implemented ticket: <ticket-summary>
 
-Implementation: <implementation-result>
-Branch: <branch-result>
-Commit and push: <commit-result>
+Validation: <validation-results>
+Branch: <current-branch>
+Commit: <hash>
 PR: <pr-url>
 
 No additional steps are required.

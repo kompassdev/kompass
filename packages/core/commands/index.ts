@@ -16,7 +16,7 @@ interface CommandDefinition {
   agent: string;
   templatePath: string;
   subtask?: boolean;
-  config?: Record<string, unknown>;
+  templateData?: Record<string, unknown>;
 }
 
 export const commandDefinitions: Record<string, CommandDefinition> = {
@@ -35,6 +35,13 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     agent: "worker",
     templatePath: "commands/commit.md",
   },
+  "commit/inline": {
+    description: "Commit changes using context from the current session",
+    agent: "worker",
+    templatePath: "commands/commit.md",
+    subtask: false,
+    templateData: { inline: true },
+  },
   "commit-and-push": {
     description: "Commit and push current changes",
     agent: "worker",
@@ -42,7 +49,7 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   dev: {
     description: "Implement a request and prepare it for PR creation",
-    agent: "navigator",
+    agent: "worker",
     templatePath: "commands/dev.md",
   },
   learn: {
@@ -51,10 +58,10 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     templatePath: "commands/learn.md",
     subtask: false,
   },
-  "loop/pr/fix": {
+  "pr/fix/loop": {
     description: "Watch PR CI and comments, repeatedly fixing both without approval prompts",
-    agent: "navigator",
-    templatePath: "commands/loop/pr/fix.md",
+    agent: "worker",
+    templatePath: "commands/pr/fix/loop.md",
   },
   merge: {
     description: "Merge a branch and auto-resolve conflicts best-effort",
@@ -70,7 +77,6 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     description: "Fix PR feedback or CI failures, push updates, and reply",
     agent: "worker",
     templatePath: "commands/pr/fix.md",
-    subtask: false,
   },
   "pr/review": {
     description: "Review the current PR and publish review feedback",
@@ -94,8 +100,15 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   ship: {
     description: "Ship branch work through commit and PR creation",
-    agent: "navigator",
+    agent: "worker",
     templatePath: "commands/ship.md",
+  },
+  "ship/inline": {
+    description: "Ship branch work using context from the current session",
+    agent: "worker",
+    templatePath: "commands/ship.md",
+    subtask: false,
+    templateData: { inline: true },
   },
   rmslop: {
     description: "Remove AI code slop from current branch",
@@ -104,7 +117,7 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   todo: {
     description: "Work through a todo file task by task",
-    agent: "navigator",
+    agent: "worker",
     templatePath: "commands/todo.md",
   },
   "ticket/ask": {
@@ -114,7 +127,7 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   "ticket/dev": {
     description: "Implement a ticket and create a PR",
-    agent: "navigator",
+    agent: "worker",
     templatePath: "commands/ticket/dev.md",
   },
   "ticket/create": {
@@ -138,6 +151,7 @@ export interface ResolvedCommandDefinition
   extends Omit<CommandDefinition, "templatePath"> {
   template: string;
   subtask: boolean;
+  config?: Record<string, unknown>;
 }
 
 async function loadComponents(
@@ -199,10 +213,10 @@ export async function resolveCommands(
     let template: string;
     const commandConfig = {
       enabled: true,
-      ...(definition.config ?? {}),
       ...(config.commands.entries[name] ?? {}),
     };
     const templateData = {
+      ...(definition.templateData ?? {}),
       ...commandConfig,
       config: {
         shared: config.shared,

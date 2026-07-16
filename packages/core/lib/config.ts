@@ -15,8 +15,8 @@ export interface AgentDefinition {
 
 export const DEFAULT_TOOL_NAMES = [
   "changes_load",
-  "command_expansion",
   "pr_load",
+  "pr_load_review",
   "pr_sync",
   "ticket_sync",
   "ticket_load",
@@ -26,18 +26,20 @@ export const DEFAULT_COMMAND_NAMES = [
   "ask",
   "branch",
   "commit",
+  "commit/inline",
   "commit-and-push",
   "dev",
   "learn",
-  "loop/pr/fix",
   "merge",
   "pr/create",
   "pr/fix",
+  "pr/fix/loop",
   "pr/review",
   "review",
   "skill/create",
   "skill/optimize",
   "ship",
+  "ship/inline",
   "rmslop",
   "todo",
   "ticket/ask",
@@ -47,15 +49,20 @@ export const DEFAULT_COMMAND_NAMES = [
   "ticket/plan-and-sync",
 ] as const;
 
-export const DEFAULT_AGENT_NAMES = ["worker", "navigator", "planner", "reviewer"] as const;
+export const DEFAULT_AGENT_NAMES = ["worker", "planner", "reviewer"] as const;
 
 export const DEFAULT_COMPONENT_NAMES = [
   "change-summary",
+  "branch",
   "changes-summary",
   "commit",
   "dev-flow",
   "load-pr",
   "load-ticket",
+  "pr-create",
+  "pr-branch-update",
+  "pr-fix",
+  "push",
   "skill-authoring",
   "summarize-changes",
 ] as const;
@@ -95,18 +102,20 @@ export interface KompassConfig {
     ask?: CommandConfig;
     branch?: CommandConfig;
     commit?: CommandConfig;
+    "commit/inline"?: CommandConfig;
     "commit-and-push"?: CommandConfig;
     dev?: CommandConfig;
     learn?: CommandConfig;
-    "loop/pr/fix"?: CommandConfig;
     merge?: CommandConfig;
     "pr/create"?: CommandConfig;
     "pr/fix"?: CommandConfig;
+    "pr/fix/loop"?: CommandConfig;
     "pr/review"?: CommandConfig;
     review?: CommandConfig;
     "skill/create"?: CommandConfig;
     "skill/optimize"?: CommandConfig;
     ship?: CommandConfig;
+    "ship/inline"?: CommandConfig;
     rmslop?: CommandConfig;
     todo?: CommandConfig;
     "ticket/ask"?: CommandConfig;
@@ -119,26 +128,30 @@ export interface KompassConfig {
   };
   agents?: {
     worker?: AgentConfig;
-    navigator?: AgentConfig;
     planner?: AgentConfig;
     reviewer?: AgentConfig;
     enabled?: string[];
   };
   tools?: {
     changes_load?: ToolConfig;
-    command_expansion?: ToolConfig;
     pr_load?: ToolConfig;
+    pr_load_review?: ToolConfig;
     pr_sync?: ToolConfig;
     ticket_sync?: ToolConfig;
     ticket_load?: ToolConfig;
   };
   components?: {
     "change-summary"?: ComponentConfig;
+    branch?: ComponentConfig;
     "changes-summary"?: ComponentConfig;
     commit?: ComponentConfig;
     "dev-flow"?: ComponentConfig;
     "load-pr"?: ComponentConfig;
     "load-ticket"?: ComponentConfig;
+    "pr-create"?: ComponentConfig;
+    "pr-branch-update"?: ComponentConfig;
+    "pr-fix"?: ComponentConfig;
+    push?: ComponentConfig;
     "skill-authoring"?: ComponentConfig;
     "summarize-changes"?: ComponentConfig;
     enabled?: string[];
@@ -169,14 +182,13 @@ export interface MergedKompassConfig {
   agents: {
     worker: AgentDefinition;
     enabled: string[];
-    navigator: AgentDefinition;
     reviewer: AgentDefinition;
     planner: AgentDefinition;
   };
   tools: {
     changes_load: ToolConfig;
-    command_expansion: ToolConfig;
     pr_load: ToolConfig;
+    pr_load_review: ToolConfig;
     pr_sync: ToolConfig;
     ticket_sync: ToolConfig;
     ticket_load: ToolConfig;
@@ -434,12 +446,6 @@ const defaultAgentReviewer: AgentDefinition = {
   permission: { edit: "deny", question: "allow", todowrite: "allow" },
 };
 
-const defaultAgentNavigator: AgentDefinition = {
-  description: "Coordinate structured multi-step workflows and run focused slash-command steps in the current session.",
-  promptPath: "agents/navigator.md",
-  permission: { edit: "deny", task: "allow", question: "allow", todowrite: "allow" },
-};
-
 const defaultAgentPlanner: AgentDefinition = {
   description: "Turn requests or tickets into scoped implementation plans.",
   promptPath: "agents/planner.md",
@@ -448,19 +454,24 @@ const defaultAgentPlanner: AgentDefinition = {
 
 const defaultComponentPaths: Record<string, string> = {
   "change-summary": "components/change-summary.md",
+  branch: "components/branch.md",
   "changes-summary": "components/changes-summary.md",
   "commit": "components/commit.md",
   "dev-flow": "components/dev-flow.md",
   "load-pr": "components/load-pr.md",
   "load-ticket": "components/load-ticket.md",
+  "pr-create": "components/pr-create.md",
+  "pr-branch-update": "components/pr-branch-update.md",
+  "pr-fix": "components/pr-fix.md",
+  push: "components/push.md",
   "skill-authoring": "components/skill-authoring.md",
   "summarize-changes": "components/summarize-changes.md",
 };
 
 const defaultToolConfig: Record<ToolName, ToolConfig> = {
   changes_load: { enabled: true },
-  command_expansion: { enabled: true },
   pr_load: { enabled: true },
+  pr_load_review: { enabled: true },
   pr_sync: { enabled: true },
   ticket_sync: { enabled: true },
   ticket_load: { enabled: true },
@@ -563,8 +574,6 @@ export function mergeWithDefaults(
   config: KompassConfig | null,
 ): MergedKompassConfig {
   const { enabled: _workerEnabled, ...workerOverrides } = config?.agents?.worker ?? {};
-  const { enabled: _navigatorEnabled, ...navigatorOverrides } =
-    config?.agents?.navigator ?? {};
   const { enabled: _reviewerEnabled, ...reviewerOverrides } = config?.agents?.reviewer ?? {};
   const { enabled: _plannerEnabled, ...plannerOverrides } = config?.agents?.planner ?? {};
 
@@ -601,17 +610,16 @@ export function mergeWithDefaults(
         DEFAULT_AGENT_NAMES,
       ),
       worker: { ...defaultAgentWorker, ...workerOverrides },
-      navigator: { ...defaultAgentNavigator, ...navigatorOverrides },
       reviewer: { ...defaultAgentReviewer, ...reviewerOverrides },
       planner: { ...defaultAgentPlanner, ...plannerOverrides },
     },
     tools: {
       changes_load: { ...defaultToolConfig.changes_load, ...config?.tools?.changes_load },
-      command_expansion: {
-        ...defaultToolConfig.command_expansion,
-        ...config?.tools?.command_expansion,
-      },
       pr_load: { ...defaultToolConfig.pr_load, ...config?.tools?.pr_load },
+      pr_load_review: {
+        ...defaultToolConfig.pr_load_review,
+        ...config?.tools?.pr_load_review,
+      },
       pr_sync: { ...defaultToolConfig.pr_sync, ...config?.tools?.pr_sync },
       ticket_sync: { ...defaultToolConfig.ticket_sync, ...config?.tools?.ticket_sync },
       ticket_load: { ...defaultToolConfig.ticket_load, ...config?.tools?.ticket_load },

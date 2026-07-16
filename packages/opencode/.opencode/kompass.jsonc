@@ -16,6 +16,9 @@
     "commit": {
       "enabled": true
     },
+    "commit/inline": {
+      "enabled": true
+    },
     "commit-and-push": {
       "enabled": true
     },
@@ -25,9 +28,6 @@
     "learn": {
       "enabled": true
     },
-    "loop/pr/fix": {
-      "enabled": true
-    },
     "merge": {
       "enabled": true
     },
@@ -35,6 +35,9 @@
       "enabled": true
     },
     "pr/fix": {
+      "enabled": true
+    },
+    "pr/fix/loop": {
       "enabled": true
     },
     "pr/review": {
@@ -50,6 +53,9 @@
       "enabled": true
     },
     "ship": {
+      "enabled": true
+    },
+    "ship/inline": {
       "enabled": true
     },
     "rmslop": {
@@ -78,9 +84,6 @@
     "worker": {
       "enabled": true
     },
-    "navigator": {
-      "enabled": true
-    },
     "planner": {
       "enabled": true
     },
@@ -92,10 +95,10 @@
     "changes_load": {
       "enabled": true
     },
-    "command_expansion": {
+    "pr_load": {
       "enabled": true
     },
-    "pr_load": {
+    "pr_load_review": {
       "enabled": true
     },
     "pr_sync": {

@@ -5,17 +5,13 @@ description: Overview of the bundled Kompass agent roles.
 
 ## Bundled agents
 
-Kompass currently defines four bundled agent roles: `worker`, `navigator`, `planner`, and `reviewer`.
+Kompass currently defines three bundled agent roles: `worker`, `planner`, and `reviewer`.
 
 These are resolved from merged config and exposed through the active adapter.
 
 ### `worker`
 
-Generic worker role with minimal built-in behavior. It is the default execution agent when a command just needs focused work.
-
-### `navigator`
-
-Owns structured multi-step workflows locally, preserves state and stop conditions, and forwards literal `<delegate>` blocks through the `command_expansion` tool when commands such as `/ship`, `/todo`, `/ticket/dev`, and `/loop/pr/fix` require delegated step execution.
+Generic worker role with minimal built-in behavior. It is the default execution agent for focused work and stateful multi-step command workflows.
 
 ### `planner`
 

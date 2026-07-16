@@ -1,6 +1,6 @@
 ## Goal
 
-Create a commit with an appropriate message summarizing the uncommitted changes.
+Create a commit with an appropriate message summarizing the uncommitted changes.<% if (it.inline) { %> Reuse the invoking session's change context instead of loading it again.<% } %>
 
 ## Additional Context
 
@@ -21,8 +21,13 @@ $ARGUMENTS
 
 ### Load Changes
 
+<% if (it.inline) { -%>
+- Reuse the current session's known uncommitted changes as `<changes>`
+- Do not call `<%= it.config.tools.changes_load.name %>`; inspect the worktree only when the session context does not identify which files remain uncommitted
+<% } else { -%>
 <%~ include("@change-summary", { config: it.config, rules: "- pass `uncommitted: true` to get uncommitted changes only" }) %>
 - Store the loaded change result as `<changes>`
+<% } -%>
 
 ### Check Blockers
 

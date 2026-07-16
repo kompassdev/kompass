@@ -25,20 +25,7 @@ $ARGUMENTS
 - Store the loaded change result as `<changes>`
 - Store the current branch as `<current-branch>` when it is available
 
-### Check Blockers
-
-- If `<changes>` contains no files, STOP and report that there is nothing to branch from
-- If `<current-branch>` already starts with a conventional work-branch category such as `feature/`, `fix/`, `refactor/`, `docs/`, `test/`, `chore/`, `feat/`, `bugfix/`, `hotfix/`, `perf/`, `build/`, or `ci/`, STOP and report that branching was skipped because the current branch already looks like a work branch
-
-### Create Branch
-
-- Choose a branch category from the summarized change themes and `<branch-context>`
-- Prefer conventional categories such as `feature`, `fix`, `refactor`, `docs`, `test`, or `chore`
-- Store the chosen category as `<branch-category>`
-- Generate a concise kebab-case slug from the summarized change themes and `<branch-context>` when available, then store it as `<branch-slug>`
-- Create and checkout `<branch-category>/<branch-slug>` with `git checkout -b`
-- If that name already exists, retry once with a short numeric suffix
-- Store the checked-out branch as `<new-branch>`
+<%~ include("@branch") %>
 
 ### Output
 
@@ -60,7 +47,7 @@ No additional steps are required.
 
 When the branch is created, display:
 ```
-Created branch: <new-branch>
+Created branch: <current-branch>
 
 From: <current-branch>
 

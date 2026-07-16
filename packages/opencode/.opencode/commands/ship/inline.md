@@ -1,15 +1,16 @@
 ---
-description: Implement a ticket and create a PR
+description: Ship branch work using context from the current session
 agent: worker
+subtask: false
 ---
 
 ## Goal
 
-Implement a ticket, create a branch and commit, push it, and create a pull request in one workflow.
+Ship the current work through branch creation, commit creation, and PR creation in one workflow. Reuse the invoking session's change context for the initial branch and commit phases.
 
 ## Additional Context
 
-Use `<additional-context>` to refine scope and delivery. Reuse loaded change state across adjacent phases.
+Use `<branch-context>` for branch naming and `<additional-context>` for commit and PR summaries. Reuse loaded state within this command instead of reloading it between phases.
 
 ## Workflow
 
@@ -21,54 +22,14 @@ $ARGUMENTS
 
 ### Interpret Arguments
 
-- Store the ticket reference, URL, file, or request as `<ticket-source>`
-- Store extra delivery guidance as `<additional-context>`
-
-### Load Ticket Context
-
-- Use `kompass_ticket_load` with `source: <ticket-source>`
-- Store the result as `<ticket-context>`
-- Treat the loaded ticket body, discussion, and any attachments or linked artifacts returned by the loader as part of the source context
-- Review attached images, PDFs, and other linked files whenever they can affect requirements, acceptance criteria, reproduction steps, design direction, or the requested answer
-- If any relevant attachment cannot be accessed, note that gap and continue only when the remaining ticket context is still sufficient to proceed reliably
-- Store a concise `<ticket-summary>` and canonical `<ticket-url>` when available
-- STOP if ticket context cannot be loaded
-
-### Implement Ticket
-
-### Development Flow Navigation Guide
-
-- Orient yourself using the normalized request context before editing
-- Survey the codebase before plotting the implementation
-- Prefer the smallest course correction that fully reaches the destination
-- Validate the path with targeted checks before handing off to PR creation
-- Surface any detours or follow-up destinations that should stay off the current route
-- Implement the smallest complete change for `<ticket-context>` and `<additional-context>`
-- Run the most relevant available validation
-- Prefer project-native checks such as changed-area tests, linting, type checking, build verification, or other documented validation steps when they exist
-- If a category of validation is not available in the project, note it explicitly instead of inventing a command
-- Store results as `<validation-results>` and STOP if required validation fails
+- Initialize `<base>`, `<branch-context>`, and `<additional-context>` as empty
+- If `<arguments>` is only a branch reference, store it as `<base>`
+- Otherwise, store it as both `<branch-context>` and `<additional-context>`
 
 ### Load Uncommitted Changes Once
 
-#### Step 1: Load Changes
-- call `kompass_changes_load`
-- pass `uncommitted: true` to get uncommitted changes only
-- Store the returned result as `<changes>`
-- Use `<changes>` as the source of truth; no additional git analysis commands are needed
-- When `<changes>.comparison` is not `uncommitted`, treat `<changes>.commits` as the authoritative scope of work: only summarize commits that are ahead of the resolved base branch
-- Do not infer scope from the branch names alone and do not describe work that exists only on the base branch
-
-#### Step 2: Analyze Files
-- Review the paths, statuses, and diffs from `<changes>` only as file-level context for the commits in scope
-- Identify the nature of changes (added, modified, deleted)
-- Note lines added/removed per file
-
-#### Step 3: Group and Summarize
-- For branch comparisons, build the summary from `<changes>.commits` first and use file diffs only to verify or refine what those commits changed
-- Group related changes into logical themes
-- Summarize the "what" and "why" (not the "how")
-- Store the result as `<changes>` and set `<branch-context>` to `<ticket-summary>`
+- Reuse the current session's known uncommitted changes as `<changes>` for branch naming and commit creation
+- Do not call `kompass_changes_load` before the branch and commit phases; inspect the worktree only when the session context does not identify which files remain uncommitted
 
 ### Check Branch
 
@@ -86,9 +47,9 @@ When branch creation was not skipped:
 - Store the checked-out branch as `<current-branch>` and `<branch-result>` as `created <current-branch>`
 - If branch creation fails, STOP and report the blocker
 
-### Commit Changes
+### Create Commit
 
-- If `<changes>` contains files:
+- If `<changes>` contains files, create the commit from the already loaded `<changes>`:
 ### Message Format
 - Prefer this format unless the change is tiny:
 
@@ -113,12 +74,13 @@ type: summary
 5. Create the commit with `<commit-message>`
 6. Store the created commit hash as `<hash>`
 7. Only run `git status` if the commit fails and needs diagnosis
-- Otherwise, continue so previously committed ticket work can still be shipped
+- Store `<commit-result>` as the created hash and message
+- If `<changes>` contains no files, store `<commit-result>` as `no new commit`
 
 ### Load Branch Changes
 
-- Call `kompass_changes_load` with no parameters and store the result as `<changes>`
-- Store `<ticket-mode>` as `provided` when `<ticket-url>` exists, otherwise `skip`
+- Call `kompass_changes_load` with `base: <base>` when defined, otherwise with no arguments
+- Store the new result as `<changes>`; this post-commit comparison is required for PR creation
 
 ### Check PR Blockers
 
@@ -188,11 +150,10 @@ Otherwise, preserve the provided `<ticket-url>` or store the literal `SKIPPED` f
 
 When complete, display:
 ```
-Implemented ticket: <ticket-summary>
+Ship flow complete
 
-Validation: <validation-results>
-Branch: <current-branch>
-Commit: <hash>
+Branch: <branch-result>
+Commit: <commit-result>
 PR: <pr-url>
 
 No additional steps are required.

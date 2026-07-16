@@ -8,11 +8,16 @@ Kompass command templates can include reusable Eta partials from `packages/core/
 Bundled components:
 
 - `change-summary`
+- `branch`
 - `changes-summary`
 - `commit`
 - `dev-flow`
 - `load-pr`
 - `load-ticket`
+- `pr-create`
+- `pr-branch-update`
+- `pr-fix`
+- `push`
 - `skill-authoring`
 - `summarize-changes`
 
@@ -21,6 +26,10 @@ Bundled components:
 ### `change-summary`
 
 Loads changes with `changes_load`, analyzes file-level diffs, and groups the work into concise what/why themes.
+
+### `branch`
+
+Checks whether the active branch is suitable and creates a categorized work branch from already loaded change context when needed.
 
 ### `changes-summary`
 
@@ -41,6 +50,22 @@ Loads PR context through `pr_load` and treats returned discussion, review histor
 ### `load-ticket`
 
 Loads ticket context through `ticket_load`, with optional comments, and treats returned discussion and relevant attachments as source context.
+
+### `pr-create`
+
+Checks PR blockers, resolves ticket handling, pushes the branch, and creates or finds the pull request from already loaded branch changes.
+
+### `pr-branch-update`
+
+Checks out the PR branch, fetches its base, confirms base ancestry, and merges and pushes the base without rebasing or force-pushing when the PR branch is behind.
+
+### `pr-fix`
+
+Analyzes feedback, applies and validates fixes, commits, pushes, and responds after the caller aligns the PR branch. Callers select interactive or automatic review behavior.
+
+### `push`
+
+Pushes the current branch and sets its upstream when necessary.
 
 ### `skill-authoring`
 

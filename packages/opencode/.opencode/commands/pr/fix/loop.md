@@ -1,15 +1,17 @@
 ---
-description: Fix PR feedback or CI failures, push updates, and reply
+description: Watch PR CI and comments, repeatedly fixing both without approval prompts
 agent: worker
 ---
 
 ## Goal
 
-Address feedback or CI failures on a pull request, validate the fixes, push them, and respond.
+Continuously watch a pull request, fix CI failures and new review feedback, push, reply, and repeat until clean.
 
 ## Additional Context
 
-Use `<additional-context>` to prioritize feedback and scope. Default behavior requires review; `auto` explicitly skips approval.
+- Use `<additional-context>` to constrain feedback and CI handling
+- This workflow is non-interactive and must not ask for approval
+- Preserve the initial PR snapshot and use incremental review checkpoints on later passes
 
 ## Workflow
 
@@ -21,11 +23,10 @@ $ARGUMENTS
 
 ### Interpret Arguments
 
-- Store automatic completion requests as `<execution-mode>` = `auto`; otherwise use `review`
 - Store a PR number or URL as `<pr-ref>` and remaining guidance as `<additional-context>`
-- Leave `<pr-ref>` undefined when absent
+- Initialize `<completed-fix-passes>` as `0`
 
-### Load PR Context
+### Load Initial PR Context
 
 - Use `kompass_pr_load` as the source of truth for PR selection
 - If `<pr-ref>` is defined, call `kompass_pr_load` with `pr: <pr-ref>`
@@ -38,6 +39,11 @@ $ARGUMENTS
 - Treat the loaded PR body, discussion, review history, and any attachments or linked artifacts returned by the loader as part of the source context
 - Review attached images, screenshots, videos, PDFs, and other linked files whenever they can affect the requested fix, review outcome, reproduction steps, or acceptance criteria
 - If any relevant attachment cannot be accessed, note that gap and continue only when the remaining PR context is still sufficient to proceed reliably
+- Store `<pr-url>`, `<pr-number>`, and `<review-checkpoint>` from `<pr-context.pr.url>`, `<pr-context.pr.number>`, and `<pr-context.loadedAt>`
+- Store the initial reviews, issue comments, and threads as `<review-context>`
+- STOP if any required value is unavailable
+
+### Align Branch With Base
 
 ### Align Local Branch
 
@@ -54,6 +60,20 @@ $ARGUMENTS
 - If the branch is behind, merge `<base-ref>` into `<active-branch>` without rebasing or force-pushing; resolve conflicts using repository context, complete the merge, push the merge commit, and store its hash as `<base-update>`
 - If the branch is current, store `<base-update>` as `already up to date`
 - STOP before making PR fixes if the fetch, merge, conflict resolution, or push cannot be completed safely
+
+### Watch CI
+
+- Run `gh pr checks <pr-number> --watch`
+- Store success or no configured checks as `<ci-status>`
+- Capture failing, cancelled, timed out, missing, or inconclusive checks as `<ci-failures>` without stopping
+
+### Load Incremental Feedback
+
+- Call `kompass_pr_load_review` with `pr: <pr-url>` and `since: <review-checkpoint>`
+- Store the result as `<fresh-review-context>` and advance `<review-checkpoint>` to `<fresh-review-context.loadedAt>`
+- Merge new reviews, issue comments, and whole changed threads into `<review-context>`, deduplicating by stable IDs
+- Combine open actionable feedback and `<ci-failures>` into `<actionable-work>`
+- If there is no actionable feedback and no actionable CI failure, continue to `### Output`
 
 ### Load PR Changes
 
@@ -78,11 +98,8 @@ Call `kompass_changes_load` with `base: <pr-context.pr.baseRefName>`, `head: <ac
 
 ### Review Fixes
 
-- If `<execution-mode>` is `auto`, skip this review gate and continue to commit and push
-- Present the fix summary, changed-file count, and validation results
-- If changes were made, ask one `Review Fixes` question with `Go Ahead` and `Revise`; apply custom revision feedback and repeat implementation and validation until approved
-- If no changes were made, ask one `Need Feedback` question with `Revise` and `Stop Here`
-- STOP if approval is required but `question` is unavailable
+- Continue without an approval prompt
+- If actionable work produced no changes and `<base-update>` is `already up to date`, STOP to avoid looping without progress
 
 ### Commit And Push Fixes
 
@@ -98,18 +115,22 @@ Call `kompass_changes_load` with `base: <pr-context.pr.baseRefName>`, `head: <ac
 - Reply with `replies` keyed by the addressed comment IDs; use `commentBody` only for general CI feedback
 - Store the number of addressed threads as `<threads-resolved>`
 
+### Continue Loop
+
+- Increment `<completed-fix-passes>` and return to `### Align Branch With Base`
+- Do not call `kompass_pr_load` again during this loop
+
 ### Output
 
-When fixes are complete, display:
+When complete, display:
 ```
-PR fix complete for #<pr-context.pr.number>
+PR loop complete for #<pr-number>
 
-- Changes made: <changes-count> files modified
+- CI status: <ci-status>
 - Base update: <base-update>
-- Threads resolved: <threads-resolved>
-- Validation passing: <validation-passing>
-- Validation details: <validation-results>
-- Pushed: <pushed>
+- CI failures remaining: 0
+- Actionable feedback remaining: 0
+- Fix passes completed: <completed-fix-passes>
 
 No additional steps are required.
 ```

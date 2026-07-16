@@ -41,6 +41,9 @@
         "commit": {
           "$ref": "#/$defs/commandConfig"
         },
+        "commit/inline": {
+          "$ref": "#/$defs/commandConfig"
+        },
         "commit-and-push": {
           "$ref": "#/$defs/commandConfig"
         },
@@ -50,9 +53,6 @@
         "learn": {
           "$ref": "#/$defs/commandConfig"
         },
-        "loop/pr/fix": {
-          "$ref": "#/$defs/commandConfig"
-        },
         "merge": {
           "$ref": "#/$defs/commandConfig"
         },
@@ -60,6 +60,9 @@
           "$ref": "#/$defs/commandConfig"
         },
         "pr/fix": {
+          "$ref": "#/$defs/commandConfig"
+        },
+        "pr/fix/loop": {
           "$ref": "#/$defs/commandConfig"
         },
         "pr/review": {
@@ -75,6 +78,9 @@
           "$ref": "#/$defs/commandConfig"
         },
         "ship": {
+          "$ref": "#/$defs/commandConfig"
+        },
+        "ship/inline": {
           "$ref": "#/$defs/commandConfig"
         },
         "rmslop": {
@@ -106,18 +112,20 @@
               "ask",
               "branch",
               "commit",
+              "commit/inline",
               "commit-and-push",
               "dev",
               "learn",
-              "loop/pr/fix",
               "merge",
               "pr/create",
               "pr/fix",
+              "pr/fix/loop",
               "pr/review",
               "review",
               "skill/create",
               "skill/optimize",
               "ship",
+              "ship/inline",
               "rmslop",
               "todo",
               "ticket/ask",
@@ -137,18 +145,20 @@
               "ask",
               "branch",
               "commit",
+              "commit/inline",
               "commit-and-push",
               "dev",
               "learn",
-              "loop/pr/fix",
               "merge",
               "pr/create",
               "pr/fix",
+              "pr/fix/loop",
               "pr/review",
               "review",
               "skill/create",
               "skill/optimize",
               "ship",
+              "ship/inline",
               "rmslop",
               "todo",
               "ticket/ask",
@@ -172,9 +182,6 @@
         "worker": {
           "$ref": "#/$defs/agentConfig"
         },
-        "navigator": {
-          "$ref": "#/$defs/agentConfig"
-        },
         "planner": {
           "$ref": "#/$defs/agentConfig"
         },
@@ -185,7 +192,7 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["worker", "navigator", "planner", "reviewer"]
+            "enum": ["worker", "planner", "reviewer"]
           },
           "uniqueItems": true,
           "deprecated": true
@@ -199,10 +206,10 @@
         "changes_load": {
           "$ref": "#/$defs/toolConfig"
         },
-        "command_expansion": {
+        "pr_load": {
           "$ref": "#/$defs/toolConfig"
         },
-        "pr_load": {
+        "pr_load_review": {
           "$ref": "#/$defs/toolConfig"
         },
         "pr_sync": {
@@ -223,6 +230,9 @@
         "change-summary": {
           "$ref": "#/$defs/componentConfig"
         },
+        "branch": {
+          "$ref": "#/$defs/componentConfig"
+        },
         "changes-summary": {
           "$ref": "#/$defs/componentConfig"
         },
@@ -238,6 +248,18 @@
         "load-ticket": {
           "$ref": "#/$defs/componentConfig"
         },
+        "pr-create": {
+          "$ref": "#/$defs/componentConfig"
+        },
+        "pr-branch-update": {
+          "$ref": "#/$defs/componentConfig"
+        },
+        "pr-fix": {
+          "$ref": "#/$defs/componentConfig"
+        },
+        "push": {
+          "$ref": "#/$defs/componentConfig"
+        },
         "skill-authoring": {
           "$ref": "#/$defs/componentConfig"
         },
@@ -248,7 +270,7 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["change-summary", "changes-summary", "commit", "dev-flow", "load-pr", "load-ticket", "skill-authoring", "summarize-changes"]
+            "enum": ["branch", "change-summary", "changes-summary", "commit", "dev-flow", "load-pr", "load-ticket", "pr-create", "pr-branch-update", "pr-fix", "push", "skill-authoring", "summarize-changes"]
           },
           "uniqueItems": true,
           "deprecated": true
@@ -256,7 +278,7 @@
         "paths": {
           "type": "object",
           "propertyNames": {
-            "enum": ["change-summary", "changes-summary", "commit", "dev-flow", "load-pr", "load-ticket", "skill-authoring", "summarize-changes"]
+            "enum": ["branch", "change-summary", "changes-summary", "commit", "dev-flow", "load-pr", "load-ticket", "pr-create", "pr-branch-update", "pr-fix", "push", "skill-authoring", "summarize-changes"]
           },
           "additionalProperties": {
             "type": "string"
@@ -391,8 +413,8 @@
       "type": "string",
       "enum": [
         "changes_load",
-        "command_expansion",
         "pr_load",
+        "pr_load_review",
         "pr_sync",
         "ticket_sync",
         "ticket_load"

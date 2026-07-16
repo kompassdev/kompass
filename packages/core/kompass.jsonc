@@ -68,7 +68,7 @@
     "pr-fix": { "enabled": true },
     "push": { "enabled": true },
     "skill-authoring": { "enabled": true },
-    "summarize-changes": { "enabled": true },
+    "ticket-planning": { "enabled": true },
   },
 
   "defaults": {

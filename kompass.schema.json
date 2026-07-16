@@ -278,14 +278,14 @@
         "skill-authoring": {
           "$ref": "#/$defs/componentConfig"
         },
-        "summarize-changes": {
+        "ticket-planning": {
           "$ref": "#/$defs/componentConfig"
         },
         "enabled": {
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["branch", "change-summary", "changes-summary", "commit", "dev-flow", "load-pr", "load-ticket", "pr-create", "pr-branch-update", "pr-fix", "push", "skill-authoring", "summarize-changes"]
+            "enum": ["branch", "change-summary", "changes-summary", "commit", "dev-flow", "load-pr", "load-ticket", "pr-create", "pr-branch-update", "pr-fix", "push", "skill-authoring", "ticket-planning"]
           },
           "uniqueItems": true,
           "deprecated": true
@@ -293,7 +293,7 @@
         "paths": {
           "type": "object",
           "propertyNames": {
-            "enum": ["branch", "change-summary", "changes-summary", "commit", "dev-flow", "load-pr", "load-ticket", "pr-create", "pr-branch-update", "pr-fix", "push", "skill-authoring", "summarize-changes"]
+            "enum": ["branch", "change-summary", "changes-summary", "commit", "dev-flow", "load-pr", "load-ticket", "pr-create", "pr-branch-update", "pr-fix", "push", "skill-authoring", "ticket-planning"]
           },
           "additionalProperties": {
             "type": "string"

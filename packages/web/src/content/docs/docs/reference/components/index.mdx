@@ -19,13 +19,13 @@ Bundled components:
 - `pr-fix`
 - `push`
 - `skill-authoring`
-- `summarize-changes`
+- `ticket-planning`
 
 ## Bundled components
 
 ### `change-summary`
 
-Loads changes with `changes_load`, analyzes file-level diffs, and groups the work into concise what/why themes.
+Loads changes with `changes_load` when needed, analyzes comparison metadata, commits, and file-level diffs, and groups the work into concise what/why themes.
 
 ### `branch`
 
@@ -71,6 +71,6 @@ Pushes the current branch and sets its upstream when necessary.
 
 Provides the shared authoring rules for skill-focused commands, including scope, trigger-description quality, progressive disclosure, and validation expectations.
 
-### `summarize-changes`
+### `ticket-planning`
 
-Guides commands to inspect comparison metadata, commit history, and changed files before grouping the work into themes.
+Interprets ticket-planning arguments, loads request context, inspects the repository, and shapes a grounded implementation and validation plan.

@@ -27,7 +27,7 @@ $ARGUMENTS
 - Do not call `<%= it.config.tools.changes_load.name %>` before the branch and commit phases; inspect the worktree only when the session context does not identify which files remain uncommitted
 <% } else { -%>
 <%~ include("@change-summary", { config: it.config, rules: "- pass `uncommitted: true` to get uncommitted changes only" }) %>
-- Store the result as `<changes>` and reuse it for branch naming and commit creation
+- Reuse `<changes>` for branch naming and commit creation
 <% } -%>
 
 <%~ include("@branch") %>

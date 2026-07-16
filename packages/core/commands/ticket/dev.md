@@ -38,7 +38,7 @@ $ARGUMENTS
 ### Load Uncommitted Changes Once
 
 <%~ include("@change-summary", { config: it.config, rules: "- pass `uncommitted: true` to get uncommitted changes only" }) %>
-- Store the result as `<changes>` and set `<branch-context>` to `<ticket-summary>`
+- Set `<branch-context>` to `<ticket-summary>`
 
 <%~ include("@branch") %>
 

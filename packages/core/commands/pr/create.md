@@ -26,9 +26,8 @@ $ARGUMENTS
 - Retain the authoritative branch comparison load even though this command runs in the invoking session; do not infer the final base, commit scope, or diff from session memory
 <% } -%>
 <%~ include("@change-summary", { config: it.config, rules: "- If `<base>` is defined, pass it as `base`; otherwise call the tool with no parameters\n- Never pass `uncommitted: true`" }) %>
-- Store the result as `<changes>`
 
-<%~ include("@pr-create", { config: it.config }) %>
+<%~ include("@pr-create", { config: it.config, analyze: false }) %>
 
 ### Output
 

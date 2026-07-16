@@ -26,7 +26,6 @@ $ARGUMENTS
 - Do not call `<%= it.config.tools.changes_load.name %>`; inspect the worktree only when the session context does not identify which files remain uncommitted
 <% } else { -%>
 <%~ include("@change-summary", { config: it.config, rules: "- pass `uncommitted: true` to get uncommitted changes only" }) %>
-- Store the loaded change result as `<changes>`
 <% } -%>
 
 ### Check Blockers
@@ -36,7 +35,6 @@ $ARGUMENTS
 ### Create Commit
 
 <%~ include("@commit") %>
-- Store the created commit hash as `<hash>`
 
 ### Output
 

@@ -90,14 +90,18 @@ type: summary
 - If `<current-branch>` equals `<resolved-base>`, STOP and report that PR creation requires a work branch
 - If `<changes>` contains no files and no commits, STOP and report that there is nothing to include in a PR
 
-### Summarize Changes
+#### Analyze And Summarize Changes
 
-- Note the comparison mode, base branch, and current branch from the result
-- If the comparison is not `uncommitted`, use only the commits in `<changes>.commits` as the branch-work scope
-- Review commit messages when they are available to understand the delivery narrative
-- Read the most relevant changed source files to understand the changes introduced by those commits
-- Do not describe work that exists only on the base branch or that is outside the commits ahead of base
-- Group related changes into themes for the final summary
+- Use `<changes>` as the source of truth; do not run additional git commands to rediscover its comparison
+- Note the comparison mode, base branch, and current branch from `<changes>`
+- When `<changes>.comparison` is not `uncommitted`, treat `<changes>.commits` as the authoritative scope of work: only summarize commits ahead of the resolved base branch
+- Review commit messages when available to understand the delivery narrative
+- Review paths, statuses, line counts, and diffs from `<changes>` as file-level context for the commits in scope
+- Read only the most relevant changed source files when the diff does not provide enough context
+- Identify the nature of changes (added, modified, deleted)
+- Group related changes into logical themes
+- Summarize the "what" and "why" (not the "how")
+- Do not infer scope from branch names or describe work that exists only on the base branch or outside the commits ahead of base
 
 ### Resolve Ticket
 
@@ -131,6 +135,7 @@ Otherwise, preserve the provided `<ticket-url>` or store the literal `SKIPPED` f
 
 ### Push Branch
 
+- If `<current-branch>` is not defined, run `git branch --show-current` and store the trimmed result as `<current-branch>`
 - Run `git push` and use its output as the source of truth
 - If the current branch has no upstream, retry with `git push -u origin <current-branch>`
 - Store whether a push occurred as `<push-status>` and the successful destination as `<push-target>`

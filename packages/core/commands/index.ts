@@ -16,7 +16,6 @@ interface CommandDefinition {
   agent: string;
   templatePath: string;
   subtask?: boolean;
-  templateData?: Record<string, unknown>;
 }
 
 export const commandDefinitions: Record<string, CommandDefinition> = {
@@ -35,7 +34,6 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     agent: "worker",
     templatePath: "commands/branch.md",
     subtask: false,
-    templateData: { inline: true },
   },
   commit: {
     description: "Commit current changes with a message",
@@ -47,7 +45,6 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     agent: "worker",
     templatePath: "commands/commit.md",
     subtask: false,
-    templateData: { inline: true },
   },
   "commit-and-push": {
     description: "Commit and push current changes",
@@ -59,7 +56,6 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     agent: "worker",
     templatePath: "commands/commit-and-push.md",
     subtask: false,
-    templateData: { inline: true },
   },
   dev: {
     description: "Implement a request and prepare it for PR creation",
@@ -92,7 +88,6 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     agent: "worker",
     templatePath: "commands/pr/create.md",
     subtask: false,
-    templateData: { inline: true },
   },
   "pr/fix": {
     description: "Fix PR feedback or CI failures, push updates, and reply",
@@ -129,7 +124,6 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     agent: "worker",
     templatePath: "commands/ship.md",
     subtask: false,
-    templateData: { inline: true },
   },
   rmslop: {
     description: "Remove AI code slop from current branch",
@@ -237,8 +231,8 @@ export async function resolveCommands(
       ...(config.commands.entries[name] ?? {}),
     };
     const templateData = {
-      ...(definition.templateData ?? {}),
       ...commandConfig,
+      inline: definition.subtask === false,
       config: {
         shared: config.shared,
         tools: names.tools,

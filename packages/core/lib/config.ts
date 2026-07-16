@@ -67,7 +67,7 @@ export const DEFAULT_COMPONENT_NAMES = [
   "pr-fix",
   "push",
   "skill-authoring",
-  "summarize-changes",
+  "ticket-planning",
 ] as const;
 
 export type ToolName = (typeof DEFAULT_TOOL_NAMES)[number];
@@ -159,7 +159,7 @@ export interface KompassConfig {
     "pr-fix"?: ComponentConfig;
     push?: ComponentConfig;
     "skill-authoring"?: ComponentConfig;
-    "summarize-changes"?: ComponentConfig;
+    "ticket-planning"?: ComponentConfig;
     enabled?: string[];
     paths?: Record<string, string>;
   };
@@ -471,7 +471,7 @@ const defaultComponentPaths: Record<string, string> = {
   "pr-fix": "components/pr-fix.md",
   push: "components/push.md",
   "skill-authoring": "components/skill-authoring.md",
-  "summarize-changes": "components/summarize-changes.md",
+  "ticket-planning": "components/ticket-planning.md",
 };
 
 const defaultToolConfig: Record<ToolName, ToolConfig> = {

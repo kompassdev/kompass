@@ -60,13 +60,15 @@ type: summary
 5. Create the commit with `<commit-message>`
 6. Store the created commit hash as `<hash>`
 7. Only run `git status` if the commit fails and needs diagnosis
-- Store the created commit hash as `<hash>`
 
 ### Push to Remote
 
+### Push Branch
+
+- If `<current-branch>` is not defined, run `git branch --show-current` and store the trimmed result as `<current-branch>`
 - Run `git push` and use its output as the source of truth
-- If the current branch has no upstream set, retry with `git push -u origin <branch>`
-- Store the successful destination as `<push-target>`
+- If the current branch has no upstream, retry with `git push -u origin <current-branch>`
+- Store whether a push occurred as `<push-status>` and the successful destination as `<push-target>`
 - If push fails, STOP and report the push error
 
 ### Output

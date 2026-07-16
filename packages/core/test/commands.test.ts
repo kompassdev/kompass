@@ -57,10 +57,27 @@ describe("resolveCommands", () => {
     assert.match(commands["branch/inline"]?.template ?? "", /Do not call `changes_load`/);
     assert.match(commands["commit/inline"]?.template ?? "", /Reuse the current session's known uncommitted changes/);
     assert.match(commands["commit-and-push/inline"]?.template ?? "", /Do not call `changes_load`/);
-    assert.match(commands["commit-and-push/inline"]?.template ?? "", /git push -u origin <branch>/);
+    assert.match(commands["commit-and-push/inline"]?.template ?? "", /git push -u origin <current-branch>/);
     assert.match(commands["pr/create/inline"]?.template ?? "", /Retain the authoritative branch comparison load/);
     assert.match(commands["pr/create/inline"]?.template ?? "", /call `changes_load`/);
     assert.match(commands["ship/inline"]?.template ?? "", /Do not call `changes_load` before the branch and commit phases/);
     assert.doesNotMatch(commands.commit?.template ?? "", /Reuse the current session's known uncommitted changes/);
+  });
+
+  test("analyzes each loaded PR comparison once", async () => {
+    const commands = await resolveCommands(process.cwd());
+    const marker = /#### Analyze And Summarize Changes/g;
+
+    assert.equal(commands["pr/create"]?.template.match(marker)?.length, 1);
+    assert.equal(commands.ship?.template.match(marker)?.length, 2);
+  });
+
+  test("uses declared subtask mode instead of the CI fallback for templates", async () => {
+    const commands = await resolveCommands(process.cwd(), { ci: true });
+
+    assert.equal(commands.commit?.subtask, false);
+    assert.match(commands.commit?.template ?? "", /call `changes_load`/);
+    assert.doesNotMatch(commands.commit?.template ?? "", /Reuse the current session's known uncommitted changes/);
+    assert.match(commands["commit/inline"]?.template ?? "", /Reuse the current session's known uncommitted changes/);
   });
 });

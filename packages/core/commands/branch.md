@@ -27,7 +27,6 @@ $ARGUMENTS
 - Run `git branch --show-current` and store the result as `<current-branch>`
 <% } else { -%>
 <%~ include("@change-summary", { config: it.config, rules: "- pass `uncommitted: true` to get uncommitted changes only" }) %>
-- Store the loaded change result as `<changes>`
 - Store the current branch as `<current-branch>` when it is available
 <% } -%>
 

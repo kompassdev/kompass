@@ -6,7 +6,9 @@
 - If `<current-branch>` equals `<resolved-base>`, STOP and report that PR creation requires a work branch
 - If `<changes>` contains no files and no commits, STOP and report that there is nothing to include in a PR
 
-<%~ include("@summarize-changes") %>
+<% if (it.analyze !== false) { -%>
+<%~ include("@change-summary", { config: it.config, load: false }) %>
+<% } -%>
 
 ### Resolve Ticket
 

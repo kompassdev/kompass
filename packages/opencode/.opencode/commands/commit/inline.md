@@ -60,7 +60,6 @@ type: summary
 5. Create the commit with `<commit-message>`
 6. Store the created commit hash as `<hash>`
 7. Only run `git status` if the commit fails and needs diagnosis
-- Store the created commit hash as `<hash>`
 
 ### Output
 

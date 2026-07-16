@@ -19,7 +19,7 @@ const MAX_RESULT_BYTES = 50 * 1024;
 export function createChangesLoadTool($: Shell) {
   return {
     description:
-      "Load changed files and diffs against a base branch. Oversized diffs are deferred for per-file inspection.",
+      "Load changed files and diffs against a base branch. If deferredDiffs is present, the diff load is incomplete: inspect every deferred diff before reporting completion unless the caller explicitly requested metadata only.",
     args: {
       base: { type: "string", optional: true, description: "Base branch or ref" },
       head: {
@@ -140,10 +140,13 @@ function serializeChangesResult(result: Record<string, unknown> & { files: Array
   return stringifyJson({
     ...result,
     files,
+    diffsComplete: false,
     deferredDiffs: {
       count: deferredCount,
       reason: "diffs omitted because the complete tool result exceeded 50 KiB",
-      loadWith: "Inspect deferred diffs directly, one file at a time, using the returned comparison and file paths",
+      required: true,
+      loadWith:
+        "Do not report the diff load as complete. Inspect every deferred diff directly, one file at a time, using the returned comparison and file paths, unless the caller explicitly requested metadata only.",
     },
   });
 }

@@ -258,11 +258,14 @@ describe("changes_load e2e", () => {
     const result = await runChangesLoad(repo, { base: "main", head: "HEAD" });
 
     assert.ok(result.deferredDiffs);
+    assert.equal(result.diffsComplete, false);
+    assert.equal(result.deferredDiffs.required, true);
     assert.equal(result.files[0].diff, undefined);
     assert.equal(result.files[0].diffDeferred, true);
     assert.ok(Buffer.byteLength(JSON.stringify(result), "utf8") <= 50 * 1024);
     assert.equal(result.files.length, 2);
-    assert.match(result.deferredDiffs.loadWith, /one file at a time/);
+    assert.match(result.deferredDiffs.loadWith, /Do not report the diff load as complete/);
+    assert.match(result.deferredDiffs.loadWith, /every deferred diff/);
   });
 
 });

@@ -1,6 +1,6 @@
 ## Goal
 
-Create and switch to a categorized branch whose name summarizes the current uncommitted work.
+Create and switch to a categorized branch whose name summarizes the current uncommitted work.<% if (it.inline) { %> Reuse the invoking session's change context instead of loading it again.<% } %>
 
 ## Additional Context
 
@@ -21,9 +21,15 @@ $ARGUMENTS
 
 ### Load Changes
 
+<% if (it.inline) { -%>
+- Reuse the current session's known uncommitted file set and diffs as `<changes>`
+- Do not call `<%= it.config.tools.changes_load.name %>`; if session context is insufficient, inspect worktree status and relevant diffs to establish the complete remaining uncommitted file set without broadening scope
+- Run `git branch --show-current` and store the result as `<current-branch>`
+<% } else { -%>
 <%~ include("@change-summary", { config: it.config, rules: "- pass `uncommitted: true` to get uncommitted changes only" }) %>
 - Store the loaded change result as `<changes>`
 - Store the current branch as `<current-branch>` when it is available
+<% } -%>
 
 <%~ include("@branch") %>
 

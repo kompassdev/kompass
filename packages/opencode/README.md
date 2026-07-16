@@ -18,7 +18,7 @@ Kompass keeps AI coding agents on course with token-efficient, composable workfl
 
 ## Bundled Surface
 
-- Commands cover direct work (`/ask`, `/commit`, `/merge`, `/skill/create`, `/skill/optimize`), orchestration (`/dev`, `/ship`, `/todo`, `/pr/fix/loop`), ticket planning/sync, and PR review/shipping flows. `/commit/inline` and `/ship/inline` reuse the invoking session instead of starting a subtask.
+- Commands cover direct work (`/ask`, `/commit`, `/merge`, `/skill/create`, `/skill/optimize`), orchestration (`/dev`, `/ship`, `/todo`, `/pr/fix/loop`), ticket planning/sync, and PR review/shipping flows. `/branch/inline`, `/commit/inline`, `/commit-and-push/inline`, `/pr/create/inline`, and `/ship/inline` reuse the invoking session instead of starting a subtask.
 - Agents are intentionally narrow: `worker` handles implementation and multi-step workflows, `planner` is no-edit planning, and `reviewer` is a no-edit review specialist.
 - Structured tools keep workflows grounded in repo and GitHub state: `changes_load`, `pr_load`, `pr_load_review`, `pr_sync`, `ticket_load`, `ticket_sync`.
 - Reusable command-template components live in `packages/core/components/` and are documented in the components reference.

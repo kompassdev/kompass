@@ -7,10 +7,10 @@ Kompass ships workflow-oriented commands authored as explicit templates in `pack
 
 ## Groups
 
-- Workflow: `/ask`, `/branch`, `/commit`, `/commit/inline`, `/commit-and-push`, `/merge`, `/rmslop`
+- Workflow: `/ask`, `/branch`, `/branch/inline`, `/commit`, `/commit/inline`, `/commit-and-push`, `/commit-and-push/inline`, `/merge`, `/rmslop`
 - Guidelines: `/learn`, `/skill/create`, `/skill/optimize`
 - Ticket: `/ticket/ask`, `/ticket/create`, `/ticket/dev`, `/ticket/plan`, `/ticket/plan-and-sync`
-- PR: `/pr/create`, `/pr/fix`, `/pr/review`, `/review`
+- PR: `/pr/create`, `/pr/create/inline`, `/pr/fix`, `/pr/review`, `/review`
 - Orchestration: `/dev`, `/ship`, `/ship/inline`, `/todo`, `/pr/fix/loop`
 
 ## What makes them different
@@ -38,6 +38,14 @@ Creates and switches to a categorized work branch from current uncommitted chang
 - arguments: optional naming guidance that can steer the category and slug
 - expected tools: `changes_load(uncommitted)`, `git checkout -b`
 
+### `/branch/inline`
+
+Creates a work branch in the invoking session from its known uncommitted work.
+
+- usage: `/branch/inline [context]`
+- arguments: optional naming guidance
+- expected tools: live branch/worktree inspection and `git checkout -b`; no initial `changes_load`
+
 ### `/commit`
 
 Creates a commit with an appropriate message summarizing uncommitted changes.
@@ -61,6 +69,14 @@ Creates a commit and immediately pushes it to the remote repository.
 - usage: `/commit-and-push [message-guidance]`
 - arguments: optional commit message guidance
 - expected tools: `changes_load(uncommitted)`, git commit, `git push` with upstream fallback when needed
+
+### `/commit-and-push/inline`
+
+Commits and pushes in the invoking session, reusing its known uncommitted-change context.
+
+- usage: `/commit-and-push/inline [message-guidance]`
+- arguments: optional commit message guidance
+- expected tools: staging/commit commands and live `git push`; worktree inspection only when session context is insufficient
 
 ### `/merge`
 
@@ -155,6 +171,14 @@ Creates a pull request for the current branch, including mandatory ticket resolu
 - usage: `/pr/create [base-or-ticket-context]`
 - arguments: optional base branch, ticket directive, ticket reference, skip directive, or additional context
 - expected tools: `changes_load`, `question` when ticket handling is unresolved, `ticket_sync` when auto-creating a ticket, `git push`, `pr_sync`
+
+### `/pr/create/inline`
+
+Creates the PR in the invoking session while retaining an authoritative committed branch comparison.
+
+- usage: `/pr/create/inline [base-or-ticket-context]`
+- arguments: optional base branch, ticket directive, ticket reference, skip directive, or additional context
+- expected tools: the same as `/pr/create`; inline execution does not skip mutable repository or GitHub state
 
 ### `/pr/fix`
 

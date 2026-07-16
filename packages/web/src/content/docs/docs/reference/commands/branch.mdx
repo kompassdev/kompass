@@ -11,7 +11,10 @@ Use `/branch` to create a short categorized branch name from current uncommitted
 
 ```text
 /branch [context]
+/branch/inline [context]
 ```
+
+Use `/branch/inline` to retain the invoking session and reuse its known uncommitted-change context. It still checks the active branch and current worktree before creating a branch.
 
 ## Typical flow
 

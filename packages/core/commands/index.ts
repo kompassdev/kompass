@@ -30,6 +30,13 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     agent: "worker",
     templatePath: "commands/branch.md",
   },
+  "branch/inline": {
+    description: "Create a branch using context from the current session",
+    agent: "worker",
+    templatePath: "commands/branch.md",
+    subtask: false,
+    templateData: { inline: true },
+  },
   commit: {
     description: "Commit current changes with a message",
     agent: "worker",
@@ -46,6 +53,13 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     description: "Commit and push current changes",
     agent: "worker",
     templatePath: "commands/commit-and-push.md",
+  },
+  "commit-and-push/inline": {
+    description: "Commit and push using context from the current session",
+    agent: "worker",
+    templatePath: "commands/commit-and-push.md",
+    subtask: false,
+    templateData: { inline: true },
   },
   dev: {
     description: "Implement a request and prepare it for PR creation",
@@ -72,6 +86,13 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     description: "Summarize branch work and create a PR",
     agent: "worker",
     templatePath: "commands/pr/create.md",
+  },
+  "pr/create/inline": {
+    description: "Create a PR in the current session",
+    agent: "worker",
+    templatePath: "commands/pr/create.md",
+    subtask: false,
+    templateData: { inline: true },
   },
   "pr/fix": {
     description: "Fix PR feedback or CI failures, push updates, and reply",

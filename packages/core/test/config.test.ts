@@ -285,7 +285,10 @@ describe("command defaults", () => {
   test("enables inline variants and the nested PR fix loop by default", () => {
     const config = mergeWithDefaults(null);
 
+    assert.equal(config.commands.enabled.includes("branch/inline"), true);
     assert.equal(config.commands.enabled.includes("commit/inline"), true);
+    assert.equal(config.commands.enabled.includes("commit-and-push/inline"), true);
+    assert.equal(config.commands.enabled.includes("pr/create/inline"), true);
     assert.equal(config.commands.enabled.includes("ship/inline"), true);
     assert.equal(config.commands.enabled.includes("pr/fix/loop"), true);
     assert.equal(config.commands.enabled.includes("loop/pr/fix"), false);

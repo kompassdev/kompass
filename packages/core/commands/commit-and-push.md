@@ -1,6 +1,6 @@
 ## Goal
 
-Create a commit and immediately push it to the remote repository.
+Create a commit and immediately push it to the remote repository.<% if (it.inline) { %> Reuse the invoking session's change context instead of loading it again.<% } %>
 
 ## Additional Context
 
@@ -21,8 +21,13 @@ $ARGUMENTS
 
 ### Load Changes
 
+<% if (it.inline) { -%>
+- Reuse the current session's known uncommitted file set and diffs as `<changes>`
+- Do not call `<%= it.config.tools.changes_load.name %>`; if session context is insufficient, inspect worktree status and relevant diffs to establish the complete remaining uncommitted file set without broadening scope
+<% } else { -%>
 <%~ include("@change-summary", { config: it.config, rules: "- pass `uncommitted: true` to get uncommitted changes only" }) %>
 - Store the loaded change result as `<changes>`
+<% } -%>
 
 ### Check Blockers
 

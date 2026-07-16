@@ -47,15 +47,14 @@ const scenarios: CommandScenario[] = [
   },
   {
     id: 'branch',
-    label: '/branch',
-    command: '/branch docs cleanup',
+    label: '/branch/inline',
+    command: '/branch/inline docs cleanup',
     agentName: 'Worker',
     task: 'Create a categorized branch from current work',
     group: 'workflow',
     steps: [
-      { id: 'thinking', phase: 'thinking', content: 'Summarize uncommitted work, check whether the current branch already looks like a work branch, then generate a short categorized name.' },
+      { id: 'thinking', phase: 'thinking', content: 'Reuse current-session change context, check the live branch and worktree, then generate a short categorized name.' },
       { id: 'tools', phase: 'tool_calls', toolCalls: [
-        { tool: 'changes_load', args: 'uncommitted: true', status: 'complete' },
         { tool: 'bash', args: 'git checkout -b docs/reference-cleanup', status: 'complete' }
       ] },
       { id: 'output', phase: 'output', output: [
@@ -85,15 +84,14 @@ const scenarios: CommandScenario[] = [
   },
   {
     id: 'commit-and-push',
-    label: '/commit-and-push',
-    command: '/commit-and-push',
+    label: '/commit-and-push/inline',
+    command: '/commit-and-push/inline',
     agentName: 'Worker',
     task: 'Create a commit and push it',
     group: 'workflow',
     steps: [
-      { id: 'thinking', phase: 'thinking', content: 'Create the commit from current uncommitted work, then push and fall back to upstream setup if needed.' },
+      { id: 'thinking', phase: 'thinking', content: 'Reuse current-session changes for the commit, then push and fall back to upstream setup if needed.' },
       { id: 'tools', phase: 'tool_calls', toolCalls: [
-        { tool: 'changes_load', args: 'uncommitted: true', status: 'complete' },
         { tool: 'bash', args: 'git commit', status: 'complete' },
         { tool: 'bash', args: 'git push', status: 'complete' }
       ] },
@@ -307,8 +305,8 @@ const scenarios: CommandScenario[] = [
   },
   {
     id: 'pr-create',
-    label: '/pr/create',
-    command: '/pr/create',
+    label: '/pr/create/inline',
+    command: '/pr/create/inline',
     agentName: 'Worker',
     task: 'Create a structured PR from current branch work',
     group: 'pr',

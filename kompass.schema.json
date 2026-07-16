@@ -38,6 +38,9 @@
         "branch": {
           "$ref": "#/$defs/commandConfig"
         },
+        "branch/inline": {
+          "$ref": "#/$defs/commandConfig"
+        },
         "commit": {
           "$ref": "#/$defs/commandConfig"
         },
@@ -45,6 +48,9 @@
           "$ref": "#/$defs/commandConfig"
         },
         "commit-and-push": {
+          "$ref": "#/$defs/commandConfig"
+        },
+        "commit-and-push/inline": {
           "$ref": "#/$defs/commandConfig"
         },
         "dev": {
@@ -57,6 +63,9 @@
           "$ref": "#/$defs/commandConfig"
         },
         "pr/create": {
+          "$ref": "#/$defs/commandConfig"
+        },
+        "pr/create/inline": {
           "$ref": "#/$defs/commandConfig"
         },
         "pr/fix": {
@@ -111,13 +120,16 @@
             "enum": [
               "ask",
               "branch",
+              "branch/inline",
               "commit",
               "commit/inline",
               "commit-and-push",
+              "commit-and-push/inline",
               "dev",
               "learn",
               "merge",
               "pr/create",
+              "pr/create/inline",
               "pr/fix",
               "pr/fix/loop",
               "pr/review",
@@ -144,13 +156,16 @@
             "enum": [
               "ask",
               "branch",
+              "branch/inline",
               "commit",
               "commit/inline",
               "commit-and-push",
+              "commit-and-push/inline",
               "dev",
               "learn",
               "merge",
               "pr/create",
+              "pr/create/inline",
               "pr/fix",
               "pr/fix/loop",
               "pr/review",

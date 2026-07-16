@@ -46,12 +46,20 @@ describe("resolveCommands", () => {
     assert.doesNotMatch(template, /question/);
   });
 
-  test("registers inline commit and ship variants in the current session", async () => {
+  test("registers current-session completion variants", async () => {
     const commands = await resolveCommands(process.cwd());
 
+    assert.equal(commands["branch/inline"]?.subtask, false);
     assert.equal(commands["commit/inline"]?.subtask, false);
+    assert.equal(commands["commit-and-push/inline"]?.subtask, false);
+    assert.equal(commands["pr/create/inline"]?.subtask, false);
     assert.equal(commands["ship/inline"]?.subtask, false);
+    assert.match(commands["branch/inline"]?.template ?? "", /Do not call `changes_load`/);
     assert.match(commands["commit/inline"]?.template ?? "", /Reuse the current session's known uncommitted changes/);
+    assert.match(commands["commit-and-push/inline"]?.template ?? "", /Do not call `changes_load`/);
+    assert.match(commands["commit-and-push/inline"]?.template ?? "", /git push -u origin <branch>/);
+    assert.match(commands["pr/create/inline"]?.template ?? "", /Retain the authoritative branch comparison load/);
+    assert.match(commands["pr/create/inline"]?.template ?? "", /call `changes_load`/);
     assert.match(commands["ship/inline"]?.template ?? "", /Do not call `changes_load` before the branch and commit phases/);
     assert.doesNotMatch(commands.commit?.template ?? "", /Reuse the current session's known uncommitted changes/);
   });

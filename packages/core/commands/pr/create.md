@@ -1,10 +1,10 @@
 ## Goal
 
-Create a pull request for the current branch from its committed changes.
+Create a pull request for the current branch from its committed changes.<% if (it.inline) { %> Run in the invoking session while loading the final branch comparison as authoritative state.<% } %>
 
 ## Additional Context
 
-Use `<additional-context>` when writing the PR. Include `Ticket`, `Description`, and `Checklist` sections in that order, and use `SKIPPED` when ticket mention is skipped.
+Use `<additional-context>`<% if (it.inline) { %> and relevant invoking-session context<% } %> when writing the PR. Include `Ticket`, `Description`, and `Checklist` sections in that order, and use `SKIPPED` when ticket mention is skipped.
 
 ## Workflow
 
@@ -22,6 +22,9 @@ $ARGUMENTS
 
 ### Load And Analyze Changes
 
+<% if (it.inline) { -%>
+- Retain the authoritative branch comparison load even though this command runs in the invoking session; do not infer the final base, commit scope, or diff from session memory
+<% } -%>
 <%~ include("@change-summary", { config: it.config, rules: "- If `<base>` is defined, pass it as `base`; otherwise call the tool with no parameters\n- Never pass `uncommitted: true`" }) %>
 - Store the result as `<changes>`
 

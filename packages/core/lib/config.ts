@@ -25,13 +25,16 @@ export const DEFAULT_TOOL_NAMES = [
 export const DEFAULT_COMMAND_NAMES = [
   "ask",
   "branch",
+  "branch/inline",
   "commit",
   "commit/inline",
   "commit-and-push",
+  "commit-and-push/inline",
   "dev",
   "learn",
   "merge",
   "pr/create",
+  "pr/create/inline",
   "pr/fix",
   "pr/fix/loop",
   "pr/review",
@@ -101,13 +104,16 @@ export interface KompassConfig {
   commands?: {
     ask?: CommandConfig;
     branch?: CommandConfig;
+    "branch/inline"?: CommandConfig;
     commit?: CommandConfig;
     "commit/inline"?: CommandConfig;
     "commit-and-push"?: CommandConfig;
+    "commit-and-push/inline"?: CommandConfig;
     dev?: CommandConfig;
     learn?: CommandConfig;
     merge?: CommandConfig;
     "pr/create"?: CommandConfig;
+    "pr/create/inline"?: CommandConfig;
     "pr/fix"?: CommandConfig;
     "pr/fix/loop"?: CommandConfig;
     "pr/review"?: CommandConfig;

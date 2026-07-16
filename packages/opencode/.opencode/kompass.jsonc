@@ -13,6 +13,9 @@
     "branch": {
       "enabled": true
     },
+    "branch/inline": {
+      "enabled": true
+    },
     "commit": {
       "enabled": true
     },
@@ -20,6 +23,9 @@
       "enabled": true
     },
     "commit-and-push": {
+      "enabled": true
+    },
+    "commit-and-push/inline": {
       "enabled": true
     },
     "dev": {
@@ -32,6 +38,9 @@
       "enabled": true
     },
     "pr/create": {
+      "enabled": true
+    },
+    "pr/create/inline": {
       "enabled": true
     },
     "pr/fix": {

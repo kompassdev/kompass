@@ -11,7 +11,7 @@ Kompass is built around three working styles:
 
 The same command and agent structure can support each mode without forcing one interaction pattern.
 
-OpenCode normally runs commands as subtasks outside CI. Use `/commit/inline` or `/ship/inline` when the invoking session already has the required change context and should retain execution instead; these variants force `subtask: false` and skip their initial change load.
+OpenCode normally runs commands as subtasks outside CI. Use the `/inline` variants of `/branch`, `/commit`, `/commit-and-push`, `/pr/create`, and `/ship` when the invoking session should retain execution; these variants force `subtask: false`. Change-producing variants skip redundant initial uncommitted loads, while `/pr/create/inline` still loads the authoritative committed branch comparison.
 
 ## Manual steering
 

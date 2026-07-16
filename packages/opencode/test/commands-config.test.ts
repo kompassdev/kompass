@@ -34,9 +34,12 @@ describe("applyCommandsConfig", () => {
       const expectedCommands = [
         "ask",
         "branch",
+        "branch/inline",
         "commit/inline",
+        "commit-and-push/inline",
         "merge",
         "pr/create",
+        "pr/create/inline",
         "pr/review",
         "pr/fix",
         "pr/fix/loop",
@@ -384,7 +387,10 @@ describe("applyCommandsConfig", () => {
       assert.equal(cfg.command!["dev"]?.subtask, true);
       assert.equal(cfg.command!["pr/fix/loop"]?.subtask, true);
       assert.equal(cfg.command!["ship"]?.subtask, true);
+      assert.equal(cfg.command!["branch/inline"]?.subtask, false);
       assert.equal(cfg.command!["commit/inline"]?.subtask, false);
+      assert.equal(cfg.command!["commit-and-push/inline"]?.subtask, false);
+      assert.equal(cfg.command!["pr/create/inline"]?.subtask, false);
       assert.equal(cfg.command!["ship/inline"]?.subtask, false);
       assert.equal(cfg.command!["todo"]?.subtask, true);
     });
@@ -401,7 +407,10 @@ describe("applyCommandsConfig", () => {
       assert.equal(cfg.command!["dev"]?.subtask, false);
       assert.equal(cfg.command!["pr/fix/loop"]?.subtask, false);
       assert.equal(cfg.command!["ship"]?.subtask, false);
+      assert.equal(cfg.command!["branch/inline"]?.subtask, false);
       assert.equal(cfg.command!["commit/inline"]?.subtask, false);
+      assert.equal(cfg.command!["commit-and-push/inline"]?.subtask, false);
+      assert.equal(cfg.command!["pr/create/inline"]?.subtask, false);
       assert.equal(cfg.command!["ship/inline"]?.subtask, false);
       assert.equal(cfg.command!["todo"]?.subtask, false);
     });
@@ -458,6 +467,7 @@ describe("applyCommandsConfig", () => {
       // All default commands should have templates loaded
       assert.ok(cfg.command!["dev"]?.template);
       assert.ok(cfg.command!["pr/create"]?.template);
+      assert.ok(cfg.command!["pr/create/inline"]?.template);
       assert.ok(cfg.command!["ticket/create"]?.template);
       assert.ok(cfg.command!["ask"]?.template);
       assert.ok(cfg.command!["pr/review"]?.template);
@@ -469,6 +479,9 @@ describe("applyCommandsConfig", () => {
       assert.ok(cfg.command!["skill/optimize"]?.template);
       assert.ok(cfg.command!["pr/fix/loop"]?.template);
       assert.ok(cfg.command!["ship"]?.template);
+      assert.ok(cfg.command!["branch/inline"]?.template);
+      assert.ok(cfg.command!["commit-and-push/inline"]?.template);
+      assert.ok(cfg.command!["ship/inline"]?.template);
       assert.ok(cfg.command!["ticket/dev"]?.template);
       assert.ok(cfg.command!["review"]?.template);
     });

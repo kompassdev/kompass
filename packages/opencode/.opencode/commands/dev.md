@@ -1,6 +1,6 @@
 ---
 description: Implement a request and prepare it for PR creation
-agent: navigator
+agent: worker
 ---
 
 ## Goal

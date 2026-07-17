@@ -28,18 +28,56 @@ describe("resolveCommands", () => {
     const commands = await resolveCommands(process.cwd());
     const template = commands["pr/fix"]?.template ?? "";
 
-    assert.match(template, /Run `gh pr checkout <pr-context\.pr\.number>` before analyzing repository files or making code changes for this PR/);
-    assert.match(template, /Do not inspect or modify local code for this PR until `<active-branch>` equals `<pr-branch>`/);
+    assert.match(template, /Run `gh pr checkout <pr-context\.pr\.number>` before inspecting or modifying code/);
+    assert.match(template, /STOP unless it equals `<pr-branch>`/);
+    assert.match(template, /git merge-base --is-ancestor <base-ref> HEAD/);
+    assert.match(template, /merge `<base-ref>` into `<active-branch>` without rebasing or force-pushing/);
     assert.doesNotMatch(template, /`<current-branch>` differs from `<pr-branch>` or `<current-head>` differs from `<pr-context\.pr\.headRefOid>`/);
   });
 
-  test("orchestrates loop pr fix through ci and delegated auto fixes", async () => {
+  test("runs pr fix loop inline with incremental review loading", async () => {
     const commands = await resolveCommands(process.cwd());
-    const template = commands["loop/pr/fix"]?.template ?? "";
+    const template = commands["pr/fix/loop"]?.template ?? "";
 
     assert.match(template, /gh pr checks <pr-number> --watch/);
-    assert.match(template, /command="pr\/fix"/);
-    assert.match(template, /auto <pr-url>/);
+    assert.match(template, /pr_load_review/);
+    assert.match(template, /since: <review-checkpoint>/);
+    assert.doesNotMatch(template, /<delegate/);
     assert.doesNotMatch(template, /question/);
+  });
+
+  test("registers current-session completion variants", async () => {
+    const commands = await resolveCommands(process.cwd());
+
+    assert.equal(commands["branch/inline"]?.subtask, false);
+    assert.equal(commands["commit/inline"]?.subtask, false);
+    assert.equal(commands["commit-and-push/inline"]?.subtask, false);
+    assert.equal(commands["pr/create/inline"]?.subtask, false);
+    assert.equal(commands["ship/inline"]?.subtask, false);
+    assert.match(commands["branch/inline"]?.template ?? "", /Do not call `changes_load`/);
+    assert.match(commands["commit/inline"]?.template ?? "", /Reuse the current session's known uncommitted changes/);
+    assert.match(commands["commit-and-push/inline"]?.template ?? "", /Do not call `changes_load`/);
+    assert.match(commands["commit-and-push/inline"]?.template ?? "", /git push -u origin <current-branch>/);
+    assert.match(commands["pr/create/inline"]?.template ?? "", /Retain the authoritative branch comparison load/);
+    assert.match(commands["pr/create/inline"]?.template ?? "", /call `changes_load`/);
+    assert.match(commands["ship/inline"]?.template ?? "", /Do not call `changes_load` before the branch and commit phases/);
+    assert.doesNotMatch(commands.commit?.template ?? "", /Reuse the current session's known uncommitted changes/);
+  });
+
+  test("analyzes each loaded PR comparison once", async () => {
+    const commands = await resolveCommands(process.cwd());
+    const marker = /#### Analyze And Summarize Changes/g;
+
+    assert.equal(commands["pr/create"]?.template.match(marker)?.length, 1);
+    assert.equal(commands.ship?.template.match(marker)?.length, 2);
+  });
+
+  test("uses declared subtask mode instead of the CI fallback for templates", async () => {
+    const commands = await resolveCommands(process.cwd(), { ci: true });
+
+    assert.equal(commands.commit?.subtask, false);
+    assert.match(commands.commit?.template ?? "", /call `changes_load`/);
+    assert.doesNotMatch(commands.commit?.template ?? "", /Reuse the current session's known uncommitted changes/);
+    assert.match(commands["commit/inline"]?.template ?? "", /Reuse the current session's known uncommitted changes/);
   });
 });

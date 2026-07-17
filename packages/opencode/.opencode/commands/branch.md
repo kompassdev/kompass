@@ -26,40 +26,41 @@ $ARGUMENTS
 
 ### Load Changes
 
-#### Step 1: Load Changes
+#### Load Changes
+
 - call `kompass_changes_load`
 - pass `uncommitted: true` to get uncommitted changes only
 - Store the returned result as `<changes>`
-- Use `<changes>` as the source of truth; no additional git analysis commands are needed
-- When `<changes>.comparison` is not `uncommitted`, treat `<changes>.commits` as the authoritative scope of work: only summarize commits that are ahead of the resolved base branch
-- Do not infer scope from the branch names alone and do not describe work that exists only on the base branch
+- If `<changes>.deferredDiffs` is present, inspect the needed deferred diffs directly one file at a time using the returned comparison and changed paths
+#### Analyze And Summarize Changes
 
-#### Step 2: Analyze Files
-- Review the paths, statuses, and diffs from `<changes>` only as file-level context for the commits in scope
+- Use `<changes>` as the source of truth; do not run additional git commands to rediscover its comparison
+- Note the comparison mode, base branch, and current branch from `<changes>`
+- When `<changes>.comparison` is not `uncommitted`, treat `<changes>.commits` as the authoritative scope of work: only summarize commits ahead of the resolved base branch
+- Review commit messages when available to understand the delivery narrative
+- Review paths, statuses, line counts, and diffs from `<changes>` as file-level context for the commits in scope
+- Read only the most relevant changed source files when the diff does not provide enough context
 - Identify the nature of changes (added, modified, deleted)
-- Note lines added/removed per file
-
-#### Step 3: Group and Summarize
-- For branch comparisons, build the summary from `<changes>.commits` first and use file diffs only to verify or refine what those commits changed
 - Group related changes into logical themes
 - Summarize the "what" and "why" (not the "how")
-- Store the loaded change result as `<changes>`
+- Do not infer scope from branch names or describe work that exists only on the base branch or outside the commits ahead of base
 - Store the current branch as `<current-branch>` when it is available
 
-### Check Blockers
+### Check Branch
 
-- If `<changes>` contains no files, STOP and report that there is nothing to branch from
-- If `<current-branch>` already starts with a conventional work-branch category such as `feature/`, `fix/`, `refactor/`, `docs/`, `test/`, `chore/`, `feat/`, `bugfix/`, `hotfix/`, `perf/`, `build/`, or `ci/`, STOP and report that branching was skipped because the current branch already looks like a work branch
+- Store the current branch from `<changes>` as `<current-branch>` when available
+- If `<changes>` contains no files, store `<branch-result>` as `nothing to branch from` and skip branch creation
+- If `<current-branch>` starts with a conventional work category such as `feature/`, `fix/`, `refactor/`, `docs/`, `test/`, `chore/`, `feat/`, `bugfix/`, `hotfix/`, `perf/`, `build/`, or `ci/`, store `<branch-result>` as `kept <current-branch>` and skip branch creation
 
 ### Create Branch
 
-- Choose a branch category from the summarized change themes and `<branch-context>`
-- Prefer conventional categories such as `feature`, `fix`, `refactor`, `docs`, `test`, or `chore`
-- Store the chosen category as `<branch-category>`
-- Generate a concise kebab-case slug from the summarized change themes and `<branch-context>` when available, then store it as `<branch-slug>`
+When branch creation was not skipped:
+- Choose a conventional category such as `feature`, `fix`, `refactor`, `docs`, `test`, or `chore` from the change themes and `<branch-context>`
+- Generate a concise kebab-case slug from the same context
 - Create and checkout `<branch-category>/<branch-slug>` with `git checkout -b`
-- If that name already exists, retry once with a short numeric suffix
-- Store the checked-out branch as `<new-branch>`
+- If that name exists, retry once with a short numeric suffix
+- Store the checked-out branch as `<current-branch>` and `<branch-result>` as `created <current-branch>`
+- If branch creation fails, STOP and report the blocker
 
 ### Output
 
@@ -81,7 +82,7 @@ No additional steps are required.
 
 When the branch is created, display:
 ```
-Created branch: <new-branch>
+Created branch: <current-branch>
 
 From: <current-branch>
 

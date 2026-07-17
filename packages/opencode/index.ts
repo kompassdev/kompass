@@ -5,8 +5,8 @@ import { promisify } from "node:util";
 
 import {
   createChangesLoadTool,
-  createCommandExpansionTool,
   createPrLoadTool,
+  createPrLoadReviewTool,
   createPrSyncTool,
   createTicketLoadTool,
   createTicketSyncTool,
@@ -15,24 +15,18 @@ import {
   type Shell,
   type ShellPromise,
 } from "../core/index.ts";
-import { loadConfiguredNames, loadMergedKompassConfig } from "./cache.ts";
+import { loadMergedKompassConfig } from "./cache.ts";
 import { applyAgentsConfig, applyCommandsConfig } from "./config.ts";
 import { createPluginLogger, getErrorDetails, type PluginLogger } from "./logging.ts";
 import {
   getConfiguredOpenCodeToolName,
 } from "./tool-names.ts";
 
-const AGENT_HANDOFF_MARKER = "generate a prompt and call the task tool with subagent:";
 const execFileAsync = promisify(execFile);
 
-type ToolExecuteBeforeHook = NonNullable<Hooks["tool.execute.before"]>;
-type ToolExecuteBeforeInput = Parameters<ToolExecuteBeforeHook>[0];
-type ToolExecuteBeforeOutput = Parameters<ToolExecuteBeforeHook>[1];
 type CommandExecuteBeforeHook = NonNullable<Hooks["command.execute.before"]>;
 type CommandExecuteBeforeInput = Parameters<CommandExecuteBeforeHook>[0];
 type CommandExecuteBeforeOutput = Parameters<CommandExecuteBeforeHook>[1];
-type ChatMessageHook = NonNullable<Hooks["chat.message"]>;
-type ChatMessageOutput = Parameters<ChatMessageHook>[1];
 type OpenCodeToolCreator = (
   client: PluginInput["client"],
   config: MergedKompassConfig,
@@ -152,14 +146,6 @@ function createNodeShell(defaultDirectory: string): Shell {
   };
 }
 
-export type TaskToolExecution = {
-  prompt: string;
-  raw_prompt?: string;
-  description?: string;
-  subagent_type?: string;
-  command?: string;
-};
-
 export type CommandExecution = {
   command: string;
   arguments: string;
@@ -182,28 +168,6 @@ function logObservedFailure(
   });
 }
 
-export async function getTaskToolExecution(
-  input: ToolExecuteBeforeInput,
-  output: ToolExecuteBeforeOutput,
-): Promise<TaskToolExecution | undefined> {
-  if (input.tool !== "task") return;
-  if (!output.args || typeof output.args !== "object") return;
-
-  const args = output.args as Record<string, unknown>;
-  const prompt = getString(args.prompt);
-  const command = getString(args.command);
-
-  if (!prompt && !command) return;
-
-  return {
-    prompt: prompt ?? command ?? "",
-    raw_prompt: prompt,
-    description: getString(args.description),
-    subagent_type: getString(args.subagent_type),
-    command,
-  };
-}
-
 export function getCommandExecution(
   input: CommandExecuteBeforeInput,
   output: CommandExecuteBeforeOutput,
@@ -220,19 +184,6 @@ export function getCommandExecution(
     arguments: input.arguments,
     prompt,
   };
-}
-
-export function removeSyntheticAgentHandoff(output: ChatMessageOutput): boolean {
-  const filteredParts = output.parts.filter((part) => !(
-    part.type === "text" &&
-    part.synthetic === true &&
-    part.text.toLowerCase().includes(AGENT_HANDOFF_MARKER)
-  ));
-
-  if (filteredParts.length === output.parts.length) return false;
-
-  output.parts.splice(0, output.parts.length, ...filteredParts);
-  return true;
 }
 
 const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
@@ -253,34 +204,23 @@ const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
-  command_expansion(_client: PluginInput["client"], config: MergedKompassConfig, projectRoot: string, _shell: Shell) {
-    return tool({
-      description: "Expand a delegated command body into a runnable prompt for immediate task execution.",
-      args: {
-        command: tool.schema.string().describe("Command name to execute, without the leading slash"),
-        body: tool.schema.string().describe("Literal body content from the delegate block").optional(),
-      },
-      execute: async (args, context) => {
-        const names = await loadConfiguredNames(projectRoot);
-        const definition = createCommandExpansionTool(projectRoot, { names });
-
-        context.metadata({
-          title: `Command /${args.command.trim()}`,
-          metadata: {
-            command: args.command,
-          },
-        });
-
-        return definition.execute(args, context);
-      },
-    });
-  },
   pr_load(_: PluginInput["client"], __: MergedKompassConfig, _projectRoot: string, shell: Shell) {
     const definition = createPrLoadTool(shell);
     return tool({
       description: definition.description,
       args: {
         pr: tool.schema.string().describe("PR number or URL").optional(),
+      },
+      execute: (args, context) => definition.execute(args, context),
+    });
+  },
+  pr_load_review(_: PluginInput["client"], __: MergedKompassConfig, _projectRoot: string, shell: Shell) {
+    const definition = createPrLoadReviewTool(shell);
+    return tool({
+      description: definition.description,
+      args: {
+        pr: tool.schema.string().describe("PR number or URL").optional(),
+        since: tool.schema.string().describe("Exclusive ISO-8601 review checkpoint"),
       },
       execute: (args, context) => definition.execute(args, context),
     });
@@ -432,25 +372,6 @@ export const OpenCodeCompassPlugin: Plugin = async (input: PluginInput) => {
       await runConfigStep("agents", () => applyAgentsConfig(cfg, worktree, { logger }));
       await runConfigStep("commands", () => applyCommandsConfig(cfg, worktree, { logger }));
     },
-    async "chat.message"(input, output) {
-      try {
-        const removedSyntheticHandoff = removeSyntheticAgentHandoff(output);
-
-        if (!removedSyntheticHandoff) return;
-
-        logger.info("Removed synthetic agent handoff text", {
-          sessionID: input.sessionID,
-          messageID: input.messageID,
-          agent: input.agent,
-        });
-      } catch (error) {
-        logObservedFailure(logger, "chat.message hook failed", error, {
-          sessionID: input.sessionID,
-          messageID: input.messageID,
-          agent: input.agent,
-        });
-      }
-    },
     async "command.execute.before"(input, output) {
       try {
         const commandExecution = getCommandExecution(input, output);
@@ -462,21 +383,6 @@ export const OpenCodeCompassPlugin: Plugin = async (input: PluginInput) => {
         logObservedFailure(logger, "command.execute.before hook failed", error, {
           command: input.command,
           arguments: input.arguments,
-          sessionID: input.sessionID,
-        });
-      }
-    },
-    async "tool.execute.before"(input, output) {
-      try {
-        const taskExecution = await getTaskToolExecution(input, output);
-
-        if (!taskExecution) return;
-
-        logger.info("Executing Kompass task tool", taskExecution as Record<string, unknown>);
-      } catch (error) {
-        logObservedFailure(logger, "tool.execute.before hook failed", error, {
-          tool: input.tool,
-          callID: input.callID,
           sessionID: input.sessionID,
         });
       }

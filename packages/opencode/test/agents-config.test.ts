@@ -34,16 +34,6 @@ describe("applyAgentsConfig", () => {
       todowrite: "allow",
     });
     assert.equal(cfg.agent.worker?.mode, undefined);
-    assert.equal(
-      cfg.agent.navigator?.description,
-      "Coordinate structured multi-step workflows and run focused slash-command steps in the current session.",
-    );
-    assert.deepEqual(cfg.agent.navigator?.permission, {
-      edit: "deny",
-      task: "allow",
-      question: "allow",
-      todowrite: "allow",
-    });
     assert.deepEqual(cfg.agent.reviewer?.permission, {
       edit: "deny",
       question: "allow",
@@ -55,10 +45,7 @@ describe("applyAgentsConfig", () => {
       todowrite: "allow",
     });
     assert.equal(cfg.agent.worker?.prompt, undefined);
-    assert.match(cfg.agent.navigator?.prompt ?? "", /structured, multi-step workflows/i);
-    assert.match(cfg.agent.navigator?.prompt ?? "", /call `?kompass_command_expansion`?/i);
-    assert.match(cfg.agent.navigator?.prompt ?? "", /manage step order/i);
-    assert.match(cfg.agent.navigator?.prompt ?? "", /<delegate agent=/i);
+    assert.equal(cfg.agent.navigator, undefined);
     assert.match(cfg.agent.reviewer?.prompt ?? "", /Never switch branches/i);
   });
 

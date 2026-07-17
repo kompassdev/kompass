@@ -1,0 +1,20 @@
+---
+title: pr_load_review
+description: Incrementally load PR review activity after a checkpoint.
+---
+
+Use `pr_load_review` after an initial `pr_load` when a long-running workflow only needs new or updated review activity.
+
+## Inputs
+
+- `pr`: optional PR number or URL
+- `since`: required exclusive ISO-8601 timestamp, usually the previous result's `loadedAt`
+
+## Behavior
+
+- filters formal reviews by submission time
+- asks GitHub for issue comments updated since the checkpoint
+- returns a whole review thread when any comment in it changed after the checkpoint
+- returns `loadedAt` for the next call
+
+GitHub does not expose a timestamp filter for review-thread resolution changes, so resolution-only changes without comment activity are not detectable incrementally.

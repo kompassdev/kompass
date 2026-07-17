@@ -1,10 +1,10 @@
 ## Goal
 
-Ship the current work by dispatching branch creation, commit creation, and PR creation in the current session.
+Ship the current work through branch creation, commit creation, and PR creation in one workflow.<% if (it.inline) { %> Reuse the invoking session's change context for the initial branch and commit phases.<% } %>
 
 ## Additional Context
 
-Use `<branch-context>` to steer delegated branch naming. Use `<additional-context>` to refine the delegated commit and PR summaries. Pass `<base>` through to PR creation when it was provided.
+Use `<branch-context>` for branch naming and `<additional-context>` for commit and PR summaries. Reuse loaded state within this command instead of reloading it between phases.
 
 ## Workflow
 
@@ -17,53 +17,36 @@ $ARGUMENTS
 ### Interpret Arguments
 
 - Initialize `<base>`, `<branch-context>`, and `<additional-context>` as empty
-- If `<arguments>` is empty, proceed with defaults
-- If the trimmed `<arguments>` is only a branch reference (for example `main` or `origin/develop`), store it as `<base>` and leave the context fields empty
-- Otherwise, store `<arguments>` as both `<branch-context>` and `<additional-context>`
+- If `<arguments>` is only a branch reference, store it as `<base>`
+- Otherwise, store it as both `<branch-context>` and `<additional-context>`
 
-### Delegate Branch Creation
+### Load Uncommitted Changes Once
 
-<delegate agent="<%= it.config.agents.worker.name %>" command="<%= it.config.commands.branch.name %>">
-Branch naming guidance: <branch-context>
-</delegate>
+<% if (it.inline) { -%>
+- Reuse the current session's known uncommitted changes as `<changes>` for branch naming and commit creation
+- Do not call `<%= it.config.tools.changes_load.name %>` before the branch and commit phases; inspect the worktree only when the session context does not identify which files remain uncommitted
+<% } else { -%>
+<%~ include("@change-summary", { config: it.config, rules: "- pass `uncommitted: true` to get uncommitted changes only" }) %>
+- Reuse `<changes>` for branch naming and commit creation
+<% } -%>
 
-- Store the delegated result as `<branch-result>`
-- If `<branch-result>` says there was nothing to branch from, continue on the current branch
-- If `<branch-result>` says branching was skipped because the current branch already looks like a work branch, continue on the current branch
-- If `<branch-result>` is blocked or incomplete, STOP and report the branch blocker
-- Otherwise, continue with the created branch
+<%~ include("@branch") %>
 
-### Delegate Commit
+### Create Commit
 
-<delegate agent="<%= it.config.agents.worker.name %>" command="<%= it.config.commands.commit.name %>">
-Additional context: <additional-context>
-</delegate>
+- If `<changes>` contains files, create the commit from the already loaded `<changes>`:
+<%~ include("@commit") %>
+- Store `<commit-result>` as the created hash and message
+- If `<changes>` contains no files, store `<commit-result>` as `no new commit`
 
-- Store the delegated result as `<commit-result>`
-- If `<commit-result>` says there was nothing to commit, continue without creating a new commit
-- If `<commit-result>` is blocked or incomplete, STOP and report the commit blocker
-- Otherwise, continue with the created commit
+### Load Branch Changes
 
-### Delegate PR Creation
+- Call `<%= it.config.tools.changes_load.name %>` with `base: <base>` when defined, otherwise with no arguments
+- Store the new result as `<changes>`; this post-commit comparison is required for PR creation
 
-<delegate agent="<%= it.config.agents.worker.name %>" command="<%= it.config.commands["pr/create"].name %>">
-Base branch: <base>
-Additional context: <additional-context>
-</delegate>
-
-- Store the delegated result as `<pr-result>`
-- If `<pr-result>` is blocked or incomplete, STOP and report the PR blocker
-- If `<pr-result>` says there is nothing to include in a PR, STOP and report that there is nothing to ship
-- Otherwise, continue with the created or existing PR
+<%~ include("@pr-create", { config: it.config }) %>
 
 ### Output
-
-If there is nothing to ship, display:
-```
-Nothing to ship
-
-No additional steps are required.
-```
 
 When complete, display:
 ```
@@ -71,7 +54,7 @@ Ship flow complete
 
 Branch: <branch-result>
 Commit: <commit-result>
-PR: <pr-result>
+PR: <pr-url>
 
 No additional steps are required.
 ```

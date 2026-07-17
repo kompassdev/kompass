@@ -11,7 +11,10 @@ Use `/pr/create` to move current branch work into a reviewable pull request.
 
 ```text
 /pr/create [base-or-ticket-context]
+/pr/create/inline [base-or-ticket-context]
 ```
+
+Use `/pr/create/inline` to retain the invoking session for PR intent and wording. It still calls `changes_load` because the final base, commit graph, and diff must come from authoritative repository state.
 
 ## Typical flow
 

@@ -241,7 +241,6 @@ describe("object-based config", () => {
       },
       agents: {
         worker: { permission: { question: "deny", bash: "allow" } },
-        navigator: { permission: { task: "deny", todowrite: "deny" } },
         reviewer: { enabled: false },
       },
       components: {
@@ -259,10 +258,6 @@ describe("object-based config", () => {
       question: "deny",
       bash: "allow",
     });
-    assert.deepEqual(config.agents.navigator.permission, {
-      task: "deny",
-      todowrite: "deny",
-    });
     assert.equal(config.agents.enabled.includes("reviewer"), false);
     assert.equal(config.components.enabled.includes("dev-flow"), false);
     assert.equal(config.components.paths.commit, "components/custom-commit.md");
@@ -270,7 +265,7 @@ describe("object-based config", () => {
 });
 
 describe("command defaults", () => {
-  test("enables worker and navigator agents by default", () => {
+  test("enables worker agent by default", () => {
     const config = mergeWithDefaults(null);
 
     assert.equal(config.agents.enabled.includes("worker"), true);
@@ -278,19 +273,24 @@ describe("command defaults", () => {
       question: "allow",
       todowrite: "allow",
     });
-    assert.equal(config.agents.enabled.includes("navigator"), true);
     assert.deepEqual(config.shared.validation, []);
-    assert.deepEqual(config.agents.navigator.permission, {
-      edit: "deny",
-      task: "allow",
-      question: "allow",
-      todowrite: "allow",
-    });
   });
 
   test("enables todo command by default", () => {
     const config = mergeWithDefaults(null);
 
     assert.equal(config.commands.enabled.includes("todo"), true);
+  });
+
+  test("enables inline variants and the nested PR fix loop by default", () => {
+    const config = mergeWithDefaults(null);
+
+    assert.equal(config.commands.enabled.includes("branch/inline"), true);
+    assert.equal(config.commands.enabled.includes("commit/inline"), true);
+    assert.equal(config.commands.enabled.includes("commit-and-push/inline"), true);
+    assert.equal(config.commands.enabled.includes("pr/create/inline"), true);
+    assert.equal(config.commands.enabled.includes("ship/inline"), true);
+    assert.equal(config.commands.enabled.includes("pr/fix/loop"), true);
+    assert.equal(config.commands.enabled.includes("loop/pr/fix"), false);
   });
 });

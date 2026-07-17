@@ -14,6 +14,7 @@ Before reviewing, always check repository guidance:
     - In CI or shallow clones, pass explicit base and head refs
     - For branch comparisons, treat the returned commit list as the authoritative scope: review the commits ahead of base and use file diffs only as supporting context
     - Scan the summary first to understand scope, file states, and risk clusters
+    - If the result reports deferred diffs, inspect them directly one file at a time using the returned comparison and changed paths
     - Never switch branches, create local review branches, or otherwise mutate `HEAD`; if a loader fails, prefer reporting the blocker over changing checkout state
 
 2. **Read Code**: Read every changed file individually before finalizing

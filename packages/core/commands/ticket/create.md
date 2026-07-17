@@ -24,14 +24,11 @@ $ARGUMENTS
 
 <%~ include("@change-summary", { config: it.config, rules: "- If `<base>` is defined: call `" + it.config.tools.changes_load.name + "` with the `base` parameter set to `<base>`\n- Otherwise: call `" + it.config.tools.changes_load.name + "` with no parameters" }) %>
 
-- Store the loaded change result as `<changes>`
 - When `<changes>.comparison` is not `uncommitted`, describe the ticket from the commits ahead of the resolved base branch, not from branch names alone
 
 ### Check Blockers
 
 - If `<changes>` contains no files, STOP and report that there is no work to summarize in a ticket
-
-<%~ include("@summarize-changes") %>
 
 ### Create Ticket
 

@@ -5,8 +5,9 @@ description: Shared partial for loading changes and summarizing them into themes
 
 ## Behavior
 
-- calls `changes_load`
+- calls `changes_load` unless `it.load` is `false`
 - accepts optional extra rules through `it.rules`
 - stores the result as `<changes>`
-- analyzes paths, statuses, and diffs
+- analyzes comparison metadata, commits, paths, statuses, and diffs
+- can analyze a comparison loaded by an earlier workflow phase
 - groups related work into concise what/why themes

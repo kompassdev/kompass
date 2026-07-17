@@ -1,6 +1,7 @@
 ---
 description: Extract learnings from session to AGENTS.md files
 agent: worker
+subtask: false
 ---
 
 ## Goal

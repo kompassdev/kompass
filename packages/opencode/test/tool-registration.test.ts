@@ -132,14 +132,14 @@ describe("createOpenCodeTools", () => {
       const tools = await createOpenCodeTools(createMockClient() as never, process.cwd());
 
       assert.ok(tools.kompass_changes_load);
-      assert.ok(tools.kompass_command_expansion);
       assert.ok(tools.kompass_pr_load);
+      assert.ok(tools.kompass_pr_load_review);
       assert.ok(tools.kompass_pr_sync);
       assert.ok(tools.kompass_ticket_load);
       assert.ok(tools.kompass_ticket_sync);
       assert.equal(tools.changes_load, undefined);
-      assert.equal(tools.command_expansion, undefined);
       assert.equal(tools.pr_load, undefined);
+      assert.equal(tools.pr_load_review, undefined);
       assert.equal(tools.pr_sync, undefined);
       assert.equal(tools.ticket_load, undefined);
       assert.equal(tools.ticket_sync, undefined);
@@ -178,8 +178,8 @@ describe("createOpenCodeTools", () => {
           `{
             "tools": {
               "changes_load": { "enabled": false },
-               "command_expansion": { "enabled": false },
               "pr_load": { "enabled": false },
+              "pr_load_review": { "enabled": false },
               "pr_sync": { "enabled": false },
               "ticket_sync": {
                 "enabled": true,
@@ -212,9 +212,6 @@ describe("createOpenCodeTools", () => {
           `{
             // jsonc config should work
             "tools": {
-               "command_expansion": {
-                 "enabled": false
-               },
               "pr_load": {
                 "enabled": true,
                 "name": "pull_request_context",
@@ -286,60 +283,6 @@ describe("createOpenCodeTools", () => {
     });
   });
 
-  test("command_expansion returns expanded prompts for delegated task execution", async () => {
-    await withTempHome(async () => {
-      const client = createMockClient();
-      const tools = await createOpenCodeTools(client as never, process.cwd());
-
-      const output = await (tools.kompass_command_expansion as any).execute(
-        { command: "review", body: "auth bug" },
-        {
-          sessionID: "session-1",
-          messageID: "message-1",
-          agent: "worker",
-          directory: process.cwd(),
-          worktree: process.cwd(),
-          abort: new AbortController().signal,
-          metadata() {},
-          ask: async () => {},
-        },
-      );
-
-      assert.equal(client.sessionCommands.length, 0);
-      assert.equal(client.sessionPromptAsyncs.length, 0);
-      assert.match(String(output), /kompass_changes_load/);
-      assert.doesNotMatch(String(output), /`changes_load`/);
-      assert.match(String(output), /auth bug/);
-      assert.equal(client.sessionPrompts.length, 0);
-    });
-  });
-
-  test("command tool rejects missing commands", async () => {
-    await withTempHome(async () => {
-      const client = createMockClient();
-      const tools = await createOpenCodeTools(client as never, process.cwd());
-
-      await assert.rejects(
-        (tools.kompass_command_expansion as any).execute(
-          { command: "   ", body: "Investigate the redirect bug" },
-          {
-            sessionID: "session-2",
-            messageID: "message-2",
-            agent: "worker",
-            directory: process.cwd(),
-            worktree: process.cwd(),
-            abort: new AbortController().signal,
-            metadata() {},
-            ask: async () => {},
-          },
-        ),
-        /requires a command/,
-      );
-      assert.equal(client.sessionCommands.length, 0);
-      assert.equal(client.sessionPrompts.length, 0);
-    });
-  });
-
   test("plugin registers shell-backed tools that execute in the worktree", async () => {
     await withTempHome(async () => {
       const tempDir = await createTempGitRepo();
@@ -360,55 +303,6 @@ describe("createOpenCodeTools", () => {
         );
 
         assert.deepEqual(JSON.parse(output).files, []);
-      } finally {
-        await rm(tempDir, { recursive: true, force: true });
-      }
-    });
-  });
-
-  test("does not expand slash commands in the task hook", async () => {
-    await withTempHome(async () => {
-      const client = createMockClient();
-      const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-tools-bad-config-"));
-
-      try {
-        await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
-        await writeFile(
-          path.join(tempDir, ".opencode", "kompass.jsonc"),
-          `{
-            "shared": {
-              "prApprove": true,
-          }`,
-        );
-
-        const plugin = await OpenCodeCompassPlugin({
-          $: (() => {
-            throw new Error("not implemented");
-          }) as never,
-          client: client as never,
-          directory: tempDir,
-          worktree: tempDir,
-        } as never);
-
-        const output = {
-          args: {
-            prompt: "/review auth bug",
-            command: "/review auth bug",
-          },
-        };
-
-        await plugin["tool.execute.before"]?.(
-          {
-            tool: "task",
-            sessionID: "session-1",
-            callID: "call-1",
-          } as never,
-          output as never,
-        );
-
-        assert.equal(output.args.prompt, "/review auth bug");
-        assert.ok(client.logs.some((entry) => entry.body?.message?.includes("Skipping Kompass tool registration")));
-        assert.ok(client.logs.some((entry) => entry.body?.message?.includes("Executing Kompass task tool")));
       } finally {
         await rm(tempDir, { recursive: true, force: true });
       }

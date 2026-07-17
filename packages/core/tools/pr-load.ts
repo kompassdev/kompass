@@ -33,7 +33,7 @@ function countPullRequestCommits(commits: unknown) {
   return 0;
 }
 
-async function loadPaginatedArray($: Shell, cwd: string, endpoint: string) {
+export async function loadPaginatedArray($: Shell, cwd: string, endpoint: string) {
   const proc = await $`gh api --paginate --slurp ${endpoint}`.cwd(cwd).quiet().nothrow();
 
   if (proc.exitCode !== 0) {
@@ -44,7 +44,7 @@ async function loadPaginatedArray($: Shell, cwd: string, endpoint: string) {
   return pages.flatMap((page) => (Array.isArray(page) ? page : [page]));
 }
 
-async function loadReviewThreads($: Shell, cwd: string, owner: string, repo: string, number: number) {
+export async function loadReviewThreads($: Shell, cwd: string, owner: string, repo: string, number: number) {
   const threads: any[] = [];
   let cursor: string | undefined;
 
@@ -82,7 +82,7 @@ async function loadReviewThreads($: Shell, cwd: string, owner: string, repo: str
   return threads;
 }
 
-async function loadViewerLogin($: Shell, cwd: string) {
+export async function loadViewerLogin($: Shell, cwd: string) {
   const isGitHubActions = process.env.GITHUB_ACTIONS?.trim() === "true";
   const workflowToken = process.env.GITHUB_TOKEN?.trim();
   if (isGitHubActions && workflowToken) {
@@ -153,7 +153,7 @@ function simplifyPullRequest(info: any) {
   };
 }
 
-function simplifyReviews(reviews: any[]) {
+export function simplifyReviews(reviews: any[]) {
   return reviews
     .map((review) => ({
       id: review.id,
@@ -166,7 +166,7 @@ function simplifyReviews(reviews: any[]) {
     .filter((review) => review.state === "APPROVED" || typeof review.body === "string");
 }
 
-function simplifyIssueComments(comments: any[]) {
+export function simplifyIssueComments(comments: any[]) {
   return comments.map((comment) => ({
     id: comment.id,
     author: comment.user?.login,
@@ -176,7 +176,7 @@ function simplifyIssueComments(comments: any[]) {
   }));
 }
 
-function simplifyThreads(threads: any[]) {
+export function simplifyThreads(threads: any[]) {
   return threads.map((thread) => ({
     id: thread.id,
     path: thread.path,
@@ -210,6 +210,7 @@ export function createPrLoadTool($: Shell) {
       },
       ctx: ToolExecutionContext,
     ) {
+      const loadedAt = new Date().toISOString();
       const proc = args.pr
         ? await $`gh pr view ${args.pr} --json ${prJsonKeys}`
             .cwd(ctx.worktree)
@@ -241,6 +242,7 @@ export function createPrLoadTool($: Shell) {
       );
       const threads = await loadReviewThreads($, ctx.worktree, owner, repoName, info.number);
       return stringifyJson({
+        loadedAt,
         repo,
         viewerLogin,
         pr: simplifyPullRequest(info),

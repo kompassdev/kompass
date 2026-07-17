@@ -14,9 +14,12 @@ import {
   type ToolExecutionContext,
 } from "./shared.ts";
 
+const MAX_RESULT_BYTES = 50 * 1024;
+
 export function createChangesLoadTool($: Shell) {
   return {
-    description: "Load branch changes against a base branch",
+    description:
+      "Load changed files and diffs against a base branch. If deferredDiffs is present, the diff load is incomplete: inspect every deferred diff before reporting completion unless the caller explicitly requested metadata only.",
     args: {
       base: { type: "string", optional: true, description: "Base branch or ref" },
       head: {
@@ -54,7 +57,7 @@ export function createChangesLoadTool($: Shell) {
           return await loadTemporaryIndexDiffs($, ctx.worktree, indexPath, files);
         });
 
-        return stringifyJson({
+        return serializeChangesResult({
           comparison: "uncommitted",
           ...(branch ? { branch } : {}),
           files: filesWithDiff,
@@ -105,7 +108,7 @@ export function createChangesLoadTool($: Shell) {
         : await loadFileDiffs($, ctx.worktree, baseRef, headRef, parsedFiles);
       const commits = parseCommitList(log.text());
 
-      return stringifyJson({
+      return serializeChangesResult({
         comparison: `${baseRef}...${headRef}`,
         ...(branch ? { branch } : {}),
         files: filesWithDiff,
@@ -118,6 +121,34 @@ export function createChangesLoadTool($: Shell) {
     depthHint?: number;
     uncommitted?: boolean;
   }>;
+}
+
+function serializeChangesResult(result: Record<string, unknown> & { files: Array<Record<string, unknown>> }) {
+  const output = stringifyJson(result);
+  if (Buffer.byteLength(output, "utf8") <= MAX_RESULT_BYTES) return output;
+
+  let deferredCount = 0;
+  const files = result.files.map((file) => {
+    if (typeof file.diff !== "string") return file;
+
+    deferredCount += 1;
+    const metadata = { ...file };
+    delete metadata.diff;
+    return { ...metadata, diffDeferred: true };
+  });
+
+  return stringifyJson({
+    ...result,
+    files,
+    diffsComplete: false,
+    deferredDiffs: {
+      count: deferredCount,
+      reason: "diffs omitted because the complete tool result exceeded 50 KiB",
+      required: true,
+      loadWith:
+        "Do not report the diff load as complete. Inspect every deferred diff directly, one file at a time, using the returned comparison and file paths, unless the caller explicitly requested metadata only.",
+    },
+  });
 }
 
 function normalizeDepthHint(depthHint?: number) {

@@ -5,16 +5,11 @@ agent: worker
 
 ## Goal
 
-Create a pull request for the current branch, handling the entire workflow from change detection to PR submission.
+Create a pull request for the current branch from its committed changes.
 
 ## Additional Context
 
-Consider `<additional-context>` when analyzing changes and writing the PR description.
-- Always include the `Ticket`, `Description`, and `Checklist` sections in that order.
-- Use the literal `SKIPPED` when ticket mention was skipped.
-- Keep the description focused on intent, not implementation details.
-- Mark checklist validation items as completed if validation was performed.
-- Uncommitted changes and being on the base branch block PR creation entirely.
+Use `<additional-context>` when writing the PR. Include `Ticket`, `Description`, and `Checklist` sections in that order, and use `SKIPPED` when ticket mention is skipped.
 
 ## Workflow
 
@@ -26,94 +21,54 @@ $ARGUMENTS
 
 ### Interpret Arguments
 
-- **Branch name**: If `<arguments>` looks like a branch reference (e.g., "main", "origin/develop"), store it as `<base>`
-- **Ticket directive**: If `<arguments>` clearly requests ticket auto-creation, store `<ticket-mode>` as `auto`
-- **Ticket reference**: If `<arguments>` includes a ticket URL or clear ticket reference, store it as `<ticket-url>` and store `<ticket-mode>` as `provided`
-- **Skip ticket**: If `<arguments>` clearly says to skip ticket mention, store `<ticket-mode>` as `skip`
-- **Additional context**: If `<arguments>` provides guidance (focus areas, related issues, notes), store it as `<additional-context>`
-- **Empty**: If no `<arguments>` provided, proceed with defaults
+- Store a branch reference as `<base>`
+- Store ticket auto-creation as `<ticket-mode>` = `auto`, an explicit ticket reference as `<ticket-url>`, or an explicit skip as `<ticket-mode>` = `skip`
+- Store remaining guidance as `<additional-context>`
 
-### Load & Analyze Changes
+### Load And Analyze Changes
 
-#### Step 1: Load Changes
+#### Load Changes
+
 - call `kompass_changes_load`
-- If `<base>` is defined: call `kompass_changes_load` with the `base` parameter set to `<base>`
-- Otherwise: call `kompass_changes_load` with no parameters
-- Never pass `uncommitted: true` in this command
+- If `<base>` is defined, pass it as `base`; otherwise call the tool with no parameters
+- Never pass `uncommitted: true`
 - Store the returned result as `<changes>`
-- Use `<changes>` as the source of truth; no additional git analysis commands are needed
-- When `<changes>.comparison` is not `uncommitted`, treat `<changes>.commits` as the authoritative scope of work: only summarize commits that are ahead of the resolved base branch
-- Do not infer scope from the branch names alone and do not describe work that exists only on the base branch
+- If `<changes>.deferredDiffs` is present, inspect the needed deferred diffs directly one file at a time using the returned comparison and changed paths
+#### Analyze And Summarize Changes
 
-#### Step 2: Analyze Files
-- Review the paths, statuses, and diffs from `<changes>` only as file-level context for the commits in scope
+- Use `<changes>` as the source of truth; do not run additional git commands to rediscover its comparison
+- Note the comparison mode, base branch, and current branch from `<changes>`
+- When `<changes>.comparison` is not `uncommitted`, treat `<changes>.commits` as the authoritative scope of work: only summarize commits ahead of the resolved base branch
+- Review commit messages when available to understand the delivery narrative
+- Review paths, statuses, line counts, and diffs from `<changes>` as file-level context for the commits in scope
+- Read only the most relevant changed source files when the diff does not provide enough context
 - Identify the nature of changes (added, modified, deleted)
-- Note lines added/removed per file
-
-#### Step 3: Group and Summarize
-- For branch comparisons, build the summary from `<changes>.commits` first and use file diffs only to verify or refine what those commits changed
 - Group related changes into logical themes
 - Summarize the "what" and "why" (not the "how")
+- Do not infer scope from branch names or describe work that exists only on the base branch or outside the commits ahead of base
 
-- Store the loaded change result as `<changes>`
-- Store the current branch from `<changes>` as `<current-branch>` when it is available
-- Store the effective base branch as `<resolved-base>` by preferring `<base>` when it was provided, otherwise using the base branch implied by `<changes>.comparison`
-- When `<changes>.comparison` is not `uncommitted`, describe the PR from the commits ahead of `<resolved-base>`, not from the raw branch comparison string by itself
+### Check PR Blockers
 
-### Check Blockers
-
-- If `<changes>.comparison` is "uncommitted":
-  - STOP immediately
-  - Report: "There are uncommitted changes. Please commit or stash them before creating a PR."
-  - List the changed files from `<changes>`
-  - Do NOT proceed further
-- Treat this as a blocker only when `kompass_changes_load` returns `comparison: "uncommitted"` from the default call above; never force that mode during PR creation
-- If `<current-branch>` equals `<resolved-base>`:
-  - STOP immediately
-  - Report: "You are currently on the base branch (<resolved-base>). Please checkout a feature branch before creating a PR."
-  - Suggest: `git checkout -b <feature-name>`
-  - Do NOT proceed further
+- Store the current branch from `<changes>` as `<current-branch>` when available
+- Store `<resolved-base>` by preferring `<base>`, otherwise use the base implied by `<changes>.comparison`
+- If `<changes>.comparison` is `uncommitted`, STOP and report that changes must be committed or stashed
+- If `<current-branch>` equals `<resolved-base>`, STOP and report that PR creation requires a work branch
 - If `<changes>` contains no files and no commits, STOP and report that there is nothing to include in a PR
 
-### Summarize Changes
-
-- Note the comparison mode, base branch, and current branch from the result
-- If the comparison is not `uncommitted`, use only the commits in `<changes>.commits` as the branch-work scope
-- Review commit messages when they are available to understand the delivery narrative
-- Read the most relevant changed source files to understand the changes introduced by those commits
-- Do not describe work that exists only on the base branch or that is outside the commits ahead of base
-- Group related changes into themes for the final summary
 
 ### Resolve Ticket
 
-- If `<ticket-mode>` is already `auto`, `provided`, or `skip`, do not ask a follow-up question
-- Otherwise, if the `question` tool is available, this step is mandatory whenever the user did not already provide ticket handling through `<arguments>`:
-  - Ask exactly one `question` before creating a ticket or PR
-  - This includes the common case where no ticket-related argument was provided at all
-  - Do not infer, assume, or default to any ticket mode while the `question` tool is available
-  - Never choose `skip` unless the user explicitly selects `Skip` or explicitly asks to skip ticket mention in `<arguments>`
-  - Do not proceed to `Prepare Ticket Reference`, `Push Branch`, or `Create PR` until the answer is resolved
-  - Ask with:
-    - header `Provide Ticket`
-    - question `Provide Ticket`
-    - options:
-      - `Automatically Create` - create a fresh ticket from the summarized branch work
-      - `Skip` - mention `SKIPPED` in the PR body
-    - custom answers enabled so the user can paste a ticket URL or ticket reference directly
-- Otherwise, if the `question` tool is not available:
-  - Do not ask a follow-up question
-  - Only in this case may the workflow continue without user input
-  - Store `<ticket-mode>` as `skip`
-  - Store `<ticket-url>` as `SKIPPED`
-  - Continue without blocking
-- Normalize the result into one of these paths:
-  - `Automatically Create` => `<ticket-mode>` = `auto`
-  - custom ticket URL or reference => `<ticket-mode>` = `provided` and store the answer as `<ticket-url>`
-  - `Skip` => `<ticket-mode>` = `skip`
+- Preserve an already defined `<ticket-mode>` or `<ticket-url>`
+- If `<ticket-url>` is defined, store `<ticket-mode>` as `provided`
+- Otherwise, if ticket handling was explicitly skipped, store `<ticket-mode>` as `skip`
+- Otherwise, if automatic ticket creation was requested, store `<ticket-mode>` as `auto`
+- Otherwise, when `question` is available, ask exactly one `Provide Ticket` question with `Automatically Create` and `Skip` options and custom answers enabled
+- When `question` is unavailable, default to `skip`
+- Normalize a custom ticket reference as `<ticket-url>` with mode `provided`; never infer `skip` when the user can be asked
 
 ### Prepare Ticket Reference
 
-When `<ticket-mode>` is `auto`, create the ticket before creating the PR:
+When `<ticket-mode>` is `auto`:
 - Reuse the same change themes, rationale, and reviewer-facing validation goals from the current summary work
 - For branch comparisons, ensure every theme is supported by commits in `<changes>.commits`; use file diffs only as supporting context
 - Generate a concise title (max 70 chars) that reflects the delivered outcome
@@ -127,82 +82,40 @@ When `<ticket-mode>` is `auto`, create the ticket before creating the PR:
 - Do not restate the full diff
 - Do not use execution-status notes such as `Validation not run in this session` as checklist items
 - If `kompass_changes_load` reports uncommitted work, make that clear in the ticket wording
-- Use `kompass_ticket_sync` with `refUrl` unset
-- Set `assignees` to `[@me]` so the created ticket is assigned to yourself as the author
-- Store the created issue reference or URL as `<ticket-url>`
+- Use `kompass_ticket_sync` with `assignees: ["@me"]` and store the created issue URL as `<ticket-url>`
 
-Otherwise:
-- If `<ticket-mode>` is `provided`, use the provided ticket value as `<ticket-url>`
-- If `<ticket-mode>` is `skip`, store the literal `SKIPPED` as `<ticket-url>`
+Otherwise, preserve the provided `<ticket-url>` or store the literal `SKIPPED` for mode `skip`.
 
 ### Push Branch
 
-Run `git push` and use its output as the source of truth.
-
-- Do not run extra git commands just to decide whether to push
-- If the branch was pushed during this run, report `Push: yes`
-- If `git push` reports no push was needed, report `Push: no`
-- If `Push: yes`, also report `Pushed: <current-branch> → origin/<current-branch>`
-- Store the push status line as `<push-status>`
-- When a push occurs, store the pushed ref line as `<pushed-line>`
+- If `<current-branch>` is not defined, run `git branch --show-current` and store the trimmed result as `<current-branch>`
+- Run `git push` and use its output as the source of truth
+- If the current branch has no upstream, retry with `git push -u origin <current-branch>`
+- Store whether a push occurred as `<push-status>` and the successful destination as `<push-target>`
+- If push fails, STOP and report the push error
 
 ### Create PR
 
-Use `kompass_pr_sync` to create the pull request:
-- This step is PR creation only
-- Omit `review`, `replies`, `commentBody`, and `commitId` entirely unless you are intentionally updating or reviewing an existing PR instead of creating one
-- Generate a concise title (max 70 chars) summarizing the change and store it as `<pr-title>`
-- Generate a short description that briefly describes the intent and scope
-- Pass `<current-branch>` as `head` when it is available so PR creation does not depend on local upstream inference
-- Set `assignees` to `[@me]` so the created PR is assigned to yourself as the author
-- Generate a compact checklist that mirrors the same human-facing structure used for the ticket summary:
-  - group delivered work into 2-4 functional or outcome-focused sections
-  - use concise section names instead of generic labels like `Changes`
-  - end with one `Validation` section containing reviewer-facing confirmation steps
-  - do not use execution-status notes as checklist items
-- Render the PR body with this exact structure by setting `body` directly:
-  - `## Ticket`, followed by `<ticket-url>` on the next line
-  - `## Description`, followed by the short description
-  - `## Checklist`, followed by the checklist items and any subsection headings
-- Use `<resolved-base>` as the base branch when it is defined
-- Do NOT restate the full diff
-- Do NOT rely on the branch diff alone to describe the PR; the description must match the commits ahead of `<resolved-base>`
-- Keep it compact and directional
-- Store the returned URL as `<pr-url>`
-- If `kompass_pr_sync` reports that a PR already exists for the branch, treat the result as an existing PR
-- Track whether the branch was pushed during this run and report that status in the final response
+- Generate a concise title of at most 70 characters as `<pr-title>`
+- Generate a compact description focused on intent and scope
+- Build 2-4 outcome-focused checklist sections followed by `Validation`
+- Use `kompass_pr_sync` to create the PR with `<resolved-base>` as `base`, `<current-branch>` as `head`, and `assignees: ["@me"]`
+- Set `body` with `## Ticket`, `## Description`, and `## Checklist` in that order
+- Omit review, replies, commentBody, and commitId
+- Store the created or existing PR URL as `<pr-url>` and whether it already existed as `<pr-existing>`
 
 ### Output
 
-If PR creation stops because there is nothing to include, display:
-```
-Nothing to include in a PR
-
-No additional steps are required.
-```
-
-When a new PR is created, display:
+When complete, display:
 ```
 Created PR: <pr-title>
 
 URL: <pr-url>
-Branch: <current-branch> → <resolved-base>
+Branch: <current-branch> -> <resolved-base>
 Ticket: <ticket-url>
-<push-status>
-<pushed-line>
+Push: <push-status>
 
 No additional steps are required.
 ```
 
-If a PR already exists for the branch, display:
-```
-PR already exists
-
-URL: <pr-url>
-Branch: <current-branch> → <resolved-base>
-Ticket: <ticket-url>
-<push-status>
-<pushed-line>
-
-No additional steps are required.
-```
+If `<pr-existing>` is true, replace the first line with `PR already exists`.

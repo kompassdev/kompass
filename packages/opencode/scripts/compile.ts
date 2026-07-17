@@ -88,6 +88,7 @@ async function main() {
     const frontmatter = YAML.stringify({
       description: command.description,
       agent: command.agent,
+      ...(command.subtask === false ? { subtask: false } : {}),
     });
     const content = ensureTrailingNewline(
       `---\n${frontmatter}---\n\n${command.template}`,

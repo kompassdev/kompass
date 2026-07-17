@@ -16,7 +16,6 @@ interface CommandDefinition {
   agent: string;
   templatePath: string;
   subtask?: boolean;
-  config?: Record<string, unknown>;
 }
 
 export const commandDefinitions: Record<string, CommandDefinition> = {
@@ -30,19 +29,37 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     agent: "worker",
     templatePath: "commands/branch.md",
   },
+  "branch/inline": {
+    description: "Create a branch using context from the current session",
+    agent: "worker",
+    templatePath: "commands/branch.md",
+    subtask: false,
+  },
   commit: {
     description: "Commit current changes with a message",
     agent: "worker",
     templatePath: "commands/commit.md",
+  },
+  "commit/inline": {
+    description: "Commit changes using context from the current session",
+    agent: "worker",
+    templatePath: "commands/commit.md",
+    subtask: false,
   },
   "commit-and-push": {
     description: "Commit and push current changes",
     agent: "worker",
     templatePath: "commands/commit-and-push.md",
   },
+  "commit-and-push/inline": {
+    description: "Commit and push using context from the current session",
+    agent: "worker",
+    templatePath: "commands/commit-and-push.md",
+    subtask: false,
+  },
   dev: {
     description: "Implement a request and prepare it for PR creation",
-    agent: "navigator",
+    agent: "worker",
     templatePath: "commands/dev.md",
   },
   learn: {
@@ -51,10 +68,10 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     templatePath: "commands/learn.md",
     subtask: false,
   },
-  "loop/pr/fix": {
+  "pr/fix/loop": {
     description: "Watch PR CI and comments, repeatedly fixing both without approval prompts",
-    agent: "navigator",
-    templatePath: "commands/loop/pr/fix.md",
+    agent: "worker",
+    templatePath: "commands/pr/fix/loop.md",
   },
   merge: {
     description: "Merge a branch and auto-resolve conflicts best-effort",
@@ -66,11 +83,16 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     agent: "worker",
     templatePath: "commands/pr/create.md",
   },
+  "pr/create/inline": {
+    description: "Create a PR in the current session",
+    agent: "worker",
+    templatePath: "commands/pr/create.md",
+    subtask: false,
+  },
   "pr/fix": {
     description: "Fix PR feedback or CI failures, push updates, and reply",
     agent: "worker",
     templatePath: "commands/pr/fix.md",
-    subtask: false,
   },
   "pr/review": {
     description: "Review the current PR and publish review feedback",
@@ -94,8 +116,14 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   ship: {
     description: "Ship branch work through commit and PR creation",
-    agent: "navigator",
+    agent: "worker",
     templatePath: "commands/ship.md",
+  },
+  "ship/inline": {
+    description: "Ship branch work using context from the current session",
+    agent: "worker",
+    templatePath: "commands/ship.md",
+    subtask: false,
   },
   rmslop: {
     description: "Remove AI code slop from current branch",
@@ -104,7 +132,7 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   todo: {
     description: "Work through a todo file task by task",
-    agent: "navigator",
+    agent: "worker",
     templatePath: "commands/todo.md",
   },
   "ticket/ask": {
@@ -114,7 +142,7 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   "ticket/dev": {
     description: "Implement a ticket and create a PR",
-    agent: "navigator",
+    agent: "worker",
     templatePath: "commands/ticket/dev.md",
   },
   "ticket/create": {
@@ -138,6 +166,7 @@ export interface ResolvedCommandDefinition
   extends Omit<CommandDefinition, "templatePath"> {
   template: string;
   subtask: boolean;
+  config?: Record<string, unknown>;
 }
 
 async function loadComponents(
@@ -199,11 +228,11 @@ export async function resolveCommands(
     let template: string;
     const commandConfig = {
       enabled: true,
-      ...(definition.config ?? {}),
       ...(config.commands.entries[name] ?? {}),
     };
     const templateData = {
       ...commandConfig,
+      inline: definition.subtask === false,
       config: {
         shared: config.shared,
         tools: names.tools,

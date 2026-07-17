@@ -1,15 +1,10 @@
 ## Goal
 
-Create a pull request for the current branch, handling the entire workflow from change detection to PR submission.
+Create a pull request for the current branch from its committed changes.<% if (it.inline) { %> Run in the invoking session while loading the final branch comparison as authoritative state.<% } %>
 
 ## Additional Context
 
-Consider `<additional-context>` when analyzing changes and writing the PR description.
-- Always include the `Ticket`, `Description`, and `Checklist` sections in that order.
-- Use the literal `SKIPPED` when ticket mention was skipped.
-- Keep the description focused on intent, not implementation details.
-- Mark checklist validation items as completed if validation was performed.
-- Uncommitted changes and being on the base branch block PR creation entirely.
+Use `<additional-context>`<% if (it.inline) { %> and relevant invoking-session context<% } %> when writing the PR. Include `Ticket`, `Description`, and `Checklist` sections in that order, and use `SKIPPED` when ticket mention is skipped.
 
 ## Workflow
 
@@ -21,146 +16,31 @@ $ARGUMENTS
 
 ### Interpret Arguments
 
-- **Branch name**: If `<arguments>` looks like a branch reference (e.g., "main", "origin/develop"), store it as `<base>`
-- **Ticket directive**: If `<arguments>` clearly requests ticket auto-creation, store `<ticket-mode>` as `auto`
-- **Ticket reference**: If `<arguments>` includes a ticket URL or clear ticket reference, store it as `<ticket-url>` and store `<ticket-mode>` as `provided`
-- **Skip ticket**: If `<arguments>` clearly says to skip ticket mention, store `<ticket-mode>` as `skip`
-- **Additional context**: If `<arguments>` provides guidance (focus areas, related issues, notes), store it as `<additional-context>`
-- **Empty**: If no `<arguments>` provided, proceed with defaults
+- Store a branch reference as `<base>`
+- Store ticket auto-creation as `<ticket-mode>` = `auto`, an explicit ticket reference as `<ticket-url>`, or an explicit skip as `<ticket-mode>` = `skip`
+- Store remaining guidance as `<additional-context>`
 
-### Load & Analyze Changes
+### Load And Analyze Changes
 
-<%~ include("@change-summary", { config: it.config, rules: "- If `<base>` is defined: call `" + it.config.tools.changes_load.name + "` with the `base` parameter set to `<base>`\n- Otherwise: call `" + it.config.tools.changes_load.name + "` with no parameters\n- Never pass `uncommitted: true` in this command" }) %>
+<% if (it.inline) { -%>
+- Retain the authoritative branch comparison load even though this command runs in the invoking session; do not infer the final base, commit scope, or diff from session memory
+<% } -%>
+<%~ include("@change-summary", { config: it.config, rules: "- If `<base>` is defined, pass it as `base`; otherwise call the tool with no parameters\n- Never pass `uncommitted: true`" }) %>
 
-- Store the loaded change result as `<changes>`
-- Store the current branch from `<changes>` as `<current-branch>` when it is available
-- Store the effective base branch as `<resolved-base>` by preferring `<base>` when it was provided, otherwise using the base branch implied by `<changes>.comparison`
-- When `<changes>.comparison` is not `uncommitted`, describe the PR from the commits ahead of `<resolved-base>`, not from the raw branch comparison string by itself
-
-### Check Blockers
-
-- If `<changes>.comparison` is "uncommitted":
-  - STOP immediately
-  - Report: "There are uncommitted changes. Please commit or stash them before creating a PR."
-  - List the changed files from `<changes>`
-  - Do NOT proceed further
-- Treat this as a blocker only when `<%= it.config.tools.changes_load.name %>` returns `comparison: "uncommitted"` from the default call above; never force that mode during PR creation
-- If `<current-branch>` equals `<resolved-base>`:
-  - STOP immediately
-  - Report: "You are currently on the base branch (<resolved-base>). Please checkout a feature branch before creating a PR."
-  - Suggest: `git checkout -b <feature-name>`
-  - Do NOT proceed further
-- If `<changes>` contains no files and no commits, STOP and report that there is nothing to include in a PR
-
-<%~ include("@summarize-changes") %>
-
-### Resolve Ticket
-
-- If `<ticket-mode>` is already `auto`, `provided`, or `skip`, do not ask a follow-up question
-- Otherwise, if the `question` tool is available, this step is mandatory whenever the user did not already provide ticket handling through `<arguments>`:
-  - Ask exactly one `question` before creating a ticket or PR
-  - This includes the common case where no ticket-related argument was provided at all
-  - Do not infer, assume, or default to any ticket mode while the `question` tool is available
-  - Never choose `skip` unless the user explicitly selects `Skip` or explicitly asks to skip ticket mention in `<arguments>`
-  - Do not proceed to `Prepare Ticket Reference`, `Push Branch`, or `Create PR` until the answer is resolved
-  - Ask with:
-    - header `Provide Ticket`
-    - question `Provide Ticket`
-    - options:
-      - `Automatically Create` - create a fresh ticket from the summarized branch work
-      - `Skip` - mention `SKIPPED` in the PR body
-    - custom answers enabled so the user can paste a ticket URL or ticket reference directly
-- Otherwise, if the `question` tool is not available:
-  - Do not ask a follow-up question
-  - Only in this case may the workflow continue without user input
-  - Store `<ticket-mode>` as `skip`
-  - Store `<ticket-url>` as `SKIPPED`
-  - Continue without blocking
-- Normalize the result into one of these paths:
-  - `Automatically Create` => `<ticket-mode>` = `auto`
-  - custom ticket URL or reference => `<ticket-mode>` = `provided` and store the answer as `<ticket-url>`
-  - `Skip` => `<ticket-mode>` = `skip`
-
-### Prepare Ticket Reference
-
-When `<ticket-mode>` is `auto`, create the ticket before creating the PR:
-<%~ include("@changes-summary", { config: it.config }) %>
-- Use `<%= it.config.tools.ticket_sync.name %>` with `refUrl` unset
-- Set `assignees` to `[@me]` so the created ticket is assigned to yourself as the author
-- Store the created issue reference or URL as `<ticket-url>`
-
-Otherwise:
-- If `<ticket-mode>` is `provided`, use the provided ticket value as `<ticket-url>`
-- If `<ticket-mode>` is `skip`, store the literal `SKIPPED` as `<ticket-url>`
-
-### Push Branch
-
-Run `git push` and use its output as the source of truth.
-
-- Do not run extra git commands just to decide whether to push
-- If the branch was pushed during this run, report `Push: yes`
-- If `git push` reports no push was needed, report `Push: no`
-- If `Push: yes`, also report `Pushed: <current-branch> → origin/<current-branch>`
-- Store the push status line as `<push-status>`
-- When a push occurs, store the pushed ref line as `<pushed-line>`
-
-### Create PR
-
-Use `<%= it.config.tools.pr_sync.name %>` to create the pull request:
-- This step is PR creation only
-- Omit `review`, `replies`, `commentBody`, and `commitId` entirely unless you are intentionally updating or reviewing an existing PR instead of creating one
-- Generate a concise title (max 70 chars) summarizing the change and store it as `<pr-title>`
-- Generate a short description that briefly describes the intent and scope
-- Pass `<current-branch>` as `head` when it is available so PR creation does not depend on local upstream inference
-- Set `assignees` to `[@me]` so the created PR is assigned to yourself as the author
-- Generate a compact checklist that mirrors the same human-facing structure used for the ticket summary:
-  - group delivered work into 2-4 functional or outcome-focused sections
-  - use concise section names instead of generic labels like `Changes`
-  - end with one `Validation` section containing reviewer-facing confirmation steps
-  - do not use execution-status notes as checklist items
-- Render the PR body with this exact structure by setting `body` directly:
-  - `## Ticket`, followed by `<ticket-url>` on the next line
-  - `## Description`, followed by the short description
-  - `## Checklist`, followed by the checklist items and any subsection headings
-- Use `<resolved-base>` as the base branch when it is defined
-- Do NOT restate the full diff
-- Do NOT rely on the branch diff alone to describe the PR; the description must match the commits ahead of `<resolved-base>`
-- Keep it compact and directional
-- Store the returned URL as `<pr-url>`
-- If `<%= it.config.tools.pr_sync.name %>` reports that a PR already exists for the branch, treat the result as an existing PR
-- Track whether the branch was pushed during this run and report that status in the final response
+<%~ include("@pr-create", { config: it.config, analyze: false }) %>
 
 ### Output
 
-If PR creation stops because there is nothing to include, display:
-```
-Nothing to include in a PR
-
-No additional steps are required.
-```
-
-When a new PR is created, display:
+When complete, display:
 ```
 Created PR: <pr-title>
 
 URL: <pr-url>
-Branch: <current-branch> → <resolved-base>
+Branch: <current-branch> -> <resolved-base>
 Ticket: <ticket-url>
-<push-status>
-<pushed-line>
+Push: <push-status>
 
 No additional steps are required.
 ```
 
-If a PR already exists for the branch, display:
-```
-PR already exists
-
-URL: <pr-url>
-Branch: <current-branch> → <resolved-base>
-Ticket: <ticket-url>
-<push-status>
-<pushed-line>
-
-No additional steps are required.
-```
+If `<pr-existing>` is true, replace the first line with `PR already exists`.

@@ -243,6 +243,31 @@ describe("changes_load e2e", () => {
     assert.equal(result.commits, undefined);
   });
 
+  test("defers oversized diffs while preserving the file manifest", async () => {
+    const repo = await createRepo();
+    const original = Array.from({ length: 1_500 }, (_, index) => `old-${index}`).join("\n") + "\n";
+    const updated = Array.from({ length: 1_500 }, (_, index) => `new-${index}`).join("\n") + "\n";
+    await commitFile(repo, "first.txt", original, "init");
+    await commitFile(repo, "second.txt", original, "add second file");
+    await git(repo, ["checkout", "-b", "feature"]);
+    await writeFile(path.join(repo, "first.txt"), updated, "utf8");
+    await writeFile(path.join(repo, "second.txt"), updated, "utf8");
+    await git(repo, ["add", "."]);
+    await git(repo, ["commit", "-m", "large changes"]);
+
+    const result = await runChangesLoad(repo, { base: "main", head: "HEAD" });
+
+    assert.ok(result.deferredDiffs);
+    assert.equal(result.diffsComplete, false);
+    assert.equal(result.deferredDiffs.required, true);
+    assert.equal(result.files[0].diff, undefined);
+    assert.equal(result.files[0].diffDeferred, true);
+    assert.ok(Buffer.byteLength(JSON.stringify(result), "utf8") <= 50 * 1024);
+    assert.equal(result.files.length, 2);
+    assert.match(result.deferredDiffs.loadWith, /Do not report the diff load as complete/);
+    assert.match(result.deferredDiffs.loadWith, /every deferred diff/);
+  });
+
 });
 
 async function createRepo() {

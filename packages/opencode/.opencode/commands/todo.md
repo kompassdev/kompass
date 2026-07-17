@@ -1,19 +1,17 @@
 ---
 description: Work through a todo file task by task
-agent: navigator
+agent: worker
 ---
 
 ## Goal
 
-Work through a todo file one pending item at a time by planning, getting approval, implementing, committing, and marking completed tasks.
+Work through a todo file one pending item at a time by planning, getting approval, implementing, committing, and marking it complete.
 
 ## Additional Context
 
 - Keep the loop focused on one checklist item at a time
-- Do not merge separate todo items unless the file explicitly frames them as one task
-- If implementation reveals scope that materially changes the approved plan, pause and re-plan before marking the task complete
-- Use `<additional-context>` to prioritize tradeoffs, constraints, or validation expectations during planning and implementation
-- Delegate planner and worker steps through literal `<delegate>` blocks and use the delegated results as the source of truth for planning, implementation, and commit steps.
+- Pause and revise the plan when implementation materially changes approved scope
+- Use `<additional-context>` for constraints and validation expectations
 
 ## Workflow
 
@@ -25,111 +23,86 @@ $ARGUMENTS
 
 ### Interpret Arguments
 
-- If `<arguments>` contains a file reference prefixed with `@`, store that value as `<todo-file>`
-- If `<arguments>` includes execution guidance, scope constraints, or notes beyond the file reference, store them as `<additional-context>`
-- If no file reference is provided, default `<todo-file>` to `@TODO.md`
+- Store an `@`-prefixed file as `<todo-file>` and remaining guidance as `<additional-context>`
+- Default `<todo-file>` to `@TODO.md`
 
-### Load Todo Context
+### Load Next Todo
 
-- Prefer the file content already provided by the user's file mention or attachment for `<todo-file>`
-- Only load `<todo-file>` yourself if that content is not already available in context
-- If the file cannot be loaded, STOP and report that `<todo-file>` could not be found or read
-- Treat markdown checklist items with unchecked boxes as pending tasks, preserving file order
-- Ignore headings, checked items, and non-checklist lines when selecting work
-- If there are no pending tasks, STOP and report that `<todo-file>` has no remaining work
-- Store the first pending task text as `<task>`
-- Store any nearby checklist context that materially clarifies `<task>` as `<task-context>`
+- Prefer attached content, otherwise load `<todo-file>`
+- Select the first unchecked markdown checklist item as `<task>` and preserve nearby context as `<task-context>`
+- STOP with completion when no pending tasks remain
 
-### Check Blockers
+### Plan Task
 
-- If the first pending item is unclear, let the planner identify missing details or questions when it can do so safely from `<task-context>` and `<additional-context>`
-- Only STOP here when the task is too ambiguous to plan at all and the workflow cannot produce a meaningful plan or targeted clarification request
+- Inspect relevant repository context and shape a scoped implementation plan from `<task>`, `<task-context>`, and `<additional-context>`
+- Store it as `<plan>`
+- Show the plan and ask one `Plan Review` question with `Implement` and `Revise`, with custom answers enabled
+- Apply revision feedback and repeat until approved; STOP without editing when approval is not granted
 
-### Delegate Planning
+### Implement Task
 
-<delegate agent="planner" command="ticket/plan">
-Task: <task>
-Task context: <task-context>
-Additional context: <additional-context>
-</delegate>
+### Development Flow Navigation Guide
 
-- Store the delegated result as `<plan>`
-- If the planner is blocked or cannot produce a usable plan, store the blocker as `<pause-reason>`, then STOP and report that planning blocker
+- Orient yourself using the normalized request context before editing
+- Survey the codebase before plotting the implementation
+- Prefer the smallest course correction that fully reaches the destination
+- Validate the path with targeted checks before handing off to PR creation
+- Surface any detours or follow-up destinations that should stay off the current route
+- Implement the approved `<plan>`
+- Run relevant validation and STOP without marking complete if implementation or validation is incomplete
 
-### Review Plan With User
+### Load And Commit Task Changes
 
-- Show `<task>` and `<plan>` to the user before any implementation work starts
-- Ask one `question` with:
-  - header `Plan Review`
-  - question `Does this plan look good to implement?`
-  - options:
-    - `Implement` - proceed with the current plan
-    - `Revise` - update the plan based on feedback
-- custom answers enabled so the user can provide specific plan changes
-- If the user requests changes, store that feedback as `<user-answer>`
-- Only run the revised planning block below when the user requests changes
-- If the user approves the current plan, skip the revised planning block and continue to implementation
+#### Load Changes
 
-<delegate agent="planner" command="ticket/plan">
-Task: <task>
-Task context: <task-context>
-Current plan: <plan>
-Plan feedback: <user-answer>
-Additional context: <additional-context>
-</delegate>
+- call `kompass_changes_load`
+- pass `uncommitted: true` to get uncommitted changes only
+- Store the returned result as `<changes>`
+- If `<changes>.deferredDiffs` is present, inspect the needed deferred diffs directly one file at a time using the returned comparison and changed paths
+#### Analyze And Summarize Changes
 
-- Store the revised delegated result as `<plan>` and continue the review loop
-- If the revised planner result is blocked or unusable, store that blocker as `<pause-reason>`, then STOP and report it before continuing the review loop
-- Repeat this review step until the user approves or stops
-- If the user does not approve implementation, store `plan approval not granted` as `<pause-reason>`, then STOP without changing `<todo-file>`
+- Use `<changes>` as the source of truth; do not run additional git commands to rediscover its comparison
+- Note the comparison mode, base branch, and current branch from `<changes>`
+- When `<changes>.comparison` is not `uncommitted`, treat `<changes>.commits` as the authoritative scope of work: only summarize commits ahead of the resolved base branch
+- Review commit messages when available to understand the delivery narrative
+- Review paths, statuses, line counts, and diffs from `<changes>` as file-level context for the commits in scope
+- Read only the most relevant changed source files when the diff does not provide enough context
+- Identify the nature of changes (added, modified, deleted)
+- Group related changes into logical themes
+- Summarize the "what" and "why" (not the "how")
+- Do not infer scope from branch names or describe work that exists only on the base branch or outside the commits ahead of base
+- STOP without marking complete if `<changes>` contains no files
+### Message Format
+- Prefer this format unless the change is tiny:
 
-### Delegate Implementation
+```text
+type: summary
 
-<delegate agent="worker" command="dev">
-Plan: <plan>
-Task: <task>
-Task context: <task-context>
-Additional context: <additional-context>
-</delegate>
+- change
+- change
+- change
+```
 
-- Store the delegated result as `<implementation-result>`
-- If `<implementation-result>` is incomplete, blocked, or fails validation, store the issue as `<pause-reason>`, then STOP and report it without marking the task complete
+- Keep the subject concise and under 72 characters
+- Use conventional commit format: "feat:", "fix:", "refactor:", "docs:", etc.
+- For non-trivial changes, add 2-5 short bullets with the main grouped changes
+- Use a one-line commit only when a body would add no value
 
-### Delegate Commit
-
-<delegate agent="worker" command="commit">
-Task: <task>
-Additional context: <additional-context>
-</delegate>
-
-- Store the delegated result as `<commit-result>`
-- If `<commit-result>` does not succeed, store the commit status as `<pause-reason>`, then STOP and report it without marking the task complete
+### Commit Phase
+1. Use the loaded change data as the source of truth for what will be committed
+2. Stage changes with `git add` (use `-A` for all, or specific files)
+3. Generate the commit message and store it as `<commit-message>`
+4. Preserve the blank line between subject and bullets when present
+5. Create the commit with `<commit-message>`
+6. Store the created commit hash as `<hash>`
+7. Only run `git status` if the commit fails and needs diagnosis
 
 ### Mark Complete And Loop
 
-- After the implementation and commit both succeed, update the matching checklist item in `<todo-file>` from unchecked to checked while preserving the rest of the file
-- Save the updated todo file
-- Return to `### Load Todo Context` and repeat the workflow for the next pending task
+- After commit succeeds, change the matching checklist item to checked while preserving the file
+- Return to `### Load Next Todo`
 
 ### Output
-
-When presenting a task plan for approval, display:
-```
-Todo: <todo-file>
-Task: <task>
-
-Plan:
-<plan>
-```
-
-If the workflow pauses before marking the task complete, display:
-```
-Todo paused: <todo-file>
-Task: <task>
-Reason: <pause-reason>
-
-No additional steps are required.
-```
 
 When all pending tasks are complete, display:
 ```

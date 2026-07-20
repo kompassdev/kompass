@@ -122,7 +122,9 @@ const REVIEW_THREADS_QUERY = `query($owner: String!, $repo: String!, $number: In
               databaseId
               author {
                 login
+                __typename
               }
+              authorAssociation
               body
               createdAt
               updatedAt
@@ -159,6 +161,8 @@ export function simplifyReviews(reviews: any[]) {
       id: review.id,
       state: review.state,
       author: review.user?.login,
+      authorType: review.user?.type,
+      authorAssociation: review.author_association,
       ...(typeof review.body === "string" && review.body.trim().length > 0 ? { body: review.body } : {}),
       submittedAt: review.submitted_at,
       commitId: review.commit_id,
@@ -170,6 +174,8 @@ export function simplifyIssueComments(comments: any[]) {
   return comments.map((comment) => ({
     id: comment.id,
     author: comment.user?.login,
+    authorType: comment.user?.type,
+    authorAssociation: comment.author_association,
     createdAt: comment.created_at,
     updatedAt: comment.updated_at,
     body: comment.body,
@@ -190,6 +196,8 @@ export function simplifyThreads(threads: any[]) {
       ? thread.comments.nodes.map((comment: any) => ({
           id: comment.databaseId,
           author: comment.author?.login,
+          authorType: comment.author?.__typename,
+          authorAssociation: comment.authorAssociation,
           body: comment.body,
           createdAt: comment.createdAt,
           updatedAt: comment.updatedAt,

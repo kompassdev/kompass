@@ -39,7 +39,7 @@ Call `<%= it.config.tools.changes_load.name %>` with `base: <pr-context.pr.baseR
 
 Following the reviewer agent guidance:
 1. Check `<pr-context.reviews>`, `<pr-context.issueComments>`, and `<pr-context.threads>`
-2. Use `<changes>` as the source of truth for changed files and diff hunks
+2. Use `<changes>` as the source of truth for changed files and diff hunks; independently verify existing review claims rather than assuming they are correct
 3. Derive `<author-decisions>` from `<pr-context.issueComments>` and `<pr-context.threads>`:
    - Include direct author replies that explicitly decline, defer, or intentionally narrow a suggestion and explain why they do not plan to implement it
    - Treat each matching author reply as higher priority than `<ticket-context>` for that same concern, unless the current diff introduces a materially different defect with a concrete failure mode

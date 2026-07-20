@@ -16,9 +16,9 @@ Use `pr_load` when a workflow needs one grounded PR context payload instead of s
 - `repo`
 - `viewerLogin`
 - `pr` metadata including title, body, URL, refs, commit count, and author
-- `reviews`
-- `issueComments`
-- `threads`
+- `reviews`, including author type and repository association when GitHub provides them
+- `issueComments`, including author type and repository association when GitHub provides them
+- `threads`, with the same metadata on each comment
 
 ## Useful for
 

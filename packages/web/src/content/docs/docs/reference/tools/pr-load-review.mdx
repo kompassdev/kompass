@@ -15,6 +15,7 @@ Use `pr_load_review` after an initial `pr_load` when a long-running workflow onl
 - filters formal reviews by submission time
 - asks GitHub for issue comments updated since the checkpoint
 - returns a whole review thread when any comment in it changed after the checkpoint
+- preserves author type and repository association so callers can distinguish automation signals from project-member intent
 - returns `loadedAt` for the next call
 
 GitHub does not expose a timestamp filter for review-thread resolution changes, so resolution-only changes without comment activity are not detectable incrementally.

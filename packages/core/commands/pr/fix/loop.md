@@ -1,6 +1,6 @@
 ## Goal
 
-Continuously watch a pull request, fix CI failures and new review feedback, push, reply, and repeat until clean.
+Continuously watch a pull request, independently assess CI failures and review feedback, fix valid issues, reply, and repeat until clean or clarification is needed.
 
 ## Additional Context
 
@@ -20,6 +20,7 @@ $ARGUMENTS
 
 - Store a PR number or URL as `<pr-ref>` and remaining guidance as `<additional-context>`
 - Initialize `<completed-fix-passes>` as `0`
+- Initialize `<handled-feedback-ids>` as an empty set
 
 ### Load Initial PR Context
 
@@ -43,19 +44,26 @@ $ARGUMENTS
 - Call `<%= it.config.tools.pr_load_review.name %>` with `pr: <pr-url>` and `since: <review-checkpoint>`
 - Store the result as `<fresh-review-context>` and advance `<review-checkpoint>` to `<fresh-review-context.loadedAt>`
 - Merge new reviews, issue comments, and whole changed threads into `<review-context>`, deduplicating by stable IDs
-- Combine open actionable feedback and `<ci-failures>` into `<actionable-work>`
-- If there is no actionable feedback and no actionable CI failure, continue to `### Output`
+- Combine open candidate feedback and `<ci-failures>` into `<actionable-work>` without presuming that reviewer requests are valid; exclude comment IDs already handled by this workflow unless new thread context or code changes materially reopen the concern
+
+### Confirm Clean PR Context
+
+- When `<ci-status>` is successful or no checks are configured and `<actionable-work>` is empty, call `<%= it.config.tools.pr_load.name %>` with `pr: <pr-url>` for a final complete snapshot
+- Store the result as `<final-pr-context>` and replace `<review-context>` with its reviews, issue comments, and threads
+- Recompute `<actionable-work>` from the complete snapshot, excluding comment IDs already handled by this workflow unless new thread context or code changes materially reopen the concern
+- If recomputed `<actionable-work>` is empty and there is no actionable CI failure, store `<fix-status>` as `complete` and continue to `### Output`
+- Otherwise continue with the newly discovered work; this includes comments posted by CI after checks completed
 
 <%~ include("@pr-fix", { config: it.config, auto: true }) %>
 
 ### Continue Loop
 
+- If `<fix-status>` is `waiting for clarification`, continue to `### Output` without starting another pass
 - Increment `<completed-fix-passes>` and return to `### Align Branch With Base`
-- Do not call `<%= it.config.tools.pr_load.name %>` again during this loop
 
 ### Output
 
-When complete, display:
+When `<fix-status>` is `complete`, display:
 ```
 PR loop complete for #<pr-number>
 
@@ -66,4 +74,15 @@ PR loop complete for #<pr-number>
 - Fix passes completed: <completed-fix-passes>
 
 No additional steps are required.
+```
+
+When `<fix-status>` is `waiting for clarification`, display:
+```
+PR loop waiting for clarification for #<pr-number>
+
+- CI status: <ci-status>
+- Feedback declined: <feedback-declined>
+- Feedback awaiting clarification: <feedback-awaiting-clarification>
+- Replies posted: <feedback-replies-posted>
+- Fix passes completed: <completed-fix-passes>
 ```

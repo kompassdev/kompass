@@ -69,7 +69,7 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     subtask: false,
   },
   "pr/fix/loop": {
-    description: "Watch PR CI and comments, repeatedly fixing both without approval prompts",
+    description: "Assess PR CI and comments, fix valid issues, and reply without approval prompts",
     agent: "worker",
     templatePath: "commands/pr/fix/loop.md",
   },
@@ -90,7 +90,7 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
     subtask: false,
   },
   "pr/fix": {
-    description: "Fix PR feedback or CI failures, push updates, and reply",
+    description: "Assess PR feedback and CI failures, fix valid issues, push, and reply",
     agent: "worker",
     templatePath: "commands/pr/fix.md",
   },

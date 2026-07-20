@@ -331,21 +331,21 @@ const scenarios: CommandScenario[] = [
     label: '/pr/fix',
     command: '/pr/fix',
     agentName: 'Worker',
-    task: 'Fix review feedback, then push and reply',
+    task: 'Assess review feedback, fix valid issues, then reply',
     group: 'pr',
     steps: [
-      { id: 'thinking', phase: 'thinking', content: 'Update the PR branch from its base when needed, address the feedback, validate the fixes, then wait for approval before pushing or replying.' },
+      { id: 'thinking', phase: 'thinking', content: 'Update the PR branch, verify each comment against the code and PR intent, implement valid fixes, and explain any disagreement before pushing or replying.' },
       { id: 'tools', phase: 'tool_calls', toolCalls: [
         { tool: 'pr_load', args: 'current PR', status: 'complete' },
         { tool: 'bash', args: 'fetch and merge PR base when behind', status: 'complete' },
-        { tool: 'apply_patch', args: 'implement requested fixes', status: 'complete' },
+        { tool: 'apply_patch', args: 'implement validated fixes', status: 'complete' },
         { tool: 'question', args: 'Review Fixes', status: 'complete' },
         { tool: 'bash', args: 'git push', status: 'complete' },
         { tool: 'pr_sync', args: 'reply to addressed threads', status: 'complete' }
       ] },
       { id: 'output', phase: 'output', output: [
         'PR fix complete for #51',
-        'Threads resolved: 2',
+        'Replies posted: 2',
         'Pushed: yes'
       ] }
     ]
@@ -440,11 +440,12 @@ const scenarios: CommandScenario[] = [
     task: 'Watch PR CI and comments, then fix both hands-off',
     group: 'orchestration',
     steps: [
-      { id: 'thinking', phase: 'thinking', content: 'Load the PR once, wait for checks, incrementally load review activity, apply fixes inline, then repeat until clean.' },
+      { id: 'thinking', phase: 'thinking', content: 'Wait for checks, assess feedback with author context, then confirm the clean state with a final full PR snapshot before finishing.' },
       { id: 'tools', phase: 'tool_calls', toolCalls: [
         { tool: 'pr_load', args: 'PR #51', status: 'complete' },
         { tool: 'bash', args: 'gh pr checks 51 --watch', status: 'complete' },
         { tool: 'pr_load_review', args: 'since last checkpoint', status: 'complete' },
+        { tool: 'pr_load', args: 'final complete snapshot', status: 'complete' },
         { tool: 'pr_sync', args: 'reply to addressed feedback', status: 'complete' }
       ] },
       { id: 'output', phase: 'output', output: [

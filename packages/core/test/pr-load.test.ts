@@ -44,7 +44,8 @@ describe("pr_load", () => {
               body: "Looks good",
               submitted_at: "2026-03-07T00:00:00Z",
               commit_id: "abc123",
-              user: { login: "review-bot" },
+              user: { login: "review-bot", type: "Bot" },
+              author_association: "MEMBER",
             },
             {
               id: 2,
@@ -52,7 +53,8 @@ describe("pr_load", () => {
               body: "",
               submitted_at: "2026-03-07T00:00:01Z",
               commit_id: "abc123",
-              user: { login: "review-bot" },
+              user: { login: "review-bot", type: "Bot" },
+              author_association: "MEMBER",
             },
           ],
         ]),
@@ -66,7 +68,8 @@ describe("pr_load", () => {
               body: "Normal comment",
               created_at: "2026-03-07T00:00:02Z",
               updated_at: "2026-03-07T00:00:02Z",
-              user: { login: "octo" },
+              user: { login: "octo", type: "User" },
+              author_association: "OWNER",
               html_url: "https://example.test/comment",
             },
           ],
@@ -95,7 +98,8 @@ describe("pr_load", () => {
                         nodes: [
                           {
                             databaseId: 12345,
-                            author: { login: "review-bot" },
+                            author: { login: "review-bot", __typename: "Bot" },
+                            authorAssociation: "MEMBER",
                             body: "Please simplify this block",
                             createdAt: "2026-03-07T00:00:03Z",
                             updatedAt: "2026-03-07T00:00:03Z",
@@ -130,6 +134,8 @@ describe("pr_load", () => {
         id: 1,
         state: "COMMENTED",
         author: "review-bot",
+        authorType: "Bot",
+        authorAssociation: "MEMBER",
         body: "Looks good",
         submittedAt: "2026-03-07T00:00:00Z",
         commitId: "abc123",
@@ -138,6 +144,8 @@ describe("pr_load", () => {
         id: 2,
         state: "APPROVED",
         author: "review-bot",
+        authorType: "Bot",
+        authorAssociation: "MEMBER",
         submittedAt: "2026-03-07T00:00:01Z",
         commitId: "abc123",
       },
@@ -146,6 +154,8 @@ describe("pr_load", () => {
       {
         id: 10,
         author: "octo",
+        authorType: "User",
+        authorAssociation: "OWNER",
         createdAt: "2026-03-07T00:00:02Z",
         updatedAt: "2026-03-07T00:00:02Z",
         body: "Normal comment",
@@ -163,6 +173,8 @@ describe("pr_load", () => {
           {
             id: 12345,
             author: "review-bot",
+            authorType: "Bot",
+            authorAssociation: "MEMBER",
             body: "Please simplify this block",
             createdAt: "2026-03-07T00:00:03Z",
             updatedAt: "2026-03-07T00:00:03Z",
@@ -401,14 +413,14 @@ describe("pr_load", () => {
       { contains: "gh repo view --json nameWithOwner", stdout: JSON.stringify({ nameWithOwner: "acme/repo" }) },
       { contains: "gh api user", stdout: JSON.stringify({ login: "review-bot" }) },
       { contains: "pulls/7/reviews?per_page=100", stdout: JSON.stringify([[{
-        id: 1, state: "COMMENTED", body: "new", submitted_at: "2026-03-07T00:00:02Z", user: { login: "octo" },
+        id: 1, state: "COMMENTED", body: "new", submitted_at: "2026-03-07T00:00:02Z", user: { login: "octo", type: "User" }, author_association: "MEMBER",
       }]]) },
       { contains: "issues/7/comments?per_page=100&since=2026-03-07T00%3A00%3A00Z", stdout: JSON.stringify([[{
-        id: 2, body: "updated", created_at: "2026-03-06T00:00:00Z", updated_at: "2026-03-07T00:00:03Z", user: { login: "octo" },
+        id: 2, body: "updated", created_at: "2026-03-06T00:00:00Z", updated_at: "2026-03-07T00:00:03Z", user: { login: "octo", type: "User" }, author_association: "MEMBER",
       }]]) },
       { contains: "gh api graphql", stdout: JSON.stringify({ data: { repository: { pullRequest: { reviewThreads: {
         pageInfo: { hasNextPage: false, endCursor: null },
-        nodes: [{ id: "thread-1", isResolved: false, isOutdated: false, path: "x.ts", line: 1, comments: { nodes: [{ databaseId: 3, body: "new", createdAt: "2026-03-07T00:00:04Z", updatedAt: "2026-03-07T00:00:04Z", author: { login: "octo" } }] } }],
+        nodes: [{ id: "thread-1", isResolved: false, isOutdated: false, path: "x.ts", line: 1, comments: { nodes: [{ databaseId: 3, body: "new", createdAt: "2026-03-07T00:00:04Z", updatedAt: "2026-03-07T00:00:04Z", author: { login: "octo", __typename: "User" }, authorAssociation: "MEMBER" }] } }],
       } } } } }) },
     ]);
 
@@ -421,6 +433,9 @@ describe("pr_load", () => {
     assert.equal(result.reviews.length, 1);
     assert.equal(result.issueComments.length, 1);
     assert.equal(result.threads.length, 1);
+    assert.equal(result.reviews[0].authorType, "User");
+    assert.equal(result.issueComments[0].authorAssociation, "MEMBER");
+    assert.equal(result.threads[0].comments[0].authorType, "User");
     assert.ok(result.loadedAt);
   });
 });

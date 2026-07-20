@@ -1,6 +1,6 @@
 ---
 title: /pr/fix/loop
-description: Watch PR CI and comments, repeatedly fixing both without approval prompts.
+description: Watch PR CI and comments, independently assess each item, and fix valid issues without approval prompts.
 ---
 
 Use `/pr/fix/loop` when a PR should be advanced hands-off until both CI and review feedback are clean.
@@ -14,9 +14,11 @@ Use `/pr/fix/loop` when a PR should be advanced hands-off until both CI and revi
 - loads the PR and stores the PR URL and number
 - watches `gh pr checks <number> --watch` until the latest checks finish
 - loads review activity after the previous `loadedAt` checkpoint
-- applies the shared non-interactive PR-fix phase inline
+- independently classifies feedback before applying the shared non-interactive PR-fix phase inline
+- after CI is green and incremental feedback appears clean, loads one final complete PR snapshot to catch late CI-generated comments
 - updates the PR branch from its base when it is behind
 - repeats after each push until no actionable CI failures or PR feedback remain
+- replies with a reason when feedback is disputed and stops explicitly when reviewer clarification is needed
 - stops on failing validation, failed push, failed PR replies, or no-change feedback loops
 
 ## Related

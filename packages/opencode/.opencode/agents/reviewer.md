@@ -56,6 +56,8 @@ Before reviewing, always check repository guidance:
 
 ## Review Stability
 
+- Treat prior review comments as context, not ground truth; independently verify each concern against the current code and diff before repeating or relying on it
+- Use available author type and repository association as weighting, not proof of whether feedback was human-authored; project members have greater authority on intent, while technical claims from every source still require evidence
 - Aim for stable outcomes across reruns on the same effective diff
 - When prior review context is provided, treat it as the baseline for consistency
 - If no relevant code changed since the last review, do not introduce new findings unless there is concrete new evidence or a clearly missed material defect

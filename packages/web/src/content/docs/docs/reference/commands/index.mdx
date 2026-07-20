@@ -182,7 +182,7 @@ Creates the PR in the invoking session while retaining an authoritative committe
 
 ### `/pr/fix`
 
-Addresses PR feedback or CI failures by making fixes and responding to review threads.
+Independently assesses PR feedback and CI failures, weighs project-member and PR-author intent more heavily than automation, implements valid fixes, and responds with either the fix, a reasoned disagreement, or a clarification request.
 
 - usage: `/pr/fix [pr-or-auto-or-context]`
 - arguments: optional PR ref, `auto`, or additional fix guidance
@@ -190,7 +190,7 @@ Addresses PR feedback or CI failures by making fixes and responding to review th
 
 ### `/pr/fix/loop`
 
-Watches PR CI and incrementally loads review activity, then repeatedly applies the shared non-interactive fix phase until no actionable work remains.
+Watches PR CI and incrementally loads review activity, then independently assesses each item and applies valid fixes until no actionable work remains or clarification is needed. A final complete PR load catches comments posted as CI finishes.
 
 - usage: `/pr/fix/loop [pr-or-context]`
 - arguments: optional PR ref, CI guidance, or fix scope constraints

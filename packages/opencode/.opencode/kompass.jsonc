@@ -125,7 +125,14 @@
   },
   "adapters": {
     "opencode": {
-      "agentMode": "all"
+      "agentMode": "all",
+      "navigator": {
+        "enabled": false,
+        "maxConcurrentSessions": 8,
+        "maxReadChars": 20000,
+        "maxOutputCharsPerItem": 4000,
+        "maxWaitMs": 120000
+      }
     }
   }
 }

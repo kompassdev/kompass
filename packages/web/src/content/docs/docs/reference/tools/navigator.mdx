@@ -1,0 +1,28 @@
+---
+title: Kompass Navigator
+description: Native OpenCode session and managed-worktree orchestration tools.
+---
+
+Navigator is an opt-in OpenCode adapter capability. Default runtime names use the `kompass_` prefix.
+
+| Logical tool | Purpose |
+| --- | --- |
+| `worktree_list` | List the checkout and native managed worktrees. |
+| `session_create` | Create a V2 session in the checkout, an existing worktree, or a newly created worktree and admit its first prompt asynchronously. |
+| `session_list` | List paginated sessions filtered to the current project. |
+| `session_read` | Read a bounded page of recent messages with optional tool outputs. |
+| `session_send` | Steer an active session or queue work for its next idle point. |
+| `session_wait` | Wait for the first of one to eight sessions to become idle. A zero timeout returns an immediate snapshot. |
+| `session_interrupt` | Interrupt another session's active execution. |
+| `worktree_remove` | Remove an idle native managed worktree without force. |
+
+## Safety and limits
+
+- Every session ID is validated against the current OpenCode project.
+- Existing-worktree paths must appear in OpenCode's native worktree list.
+- Send, wait, and interrupt reject the calling session.
+- Reads default to ten recent messages, exclude tool outputs, and enforce configured per-item and total character limits.
+- Worktree removal rejects the main checkout, unmanaged worktrees, and worktrees containing active sessions.
+- Partial creation errors identify resources already created and never automatically delete them.
+
+Navigator does not keep a separate job database. Existing native sessions and worktrees remain discoverable after plugin restarts.

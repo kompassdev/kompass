@@ -13,6 +13,14 @@ Current built-in tools:
 - `pr_sync`
 - `ticket_load`
 - `ticket_sync`
+- `worktree_list` (OpenCode Navigator)
+- `session_create` (OpenCode Navigator)
+- `session_list` (OpenCode Navigator)
+- `session_read` (OpenCode Navigator)
+- `session_send` (OpenCode Navigator)
+- `session_wait` (OpenCode Navigator)
+- `session_interrupt` (OpenCode Navigator)
+- `worktree_remove` (OpenCode Navigator)
 
 ## Built-in tools
 
@@ -39,3 +47,39 @@ Loads a ticket from GitHub issue references, local files, or raw text, with opti
 ### `ticket_sync`
 
 Creates or updates GitHub issues, renders checklist sections, and can append issue comments.
+
+## OpenCode Navigator tools
+
+Navigator tools are disabled by default and are available only through the OpenCode adapter. Their default runtime names use the `kompass_` prefix. See [Kompass Navigator](./navigator/) for arguments and safety behavior.
+
+### `worktree_list`
+
+Lists the current checkout explicitly and all native OpenCode-managed worktrees.
+
+### `session_create`
+
+Creates a native session in the checkout, an existing managed worktree, or a newly created worktree; admits its initial prompt and returns immediately.
+
+### `session_list`
+
+Lists paginated sessions filtered to the current OpenCode project, with location, agent, model, timestamps, and active or idle state.
+
+### `session_read`
+
+Reads a bounded page of recent projected messages. Tool outputs are excluded by default, and per-item and total truncation metadata is returned.
+
+### `session_send`
+
+Sends a follow-up with native `steer` delivery by default or queues it until the session would otherwise become idle.
+
+### `session_wait`
+
+Waits for the first of up to eight sessions to become idle, aborts losing waits, and returns bounded recent output. A zero timeout returns an immediate snapshot.
+
+### `session_interrupt`
+
+Interrupts active native execution for another session in the current project.
+
+### `worktree_remove`
+
+Removes an idle native managed worktree. It rejects the main checkout, unmanaged paths, and worktrees containing active sessions; force removal is not available.

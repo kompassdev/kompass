@@ -14,6 +14,7 @@ Inside OpenCode, the adapter exposes:
 - Kompass commands
 - Kompass agents
 - Kompass tools
+- opt-in Kompass Navigator session and worktree orchestration
 - project override loading from local config files
 
 ## Project overrides
@@ -28,6 +29,35 @@ You can use overrides to:
 - remap tool names
 - change defaults such as the base branch
 - adjust adapter behavior such as `agentMode`
+- enable and limit Navigator
+
+## Kompass Navigator
+
+Navigator uses OpenCode's native server and SDK to create, inspect, continue, wait for, and interrupt sessions in the current checkout or managed Git worktrees. It requires OpenCode `1.17.12` or newer and is disabled by default.
+
+```jsonc
+{
+  "adapters": {
+    "opencode": {
+      "navigator": {
+        "enabled": true,
+        "maxConcurrentSessions": 8,
+        "maxReadChars": 20000,
+        "maxOutputCharsPerItem": 4000,
+        "maxWaitMs": 120000
+      }
+    }
+  },
+  "tools": {
+    "session_interrupt": { "enabled": false },
+    "session_create": { "name": "delegate_session" }
+  }
+}
+```
+
+Enabling Navigator enables all eight logical tools unless an individual tool is disabled. Default names receive the `kompass_` prefix; configured aliases such as `delegate_session` are registered exactly.
+
+Navigator is scoped to the current project. Session IDs are ownership-checked, directories must be native managed worktrees, and lifecycle calls cannot target the calling session. Removal rejects the checkout, unmanaged worktrees, and worktrees containing active sessions. Navigator does not force removal, merge branches, create pull requests, or maintain a separate job database.
 
 ## Agent model
 

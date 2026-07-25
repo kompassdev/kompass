@@ -127,6 +127,52 @@ async function createTempGitRepo() {
 }
 
 describe("createOpenCodeTools", () => {
+  test("keeps Navigator disabled by default", async () => {
+    await withTempHome(async () => {
+      const tools = await createOpenCodeTools(createMockClient() as never, process.cwd());
+      assert.equal(tools.kompass_session_create, undefined);
+      assert.equal(tools.kompass_worktree_list, undefined);
+    });
+  });
+
+  test("registers all Navigator tools when enabled and preserves aliases and disables", async () => {
+    await withTempHome(async () => {
+      const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-navigator-tools-"));
+      try {
+        await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
+        await writeFile(path.join(tempDir, ".opencode", "kompass.jsonc"), `{
+          "adapters": { "opencode": { "navigator": { "enabled": true } } },
+          "tools": {
+            "session_create": { "name": "delegate_session" },
+            "session_interrupt": { "enabled": false }
+          }
+        }`);
+        const navigatorClient = {
+          worktree: { list() {}, create() {}, remove() {} },
+          v2: { session: {
+            create() {}, list() {}, get() {}, messages() {}, prompt() {}, active() {}, wait() {}, interrupt() {},
+          } },
+        };
+        const tools = await createOpenCodeTools(createMockClient() as never, tempDir, {
+          client: navigatorClient as never,
+          projectID: "project-1",
+        });
+
+        assert.ok(tools.kompass_worktree_list);
+        assert.ok(tools.delegate_session);
+        assert.ok(tools.kompass_session_list);
+        assert.ok(tools.kompass_session_read);
+        assert.ok(tools.kompass_session_send);
+        assert.ok(tools.kompass_session_wait);
+        assert.ok(tools.kompass_worktree_remove);
+        assert.equal(tools.kompass_session_create, undefined);
+        assert.equal(tools.kompass_session_interrupt, undefined);
+      } finally {
+        await rm(tempDir, { recursive: true, force: true });
+      }
+    });
+  });
+
   test("registers Kompass tools with prefixed names", async () => {
     await withTempHome(async () => {
       const tools = await createOpenCodeTools(createMockClient() as never, process.cwd());

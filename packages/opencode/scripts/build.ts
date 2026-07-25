@@ -13,7 +13,11 @@ const workspaceReadme = path.join(workspaceRoot, "README.md");
 const packageReadme = path.join(packageRoot, "README.md");
 
 const runtimeDirs = ["agents", "commands", "components"] as const;
-const bundleExternals = ["@opencode-ai/plugin", "@opencode-ai/plugin/tool"] as const;
+const bundleExternals = [
+  "@opencode-ai/plugin",
+  "@opencode-ai/plugin/tool",
+  "@opencode-ai/sdk/v2",
+] as const;
 const bundleArgs = [
   "build",
   "./plugin.ts",

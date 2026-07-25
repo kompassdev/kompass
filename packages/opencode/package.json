@@ -47,11 +47,12 @@
     "url": "https://github.com/kompassdev/kompass/issues"
   },
   "peerDependencies": {
-    "@opencode-ai/plugin": "^1.16.2"
+    "@opencode-ai/plugin": "^1.17.12",
+    "@opencode-ai/sdk": "^1.17.12"
   },
   "devDependencies": {
-    "@opencode-ai/plugin": "^1.16.2",
-    "@opencode-ai/sdk": "^1.16.2",
+    "@opencode-ai/plugin": "^1.17.12",
+    "@opencode-ai/sdk": "^1.17.12",
     "yaml": "^2.8.2"
   }
 }

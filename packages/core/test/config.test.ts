@@ -232,7 +232,7 @@ describe("object-based config", () => {
   test("merges Navigator defaults and validates limits", () => {
     const defaults = mergeWithDefaults(null);
     assert.deepEqual(defaults.adapters.opencode.navigator, {
-      enabled: false,
+      enabled: true,
       maxConcurrentSessions: 8,
       maxReadChars: 20_000,
       maxOutputCharsPerItem: 4_000,

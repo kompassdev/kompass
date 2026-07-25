@@ -642,7 +642,7 @@ export function mergeWithDefaults(
   const { enabled: _reviewerEnabled, ...reviewerOverrides } = config?.agents?.reviewer ?? {};
   const { enabled: _plannerEnabled, ...plannerOverrides } = config?.agents?.planner ?? {};
   const navigator = {
-    enabled: config?.adapters?.opencode?.navigator?.enabled ?? false,
+    enabled: config?.adapters?.opencode?.navigator?.enabled ?? true,
     maxConcurrentSessions:
       config?.adapters?.opencode?.navigator?.maxConcurrentSessions ?? 8,
     maxReadChars: config?.adapters?.opencode?.navigator?.maxReadChars ?? 20_000,

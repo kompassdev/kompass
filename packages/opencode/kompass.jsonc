@@ -87,7 +87,7 @@
     "opencode": {
       "agentMode": "all",
       "navigator": {
-        "enabled": false,
+        "enabled": true,
         "maxConcurrentSessions": 8,
         "maxReadChars": 20000,
         "maxOutputCharsPerItem": 4000,

@@ -127,21 +127,50 @@ async function createTempGitRepo() {
 }
 
 describe("createOpenCodeTools", () => {
-  test("keeps Navigator disabled by default", async () => {
+  test("registers Navigator by default", async () => {
     await withTempHome(async () => {
-      const tools = await createOpenCodeTools(createMockClient() as never, process.cwd());
-      assert.equal(tools.kompass_session_create, undefined);
-      assert.equal(tools.kompass_worktree_list, undefined);
+      const navigatorClient = {
+        worktree: { list() {}, create() {}, remove() {} },
+        v2: { session: {
+          create() {}, list() {}, get() {}, messages() {}, prompt() {}, active() {}, wait() {}, interrupt() {},
+        } },
+      };
+      const tools = await createOpenCodeTools(createMockClient() as never, process.cwd(), {
+        client: navigatorClient as never,
+        projectID: "project-1",
+      });
+      assert.ok(tools.kompass_session_create);
+      assert.ok(tools.kompass_worktree_list);
     });
   });
 
-  test("registers all Navigator tools when enabled and preserves aliases and disables", async () => {
+  test("allows Navigator to be disabled as a feature", async () => {
+    await withTempHome(async () => {
+      const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-navigator-disabled-"));
+      try {
+        await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
+        await writeFile(path.join(tempDir, ".opencode", "kompass.jsonc"), `{
+          "adapters": { "opencode": { "navigator": { "enabled": false } } }
+        }`);
+        const tools = await createOpenCodeTools(createMockClient() as never, tempDir, {
+          client: {} as never,
+          projectID: "project-1",
+        });
+
+        assert.equal(tools.kompass_session_create, undefined);
+        assert.equal(tools.kompass_worktree_list, undefined);
+      } finally {
+        await rm(tempDir, { recursive: true, force: true });
+      }
+    });
+  });
+
+  test("preserves Navigator aliases and individual disables", async () => {
     await withTempHome(async () => {
       const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-navigator-tools-"));
       try {
         await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
         await writeFile(path.join(tempDir, ".opencode", "kompass.jsonc"), `{
-          "adapters": { "opencode": { "navigator": { "enabled": true } } },
           "tools": {
             "session_create": { "name": "delegate_session" },
             "session_interrupt": { "enabled": false }

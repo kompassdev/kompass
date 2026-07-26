@@ -1,5 +1,6 @@
 import type { Hooks, Plugin, PluginInput } from "@opencode-ai/plugin";
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool";
+import { createOpencodeClient as createLegacyClient, type OpencodeClient as LegacyClient } from "@opencode-ai/sdk/client";
 import { createOpencodeClient as createV2Client, type OpencodeClient as V2Client } from "@opencode-ai/sdk/v2";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -19,7 +20,7 @@ import {
 import { loadMergedKompassConfig } from "./cache.ts";
 import { applyAgentsConfig, applyCommandsConfig } from "./config.ts";
 import { createPluginLogger, getErrorDetails, type PluginLogger } from "./logging.ts";
-import { createNavigatorTools, getNavigatorCompatibilityWarning } from "./navigator.ts";
+import { createNavigatorTools, detectNavigatorProtocol, getNavigatorCompatibilityWarning } from "./navigator.ts";
 import {
   getConfiguredOpenCodeToolName,
 } from "./tool-names.ts";
@@ -312,7 +313,12 @@ const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
 export async function createOpenCodeTools(
   client: PluginInput["client"],
   projectRoot: string,
-  navigator?: { client: V2Client; projectID: string },
+  navigator?: {
+    client: V2Client;
+    legacyClient: (directory: string) => LegacyClient;
+    projectID: string;
+    protocol: "v1" | "v2";
+  },
 ): Promise<Record<string, ToolDefinition>> {
   const config = await loadMergedKompassConfig(projectRoot);
   const tools: Record<string, ToolDefinition> = {};
@@ -323,9 +329,11 @@ export async function createOpenCodeTools(
   const navigatorTools: Record<string, ToolDefinition> = navigatorEnabled && navigator
     ? createNavigatorTools({
         client: navigator.client,
+        legacyClient: navigator.legacyClient,
         projectID: navigator.projectID,
         checkout: projectRoot,
         config: config.adapters.opencode.navigator,
+        protocol: navigator.protocol,
       })
     : {};
 
@@ -358,20 +366,39 @@ export const OpenCodeCompassPlugin: Plugin = async (input: PluginInput) => {
   async function createToolsSafely() {
     try {
       const config = await loadMergedKompassConfig(worktree);
-      let navigator: { client: V2Client; projectID: string } | undefined;
+      let navigator: {
+        client: V2Client;
+        legacyClient: (directory: string) => LegacyClient;
+        projectID: string;
+        protocol: "v1" | "v2";
+      } | undefined;
       if (config.adapters.opencode.navigator.enabled) {
         const projectID = getString(input.project?.id);
         if (!input.serverUrl || !projectID) {
           logger.warn("Navigator requires OpenCode 1.17.12 or newer; Navigator tools were not registered");
         } else {
+          const legacyClients = new Map<string, LegacyClient>();
+          const navigatorClient = createV2Client({ baseUrl: input.serverUrl.toString() });
+          const protocol = await detectNavigatorProtocol(navigatorClient);
           navigator = {
-            client: createV2Client({
-              baseUrl: input.serverUrl.toString(),
-              directory: worktree,
-            }),
+            // A client-wide directory would silently hide sessions in managed worktrees.
+            client: navigatorClient,
+            legacyClient(directory) {
+              let located = legacyClients.get(directory);
+              if (!located) {
+                located = createLegacyClient({ baseUrl: input.serverUrl!.toString(), directory });
+                legacyClients.set(directory, located);
+              }
+              return located;
+            },
             projectID,
+            protocol,
           };
-          const warning = await getNavigatorCompatibilityWarning(navigator.client);
+          const warning = await getNavigatorCompatibilityWarning(
+            navigator.client,
+            navigator.protocol,
+            navigator.legacyClient(worktree),
+          );
           if (warning) {
             logger.warn(`${warning}; Navigator tools were not registered`);
             navigator = undefined;

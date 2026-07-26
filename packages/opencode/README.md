@@ -54,7 +54,7 @@ The recommended project override path is `.opencode/kompass.jsonc`.
 
 ## Kompass Navigator
 
-Navigator is an OpenCode capability for orchestrating native sessions in the current checkout and OpenCode-managed Git worktrees. It is enabled by default, uses the OpenCode server and SDK directly, returns immediately after admitting prompts, supports parallel sessions, and discovers native sessions and worktrees again after plugin restarts. It requires OpenCode `1.17.12` or newer.
+Navigator is an OpenCode capability for orchestrating native sessions in the current checkout and OpenCode-managed Git worktrees. It is enabled by default, follows OpenCode Desktop's protocol detection so session creation, prompts, reads, status, and interrupts stay on one compatible API, returns immediately after admitting prompts, and supports parallel sessions. Until OpenCode implements V2 wait, Navigator waits by polling the active-session API locally. It requires OpenCode `1.17.12` or newer.
 
 Configure Navigator and its limits with:
 

@@ -1,6 +1,11 @@
 import type { ToolContext, ToolDefinition } from "@opencode-ai/plugin/tool";
 import { tool } from "@opencode-ai/plugin/tool";
 import type {
+  Message as LegacyMessage,
+  OpencodeClient as LegacyOpencodeClient,
+  Part as LegacyPart,
+} from "@opencode-ai/sdk/client";
+import type {
   OpencodeClient,
   SessionMessage,
   SessionV2Info,
@@ -11,6 +16,10 @@ import path from "node:path";
 import type { NavigatorConfig } from "../core/index.ts";
 
 export type NavigatorClient = Pick<OpencodeClient, "worktree" | "v2" | "global">;
+export type NavigatorLegacyClient = Pick<LegacyOpencodeClient, "session">;
+
+type NavigatorProtocol = "v1" | "v2";
+type LegacySessionMessage = { info: LegacyMessage; parts: LegacyPart[] };
 
 export interface SessionSummary {
   sessionID: string;
@@ -57,6 +66,8 @@ type NavigatorContext = {
   checkout: string;
   projectID: string;
   config: NavigatorConfig;
+  protocol: NavigatorProtocol;
+  legacyClient: (directory: string) => NavigatorLegacyClient;
 };
 
 type NativeWorktree = { directory: string; name: string; branch?: string };
@@ -103,12 +114,77 @@ async function listManagedWorktrees(client: NavigatorClient, checkout: string) {
   return values.map(normalizeWorktree).filter((item) => !sameDirectory(item.directory, checkout));
 }
 
-async function activeSessionIDs(client: NavigatorClient) {
+async function activeSessionIDs(client: NavigatorClient, navigator: NavigatorContext) {
+  if (navigator.protocol === "v1") {
+    const worktrees = await listManagedWorktrees(client, navigator.checkout);
+    const directories = [navigator.checkout, ...worktrees.map((item) => item.directory)];
+    const statuses = await Promise.all(directories.map(async (directory) => responseData(
+      await navigator.legacyClient(directory).session.status(),
+      `OpenCode session status for ${directory}`,
+    ) as Record<string, { type: string }>));
+    return new Set(statuses.flatMap((items) => Object.entries(items)
+      .filter(([, status]) => status.type !== "idle")
+      .map(([sessionID]) => sessionID)));
+  }
   const active = envelopeData(
     await client.v2.session.active(),
     "OpenCode active session list",
   );
   return new Set(Object.keys(active));
+}
+
+function projectLegacyMessages(messages: LegacySessionMessage[]): SessionMessage[] {
+  return messages.map(({ info, parts }) => {
+    if (info.role === "user") {
+      return {
+        id: info.id,
+        type: "user",
+        time: { created: info.time.created },
+        text: parts.filter((part) => part.type === "text").map((part) => part.text).join("\n"),
+      };
+    }
+
+    const content: Extract<SessionMessage, { type: "assistant" }>["content"] = [];
+    for (const part of parts) {
+      if (part.type === "text" || part.type === "reasoning") {
+        content.push({ id: part.id, type: part.type, text: part.text });
+        continue;
+      }
+      if (part.type !== "tool") continue;
+      const state = part.state.status === "pending"
+        ? { status: "pending", input: JSON.stringify(part.state.input) }
+        : part.state.status === "running"
+          ? { status: "running", input: part.state.input, structured: {}, content: [] }
+          : part.state.status === "completed"
+            ? { status: "completed", input: part.state.input, structured: {}, content: [], result: part.state.output }
+            : {
+                status: "error",
+                input: part.state.input,
+                structured: {},
+                content: [],
+                error: { name: "UnknownError", data: { message: part.state.error } },
+              };
+      content.push({
+        id: part.id,
+        type: "tool",
+        name: part.tool,
+        state,
+        time: {
+          created: "time" in part.state ? part.state.time.start : info.time.created,
+          ...("time" in part.state && "end" in part.state.time ? { completed: part.state.time.end } : {}),
+        },
+      } as Extract<SessionMessage, { type: "assistant" }>["content"][number]);
+    }
+
+    return {
+      id: info.id,
+      type: "assistant",
+      time: info.time,
+      agent: info.mode,
+      model: { providerID: info.providerID, id: info.modelID },
+      content,
+    } as SessionMessage;
+  });
 }
 
 async function getOwnedSession(
@@ -288,18 +364,30 @@ async function readSession(
 ) {
   const [session, active] = await Promise.all([
     getOwnedSession(client, navigator.projectID, args.sessionID),
-    activeSessionIDs(client),
+    activeSessionIDs(client, navigator),
   ]);
   const limit = Math.min(args.turnLimit ?? 10, 100);
-  const payload = responseData(
-    await client.v2.session.messages({
-      sessionID: args.sessionID,
-      limit,
-      order: args.cursor ? undefined : "desc",
-      cursor: args.cursor,
-    }),
-    `OpenCode messages for session ${args.sessionID}`,
-  );
+  const payload = navigator.protocol === "v1"
+    ? await (async () => {
+        const response = await navigator.legacyClient(session.location.directory).session.messages({
+          path: { id: args.sessionID },
+          query: { limit, ...(args.cursor ? { before: args.cursor } : {}) },
+        });
+        const messages = responseData(response, `OpenCode messages for session ${args.sessionID}`) as LegacySessionMessage[];
+        return {
+          data: projectLegacyMessages(messages).reverse(),
+          cursor: { next: response.response.headers.get("x-next-cursor") ?? undefined },
+        };
+      })()
+    : responseData(
+        await client.v2.session.messages({
+          sessionID: args.sessionID,
+          limit,
+          order: args.cursor ? undefined : "desc",
+          cursor: args.cursor,
+        }),
+        `OpenCode messages for session ${args.sessionID}`,
+      );
   const formatted = summarizeMessages(payload.data, {
     includeOutputs: args.includeOutputs ?? false,
     maxItemChars: Math.min(
@@ -359,7 +447,7 @@ export function createNavigatorTools(
         }).optional(),
       },
       async execute(args) {
-        const active = await activeSessionIDs(client);
+        const active = await activeSessionIDs(client, navigator);
         const activeSessions = await Promise.all([...active].map((sessionID) => getSession(client, sessionID)));
         const activeOwnedCount = activeSessions.filter((session) => session.projectID === navigator.projectID).length;
         if (activeOwnedCount >= navigator.config.maxConcurrentSessions) {
@@ -400,16 +488,21 @@ export function createNavigatorTools(
           }
         }
 
-        let session: SessionV2Info;
+        let session: SessionV2Info | { id: string; projectID: string };
         try {
-          session = envelopeData(
-            await client.v2.session.create({
-              ...(args.agent ? { agent: args.agent } : {}),
-              ...(args.model ? { model: { providerID: args.model.providerID, id: args.model.modelID } } : {}),
-              location: { directory },
-            }),
-            "OpenCode session create",
-          );
+          session = navigator.protocol === "v1"
+            ? responseData(
+                await navigator.legacyClient(directory).session.create(),
+                "OpenCode session create",
+              ) as { id: string; projectID: string }
+            : envelopeData(
+                await client.v2.session.create({
+                  ...(args.agent ? { agent: args.agent } : {}),
+                  ...(args.model ? { model: { providerID: args.model.providerID, id: args.model.modelID } } : {}),
+                  location: { directory },
+                }),
+                "OpenCode session create",
+              );
         } catch (error) {
           throw new Error(
             `Navigator session creation failed: ${error instanceof Error ? error.message : String(error)}` +
@@ -421,14 +514,26 @@ export function createNavigatorTools(
         }
 
         try {
-          envelopeData(
-            await client.v2.session.prompt({
-              sessionID: session.id,
-              prompt: { text: args.prompt },
-              delivery: "steer",
-            }),
-            `OpenCode prompt admission for session ${session.id}`,
-          );
+          if (navigator.protocol === "v1") {
+            const response = await navigator.legacyClient(directory).session.promptAsync({
+              path: { id: session.id },
+              body: {
+                parts: [{ type: "text", text: args.prompt }],
+                ...(args.agent ? { agent: args.agent } : {}),
+                ...(args.model ? { model: args.model } : {}),
+              },
+            });
+            if (response.error !== undefined) failResponse(response.error, `OpenCode prompt admission for session ${session.id}`);
+          } else {
+            envelopeData(
+              await client.v2.session.prompt({
+                sessionID: session.id,
+                prompt: { text: args.prompt },
+                delivery: "steer",
+              }),
+              `OpenCode prompt admission for session ${session.id}`,
+            );
+          }
         } catch (error) {
           throw new Error(
             `Navigator prompt admission failed: ${error instanceof Error ? error.message : String(error)}. Session created: ${session.id}` +
@@ -469,7 +574,7 @@ export function createNavigatorTools(
             limit: args.limit,
             cursor: args.cursor,
           }).then((response) => responseData(response, "OpenCode session list")),
-          activeSessionIDs(client),
+          activeSessionIDs(client, navigator),
         ]);
         const owned = payload.data.filter((session) => session.projectID === navigator.projectID);
         return json({
@@ -494,23 +599,27 @@ export function createNavigatorTools(
     }),
 
     session_send: tool({
-      description: "Steer or queue a prompt for an existing current-project OpenCode session.",
+      description: "Steer a prompt for an existing current-project OpenCode session.",
       args: {
         sessionID: tool.schema.string().min(1),
         prompt: tool.schema.string().min(1),
-        delivery: tool.schema.enum(["steer", "queue"]).optional(),
       },
       async execute(args, context) {
         assertNotCallingSession(args.sessionID, context, "send to");
-        await getOwnedSession(client, navigator.projectID, args.sessionID);
-        const admitted = envelopeData(
-          await client.v2.session.prompt({
-            sessionID: args.sessionID,
-            prompt: { text: args.prompt },
-            delivery: args.delivery ?? "steer",
-          }),
-          `OpenCode prompt admission for session ${args.sessionID}`,
-        );
+        const session = await getOwnedSession(client, navigator.projectID, args.sessionID);
+        if (navigator.protocol === "v1") {
+          const response = await navigator.legacyClient(session.location.directory).session.promptAsync({
+            path: { id: args.sessionID },
+            body: { parts: [{ type: "text", text: args.prompt }] },
+          });
+          if (response.error !== undefined) failResponse(response.error, `OpenCode prompt admission for session ${args.sessionID}`);
+          return json({ sessionID: args.sessionID, admitted: true });
+        }
+        const admitted = envelopeData(await client.v2.session.prompt({
+          sessionID: args.sessionID,
+          prompt: { text: args.prompt },
+          delivery: "steer",
+        }), `OpenCode prompt admission for session ${args.sessionID}`);
         return json({ sessionID: args.sessionID, admitted: Boolean(admitted) });
       },
     }),
@@ -526,7 +635,7 @@ export function createNavigatorTools(
         if (new Set(ids).size !== ids.length) throw new Error("Navigator wait targets must be unique");
         for (const id of ids) assertNotCallingSession(id, context, "wait for");
         const sessions = await Promise.all(ids.map((id) => getOwnedSession(client, navigator.projectID, id)));
-        let active = await activeSessionIDs(client);
+        let active = await activeSessionIDs(client, navigator);
         const alreadyIdle = sessions.find((session) => !active.has(session.id));
         if (alreadyIdle) {
           const completed = await readSession(client, navigator, { sessionID: alreadyIdle.id });
@@ -541,40 +650,21 @@ export function createNavigatorTools(
           });
         }
 
-        const controllers = ids.map(() => new AbortController());
-        const abortAll = () => controllers.forEach((controller) => controller.abort());
-        const invocationAbort = new Promise<never>((_, reject) => {
-          context.abort.addEventListener("abort", () => reject(context.abort.reason ?? new Error("Navigator wait aborted")), { once: true });
-        });
-        let timer: ReturnType<typeof setTimeout> | undefined;
-        const timeout = new Promise<{ type: "timeout" }>((resolve) => {
-          timer = setTimeout(() => resolve({ type: "timeout" }), timeoutMs);
-        });
-        const waits = ids.map((sessionID, index) =>
-          client.v2.session.wait({ sessionID }, { signal: controllers[index].signal })
-            .then((response) => {
-              if (response.error !== undefined) failResponse(response.error, `OpenCode wait for session ${sessionID}`);
-              return { type: "completed" as const, sessionID };
-            })
-        );
-
-        try {
-          const result = await Promise.race([...waits, timeout, invocationAbort]);
-          if (result.type === "completed") {
-            abortAll();
-            const completed = await readSession(client, navigator, { sessionID: result.sessionID });
+        // OpenCode's V2 wait endpoint is unavailable, so poll process-global active ownership locally.
+        const deadline = Date.now() + timeoutMs;
+        while (Date.now() < deadline) {
+          await waitFor(Math.min(250, deadline - Date.now()), context.abort);
+          active = await activeSessionIDs(client, navigator);
+          const completedSession = sessions.find((session) => !active.has(session.id));
+          if (completedSession) {
+            const completed = await readSession(client, navigator, { sessionID: completedSession.id });
             return json({ status: "completed", completed });
           }
-          abortAll();
-          active = await activeSessionIDs(client);
-          return json({
-            status: "timeout",
-            active: sessions.filter((session) => active.has(session.id)).map((session) => summarizeSession(session, active)),
-          });
-        } finally {
-          if (timer) clearTimeout(timer);
-          abortAll();
         }
+        return json({
+          status: "timeout",
+          active: sessions.filter((session) => active.has(session.id)).map((session) => summarizeSession(session, active)),
+        });
       },
     }),
 
@@ -583,8 +673,10 @@ export function createNavigatorTools(
       args: { sessionID: tool.schema.string().min(1) },
       async execute(args, context) {
         assertNotCallingSession(args.sessionID, context, "interrupt");
-        await getOwnedSession(client, navigator.projectID, args.sessionID);
-        const response = await client.v2.session.interrupt({ sessionID: args.sessionID });
+        const session = await getOwnedSession(client, navigator.projectID, args.sessionID);
+        const response = navigator.protocol === "v1"
+          ? await navigator.legacyClient(session.location.directory).session.abort({ path: { id: args.sessionID } })
+          : await client.v2.session.interrupt({ sessionID: args.sessionID });
         if (response.error !== undefined) failResponse(response.error, `OpenCode interrupt for session ${args.sessionID}`);
         return json({ sessionID: args.sessionID, interrupted: true });
       },
@@ -601,7 +693,7 @@ export function createNavigatorTools(
         const managed = worktrees.find((item) => sameDirectory(item.directory, args.directory));
         if (!managed) throw new Error("The requested directory is not a managed OpenCode worktree");
 
-        const active = await activeSessionIDs(client);
+        const active = await activeSessionIDs(client, navigator);
         for (const sessionID of active) {
           const session = await getSession(client, sessionID);
           if (session.projectID !== navigator.projectID) continue;
@@ -626,9 +718,37 @@ export async function checkNavigatorCompatibility(client: NavigatorClient, check
   await listManagedWorktrees(client, checkout);
 }
 
-export async function getNavigatorCompatibilityWarning(client: NavigatorClient) {
-  if (!client.worktree?.list || !client.v2?.session?.create || !client.v2.session.prompt || !client.v2.session.wait) {
-    return "Kompass Navigator requires OpenCode 1.17.12 or newer with V2 session and worktree APIs";
+export async function detectNavigatorProtocol(client: NavigatorClient): Promise<NavigatorProtocol> {
+  try {
+    const health = responseData(await client.global.health(), "OpenCode health") as { healthy?: boolean };
+    if (health.healthy === true) return "v1";
+  } catch {
+    // Continue with the current health probe, matching OpenCode Desktop.
+  }
+  try {
+    const health = responseData(await client.v2.health.get(), "OpenCode V2 health") as {
+      healthy?: boolean;
+      pid?: number;
+    };
+    if (typeof health.pid === "number") return "v2";
+    if (health.healthy === true) return "v1";
+  } catch {
+    // Desktop defaults to V2 when neither health shape can be identified.
+  }
+  return "v2";
+}
+
+export async function getNavigatorCompatibilityWarning(
+  client: NavigatorClient,
+  protocol: NavigatorProtocol,
+  legacyClient?: NavigatorLegacyClient,
+) {
+  const v2Metadata = hasMethods(client.worktree, ["list"]) && hasMethods(client.v2?.session, ["list", "get"]);
+  const compatible = protocol === "v1"
+    ? v2Metadata && hasMethods(legacyClient?.session, ["create", "promptAsync", "status", "messages", "abort"])
+    : v2Metadata && hasMethods(client.v2.session, ["create", "messages", "prompt", "active", "interrupt"]);
+  if (!compatible) {
+    return `Kompass Navigator requires OpenCode 1.17.12 or newer with ${protocol.toUpperCase()} session and worktree APIs`;
   }
   if (!client.global?.health) return;
   try {
@@ -639,6 +759,30 @@ export async function getNavigatorCompatibilityWarning(client: NavigatorClient) 
   } catch (error) {
     return `Kompass Navigator could not verify OpenCode compatibility: ${error instanceof Error ? error.message : String(error)}`;
   }
+}
+
+function hasMethods(value: unknown, names: string[]) {
+  if (!value || typeof value !== "object") return false;
+  return names.every((name) => typeof Reflect.get(value, name) === "function");
+}
+
+function waitFor(timeoutMs: number, signal: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    if (signal.aborted) {
+      reject(signal.reason ?? new Error("Navigator wait aborted"));
+      return;
+    }
+    const timer = setTimeout(done, timeoutMs);
+    signal.addEventListener("abort", aborted, { once: true });
+    function done() {
+      signal.removeEventListener("abort", aborted);
+      resolve();
+    }
+    function aborted() {
+      clearTimeout(timer);
+      reject(signal.reason ?? new Error("Navigator wait aborted"));
+    }
+  });
 }
 
 function compareVersions(left: string, right: string) {

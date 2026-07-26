@@ -70,11 +70,11 @@ Reads a bounded page of recent projected messages. Tool outputs are excluded by 
 
 ### `session_send`
 
-Sends a follow-up with native `steer` delivery by default or queues it until the session would otherwise become idle.
+Sends a steered follow-up through the same session protocol selected by OpenCode Desktop.
 
 ### `session_wait`
 
-Waits for the first of up to eight sessions to become idle, aborts losing waits, and returns bounded recent output. A zero timeout returns an immediate snapshot.
+Polls the active-session API for the detected protocol until the first of up to eight sessions becomes idle, then returns bounded recent output. A zero timeout returns an immediate snapshot.
 
 ### `session_interrupt`
 

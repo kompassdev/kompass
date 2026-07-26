@@ -137,7 +137,9 @@ describe("createOpenCodeTools", () => {
       };
       const tools = await createOpenCodeTools(createMockClient() as never, process.cwd(), {
         client: navigatorClient as never,
+        legacyClient: () => createMockClient() as never,
         projectID: "project-1",
+        protocol: "v2",
       });
       assert.ok(tools.kompass_session_create);
       assert.ok(tools.kompass_worktree_list);
@@ -154,7 +156,9 @@ describe("createOpenCodeTools", () => {
         }`);
         const tools = await createOpenCodeTools(createMockClient() as never, tempDir, {
           client: {} as never,
+          legacyClient: () => createMockClient() as never,
           projectID: "project-1",
+          protocol: "v2",
         });
 
         assert.equal(tools.kompass_session_create, undefined);
@@ -184,7 +188,9 @@ describe("createOpenCodeTools", () => {
         };
         const tools = await createOpenCodeTools(createMockClient() as never, tempDir, {
           client: navigatorClient as never,
+          legacyClient: () => createMockClient() as never,
           projectID: "project-1",
+          protocol: "v2",
         });
 
         assert.ok(tools.kompass_worktree_list);

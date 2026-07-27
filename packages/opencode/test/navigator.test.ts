@@ -203,6 +203,48 @@ describe("Kompass Navigator", () => {
     assert.equal(output.messages[0].items[0].text, "visible");
   });
 
+  test("preserves legacy errored tool output text", async () => {
+    const client = createClient({
+      legacySession: {
+        messages: async () => ({
+          ...response([{
+            info: {
+              id: "assistant-1",
+              sessionID: "session-1",
+              role: "assistant",
+              time: { created: 1, completed: 2 },
+              mode: "build",
+              providerID: "provider",
+              modelID: "model",
+            },
+            parts: [{
+              id: "tool-1",
+              sessionID: "session-1",
+              messageID: "assistant-1",
+              type: "tool",
+              tool: "bash",
+              state: {
+                status: "error",
+                input: { command: "false" },
+                error: "command failed",
+                time: { start: 1, end: 2 },
+              },
+            }],
+          }]),
+          response: new Response(),
+        }),
+      },
+    });
+
+    const output = JSON.parse(await (tools(client, navigatorConfig, "v1").session_read as any).execute({
+      sessionID: "session-1",
+      includeOutputs: true,
+    }, context()));
+
+    assert.equal(output.messages[0].items[0].status, "error");
+    assert.equal(output.messages[0].items[0].output, "command failed");
+  });
+
   test("returns new worktree details", async () => {
     const output = JSON.parse(await (tools().session_create as any).execute({
       prompt: "implement it",

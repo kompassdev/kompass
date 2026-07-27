@@ -162,7 +162,7 @@ function projectLegacyMessages(messages: LegacySessionMessage[]): SessionMessage
                 input: part.state.input,
                 structured: {},
                 content: [],
-                error: { name: "UnknownError", data: { message: part.state.error } },
+                error: { type: "unknown", message: part.state.error },
               };
       content.push({
         id: part.id,

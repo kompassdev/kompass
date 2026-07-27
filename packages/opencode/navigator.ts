@@ -795,12 +795,20 @@ export function createNavigatorTools(
           }
         }
         if (managed.type === "rift") {
-          if (!managed.id) throw new Error("The requested Rift workspace is missing an OpenCode workspace id");
           const api = workspaceApi(client);
           if (!api?.workspace?.remove) throw new Error("OpenCode workspace removal is unavailable for Rift workspaces");
-          const response = await api.workspace.remove({ id: managed.id, directory: navigator.checkout });
-          if (response.error !== undefined) failResponse(response.error, `OpenCode Rift workspace removal for ${managed.directory}`);
-          return json({ removed: true });
+          let target = managed;
+          for (let attempt = 0; attempt < 2; attempt++) {
+            if (!target.id) throw new Error("The requested Rift workspace is missing an OpenCode workspace id");
+            const response = await api.workspace.remove({ id: target.id, directory: navigator.checkout });
+            if (response.error !== undefined) failResponse(response.error, `OpenCode Rift workspace removal for ${target.directory}`);
+
+            const remaining = await listRiftWorkspaces(client, navigator.checkout, navigator.projectID).catch(() => []);
+            const stillPresent = remaining.find((item) => sameDirectory(item.directory, target.directory));
+            if (!stillPresent) return json({ removed: true });
+            target = stillPresent;
+          }
+          throw new Error(`Navigator could not confirm Rift workspace removal for ${managed.directory}`);
         }
         const removed = responseData(
           await client.worktree.remove({

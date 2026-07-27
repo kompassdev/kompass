@@ -500,18 +500,20 @@ describe("Kompass Navigator", () => {
 
   test("removes managed Rift workspaces through the workspace API", async () => {
     const removes: any[] = [];
+    let lists = 0;
     const client = createClient();
+    const riftWorkspace = {
+      id: "wrk_rift",
+      type: "rift",
+      name: "parser-fix",
+      directory: "/repo-rift",
+      projectID: "project-1",
+    };
     client.experimental = {
       workspace: {
         adapter: { list: async () => response([{ type: "rift" }]) },
         syncList: async () => response(undefined),
-        list: async () => response([{
-          id: "wrk_rift",
-          type: "rift",
-          name: "parser-fix",
-          directory: "/repo-rift",
-          projectID: "project-1",
-        }]),
+        list: async () => response(++lists < 3 ? [riftWorkspace] : []),
         create: async () => response(undefined),
         remove: async (args: any) => {
           removes.push(args);
@@ -526,7 +528,10 @@ describe("Kompass Navigator", () => {
     ));
 
     assert.deepEqual(output, { removed: true });
-    assert.deepEqual(removes, [{ id: "wrk_rift", directory: "/repo" }]);
+    assert.deepEqual(removes, [
+      { id: "wrk_rift", directory: "/repo" },
+      { id: "wrk_rift", directory: "/repo" },
+    ]);
   });
 
   test("fails closed when active-session lookup fails during worktree removal", async () => {

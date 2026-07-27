@@ -173,7 +173,7 @@ async function listManagedWorktrees(client: NavigatorClient, checkout: string, p
 
 async function activeSessionIDs(client: NavigatorClient, navigator: NavigatorContext) {
   if (navigator.protocol === "v1") {
-    const worktrees = await listManagedWorktrees(client, navigator.checkout);
+    const worktrees = await listManagedWorktrees(client, navigator.checkout, navigator.projectID);
     const directories = [navigator.checkout, ...worktrees.map((item) => item.directory)];
     const statuses = await Promise.all(directories.map(async (directory) => responseData(
       await navigator.legacyClient(directory).session.status(),

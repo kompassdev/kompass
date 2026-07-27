@@ -534,6 +534,53 @@ describe("Kompass Navigator", () => {
     ]);
   });
 
+  test("guards active Rift workspaces when polling active sessions through V1", async () => {
+    const statusDirectories: string[] = [];
+    const client = createClient({
+      session: {
+        get: async () => response({ data: session("rift-active", "/repo-rift") }),
+      },
+    });
+    client.experimental = {
+      workspace: {
+        adapter: { list: async () => response([{ type: "rift" }]) },
+        syncList: async () => response(undefined),
+        list: async () => response([{
+          id: "wrk_rift",
+          type: "rift",
+          name: "parser-fix",
+          directory: "/repo-rift",
+          projectID: "project-1",
+        }]),
+        create: async () => response(undefined),
+        remove: async () => response(undefined),
+      },
+    };
+    const navigator = createNavigatorTools({
+      client: client as never,
+      legacyClient: (directory: string) => ({
+        ...client,
+        session: {
+          ...client.session,
+          status: async () => {
+            statusDirectories.push(directory);
+            return response(directory === "/repo-rift" ? { "rift-active": { type: "running" } } : {});
+          },
+        },
+      }) as never,
+      config: navigatorConfig,
+      projectID: "project-1",
+      checkout: "/repo",
+      protocol: "v1",
+    });
+
+    await assert.rejects(
+      (navigator.worktree_remove as any).execute({ directory: "/repo-rift" }, context()),
+      /active session rift-active/,
+    );
+    assert.ok(statusDirectories.includes("/repo-rift"));
+  });
+
   test("fails closed when active-session lookup fails during worktree removal", async () => {
     const client = createClient({
       session: {

@@ -229,6 +229,41 @@ describe("config loading", () => {
 });
 
 describe("object-based config", () => {
+  test("merges Navigator defaults and validates limits", () => {
+    const defaults = mergeWithDefaults(null);
+    assert.deepEqual(defaults.adapters.opencode.navigator, {
+      enabled: true,
+      maxConcurrentSessions: 8,
+      maxReadChars: 20_000,
+      maxOutputCharsPerItem: 4_000,
+      maxWaitMs: 120_000,
+    });
+
+    const configured = mergeWithDefaults({ adapters: { opencode: { navigator: {
+      enabled: true,
+      maxConcurrentSessions: 3,
+      maxReadChars: 5_000,
+    } } } });
+    assert.equal(configured.adapters.opencode.navigator.enabled, true);
+    assert.equal(configured.adapters.opencode.navigator.maxConcurrentSessions, 3);
+    assert.equal(configured.adapters.opencode.navigator.maxReadChars, 5_000);
+    assert.throws(
+      () => mergeWithDefaults({ adapters: { opencode: { navigator: { maxConcurrentSessions: 9 } } } }),
+      /cannot exceed 8/,
+    );
+    assert.throws(
+      () => mergeWithDefaults({ adapters: { opencode: { navigator: { maxWaitMs: 0 } } } }),
+      /positive integer/,
+    );
+    assert.throws(
+      () => mergeWithDefaults({ adapters: { opencode: { navigator: {
+        maxReadChars: 100,
+        maxOutputCharsPerItem: 101,
+      } } } }),
+      /cannot exceed maxReadChars/,
+    );
+  });
+
   test("supports command, agent, and component entry toggles", () => {
     const config = mergeWithDefaults({
       shared: {

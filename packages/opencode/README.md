@@ -20,7 +20,7 @@ Kompass keeps AI coding agents on course with token-efficient, composable workfl
 
 - Commands cover direct work (`/ask`, `/commit`, `/merge`, `/skill/create`, `/skill/optimize`), orchestration (`/dev`, `/ship`, `/todo`, `/pr/fix/loop`), ticket planning/sync, and PR review/shipping flows. `/branch/inline`, `/commit/inline`, `/commit-and-push/inline`, `/pr/create/inline`, and `/ship/inline` reuse the invoking session instead of starting a subtask.
 - Agents are intentionally narrow: `worker` handles implementation and multi-step workflows, `planner` is no-edit planning, and `reviewer` is a no-edit review specialist.
-- Structured tools keep workflows grounded in repo and GitHub state: `changes_load`, `pr_load`, `pr_load_review`, `pr_sync`, `ticket_load`, `ticket_sync`.
+- Structured tools keep workflows grounded in repo and GitHub state: `changes_load`, `pr_load`, `pr_load_review`, `pr_sync`, `ticket_load`, `ticket_sync`. OpenCode users can opt into the eight Navigator session and worktree tools.
 - Reusable command-template components live in `packages/core/components/` and are documented in the components reference.
 
 ## Prerequisites
@@ -51,6 +51,36 @@ Kompass loads the bundled base config, then optional home-directory overrides, t
 - `kompass.json`
 
 The recommended project override path is `.opencode/kompass.jsonc`.
+
+## Kompass Navigator
+
+Navigator is an OpenCode capability for orchestrating native sessions in the current checkout and OpenCode-managed Git worktrees. It is enabled by default, follows OpenCode Desktop's protocol detection so session creation, prompts, reads, status, and interrupts stay on one compatible API, returns immediately after admitting prompts, and supports parallel sessions. Until OpenCode implements V2 wait, Navigator waits by polling the active-session API locally. It requires OpenCode `1.17.12` or newer.
+
+Configure Navigator and its limits with:
+
+```jsonc
+{
+  "adapters": {
+    "opencode": {
+      "navigator": {
+        "enabled": true,
+        "maxConcurrentSessions": 8,
+        "maxReadChars": 20000,
+        "maxOutputCharsPerItem": 4000,
+        "maxWaitMs": 120000
+      }
+    }
+  }
+}
+```
+
+The default runtime names are `kompass_worktree_list`, `kompass_session_create`, `kompass_session_list`, `kompass_session_read`, `kompass_session_send`, `kompass_session_wait`, `kompass_session_interrupt`, and `kompass_worktree_remove`. Disable or alias any logical name through `tools`; an alias is registered exactly as configured.
+
+Set `adapters.opencode.navigator.enabled` to `false` to disable all Navigator tools.
+
+Navigator accepts only sessions from the current OpenCode project and only worktrees returned by OpenCode. It rejects self-targeting lifecycle calls, arbitrary directories, main-checkout removal, unmanaged worktrees, and removal while a worktree has active sessions. `session_send` can switch the target session's agent or model before admitting a steered prompt when the detected OpenCode protocol supports it. `session_wait` defaults to `maxWaitMs`, caps requested timeouts at `maxWaitMs`, and treats `timeoutMs: 0` as an immediate snapshot. Navigator never force-removes or automatically cleans up resources after a partial failure.
+
+When OpenCode exposes experimental workspace adapters, Kompass registers a `rift` workspace adapter backed by its bundled `rift-snapshot` dependency. Navigator automatically uses that adapter for `new_worktree` sessions when no `startCommand` is requested, falling back to Git worktrees otherwise.
 
 ## Workspace
 

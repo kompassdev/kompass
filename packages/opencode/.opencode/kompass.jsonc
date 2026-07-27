@@ -118,6 +118,30 @@
     },
     "ticket_load": {
       "enabled": true
+    },
+    "worktree_list": {
+      "enabled": true
+    },
+    "session_create": {
+      "enabled": true
+    },
+    "session_list": {
+      "enabled": true
+    },
+    "session_read": {
+      "enabled": true
+    },
+    "session_send": {
+      "enabled": true
+    },
+    "session_wait": {
+      "enabled": true
+    },
+    "session_interrupt": {
+      "enabled": true
+    },
+    "worktree_remove": {
+      "enabled": true
     }
   },
   "defaults": {
@@ -125,7 +149,14 @@
   },
   "adapters": {
     "opencode": {
-      "agentMode": "all"
+      "agentMode": "all",
+      "navigator": {
+        "enabled": true,
+        "maxConcurrentSessions": 8,
+        "maxReadChars": 20000,
+        "maxOutputCharsPerItem": 4000,
+        "maxWaitMs": 120000
+      }
     }
   }
 }

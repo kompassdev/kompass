@@ -9,6 +9,7 @@ The published schema lives in `kompass.schema.json`.
 
 - default base branch: `main`
 - OpenCode adapter agent mode: `all`
+- OpenCode Navigator: enabled, with limits of 8 concurrent sessions, 20,000 read characters, 4,000 output characters per item, and 120,000 milliseconds per wait
 - OpenCode subtask command mode: `kompass`
 - bundled shared validation guidance is included by default
 
@@ -49,3 +50,11 @@ Deprecated array fields still exist in the schema for compatibility, but the new
 - `subagent`
 - `primary`
 - `all`
+
+`adapters.opencode.navigator` supports:
+
+- `enabled`
+- `maxConcurrentSessions` from 1 through 8
+- positive `maxReadChars`
+- positive `maxOutputCharsPerItem`, no greater than `maxReadChars`
+- positive `maxWaitMs`

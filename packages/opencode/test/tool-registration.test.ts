@@ -7,6 +7,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 
 import { createOpenCodeTools, OpenCodeCompassPlugin } from "../index.ts";
+import { createRiftWorkspaceAdapter } from "../rift-workspace.ts";
 
 const execFileAsync = promisify(execFile);
 
@@ -127,6 +128,135 @@ async function createTempGitRepo() {
 }
 
 describe("createOpenCodeTools", () => {
+  test("Rift workspace adapter maps OpenCode workspaces to Rift snapshots", async () => {
+    const calls: Array<{ name: string; options?: Record<string, unknown> }> = [];
+    const sourceDirectory = path.join(os.tmpdir(), "kompass-rift-source");
+    const adapter = createRiftWorkspaceAdapter({
+      init: (options) => {
+        calls.push({ name: "init", options });
+        return null;
+      },
+      create: (options) => {
+        calls.push({ name: "create", options });
+        return path.join(path.dirname(sourceDirectory), ".rifts", path.basename(sourceDirectory), options?.name ?? "missing");
+      },
+      remove: (options) => {
+        calls.push({ name: "remove", options });
+      },
+      list: (options) => {
+        calls.push({ name: "list", options });
+        return [path.join(path.dirname(sourceDirectory), ".rifts", path.basename(sourceDirectory), "parser-fix")];
+      },
+    }, { sourceDirectory, projectID: "project-1" });
+
+    const configured = await adapter.configure({
+      id: "wrk_1",
+      type: "rift",
+      name: "Parser Fix",
+      branch: null,
+      directory: null,
+      extra: null,
+      projectID: "project-1",
+    });
+    await adapter.create(configured, {});
+    const listed = await adapter.list?.();
+    await adapter.remove(configured);
+    const target = await adapter.target(configured);
+
+    assert.equal(configured.name, "parser-fix");
+    assert.equal(configured.directory, path.join(path.dirname(sourceDirectory), ".rifts", path.basename(sourceDirectory), "parser-fix"));
+    assert.deepEqual(target, { type: "local", directory: configured.directory });
+    assert.equal(listed?.[0]?.type, "rift");
+    assert.equal(listed?.[0]?.projectID, "project-1");
+    assert.deepEqual(calls.map((call) => call.name), ["init", "create", "list", "remove"]);
+    assert.deepEqual(calls.find((call) => call.name === "create")?.options, {
+      from: sourceDirectory,
+      name: "parser-fix",
+      copyAll: true,
+    });
+  });
+
+  test("registers Navigator by default", async () => {
+    await withTempHome(async () => {
+      const navigatorClient = {
+        worktree: { list() {}, create() {}, remove() {} },
+        v2: { session: {
+          create() {}, list() {}, get() {}, messages() {}, prompt() {}, active() {}, wait() {}, interrupt() {},
+        } },
+      };
+      const tools = await createOpenCodeTools(createMockClient() as never, process.cwd(), {
+        client: navigatorClient as never,
+        legacyClient: () => createMockClient() as never,
+        projectID: "project-1",
+        protocol: "v2",
+      });
+      assert.ok(tools.kompass_session_create);
+      assert.ok(tools.kompass_worktree_list);
+    });
+  });
+
+  test("allows Navigator to be disabled as a feature", async () => {
+    await withTempHome(async () => {
+      const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-navigator-disabled-"));
+      try {
+        await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
+        await writeFile(path.join(tempDir, ".opencode", "kompass.jsonc"), `{
+          "adapters": { "opencode": { "navigator": { "enabled": false } } }
+        }`);
+        const tools = await createOpenCodeTools(createMockClient() as never, tempDir, {
+          client: {} as never,
+          legacyClient: () => createMockClient() as never,
+          projectID: "project-1",
+          protocol: "v2",
+        });
+
+        assert.equal(tools.kompass_session_create, undefined);
+        assert.equal(tools.kompass_worktree_list, undefined);
+      } finally {
+        await rm(tempDir, { recursive: true, force: true });
+      }
+    });
+  });
+
+  test("preserves Navigator aliases and individual disables", async () => {
+    await withTempHome(async () => {
+      const tempDir = await mkdtemp(path.join(os.tmpdir(), "kompass-navigator-tools-"));
+      try {
+        await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
+        await writeFile(path.join(tempDir, ".opencode", "kompass.jsonc"), `{
+          "tools": {
+            "session_create": { "name": "delegate_session" },
+            "session_interrupt": { "enabled": false }
+          }
+        }`);
+        const navigatorClient = {
+          worktree: { list() {}, create() {}, remove() {} },
+          v2: { session: {
+            create() {}, list() {}, get() {}, messages() {}, prompt() {}, active() {}, wait() {}, interrupt() {},
+          } },
+        };
+        const tools = await createOpenCodeTools(createMockClient() as never, tempDir, {
+          client: navigatorClient as never,
+          legacyClient: () => createMockClient() as never,
+          projectID: "project-1",
+          protocol: "v2",
+        });
+
+        assert.ok(tools.kompass_worktree_list);
+        assert.ok(tools.delegate_session);
+        assert.ok(tools.kompass_session_list);
+        assert.ok(tools.kompass_session_read);
+        assert.ok(tools.kompass_session_send);
+        assert.ok(tools.kompass_session_wait);
+        assert.ok(tools.kompass_worktree_remove);
+        assert.equal(tools.kompass_session_create, undefined);
+        assert.equal(tools.kompass_session_interrupt, undefined);
+      } finally {
+        await rm(tempDir, { recursive: true, force: true });
+      }
+    });
+  });
+
   test("registers Kompass tools with prefixed names", async () => {
     await withTempHome(async () => {
       const tools = await createOpenCodeTools(createMockClient() as never, process.cwd());

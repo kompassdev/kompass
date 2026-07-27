@@ -1,5 +1,7 @@
 import type { Hooks, Plugin, PluginInput } from "@opencode-ai/plugin";
 import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool";
+import { createOpencodeClient as createLegacyClient, type OpencodeClient as LegacyClient } from "@opencode-ai/sdk/client";
+import { createOpencodeClient as createV2Client, type OpencodeClient as V2Client } from "@opencode-ai/sdk/v2";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
@@ -18,6 +20,8 @@ import {
 import { loadMergedKompassConfig } from "./cache.ts";
 import { applyAgentsConfig, applyCommandsConfig } from "./config.ts";
 import { createPluginLogger, getErrorDetails, type PluginLogger } from "./logging.ts";
+import { createNavigatorTools, detectNavigatorProtocol, getNavigatorCompatibilityWarning } from "./navigator.ts";
+import { registerRiftWorkspaceAdapter } from "./rift-workspace.ts";
 import {
   getConfiguredOpenCodeToolName,
 } from "./tool-names.ts";
@@ -310,17 +314,36 @@ const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
 export async function createOpenCodeTools(
   client: PluginInput["client"],
   projectRoot: string,
+  navigator?: {
+    client: V2Client;
+    legacyClient: (directory: string) => LegacyClient;
+    projectID: string;
+    protocol: "v1" | "v2";
+  },
 ): Promise<Record<string, ToolDefinition>> {
   const config = await loadMergedKompassConfig(projectRoot);
   const tools: Record<string, ToolDefinition> = {};
   const logger = createPluginLogger(client, projectRoot);
   const shell = createNodeShell(projectRoot);
 
-  for (const toolName of getEnabledToolNames(config.tools)) {
+  const navigatorEnabled = config.adapters.opencode.navigator.enabled;
+  const navigatorTools: Record<string, ToolDefinition> = navigatorEnabled && navigator
+    ? createNavigatorTools({
+        client: navigator.client,
+        legacyClient: navigator.legacyClient,
+        projectID: navigator.projectID,
+        checkout: projectRoot,
+        config: config.adapters.opencode.navigator,
+        protocol: navigator.protocol,
+      })
+    : {};
+
+  for (const toolName of getEnabledToolNames(config.tools, navigatorEnabled)) {
     const creator = opencodeToolCreators[toolName as keyof typeof opencodeToolCreators];
-    if (creator) {
+    const navigatorTool = navigatorTools[toolName];
+    if (creator || navigatorTool) {
       const registeredName = getConfiguredOpenCodeToolName(toolName, config.tools[toolName].name);
-      tools[registeredName] = creator(client, config, projectRoot, shell);
+      tools[registeredName] = navigatorTool ?? creator(client, config, projectRoot, shell);
       logger.info("Loaded Kompass tool", {
         tool: toolName,
         registeredName,
@@ -343,7 +366,47 @@ export const OpenCodeCompassPlugin: Plugin = async (input: PluginInput) => {
 
   async function createToolsSafely() {
     try {
-      return await createOpenCodeTools(client, worktree);
+      const config = await loadMergedKompassConfig(worktree);
+      let navigator: {
+        client: V2Client;
+        legacyClient: (directory: string) => LegacyClient;
+        projectID: string;
+        protocol: "v1" | "v2";
+      } | undefined;
+      if (config.adapters.opencode.navigator.enabled) {
+        const projectID = getString(input.project?.id);
+        if (!input.serverUrl || !projectID) {
+          logger.warn("Navigator requires OpenCode 1.17.12 or newer; Navigator tools were not registered");
+        } else {
+          const legacyClients = new Map<string, LegacyClient>();
+          const navigatorClient = createV2Client({ baseUrl: input.serverUrl.toString() });
+          const protocol = await detectNavigatorProtocol(navigatorClient);
+          navigator = {
+            // A client-wide directory would silently hide sessions in managed worktrees.
+            client: navigatorClient,
+            legacyClient(directory) {
+              let located = legacyClients.get(directory);
+              if (!located) {
+                located = createLegacyClient({ baseUrl: input.serverUrl!.toString(), directory });
+                legacyClients.set(directory, located);
+              }
+              return located;
+            },
+            projectID,
+            protocol,
+          };
+          const warning = await getNavigatorCompatibilityWarning(
+            navigator.client,
+            navigator.protocol,
+            navigator.legacyClient(worktree),
+          );
+          if (warning) {
+            logger.warn(`${warning}; Navigator tools were not registered`);
+            navigator = undefined;
+          }
+        }
+      }
+      return await createOpenCodeTools(client, worktree, navigator);
     } catch (error) {
       logger.warn("Skipping Kompass tool registration", {
         ...getErrorDetails(error),
@@ -365,6 +428,7 @@ export const OpenCodeCompassPlugin: Plugin = async (input: PluginInput) => {
   }
 
   const tools = await createToolsSafely();
+  await registerRiftWorkspaceAdapter(input as never, logger);
 
   return {
     tool: tools,

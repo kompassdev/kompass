@@ -7,6 +7,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 
 import { createOpenCodeTools, OpenCodeCompassPlugin } from "../index.ts";
+import { createRiftWorkspaceAdapter } from "../rift-workspace.ts";
 
 const execFileAsync = promisify(execFile);
 
@@ -127,6 +128,54 @@ async function createTempGitRepo() {
 }
 
 describe("createOpenCodeTools", () => {
+  test("Rift workspace adapter maps OpenCode workspaces to Rift snapshots", async () => {
+    const calls: Array<{ name: string; options?: Record<string, unknown> }> = [];
+    const sourceDirectory = path.join(os.tmpdir(), "kompass-rift-source");
+    const adapter = createRiftWorkspaceAdapter({
+      init: (options) => {
+        calls.push({ name: "init", options });
+        return null;
+      },
+      create: (options) => {
+        calls.push({ name: "create", options });
+        return path.join(path.dirname(sourceDirectory), ".rifts", path.basename(sourceDirectory), options?.name ?? "missing");
+      },
+      remove: (options) => {
+        calls.push({ name: "remove", options });
+      },
+      list: (options) => {
+        calls.push({ name: "list", options });
+        return [path.join(path.dirname(sourceDirectory), ".rifts", path.basename(sourceDirectory), "parser-fix")];
+      },
+    }, { sourceDirectory, projectID: "project-1" });
+
+    const configured = await adapter.configure({
+      id: "wrk_1",
+      type: "rift",
+      name: "Parser Fix",
+      branch: null,
+      directory: null,
+      extra: null,
+      projectID: "project-1",
+    });
+    await adapter.create(configured, {});
+    const listed = await adapter.list?.();
+    await adapter.remove(configured);
+    const target = await adapter.target(configured);
+
+    assert.equal(configured.name, "parser-fix");
+    assert.equal(configured.directory, path.join(path.dirname(sourceDirectory), ".rifts", path.basename(sourceDirectory), "parser-fix"));
+    assert.deepEqual(target, { type: "local", directory: configured.directory });
+    assert.equal(listed?.[0]?.type, "rift");
+    assert.equal(listed?.[0]?.projectID, "project-1");
+    assert.deepEqual(calls.map((call) => call.name), ["init", "create", "list", "remove"]);
+    assert.deepEqual(calls.find((call) => call.name === "create")?.options, {
+      from: sourceDirectory,
+      name: "parser-fix",
+      copyAll: true,
+    });
+  });
+
   test("registers Navigator by default", async () => {
     await withTempHome(async () => {
       const navigatorClient = {

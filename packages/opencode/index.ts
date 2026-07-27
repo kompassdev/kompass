@@ -21,6 +21,7 @@ import { loadMergedKompassConfig } from "./cache.ts";
 import { applyAgentsConfig, applyCommandsConfig } from "./config.ts";
 import { createPluginLogger, getErrorDetails, type PluginLogger } from "./logging.ts";
 import { createNavigatorTools, detectNavigatorProtocol, getNavigatorCompatibilityWarning } from "./navigator.ts";
+import { registerRiftWorkspaceAdapter } from "./rift-workspace.ts";
 import {
   getConfiguredOpenCodeToolName,
 } from "./tool-names.ts";
@@ -427,6 +428,7 @@ export const OpenCodeCompassPlugin: Plugin = async (input: PluginInput) => {
   }
 
   const tools = await createToolsSafely();
+  await registerRiftWorkspaceAdapter(input as never, logger);
 
   return {
     tool: tools,

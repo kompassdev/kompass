@@ -20,6 +20,23 @@ export type NavigatorLegacyClient = Pick<LegacyOpencodeClient, "session">;
 
 type NavigatorProtocol = "v1" | "v2";
 type LegacySessionMessage = { info: LegacyMessage; parts: LegacyPart[] };
+type WorkspaceApi = {
+  workspace?: {
+    adapter?: { list(args?: { directory?: string }): Promise<{ data?: Array<{ type: string }>; error?: unknown }> };
+    create(args?: { directory?: string; type?: string; extra?: unknown }): Promise<{ data?: NativeWorkspace; error?: unknown }>;
+    list(args?: { directory?: string }): Promise<{ data?: NativeWorkspace[]; error?: unknown }>;
+    remove(args: { id: string; directory?: string }): Promise<{ data?: unknown; error?: unknown }>;
+    syncList?(args?: { directory?: string }): Promise<{ data?: unknown; error?: unknown }>;
+  };
+};
+type NativeWorkspace = {
+  id: string;
+  type: string;
+  name?: string | null;
+  branch?: string | null;
+  directory?: string | null;
+  projectID?: string;
+};
 
 export interface SessionSummary {
   sessionID: string;
@@ -70,7 +87,7 @@ type NavigatorContext = {
   legacyClient: (directory: string) => NavigatorLegacyClient;
 };
 
-type NativeWorktree = { directory: string; name: string; branch?: string };
+type NativeWorktree = { directory: string; name: string; branch?: string; id?: string; type: "worktree" | "rift" };
 
 function failResponse(error: unknown, operation: string): never {
   const message = error instanceof Error
@@ -101,17 +118,57 @@ function sameDirectory(left: string, right: string) {
 
 function normalizeWorktree(value: string | Worktree): NativeWorktree {
   if (typeof value === "string") {
-    return { directory: value, name: path.basename(value) };
+    return { directory: value, name: path.basename(value), type: "worktree" };
   }
-  return { directory: value.directory, name: value.name, ...(value.branch ? { branch: value.branch } : {}) };
+  return { directory: value.directory, name: value.name, ...(value.branch ? { branch: value.branch } : {}), type: "worktree" };
 }
 
-async function listManagedWorktrees(client: NavigatorClient, checkout: string) {
+function workspaceApi(client: NavigatorClient): WorkspaceApi | undefined {
+  const candidate = client as unknown as { experimental?: WorkspaceApi; v2?: { experimental?: WorkspaceApi } };
+  return candidate.experimental ?? candidate.v2?.experimental;
+}
+
+async function hasRiftAdapter(client: NavigatorClient, checkout: string) {
+  const api = workspaceApi(client);
+  if (!api?.workspace?.adapter?.list || !api.workspace.create) return false;
+  const adapters = responseData(await api.workspace.adapter.list({ directory: checkout }), "OpenCode workspace adapter list");
+  return adapters.some((adapter) => adapter.type === "rift");
+}
+
+function normalizeRiftWorkspace(workspace: NativeWorkspace): NativeWorktree | undefined {
+  if (workspace.type !== "rift" || !workspace.directory) return;
+  return {
+    id: workspace.id,
+    type: "rift",
+    directory: workspace.directory,
+    name: workspace.name || path.basename(workspace.directory),
+    ...(workspace.branch ? { branch: workspace.branch } : {}),
+  };
+}
+
+async function listRiftWorkspaces(client: NavigatorClient, checkout: string, projectID: string) {
+  const api = workspaceApi(client);
+  if (!api?.workspace?.list || !api.workspace.adapter?.list) return [];
+  if (!(await hasRiftAdapter(client, checkout))) return [];
+  await api.workspace.syncList?.({ directory: checkout }).catch(() => undefined);
+  const workspaces = responseData(await api.workspace.list({ directory: checkout }), "OpenCode workspace list");
+  return workspaces
+    .filter((workspace) => !workspace.projectID || workspace.projectID === projectID)
+    .flatMap((workspace) => {
+      const normalized = normalizeRiftWorkspace(workspace);
+      return normalized ? [normalized] : [];
+    });
+}
+
+async function listManagedWorktrees(client: NavigatorClient, checkout: string, projectID?: string) {
   const values = responseData(
     await client.worktree.list({ directory: checkout }),
     "OpenCode worktree list",
   ) as Array<string | Worktree>;
-  return values.map(normalizeWorktree).filter((item) => !sameDirectory(item.directory, checkout));
+  const worktrees = values.map(normalizeWorktree).filter((item) => !sameDirectory(item.directory, checkout));
+  if (!projectID) return worktrees;
+  const rifts = await listRiftWorkspaces(client, checkout, projectID).catch(() => []);
+  return [...worktrees, ...rifts];
 }
 
 async function activeSessionIDs(client: NavigatorClient, navigator: NavigatorContext) {
@@ -419,7 +476,7 @@ export function createNavigatorTools(
       async execute() {
         return json({
           checkout: { directory: navigator.checkout },
-          worktrees: await listManagedWorktrees(client, navigator.checkout),
+          worktrees: await listManagedWorktrees(client, navigator.checkout, navigator.projectID),
         });
       },
     }),
@@ -458,32 +515,45 @@ export function createNavigatorTools(
         let createdWorktree: NativeWorktree | undefined;
         if (args.environment.type === "existing_worktree") {
           const requestedDirectory = args.environment.directory;
-          const worktrees = await listManagedWorktrees(client, navigator.checkout);
+          const worktrees = await listManagedWorktrees(client, navigator.checkout, navigator.projectID);
           const requested = worktrees.find((item) => sameDirectory(item.directory, requestedDirectory));
-          if (!requested) throw new Error("The requested directory is not a managed OpenCode worktree for this project");
+          if (!requested) throw new Error("The requested directory is not a managed OpenCode workspace for this project");
           directory = requested.directory;
         } else if (args.environment.type === "new_worktree") {
-          const worktreesBefore = await listManagedWorktrees(client, navigator.checkout);
+          const worktreesBefore = await listManagedWorktrees(client, navigator.checkout, navigator.projectID);
           try {
-            const worktree = responseData(
-              await client.worktree.create({
+            const api = workspaceApi(client);
+            const useRift = !args.environment.startCommand && await hasRiftAdapter(client, navigator.checkout).catch(() => false);
+            if (useRift && api?.workspace?.create) {
+              const workspace = responseData(await api.workspace.create({
                 directory: navigator.checkout,
-                worktreeCreateInput: {
-                  ...(args.environment.name ? { name: args.environment.name } : {}),
-                  ...(args.environment.startCommand ? { startCommand: args.environment.startCommand } : {}),
-                },
-              }),
-              "OpenCode worktree create",
-            );
-            createdWorktree = normalizeWorktree(worktree);
+                type: "rift",
+                extra: args.environment.name ? { name: args.environment.name } : undefined,
+              }), "OpenCode Rift workspace create");
+              const normalized = normalizeRiftWorkspace(workspace);
+              if (!normalized) throw new Error("OpenCode Rift workspace create returned no directory");
+              createdWorktree = normalized;
+            } else {
+              const worktree = responseData(
+                await client.worktree.create({
+                  directory: navigator.checkout,
+                  worktreeCreateInput: {
+                    ...(args.environment.name ? { name: args.environment.name } : {}),
+                    ...(args.environment.startCommand ? { startCommand: args.environment.startCommand } : {}),
+                  },
+                }),
+                "OpenCode worktree create",
+              );
+              createdWorktree = normalizeWorktree(worktree);
+            }
             directory = createdWorktree.directory;
           } catch (error) {
-            const worktreesAfter = await listManagedWorktrees(client, navigator.checkout).catch(() => []);
+            const worktreesAfter = await listManagedWorktrees(client, navigator.checkout, navigator.projectID).catch(() => []);
             const before = new Set(worktreesBefore.map((item) => normalizeDirectory(item.directory)));
             const partial = worktreesAfter.filter((item) => !before.has(normalizeDirectory(item.directory)));
             throw new Error(
-              `Navigator could not create the requested worktree: ${error instanceof Error ? error.message : String(error)}` +
-              (partial.length ? `. Worktrees created and not removed: ${partial.map((item) => item.directory).join(", ")}` : ""),
+              `Navigator could not create the requested workspace: ${error instanceof Error ? error.message : String(error)}` +
+              (partial.length ? `. Workspaces created and not removed: ${partial.map((item) => item.directory).join(", ")}` : ""),
             );
           }
         }
@@ -545,7 +615,7 @@ export function createNavigatorTools(
           sessionID: session.id,
           directory,
           ...(createdWorktree
-            ? { worktree: { created: true, name: createdWorktree.name, ...(createdWorktree.branch ? { branch: createdWorktree.branch } : {}) } }
+            ? { worktree: { created: true, type: createdWorktree.type, name: createdWorktree.name, ...(createdWorktree.branch ? { branch: createdWorktree.branch } : {}) } }
             : {}),
         });
       },
@@ -561,10 +631,10 @@ export function createNavigatorTools(
       },
       async execute(args) {
         if (args.directory) {
-          const managed = await listManagedWorktrees(client, navigator.checkout);
+          const managed = await listManagedWorktrees(client, navigator.checkout, navigator.projectID);
           const valid = [navigator.checkout, ...managed.map((item) => item.directory)]
             .some((directory) => sameDirectory(directory, args.directory!));
-          if (!valid) throw new Error("The requested directory is not a managed OpenCode worktree for this project");
+          if (!valid) throw new Error("The requested directory is not a managed OpenCode workspace for this project");
         }
         const [payload, active] = await Promise.all([
           client.v2.session.list({
@@ -712,9 +782,9 @@ export function createNavigatorTools(
         if (sameDirectory(args.directory, navigator.checkout)) {
           throw new Error("Navigator refuses to remove the main checkout");
         }
-        const worktrees = await listManagedWorktrees(client, navigator.checkout);
+        const worktrees = await listManagedWorktrees(client, navigator.checkout, navigator.projectID);
         const managed = worktrees.find((item) => sameDirectory(item.directory, args.directory));
-        if (!managed) throw new Error("The requested directory is not a managed OpenCode worktree");
+        if (!managed) throw new Error("The requested directory is not a managed OpenCode workspace");
 
         const active = await activeSessionIDs(client, navigator);
         for (const sessionID of active) {
@@ -723,6 +793,14 @@ export function createNavigatorTools(
           if (sameDirectory(session.location.directory, managed.directory)) {
             throw new Error(`Navigator refuses to remove a worktree containing active session ${sessionID}`);
           }
+        }
+        if (managed.type === "rift") {
+          if (!managed.id) throw new Error("The requested Rift workspace is missing an OpenCode workspace id");
+          const api = workspaceApi(client);
+          if (!api?.workspace?.remove) throw new Error("OpenCode workspace removal is unavailable for Rift workspaces");
+          const response = await api.workspace.remove({ id: managed.id, directory: navigator.checkout });
+          if (response.error !== undefined) failResponse(response.error, `OpenCode Rift workspace removal for ${managed.directory}`);
+          return json({ removed: true });
         }
         const removed = responseData(
           await client.worktree.remove({

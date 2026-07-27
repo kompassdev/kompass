@@ -59,6 +59,8 @@ Navigator registers all eight logical tools unless the feature or an individual 
 
 Navigator is scoped to the current project. Session IDs are ownership-checked, directories must be native managed worktrees, and lifecycle calls cannot target the calling session. `session_send` can switch the target session's agent or model before admitting a steered prompt. Waits default to `maxWaitMs`, cap requested timeouts at `maxWaitMs`, and use `timeoutMs: 0` for an immediate snapshot. Removal rejects the checkout, unmanaged worktrees, and worktrees containing active sessions. Navigator does not force removal, merge branches, create pull requests, or maintain a separate job database.
 
+When OpenCode exposes experimental workspace adapters, Kompass registers a `rift` workspace adapter for OpenCode's workspace API using its bundled `rift-snapshot` dependency. Navigator automatically uses Rift for `new_worktree` sessions when no `startCommand` is requested, falling back to Git worktrees otherwise.
+
 ## Agent model
 
 Most command execution runs on the bundled `worker` agent.

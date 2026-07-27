@@ -58,7 +58,7 @@ Lists the current checkout explicitly and all native OpenCode-managed worktrees.
 
 ### `session_create`
 
-Creates a native session in the checkout, an existing managed worktree, or a newly created worktree; admits its initial prompt and returns immediately.
+Creates a native session in the checkout, an existing managed workspace, or a newly created workspace; admits its initial prompt and returns immediately. New workspaces prefer the registered Rift adapter when available and fall back to Git worktrees.
 
 ### `session_list`
 

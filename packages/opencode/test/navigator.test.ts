@@ -98,7 +98,7 @@ describe("Kompass Navigator", () => {
   test("lists the checkout and managed worktrees", async () => {
     const output = JSON.parse(await (tools().worktree_list as any).execute({}, context()));
     assert.deepEqual(output.checkout, { directory: "/repo" });
-    assert.deepEqual(output.worktrees, [{ directory: "/repo-worktree", name: "repo-worktree" }]);
+    assert.deepEqual(output.worktrees, [{ directory: "/repo-worktree", name: "repo-worktree", type: "worktree" }]);
   });
 
   test("rejects foreign sessions", async () => {
@@ -136,14 +136,14 @@ describe("Kompass Navigator", () => {
         prompt: "work",
         environment: { type: "existing_worktree", directory: "/tmp/arbitrary" },
       }, context()),
-      /not a managed OpenCode worktree/,
+      /not a managed OpenCode workspace/,
     );
   });
 
   test("rejects arbitrary session-list directories", async () => {
     await assert.rejects(
       (tools().session_list as any).execute({ directory: "/tmp/arbitrary" }, context()),
-      /not a managed OpenCode worktree/,
+      /not a managed OpenCode workspace/,
     );
   });
 
@@ -252,7 +252,47 @@ describe("Kompass Navigator", () => {
       prompt: "implement it",
       environment: { type: "new_worktree", name: "feature" },
     }, context()));
-    assert.deepEqual(output.worktree, { created: true, name: "new", branch: "new" });
+    assert.deepEqual(output.worktree, { created: true, type: "worktree", name: "new", branch: "new" });
+  });
+
+  test("prefers Rift workspace adapter for new workspaces when available", async () => {
+    const workspaceCreates: any[] = [];
+    const sessionCreates: any[] = [];
+    const client = createClient({
+      session: {
+        create: async (args: any) => {
+          sessionCreates.push(args);
+          return response({ data: session("created", args.location.directory) });
+        },
+      },
+    });
+    client.experimental = {
+      workspace: {
+        adapter: { list: async () => response([{ type: "worktree" }, { type: "rift" }]) },
+        syncList: async () => response(undefined),
+        list: async () => response([]),
+        create: async (args: any) => {
+          workspaceCreates.push(args);
+          return response({
+            id: "wrk_rift",
+            type: "rift",
+            name: "parser-fix",
+            directory: "/repo-rift",
+            projectID: "project-1",
+          });
+        },
+        remove: async () => response(undefined),
+      },
+    };
+
+    const output = JSON.parse(await (tools(client).session_create as any).execute({
+      prompt: "implement it",
+      environment: { type: "new_worktree", name: "Parser Fix" },
+    }, context()));
+
+    assert.deepEqual(workspaceCreates, [{ directory: "/repo", type: "rift", extra: { name: "Parser Fix" } }]);
+    assert.equal(sessionCreates[0].location.directory, "/repo-rift");
+    assert.deepEqual(output.worktree, { created: true, type: "rift", name: "parser-fix" });
   });
 
   test("reports resources created before a prompt failure", async () => {
@@ -293,7 +333,7 @@ describe("Kompass Navigator", () => {
         prompt: "implement it",
         environment: { type: "new_worktree", startCommand: "false" },
       }, context()),
-      /Worktrees created and not removed: \/repo-partial/,
+      /Workspaces created and not removed: \/repo-partial/,
     );
   });
 
@@ -438,7 +478,7 @@ describe("Kompass Navigator", () => {
     );
     await assert.rejects(
       (navigator.worktree_remove as any).execute({ directory: "/other" }, context()),
-      /not a managed OpenCode worktree/,
+      /not a managed OpenCode workspace/,
     );
     const activeClient = createClient({
       session: {
@@ -456,6 +496,37 @@ describe("Kompass Navigator", () => {
       context(),
     ));
     assert.deepEqual(output, { removed: true });
+  });
+
+  test("removes managed Rift workspaces through the workspace API", async () => {
+    const removes: any[] = [];
+    const client = createClient();
+    client.experimental = {
+      workspace: {
+        adapter: { list: async () => response([{ type: "rift" }]) },
+        syncList: async () => response(undefined),
+        list: async () => response([{
+          id: "wrk_rift",
+          type: "rift",
+          name: "parser-fix",
+          directory: "/repo-rift",
+          projectID: "project-1",
+        }]),
+        create: async () => response(undefined),
+        remove: async (args: any) => {
+          removes.push(args);
+          return response(undefined);
+        },
+      },
+    };
+
+    const output = JSON.parse(await (tools(client).worktree_remove as any).execute(
+      { directory: "/repo-rift" },
+      context(),
+    ));
+
+    assert.deepEqual(output, { removed: true });
+    assert.deepEqual(removes, [{ id: "wrk_rift", directory: "/repo" }]);
   });
 
   test("fails closed when active-session lookup fails during worktree removal", async () => {

@@ -80,6 +80,8 @@ Set `adapters.opencode.navigator.enabled` to `false` to disable all Navigator to
 
 Navigator accepts only sessions from the current OpenCode project and only worktrees returned by OpenCode. It rejects self-targeting lifecycle calls, arbitrary directories, main-checkout removal, unmanaged worktrees, and removal while a worktree has active sessions. `session_send` can switch the target session's agent or model before admitting a steered prompt when the detected OpenCode protocol supports it. `session_wait` defaults to `maxWaitMs`, caps requested timeouts at `maxWaitMs`, and treats `timeoutMs: 0` as an immediate snapshot. Navigator never force-removes or automatically cleans up resources after a partial failure.
 
+When OpenCode exposes experimental workspace adapters, Kompass registers a `rift` workspace adapter backed by its bundled `rift-snapshot` dependency. Navigator automatically uses that adapter for `new_worktree` sessions when no `startCommand` is requested, falling back to Git worktrees otherwise.
+
 ## Workspace
 
 This repository is the Kompass development workspace.

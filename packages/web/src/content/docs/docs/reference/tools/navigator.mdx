@@ -11,8 +11,8 @@ Navigator is enabled by default in the OpenCode adapter. Default runtime names u
 | `session_create` | Create a native session in the checkout, an existing worktree, or a newly created worktree and admit its first prompt asynchronously. |
 | `session_list` | List paginated sessions filtered to the current project. |
 | `session_read` | Read a bounded page of recent messages with optional tool outputs. |
-| `session_send` | Send a steered follow-up through the detected session API. |
-| `session_wait` | Poll the detected active-session API until the first of one to eight sessions becomes idle. A zero timeout returns an immediate snapshot. |
+| `session_send` | Send a steered follow-up through the detected session API, optionally switching agent or model first. |
+| `session_wait` | Poll the detected active-session API until the first of one to eight sessions becomes idle. The timeout defaults to and is capped by `maxWaitMs`; zero returns an immediate snapshot. |
 | `session_interrupt` | Interrupt another session's active execution. |
 | `worktree_remove` | Remove an idle native managed worktree without force. |
 

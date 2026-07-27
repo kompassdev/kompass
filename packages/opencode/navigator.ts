@@ -599,10 +599,15 @@ export function createNavigatorTools(
     }),
 
     session_send: tool({
-      description: "Steer a prompt for an existing current-project OpenCode session.",
+      description: "Steer a prompt for an existing current-project OpenCode session, optionally switching agent or model first.",
       args: {
         sessionID: tool.schema.string().min(1),
         prompt: tool.schema.string().min(1),
+        agent: tool.schema.string().min(1).optional(),
+        model: tool.schema.object({
+          providerID: tool.schema.string().min(1),
+          modelID: tool.schema.string().min(1),
+        }).optional(),
       },
       async execute(args, context) {
         assertNotCallingSession(args.sessionID, context, "send to");
@@ -610,10 +615,28 @@ export function createNavigatorTools(
         if (navigator.protocol === "v1") {
           const response = await navigator.legacyClient(session.location.directory).session.promptAsync({
             path: { id: args.sessionID },
-            body: { parts: [{ type: "text", text: args.prompt }] },
+            body: {
+              parts: [{ type: "text", text: args.prompt }],
+              ...(args.agent ? { agent: args.agent } : {}),
+              ...(args.model ? { model: args.model } : {}),
+            },
           });
           if (response.error !== undefined) failResponse(response.error, `OpenCode prompt admission for session ${args.sessionID}`);
           return json({ sessionID: args.sessionID, admitted: true });
+        }
+        if (args.agent) {
+          const response = await client.v2.session.switchAgent({
+            sessionID: args.sessionID,
+            agent: args.agent,
+          });
+          if (response.error !== undefined) failResponse(response.error, `OpenCode agent switch for session ${args.sessionID}`);
+        }
+        if (args.model) {
+          const response = await client.v2.session.switchModel({
+            sessionID: args.sessionID,
+            model: { providerID: args.model.providerID, id: args.model.modelID },
+          });
+          if (response.error !== undefined) failResponse(response.error, `OpenCode model switch for session ${args.sessionID}`);
         }
         const admitted = envelopeData(await client.v2.session.prompt({
           sessionID: args.sessionID,
@@ -746,7 +769,7 @@ export async function getNavigatorCompatibilityWarning(
   const v2Metadata = hasMethods(client.worktree, ["list"]) && hasMethods(client.v2?.session, ["list", "get"]);
   const compatible = protocol === "v1"
     ? v2Metadata && hasMethods(legacyClient?.session, ["create", "promptAsync", "status", "messages", "abort"])
-    : v2Metadata && hasMethods(client.v2.session, ["create", "messages", "prompt", "active", "interrupt"]);
+    : v2Metadata && hasMethods(client.v2.session, ["create", "messages", "prompt", "switchAgent", "switchModel", "active", "interrupt"]);
   if (!compatible) {
     return `Kompass Navigator requires OpenCode 1.17.12 or newer with ${protocol.toUpperCase()} session and worktree APIs`;
   }

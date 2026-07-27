@@ -43,6 +43,8 @@ function createClient(overrides: Record<string, any> = {}) {
         messages: async () => response({ data: [], cursor: {} }),
         create: async ({ location }: any) => response({ data: session("created", location.directory) }),
         prompt: async ({ sessionID }: any) => response({ data: { sessionID } }),
+        switchAgent: async () => response(undefined),
+        switchModel: async () => response(undefined),
         wait: async () => response(undefined),
         interrupt: async () => response(undefined),
       },
@@ -311,14 +313,24 @@ describe("Kompass Navigator", () => {
     );
   });
 
-  test("sends steer and interrupts through V2", async () => {
+  test("switches context, sends steer, and interrupts through V2", async () => {
     const prompts: any[] = [];
     const interrupts: any[] = [];
+    const agentSwitches: any[] = [];
+    const modelSwitches: any[] = [];
     const client = createClient({
       session: {
         prompt: async (args: any) => {
           prompts.push(args);
           return response({ data: { sessionID: args.sessionID } });
+        },
+        switchAgent: async (args: any) => {
+          agentSwitches.push(args);
+          return response(undefined);
+        },
+        switchModel: async (args: any) => {
+          modelSwitches.push(args);
+          return response(undefined);
         },
         interrupt: async (args: any) => {
           interrupts.push(args);
@@ -328,7 +340,12 @@ describe("Kompass Navigator", () => {
     });
     const navigator = tools(client);
     await (navigator.session_send as any).execute(
-      { sessionID: "session-1", prompt: "steer" },
+      {
+        sessionID: "session-1",
+        prompt: "steer",
+        agent: "worker",
+        model: { providerID: "openai", modelID: "gpt-5.5" },
+      },
       context(),
     );
     await (navigator.session_interrupt as any).execute(
@@ -336,6 +353,11 @@ describe("Kompass Navigator", () => {
       context(),
     );
 
+    assert.deepEqual(agentSwitches, [{ sessionID: "session-1", agent: "worker" }]);
+    assert.deepEqual(modelSwitches, [{
+      sessionID: "session-1",
+      model: { providerID: "openai", id: "gpt-5.5" },
+    }]);
     assert.equal(prompts[0].delivery, "steer");
     assert.deepEqual(interrupts, [{ sessionID: "session-1" }]);
   });

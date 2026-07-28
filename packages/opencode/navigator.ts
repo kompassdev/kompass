@@ -89,6 +89,8 @@ type NavigatorContext = {
 
 type NativeWorktree = { directory: string; name: string; branch?: string; id?: string; type: "worktree" | "rift" };
 
+const explicitNavigatorUse = "Use only when the user explicitly asks to create or manage native OpenCode sessions, worktrees, or a multi-session workflow. Do not use for subagent delegation; use the built-in task tool instead.";
+
 function failResponse(error: unknown, operation: string): never {
   const message = error instanceof Error
     ? error.message
@@ -106,6 +108,15 @@ function responseData<T>(response: { data?: T; error?: unknown }, operation: str
 
 function envelopeData<T>(response: { data?: { data: T }; error?: unknown }, operation: string): T {
   return responseData(response, operation).data;
+}
+
+async function assertKnownV2Agent(client: NavigatorClient, directory: string, agent: string) {
+  const agents = envelopeData<Array<{ id: string }>>(
+    await client.v2.agent.list({ location: { directory } }),
+    "OpenCode agent list",
+  );
+  if (agents.some((item) => item.id === agent)) return;
+  throw new Error(`Unknown OpenCode agent "${agent}". Available agents: ${agents.map((item) => item.id).join(", ")}`);
 }
 
 function normalizeDirectory(directory: string) {
@@ -471,7 +482,7 @@ export function createNavigatorTools(
   const { client, ...navigator } = input;
   return {
     worktree_list: tool({
-      description: "List the current OpenCode project checkout and its managed native worktrees.",
+      description: `${explicitNavigatorUse} List the current OpenCode project checkout and its managed native worktrees.`,
       args: {},
       async execute() {
         return json({
@@ -482,7 +493,7 @@ export function createNavigatorTools(
     }),
 
     session_create: tool({
-      description: "Create and asynchronously prompt a native OpenCode session in the checkout or a managed worktree.",
+      description: `${explicitNavigatorUse} Create and asynchronously prompt a native OpenCode session in the checkout or a managed worktree.`,
       args: {
         prompt: tool.schema.string().min(1),
         environment: tool.schema.discriminatedUnion("type", [
@@ -501,14 +512,29 @@ export function createNavigatorTools(
         model: tool.schema.object({
           providerID: tool.schema.string().min(1),
           modelID: tool.schema.string().min(1),
+          variant: tool.schema.string().min(1).optional(),
         }).optional(),
       },
-      async execute(args) {
+      async execute(args, context) {
         const active = await activeSessionIDs(client, navigator);
         const activeSessions = await Promise.all([...active].map((sessionID) => getSession(client, sessionID)));
         const activeOwnedCount = activeSessions.filter((session) => session.projectID === navigator.projectID).length;
         if (activeOwnedCount >= navigator.config.maxConcurrentSessions) {
           throw new Error(`Navigator allows at most ${navigator.config.maxConcurrentSessions} concurrent sessions`);
+        }
+
+        const caller = await getOwnedSession(client, navigator.projectID, context.sessionID).catch(() => undefined);
+        const selectedAgent = args.agent ?? caller?.agent;
+        const selectedModel = args.model ?? (caller?.model
+          ? {
+              providerID: caller.model.providerID,
+              modelID: caller.model.id,
+              ...(caller.model.variant ? { variant: caller.model.variant } : {}),
+            }
+          : undefined);
+
+        if (navigator.protocol === "v2" && selectedAgent) {
+          await assertKnownV2Agent(client, navigator.checkout, selectedAgent);
         }
 
         let directory = navigator.checkout;
@@ -567,8 +593,16 @@ export function createNavigatorTools(
               ) as { id: string; projectID: string }
             : envelopeData(
                 await client.v2.session.create({
-                  ...(args.agent ? { agent: args.agent } : {}),
-                  ...(args.model ? { model: { providerID: args.model.providerID, id: args.model.modelID } } : {}),
+                  ...(selectedAgent ? { agent: selectedAgent } : {}),
+                  ...(selectedModel
+                    ? {
+                        model: {
+                          providerID: selectedModel.providerID,
+                          id: selectedModel.modelID,
+                          ...(selectedModel.variant ? { variant: selectedModel.variant } : {}),
+                        },
+                      }
+                    : {}),
                   location: { directory },
                 }),
                 "OpenCode session create",
@@ -589,8 +623,13 @@ export function createNavigatorTools(
               path: { id: session.id },
               body: {
                 parts: [{ type: "text", text: args.prompt }],
-                ...(args.agent ? { agent: args.agent } : {}),
-                ...(args.model ? { model: args.model } : {}),
+                ...(selectedAgent ? { agent: selectedAgent } : {}),
+                ...(selectedModel
+                  ? {
+                      model: { providerID: selectedModel.providerID, modelID: selectedModel.modelID },
+                      ...(selectedModel.variant ? { variant: selectedModel.variant } : {}),
+                    }
+                  : {}),
               },
             });
             if (response.error !== undefined) failResponse(response.error, `OpenCode prompt admission for session ${session.id}`);
@@ -622,7 +661,7 @@ export function createNavigatorTools(
     }),
 
     session_list: tool({
-      description: "List native OpenCode sessions owned by the current project.",
+      description: `${explicitNavigatorUse} List native OpenCode sessions owned by the current project.`,
       args: {
         directory: tool.schema.string().optional(),
         search: tool.schema.string().optional(),
@@ -655,7 +694,7 @@ export function createNavigatorTools(
     }),
 
     session_read: tool({
-      description: "Read a bounded page of recent messages from a current-project OpenCode session.",
+      description: `${explicitNavigatorUse} Read a bounded page of recent messages from a current-project OpenCode session.`,
       args: {
         sessionID: tool.schema.string().min(1),
         cursor: tool.schema.string().optional(),
@@ -669,7 +708,7 @@ export function createNavigatorTools(
     }),
 
     session_send: tool({
-      description: "Steer a prompt for an existing current-project OpenCode session, optionally switching agent or model first.",
+      description: `${explicitNavigatorUse} Steer a prompt for an existing current-project OpenCode session, optionally switching agent or model first.`,
       args: {
         sessionID: tool.schema.string().min(1),
         prompt: tool.schema.string().min(1),
@@ -695,6 +734,7 @@ export function createNavigatorTools(
           return json({ sessionID: args.sessionID, admitted: true });
         }
         if (args.agent) {
+          await assertKnownV2Agent(client, session.location.directory, args.agent);
           const response = await client.v2.session.switchAgent({
             sessionID: args.sessionID,
             agent: args.agent,
@@ -718,7 +758,7 @@ export function createNavigatorTools(
     }),
 
     session_wait: tool({
-      description: "Wait for the first of one to eight current-project OpenCode sessions to become idle.",
+      description: `${explicitNavigatorUse} Wait for the first of one to eight current-project OpenCode sessions to become idle.`,
       args: {
         targets: tool.schema.array(tool.schema.object({ sessionID: tool.schema.string().min(1) })).min(1).max(8),
         timeoutMs: tool.schema.number().int().nonnegative().optional(),
@@ -762,7 +802,7 @@ export function createNavigatorTools(
     }),
 
     session_interrupt: tool({
-      description: "Interrupt active execution in a current-project OpenCode session.",
+      description: `${explicitNavigatorUse} Interrupt active execution in a current-project OpenCode session.`,
       args: { sessionID: tool.schema.string().min(1) },
       async execute(args, context) {
         assertNotCallingSession(args.sessionID, context, "interrupt");
@@ -776,7 +816,7 @@ export function createNavigatorTools(
     }),
 
     worktree_remove: tool({
-      description: "Remove an idle managed OpenCode worktree from the current project without force.",
+      description: `${explicitNavigatorUse} Remove an idle managed OpenCode worktree from the current project without force.`,
       args: { directory: tool.schema.string().min(1) },
       async execute(args) {
         if (sameDirectory(args.directory, navigator.checkout)) {
@@ -852,7 +892,9 @@ export async function getNavigatorCompatibilityWarning(
   protocol: NavigatorProtocol,
   legacyClient?: NavigatorLegacyClient,
 ) {
-  const v2Metadata = hasMethods(client.worktree, ["list"]) && hasMethods(client.v2?.session, ["list", "get"]);
+  const v2Metadata = hasMethods(client.worktree, ["list"])
+    && hasMethods(client.v2?.agent, ["list"])
+    && hasMethods(client.v2?.session, ["list", "get"]);
   const compatible = protocol === "v1"
     ? v2Metadata && hasMethods(legacyClient?.session, ["create", "promptAsync", "status", "messages", "abort"])
     : v2Metadata && hasMethods(client.v2.session, ["create", "messages", "prompt", "switchAgent", "switchModel", "active", "interrupt"]);

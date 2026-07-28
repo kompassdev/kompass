@@ -34,6 +34,9 @@ function createClient(overrides: Record<string, any> = {}) {
       remove: async () => response(true),
     },
     v2: {
+      agent: {
+        list: async () => response({ location: { directory: "/repo" }, data: [{ id: "build" }, { id: "reviewer" }, { id: "worker" }] }),
+      },
       session: {
         active: async () => response({ data: {} }),
         get: async ({ sessionID }: { sessionID: string }) => response({
@@ -59,6 +62,7 @@ function createClient(overrides: Record<string, any> = {}) {
   };
   for (const [key, value] of Object.entries(overrides)) {
     if (key === "worktree") Object.assign(client.worktree, value);
+    else if (key === "agent") Object.assign(client.v2.agent, value);
     else if (key === "session") Object.assign(client.v2.session, value);
     else if (key === "legacySession") Object.assign(client.session, value);
     else client[key] = value;
@@ -82,6 +86,14 @@ function context(sessionID = "caller", abort = new AbortController().signal) {
 }
 
 describe("Kompass Navigator", () => {
+  test("reserves Navigator tools for explicit native-session workflows", () => {
+    for (const definition of Object.values(tools())) {
+      assert.match(definition.description, /explicitly asks/);
+      assert.match(definition.description, /Do not use for subagent delegation/);
+      assert.match(definition.description, /built-in task tool/);
+    }
+  });
+
   test("matches Desktop protocol detection", async () => {
     const legacy = createClient({
       global: { health: async () => response({ healthy: true }) },
@@ -170,6 +182,58 @@ describe("Kompass Navigator", () => {
     assert.equal(output.directory, "/repo-worktree");
     assert.equal(creates[0].location.directory, "/repo-worktree");
     assert.equal(prompts[0].prompt.text, "implement it");
+  });
+
+  test("inherits the calling session agent, model, and variant", async () => {
+    const creates: any[] = [];
+    const client = createClient({
+      session: {
+        get: async ({ sessionID }: { sessionID: string }) => response({
+          data: {
+            ...session(sessionID),
+            agent: "reviewer",
+            model: { providerID: "openai", id: "gpt-5.6-sol", variant: "xhigh" },
+          },
+        }),
+        create: async (args: any) => {
+          creates.push(args);
+          return response({ data: session("created", args.location.directory) });
+        },
+      },
+    });
+
+    await (tools(client).session_create as any).execute({
+      prompt: "review it",
+      environment: { type: "checkout" },
+    }, context());
+
+    assert.equal(creates[0].agent, "reviewer");
+    assert.deepEqual(creates[0].model, {
+      providerID: "openai",
+      id: "gpt-5.6-sol",
+      variant: "xhigh",
+    });
+  });
+
+  test("rejects an unknown V2 agent before creating a worktree or session", async () => {
+    let worktreeCreates = 0;
+    let sessionCreates = 0;
+    const client = createClient({
+      agent: { list: async () => response({ location: { directory: "/repo" }, data: [{ id: "reviewer" }] }) },
+      worktree: { create: async () => { worktreeCreates += 1; return response({ directory: "/repo-new", name: "new" }); } },
+      session: { create: async () => { sessionCreates += 1; return response({ data: session("created") }); } },
+    });
+
+    await assert.rejects(
+      (tools(client).session_create as any).execute({
+        prompt: "review it",
+        agent: "review",
+        environment: { type: "new_worktree" },
+      }, context()),
+      /Unknown OpenCode agent "review".*reviewer/,
+    );
+    assert.equal(worktreeCreates, 0);
+    assert.equal(sessionCreates, 0);
   });
 
   test("uses one legacy transcript path when Desktop selects V1", async () => {
@@ -602,6 +666,13 @@ describe("Kompass Navigator", () => {
   });
 
   test("reports incompatible OpenCode runtime versions", async () => {
+    const missingAgentList = createClient();
+    delete missingAgentList.v2.agent.list;
+    assert.match(
+      await getNavigatorCompatibilityWarning(missingAgentList as never, "v2") ?? "",
+      /requires OpenCode 1\.17\.12 or newer/,
+    );
+
     const client = createClient({
       global: { health: async () => response({ version: "1.17.11" }) },
     });

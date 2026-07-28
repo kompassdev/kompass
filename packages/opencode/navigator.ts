@@ -87,7 +87,7 @@ type NavigatorContext = {
   legacyClient: (directory: string) => NavigatorLegacyClient;
 };
 
-type NativeWorktree = { directory: string; name: string; branch?: string; id?: string; type: "worktree" | "rift" };
+type NativeWorktree = { directory: string; name: string; branch?: string; id?: string; projectID?: string; type: "worktree" | "rift" };
 
 const explicitNavigatorUse = "Use only when the user explicitly asks to create or manage native OpenCode sessions, worktrees, or a multi-session workflow. Do not use for subagent delegation; use the built-in task tool instead.";
 
@@ -153,6 +153,7 @@ function normalizeRiftWorkspace(workspace: NativeWorkspace): NativeWorktree | un
     type: "rift",
     directory: workspace.directory,
     name: workspace.name || path.basename(workspace.directory),
+    ...(workspace.projectID ? { projectID: workspace.projectID } : {}),
     ...(workspace.branch ? { branch: workspace.branch } : {}),
   };
 }
@@ -179,7 +180,36 @@ async function listManagedWorktrees(client: NavigatorClient, checkout: string, p
   const worktrees = values.map(normalizeWorktree).filter((item) => !sameDirectory(item.directory, checkout));
   if (!projectID) return worktrees;
   const rifts = await listRiftWorkspaces(client, checkout, projectID).catch(() => []);
-  return [...worktrees, ...rifts];
+  const unique = new Map(worktrees.map((item) => [normalizeDirectory(item.directory), item]));
+  for (const rift of rifts) unique.set(normalizeDirectory(rift.directory), rift);
+  return [...unique.values()];
+}
+
+async function removeCreatedWorkspace(client: NavigatorClient, checkout: string, workspace: NativeWorktree) {
+  if (workspace.type === "rift") {
+    const api = workspaceApi(client);
+    if (!api?.workspace?.remove || !workspace.id) throw new Error("OpenCode Rift workspace removal is unavailable");
+    const response = await api.workspace.remove({ id: workspace.id, directory: checkout });
+    if (response.error !== undefined) failResponse(response.error, `OpenCode Rift workspace rollback for ${workspace.directory}`);
+    return;
+  }
+  responseData(await client.worktree.remove({
+    directory: checkout,
+    worktreeRemoveInput: { directory: workspace.directory },
+  }), `OpenCode worktree rollback for ${workspace.directory}`);
+}
+
+async function rollbackCreatedWorkspaces(client: NavigatorClient, checkout: string, workspaces: NativeWorktree[]) {
+  const unique = new Map(workspaces.map((item) => [normalizeDirectory(item.directory), item]));
+  const failures: string[] = [];
+  for (const workspace of unique.values()) {
+    try {
+      await removeCreatedWorkspace(client, checkout, workspace);
+    } catch (error) {
+      failures.push(`${workspace.directory}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  return failures;
 }
 
 async function activeSessionIDs(client: NavigatorClient, navigator: NavigatorContext) {
@@ -559,6 +589,11 @@ export function createNavigatorTools(
               const normalized = normalizeRiftWorkspace(workspace);
               if (!normalized) throw new Error("OpenCode Rift workspace create returned no directory");
               createdWorktree = normalized;
+              if (normalized.projectID && normalized.projectID !== navigator.projectID) {
+                throw new Error(
+                  `OpenCode registered workspace ${normalized.id} to project ${normalized.projectID}; expected ${navigator.projectID}`,
+                );
+              }
             } else {
               const worktree = responseData(
                 await client.worktree.create({
@@ -577,9 +612,15 @@ export function createNavigatorTools(
             const worktreesAfter = await listManagedWorktrees(client, navigator.checkout, navigator.projectID).catch(() => []);
             const before = new Set(worktreesBefore.map((item) => normalizeDirectory(item.directory)));
             const partial = worktreesAfter.filter((item) => !before.has(normalizeDirectory(item.directory)));
+            const created = createdWorktree ? [createdWorktree, ...partial] : partial;
+            const rollbackFailures = await rollbackCreatedWorkspaces(client, navigator.checkout, created);
             throw new Error(
               `Navigator could not create the requested workspace: ${error instanceof Error ? error.message : String(error)}` +
-              (partial.length ? `. Workspaces created and not removed: ${partial.map((item) => item.directory).join(", ")}` : ""),
+              (created.length
+                ? rollbackFailures.length
+                  ? `. Rollback failed for ${rollbackFailures.join("; ")}`
+                  : ". The partially created workspace was removed"
+                : ""),
             );
           }
         }
@@ -608,13 +649,30 @@ export function createNavigatorTools(
                 "OpenCode session create",
               );
         } catch (error) {
+          const rollbackFailures = createdWorktree
+            ? await rollbackCreatedWorkspaces(client, navigator.checkout, [createdWorktree])
+            : [];
           throw new Error(
             `Navigator session creation failed: ${error instanceof Error ? error.message : String(error)}` +
-            (createdWorktree ? `. Worktree created: ${createdWorktree.name} (${createdWorktree.directory}) and was not removed` : ""),
+            (createdWorktree
+              ? rollbackFailures.length
+                ? `. Workspace created at ${createdWorktree.directory}, but rollback failed: ${rollbackFailures.join("; ")}`
+                : `. Workspace ${createdWorktree.directory} was rolled back`
+              : ""),
           );
         }
         if (session.projectID !== navigator.projectID) {
-          throw new Error(`Created session ${session.id} belongs to an unexpected project; it was not prompted`);
+          const rollbackFailures = createdWorktree
+            ? await rollbackCreatedWorkspaces(client, navigator.checkout, [createdWorktree])
+            : [];
+          throw new Error(
+            `Created session ${session.id} belongs to project ${session.projectID}; expected ${navigator.projectID}. It was not prompted` +
+            (createdWorktree
+              ? rollbackFailures.length
+                ? `. Workspace rollback failed: ${rollbackFailures.join("; ")}`
+                : `. Workspace ${createdWorktree.directory} was rolled back`
+              : ""),
+          );
         }
 
         try {
@@ -654,7 +712,7 @@ export function createNavigatorTools(
           sessionID: session.id,
           directory,
           ...(createdWorktree
-            ? { worktree: { created: true, type: createdWorktree.type, name: createdWorktree.name, ...(createdWorktree.branch ? { branch: createdWorktree.branch } : {}) } }
+              ? { worktree: { created: true, type: createdWorktree.type, name: createdWorktree.name, ...(createdWorktree.id ? { id: createdWorktree.id } : {}), ...(createdWorktree.branch ? { branch: createdWorktree.branch } : {}) } }
             : {}),
         });
       },

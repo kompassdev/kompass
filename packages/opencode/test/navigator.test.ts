@@ -113,6 +113,34 @@ describe("Kompass Navigator", () => {
     assert.deepEqual(output.worktrees, [{ directory: "/repo-worktree", name: "repo-worktree", type: "worktree" }]);
   });
 
+  test("deduplicates native and Rift workspace entries by directory", async () => {
+    const client = createClient({ worktree: { list: async () => response(["/repo-shared"]) } });
+    client.experimental = {
+      workspace: {
+        adapter: { list: async () => response([{ type: "rift" }]) },
+        syncList: async () => response(undefined),
+        list: async () => response([{
+          id: "wrk_rift",
+          type: "rift",
+          name: "shared",
+          directory: "/repo-shared",
+          projectID: "project-1",
+        }]),
+        create: async () => response(undefined),
+        remove: async () => response(undefined),
+      },
+    };
+
+    const output = JSON.parse(await (tools(client).worktree_list as any).execute({}, context()));
+    assert.deepEqual(output.worktrees, [{
+      id: "wrk_rift",
+      projectID: "project-1",
+      type: "rift",
+      directory: "/repo-shared",
+      name: "shared",
+    }]);
+  });
+
   test("rejects foreign sessions", async () => {
     const client = createClient({
       session: { get: async () => response({ data: session("foreign", "/repo", "project-2") }) },
@@ -356,7 +384,7 @@ describe("Kompass Navigator", () => {
 
     assert.deepEqual(workspaceCreates, [{ directory: "/repo", type: "rift", extra: { name: "Parser Fix" } }]);
     assert.equal(sessionCreates[0].location.directory, "/repo-rift");
-    assert.deepEqual(output.worktree, { created: true, type: "rift", name: "parser-fix" });
+    assert.deepEqual(output.worktree, { created: true, type: "rift", name: "parser-fix", id: "wrk_rift" });
   });
 
   test("reports resources created before a prompt failure", async () => {
@@ -371,14 +399,19 @@ describe("Kompass Navigator", () => {
   });
 
   test("reports a worktree created before a session failure", async () => {
-    const client = createClient({ session: { create: async () => { throw new Error("create failed"); } } });
+    const removes: any[] = [];
+    const client = createClient({
+      worktree: { remove: async (args: any) => { removes.push(args); return response(true); } },
+      session: { create: async () => { throw new Error("create failed"); } },
+    });
     await assert.rejects(
       (tools(client).session_create as any).execute({
         prompt: "implement it",
         environment: { type: "new_worktree" },
       }, context()),
-      /Worktree created: new \(\/repo-new\).*was not removed/,
+      /Workspace \/repo-new was rolled back/,
     );
+    assert.equal(removes[0].worktreeRemoveInput.directory, "/repo-new");
   });
 
   test("discovers a worktree left behind by a failed native create", async () => {
@@ -397,8 +430,42 @@ describe("Kompass Navigator", () => {
         prompt: "implement it",
         environment: { type: "new_worktree", startCommand: "false" },
       }, context()),
-      /Workspaces created and not removed: \/repo-partial/,
+      /partially created workspace was removed/,
     );
+  });
+
+  test("rejects a foreign Rift workspace before creating a session and rolls it back", async () => {
+    const removes: any[] = [];
+    let sessionCreates = 0;
+    const client = createClient({
+      worktree: { list: async () => response([]) },
+      session: { create: async () => { sessionCreates += 1; return response({ data: session("created") }); } },
+    });
+    client.experimental = {
+      workspace: {
+        adapter: { list: async () => response([{ type: "rift" }]) },
+        syncList: async () => response(undefined),
+        list: async () => response([]),
+        create: async () => response({
+          id: "wrk_foreign",
+          type: "rift",
+          name: "foreign",
+          directory: "/repo-foreign",
+          projectID: "project-2",
+        }),
+        remove: async (args: any) => { removes.push(args); return response(undefined); },
+      },
+    };
+
+    await assert.rejects(
+      (tools(client).session_create as any).execute({
+        prompt: "implement it",
+        environment: { type: "new_worktree" },
+      }, context()),
+      /registered workspace wrk_foreign to project project-2; expected project-1.*partially created workspace was removed/,
+    );
+    assert.equal(sessionCreates, 0);
+    assert.deepEqual(removes, [{ id: "wrk_foreign", directory: "/repo" }]);
   });
 
   test("rejects self send, wait, and interrupt", async () => {

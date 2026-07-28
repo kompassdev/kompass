@@ -215,22 +215,25 @@ describe("Kompass Navigator", () => {
     });
   });
 
-  test("rejects an unknown V2 agent before creating a session", async () => {
-    let creates = 0;
+  test("rejects an unknown V2 agent before creating a worktree or session", async () => {
+    let worktreeCreates = 0;
+    let sessionCreates = 0;
     const client = createClient({
       agent: { list: async () => response({ location: { directory: "/repo" }, data: [{ id: "reviewer" }] }) },
-      session: { create: async () => { creates += 1; return response({ data: session("created") }); } },
+      worktree: { create: async () => { worktreeCreates += 1; return response({ directory: "/repo-new", name: "new" }); } },
+      session: { create: async () => { sessionCreates += 1; return response({ data: session("created") }); } },
     });
 
     await assert.rejects(
       (tools(client).session_create as any).execute({
         prompt: "review it",
         agent: "review",
-        environment: { type: "checkout" },
+        environment: { type: "new_worktree" },
       }, context()),
       /Unknown OpenCode agent "review".*reviewer/,
     );
-    assert.equal(creates, 0);
+    assert.equal(worktreeCreates, 0);
+    assert.equal(sessionCreates, 0);
   });
 
   test("uses one legacy transcript path when Desktop selects V1", async () => {
@@ -663,6 +666,13 @@ describe("Kompass Navigator", () => {
   });
 
   test("reports incompatible OpenCode runtime versions", async () => {
+    const missingAgentList = createClient();
+    delete missingAgentList.v2.agent.list;
+    assert.match(
+      await getNavigatorCompatibilityWarning(missingAgentList as never, "v2") ?? "",
+      /requires OpenCode 1\.17\.12 or newer/,
+    );
+
     const client = createClient({
       global: { health: async () => response({ version: "1.17.11" }) },
     });

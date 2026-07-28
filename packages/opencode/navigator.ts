@@ -523,6 +523,20 @@ export function createNavigatorTools(
           throw new Error(`Navigator allows at most ${navigator.config.maxConcurrentSessions} concurrent sessions`);
         }
 
+        const caller = await getOwnedSession(client, navigator.projectID, context.sessionID).catch(() => undefined);
+        const selectedAgent = args.agent ?? caller?.agent;
+        const selectedModel = args.model ?? (caller?.model
+          ? {
+              providerID: caller.model.providerID,
+              modelID: caller.model.id,
+              ...(caller.model.variant ? { variant: caller.model.variant } : {}),
+            }
+          : undefined);
+
+        if (navigator.protocol === "v2" && selectedAgent) {
+          await assertKnownV2Agent(client, navigator.checkout, selectedAgent);
+        }
+
         let directory = navigator.checkout;
         let createdWorktree: NativeWorktree | undefined;
         if (args.environment.type === "existing_worktree") {
@@ -568,20 +582,6 @@ export function createNavigatorTools(
               (partial.length ? `. Workspaces created and not removed: ${partial.map((item) => item.directory).join(", ")}` : ""),
             );
           }
-        }
-
-        const caller = await getOwnedSession(client, navigator.projectID, context.sessionID).catch(() => undefined);
-        const selectedAgent = args.agent ?? caller?.agent;
-        const selectedModel = args.model ?? (caller?.model
-          ? {
-              providerID: caller.model.providerID,
-              modelID: caller.model.id,
-              ...(caller.model.variant ? { variant: caller.model.variant } : {}),
-            }
-          : undefined);
-
-        if (navigator.protocol === "v2" && selectedAgent) {
-          await assertKnownV2Agent(client, directory, selectedAgent);
         }
 
         let session: SessionV2Info | { id: string; projectID: string };
@@ -892,7 +892,9 @@ export async function getNavigatorCompatibilityWarning(
   protocol: NavigatorProtocol,
   legacyClient?: NavigatorLegacyClient,
 ) {
-  const v2Metadata = hasMethods(client.worktree, ["list"]) && hasMethods(client.v2?.session, ["list", "get"]);
+  const v2Metadata = hasMethods(client.worktree, ["list"])
+    && hasMethods(client.v2?.agent, ["list"])
+    && hasMethods(client.v2?.session, ["list", "get"]);
   const compatible = protocol === "v1"
     ? v2Metadata && hasMethods(legacyClient?.session, ["create", "promptAsync", "status", "messages", "abort"])
     : v2Metadata && hasMethods(client.v2.session, ["create", "messages", "prompt", "switchAgent", "switchModel", "active", "interrupt"]);

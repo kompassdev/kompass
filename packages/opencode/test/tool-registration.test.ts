@@ -176,6 +176,29 @@ describe("createOpenCodeTools", () => {
     });
   });
 
+  test("Rift workspace adapter removes a snapshot created at an unexpected path", async () => {
+    const removed: string[] = [];
+    const sourceDirectory = path.join(os.tmpdir(), "kompass-rift-source");
+    const adapter = createRiftWorkspaceAdapter({
+      init: () => null,
+      create: () => path.join(os.tmpdir(), "unexpected-rift"),
+      remove: ({ at } = {}) => { if (at) removed.push(at); },
+      list: () => [],
+    }, { sourceDirectory, projectID: "project-1" });
+    const configured = await adapter.configure({
+      id: "wrk_1",
+      type: "rift",
+      name: "Parser Fix",
+      branch: null,
+      directory: null,
+      extra: null,
+      projectID: "project-1",
+    });
+
+    await assert.rejects(adapter.create(configured, {}), /created Rift was removed/);
+    assert.deepEqual(removed, [path.join(os.tmpdir(), "unexpected-rift")]);
+  });
+
   test("registers Navigator by default", async () => {
     await withTempHome(async () => {
       const navigatorClient = {

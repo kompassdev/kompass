@@ -36,7 +36,7 @@ type RiftAdapterOptions = {
 
 type ExperimentalWorkspaceInput = {
   experimental_workspace?: { register(type: string, adapter: WorkspaceAdapter): void };
-  project?: { id?: string };
+  project?: { id?: string; path?: string };
   worktree?: string;
   directory?: string;
 };
@@ -103,7 +103,14 @@ export function createRiftWorkspaceAdapter(rift: RiftModule, options: RiftAdapte
         copyAll: true,
       }));
       if (created !== expected) {
-        throw new Error(`Rift created ${created}, but OpenCode registered ${expected}`);
+        try {
+          rift.remove({ at: created });
+        } catch (error) {
+          throw new Error(
+            `Rift created ${created}, but OpenCode registered ${expected}. Rollback failed: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+        throw new Error(`Rift created ${created}, but OpenCode registered ${expected}. The created Rift was removed`);
       }
     },
     list() {
@@ -129,7 +136,9 @@ export function createRiftWorkspaceAdapter(rift: RiftModule, options: RiftAdapte
 export async function registerRiftWorkspaceAdapter(input: ExperimentalWorkspaceInput, logger: Logger) {
   const registrar = input.experimental_workspace;
   const projectID = input.project?.id;
-  const sourceDirectory = input.worktree ?? input.directory;
+  // A plugin loaded inside a managed workspace still belongs to the stable project checkout.
+  // Using input.worktree here would recursively nest new Rifts below the current Rift.
+  const sourceDirectory = input.project?.path ?? input.directory ?? input.worktree;
   if (!registrar || !projectID || !sourceDirectory) return;
 
   let rift: RiftModule;

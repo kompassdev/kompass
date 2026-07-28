@@ -54,7 +54,7 @@ The recommended project override path is `.opencode/kompass.jsonc`.
 
 ## Kompass Navigator
 
-Navigator is an OpenCode capability for orchestrating native sessions in the current checkout and OpenCode-managed Git worktrees. It is enabled by default, follows OpenCode Desktop's protocol detection so session creation, prompts, reads, status, and interrupts stay on one compatible API, returns immediately after admitting prompts, and supports parallel sessions. Until OpenCode implements V2 wait, Navigator waits by polling the active-session API locally. It requires OpenCode `1.17.12` or newer.
+Navigator is an OpenCode capability for explicitly requested orchestration of native sessions in the current checkout and OpenCode-managed Git worktrees. It is not a subagent mechanism; ordinary delegation should use OpenCode's built-in `task` tool. Navigator is enabled by default, follows OpenCode Desktop's protocol detection so session creation, prompts, reads, status, and interrupts stay on one compatible API, returns immediately after admitting prompts, and supports parallel sessions. Until OpenCode implements V2 wait, Navigator waits by polling the active-session API locally. It requires OpenCode `1.17.12` or newer.
 
 Configure Navigator and its limits with:
 
@@ -78,7 +78,7 @@ The default runtime names are `kompass_worktree_list`, `kompass_session_create`,
 
 Set `adapters.opencode.navigator.enabled` to `false` to disable all Navigator tools.
 
-Navigator accepts only sessions from the current OpenCode project and only worktrees returned by OpenCode. It rejects self-targeting lifecycle calls, arbitrary directories, main-checkout removal, unmanaged worktrees, and removal while a worktree has active sessions. `session_send` can switch the target session's agent or model before admitting a steered prompt when the detected OpenCode protocol supports it. `session_wait` defaults to `maxWaitMs`, caps requested timeouts at `maxWaitMs`, and treats `timeoutMs: 0` as an immediate snapshot. Navigator never force-removes or automatically cleans up resources after a partial failure.
+Navigator accepts only sessions from the current OpenCode project and only worktrees returned by OpenCode. New sessions inherit the calling session's agent, model, and variant unless explicitly overridden. It rejects self-targeting lifecycle calls, arbitrary directories, unknown V2 agent overrides, main-checkout removal, unmanaged worktrees, and removal while a worktree has active sessions. `session_send` can switch the target session's agent or model before admitting a steered prompt when the detected OpenCode protocol supports it. `session_wait` defaults to `maxWaitMs`, caps requested timeouts at `maxWaitMs`, and treats `timeoutMs: 0` as an immediate snapshot. Navigator never force-removes or automatically cleans up resources after a partial failure.
 
 When OpenCode exposes experimental workspace adapters, Kompass registers a `rift` workspace adapter backed by its bundled `rift-snapshot` dependency. Navigator automatically uses that adapter for `new_worktree` sessions when no `startCommand` is requested, falling back to Git worktrees otherwise.
 

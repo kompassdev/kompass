@@ -3,12 +3,12 @@ title: Kompass Navigator
 description: Native OpenCode session and managed-worktree orchestration tools.
 ---
 
-Navigator is enabled by default in the OpenCode adapter. Default runtime names use the `kompass_` prefix; set `adapters.opencode.navigator.enabled` to `false` to disable all eight tools.
+Navigator is enabled by default in the OpenCode adapter. Use it only when the user explicitly requests native-session, managed-worktree, or multi-session workflow orchestration. Do not use it for subagent delegation: OpenCode's built-in `task` tool creates child sessions, waits for foreground tasks, and reports background completion automatically. Default runtime names use the `kompass_` prefix; set `adapters.opencode.navigator.enabled` to `false` to disable all eight tools.
 
 | Logical tool | Purpose |
 | --- | --- |
 | `worktree_list` | List the checkout and native managed worktrees. |
-| `session_create` | Create a native session in the checkout, an existing managed workspace, or a newly created workspace and admit its first prompt asynchronously. New workspaces prefer Rift when available. |
+| `session_create` | Create a native session in the checkout, an existing managed workspace, or a newly created workspace, inheriting the caller's agent, model, and variant unless overridden, and admit its first prompt asynchronously. New workspaces prefer Rift when available. |
 | `session_list` | List paginated sessions filtered to the current project. |
 | `session_read` | Read a bounded page of recent messages with optional tool outputs. |
 | `session_send` | Send a steered follow-up through the detected session API, optionally switching agent or model first. |
@@ -23,6 +23,7 @@ Navigator is enabled by default in the OpenCode adapter. Default runtime names u
 - Send, wait, and interrupt reject the calling session.
 - Reads default to ten recent messages, exclude tool outputs, and enforce configured per-item and total character limits.
 - Navigator uses the same V1-or-V2 protocol choice as OpenCode Desktop so created sessions remain visible there.
+- V2 create and send operations reject unknown agent names before admitting a prompt.
 - Worktree removal rejects the main checkout, unmanaged worktrees, and worktrees containing active sessions.
 - Partial creation errors identify resources already created and never automatically delete them.
 

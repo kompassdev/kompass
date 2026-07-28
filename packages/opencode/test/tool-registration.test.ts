@@ -225,7 +225,7 @@ describe("createOpenCodeTools", () => {
         await mkdir(path.join(tempDir, ".opencode"), { recursive: true });
         await writeFile(path.join(tempDir, ".opencode", "kompass.jsonc"), `{
           "tools": {
-            "session_create": { "name": "delegate_session" },
+            "session_create": { "name": "start_workflow_session" },
             "session_interrupt": { "enabled": false }
           }
         }`);
@@ -243,7 +243,7 @@ describe("createOpenCodeTools", () => {
         });
 
         assert.ok(tools.kompass_worktree_list);
-        assert.ok(tools.delegate_session);
+        assert.ok(tools.start_workflow_session);
         assert.ok(tools.kompass_session_list);
         assert.ok(tools.kompass_session_read);
         assert.ok(tools.kompass_session_send);

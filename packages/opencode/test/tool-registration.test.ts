@@ -7,7 +7,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 
 import { createOpenCodeTools, OpenCodeCompassPlugin } from "../index.ts";
-import { createRiftWorkspaceAdapter } from "../rift-workspace.ts";
+import { createRiftWorkspaceAdapter, resolveRiftSourceDirectory } from "../rift-workspace.ts";
 
 const execFileAsync = promisify(execFile);
 
@@ -145,7 +145,9 @@ describe("createOpenCodeTools", () => {
       },
       list: (options) => {
         calls.push({ name: "list", options });
-        return [path.join(path.dirname(sourceDirectory), ".rifts", path.basename(sourceDirectory), "parser-fix")];
+        return calls.filter((call) => call.name === "list").length === 1
+          ? []
+          : [path.join(path.dirname(sourceDirectory), ".rifts", path.basename(sourceDirectory), "parser-fix")];
       },
     }, { sourceDirectory, projectID: "project-1" });
 
@@ -168,7 +170,7 @@ describe("createOpenCodeTools", () => {
     assert.deepEqual(target, { type: "local", directory: configured.directory });
     assert.equal(listed?.[0]?.type, "rift");
     assert.equal(listed?.[0]?.projectID, "project-1");
-    assert.deepEqual(calls.map((call) => call.name), ["init", "create", "list", "remove"]);
+    assert.deepEqual(calls.map((call) => call.name), ["list", "init", "create", "list", "remove"]);
     assert.deepEqual(calls.find((call) => call.name === "create")?.options, {
       from: sourceDirectory,
       name: "parser-fix",
@@ -197,6 +199,36 @@ describe("createOpenCodeTools", () => {
 
     await assert.rejects(adapter.create(configured, {}), /created Rift was removed/);
     assert.deepEqual(removed, [path.join(os.tmpdir(), "unexpected-rift")]);
+  });
+
+  test("Rift workspace adapter suffixes a registered workspace name", async () => {
+    const sourceDirectory = path.join(os.tmpdir(), "kompass-rift-source");
+    const existing = path.join(path.dirname(sourceDirectory), ".rifts", path.basename(sourceDirectory), "parser-fix");
+    const adapter = createRiftWorkspaceAdapter({
+      init: () => null,
+      create: () => "",
+      remove: () => undefined,
+      list: () => [existing],
+    }, { sourceDirectory, projectID: "project-1" });
+    const configured = await adapter.configure({
+      id: "wrk_1",
+      type: "rift",
+      name: "Parser Fix",
+      branch: null,
+      directory: null,
+      extra: null,
+      projectID: "project-1",
+    });
+
+    assert.equal(configured.name, "parser-fix-2");
+    assert.equal(configured.directory, `${existing}-2`);
+  });
+
+  test("Rift source resolution unwraps a removed managed workspace", () => {
+    assert.equal(
+      resolveRiftSourceDirectory("/projects/.rifts/repo/removed-workspace"),
+      "/projects/repo",
+    );
   });
 
   test("registers Navigator by default", async () => {

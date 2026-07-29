@@ -36,7 +36,7 @@ type RiftAdapterOptions = {
 
 type ExperimentalWorkspaceInput = {
   experimental_workspace?: { register(type: string, adapter: WorkspaceAdapter): void };
-  project?: { id?: string; path?: string };
+  project?: { id?: string; worktree?: string };
   worktree?: string;
   directory?: string;
 };
@@ -70,6 +70,28 @@ function workspaceDirectory(sourceDirectory: string, name: string) {
   return path.join(managedRoot(sourceDirectory), name);
 }
 
+function availableWorkspaceName(rift: RiftModule, sourceDirectory: string, requested: string) {
+  let existing: Set<string>;
+  try {
+    existing = new Set(rift.list({ of: sourceDirectory }).map((directory) => path.basename(directory)));
+  } catch {
+    return requested;
+  }
+  if (!existing.has(requested)) return requested;
+  let suffix = 2;
+  while (existing.has(`${requested}-${suffix}`)) suffix += 1;
+  return `${requested}-${suffix}`;
+}
+
+export function resolveRiftSourceDirectory(directory: string) {
+  const resolved = path.resolve(directory);
+  const marker = `${path.sep}.rifts${path.sep}`;
+  const markerIndex = resolved.indexOf(marker);
+  if (markerIndex < 0) return resolved;
+  const namespace = resolved.slice(markerIndex + marker.length).split(path.sep)[0];
+  return namespace ? path.join(resolved.slice(0, markerIndex), namespace) : resolved;
+}
+
 function requireDirectory(config: WorkspaceInfo) {
   if (!config.directory) throw new Error("Rift workspace is missing a directory");
   return config.directory;
@@ -82,7 +104,7 @@ export function createRiftWorkspaceAdapter(rift: RiftModule, options: RiftAdapte
     name: "Rift",
     description: "Create a copy-on-write Rift workspace",
     configure(config) {
-      const name = workspaceName(config);
+      const name = availableWorkspaceName(rift, sourceDirectory, workspaceName(config));
       return {
         ...config,
         type: "rift",
@@ -136,10 +158,11 @@ export function createRiftWorkspaceAdapter(rift: RiftModule, options: RiftAdapte
 export async function registerRiftWorkspaceAdapter(input: ExperimentalWorkspaceInput, logger: Logger) {
   const registrar = input.experimental_workspace;
   const projectID = input.project?.id;
-  // A plugin loaded inside a managed workspace still belongs to the stable project checkout.
-  // Using input.worktree here would recursively nest new Rifts below the current Rift.
-  const sourceDirectory = input.project?.path ?? input.directory ?? input.worktree;
-  if (!registrar || !projectID || !sourceDirectory) return;
+  // Plugin directory/worktree values may identify a managed workspace. The project's
+  // worktree is OpenCode's canonical checkout and remains stable across workspaces.
+  const sourceCandidate = input.project?.worktree ?? input.directory ?? input.worktree;
+  if (!registrar || !projectID || !sourceCandidate) return;
+  const sourceDirectory = resolveRiftSourceDirectory(sourceCandidate);
 
   let rift: RiftModule;
   try {

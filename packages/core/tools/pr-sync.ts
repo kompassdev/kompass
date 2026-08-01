@@ -36,6 +36,8 @@ type PrSyncArgs = {
   base?: string;
   head?: string;
   labels?: string[];
+  removeLabels?: string[];
+  replaceLabels?: string[];
   assignees?: string[];
   checklists?: Array<{
     name: string;
@@ -97,6 +99,8 @@ function hasMetadataUpdate(args: PrSyncArgs, body?: string) {
       body ||
       args.base?.trim() ||
       collectLabels(args.labels).length > 0 ||
+      collectLabels(args.removeLabels).length > 0 ||
+      args.replaceLabels !== undefined ||
       collectAssignees(args.assignees).length > 0,
   );
 }
@@ -332,7 +336,14 @@ async function updatePullRequest(
   $: Shell,
   worktree: string,
   refUrl: string,
-  args: { title?: string; body?: string; base?: string; labels?: string[]; assignees?: string[] },
+  args: {
+    title?: string;
+    body?: string;
+    base?: string;
+    labels?: string[];
+    removeLabels?: string[];
+    assignees?: string[];
+  },
 ) {
   const updateArgs: string[] = [];
   if (args.title?.trim()) {
@@ -346,6 +357,9 @@ async function updatePullRequest(
   }
   for (const label of collectLabels(args.labels)) {
     updateArgs.push("--add-label", label);
+  }
+  for (const label of collectLabels(args.removeLabels)) {
+    updateArgs.push("--remove-label", label);
   }
   for (const assignee of collectAssignees(args.assignees)) {
     updateArgs.push("--add-assignee", assignee);
@@ -365,6 +379,25 @@ async function updatePullRequest(
   }
 
   return true;
+}
+
+async function replacePullRequestLabels(
+  $: Shell,
+  worktree: string,
+  owner: string,
+  repo: string,
+  prNumber: number,
+  labels: string[],
+) {
+  const payload = JSON.stringify({ labels: collectLabels(labels) });
+  const proc = await $`echo ${payload} | gh api --method PUT /repos/${owner}/${repo}/issues/${prNumber}/labels --input -`
+    .cwd(worktree)
+    .quiet()
+    .nothrow();
+
+  if (proc.exitCode !== 0) {
+    throw new Error(proc.stderr.toString() || "Failed to replace PR labels");
+  }
 }
 
 function summarizeActions(actions: string[]) {
@@ -403,7 +436,17 @@ export function createPrSyncTool($: Shell) {
       labels: {
         type: "string[]",
         optional: true,
-        description: "Labels to apply to the PR",
+        description: "Labels to add to the PR",
+      },
+      removeLabels: {
+        type: "string[]",
+        optional: true,
+        description: "Labels to remove from an existing PR",
+      },
+      replaceLabels: {
+        type: "string[]",
+        optional: true,
+        description: "Exact label set for the PR; an empty array clears all labels",
       },
       assignees: {
         type: "string[]",
@@ -452,6 +495,17 @@ export function createPrSyncTool($: Shell) {
       const metadataUpdate = hasMetadataUpdate(args, body);
       const existingPrActions = requiresExistingPullRequest(args, review);
 
+      if (
+        args.replaceLabels !== undefined &&
+        (args.labels !== undefined || args.removeLabels !== undefined)
+      ) {
+        throw new Error("pr_sync replaceLabels cannot be combined with labels or removeLabels");
+      }
+
+      if (!args.refUrl?.trim() && collectLabels(args.removeLabels).length > 0) {
+        throw new Error("pr_sync removeLabels requires refUrl");
+      }
+
       if (!args.refUrl?.trim() && existingPrActions && metadataUpdate) {
         throw new Error("pr_sync requires refUrl when combining PR updates with review, comment, or reply actions");
       }
@@ -476,7 +530,7 @@ export function createPrSyncTool($: Shell) {
         for (const assignee of collectAssignees(args.assignees)) {
           createArgs.push("--assignee", assignee);
         }
-        for (const label of collectLabels(args.labels)) {
+        for (const label of collectLabels(args.replaceLabels ?? args.labels)) {
           createArgs.push("--label", label);
         }
         if (args.draft) {
@@ -514,9 +568,21 @@ export function createPrSyncTool($: Shell) {
           body,
           base: args.base,
           labels: args.labels,
+          removeLabels: args.removeLabels,
           assignees: args.assignees,
         });
-        if (updated) {
+        if (args.replaceLabels !== undefined) {
+          const { owner, repoName } = await getRepoContext();
+          await replacePullRequestLabels(
+            $,
+            ctx.worktree,
+            owner,
+            repoName,
+            target.number,
+            args.replaceLabels,
+          );
+        }
+        if (updated || args.replaceLabels !== undefined) {
           actions.push("updated");
         }
       }
@@ -557,7 +623,7 @@ export function createPrSyncTool($: Shell) {
 
       if (actions.length === 0) {
         throw new Error(
-          "pr_sync requires title, body, description, checklist content, labels, assignees, review, commentBody, or replies",
+          "pr_sync requires title, body, description, checklist content, label changes, assignees, review, commentBody, or replies",
         );
       }
 

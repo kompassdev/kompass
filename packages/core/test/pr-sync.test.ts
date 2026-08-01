@@ -139,6 +139,73 @@ describe("pr_sync", () => {
     assert.match(executedCommands[1], /--add-assignee octocat/);
   });
 
+  test("removes labels from an existing PR", async () => {
+    const executedCommands: string[] = [];
+    const shell = createMockShell(executedCommands, [
+      {
+        contains: "gh pr view https://github.com/acme/repo/pull/9 --json number,url",
+        stdout: JSON.stringify({ number: 9, url: "https://github.com/acme/repo/pull/9" }),
+      },
+      {
+        contains: "gh pr edit https://github.com/acme/repo/pull/9",
+        stdout: "",
+      },
+    ]);
+
+    const tool = createPrSyncTool(shell);
+    const output = await tool.execute({
+      refUrl: "https://github.com/acme/repo/pull/9",
+      removeLabels: ["blocked", "needs review"],
+    }, createToolContextForDirectory("/tmp/repo"));
+
+    const result = JSON.parse(output);
+    assert.equal(result.action, "updated");
+    assert.match(executedCommands[1], /--remove-label blocked/);
+    assert.match(executedCommands[1], /--remove-label needs review/);
+  });
+
+  test("replaces the complete label set on an existing PR", async () => {
+    const executedCommands: string[] = [];
+    const shell = createMockShell(executedCommands, [
+      {
+        contains: "gh pr view https://github.com/acme/repo/pull/9 --json number,url",
+        stdout: JSON.stringify({ number: 9, url: "https://github.com/acme/repo/pull/9" }),
+      },
+      {
+        contains: "gh repo view --json nameWithOwner",
+        stdout: JSON.stringify({ nameWithOwner: "acme/repo" }),
+      },
+      {
+        contains: "/repos/acme/repo/issues/9/labels --input -",
+        stdout: JSON.stringify([]),
+      },
+    ]);
+
+    const tool = createPrSyncTool(shell);
+    const output = await tool.execute({
+      refUrl: "https://github.com/acme/repo/pull/9",
+      replaceLabels: [],
+    }, createToolContextForDirectory("/tmp/repo"));
+
+    const result = JSON.parse(output);
+    assert.equal(result.action, "updated");
+    assert.match(executedCommands[2], /--method PUT/);
+    assert.match(executedCommands[2], /"labels":\[\]/);
+  });
+
+  test("rejects replacing and incrementally changing labels together", async () => {
+    const tool = createPrSyncTool(createMockShell([], []));
+
+    await assert.rejects(
+      tool.execute({
+        refUrl: "https://github.com/acme/repo/pull/9",
+        labels: ["enhancement"],
+        replaceLabels: ["ready"],
+      }, createToolContextForDirectory("/tmp/repo")),
+      /replaceLabels cannot be combined with labels or removeLabels/,
+    );
+  });
+
   test("submits structured review comments through pr_sync", async () => {
     const executedCommands: string[] = [];
     const shell = createMockShell(executedCommands, [

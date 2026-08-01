@@ -462,6 +462,8 @@ describe("createOpenCodeTools", () => {
       const prSyncArgs = (tools.kompass_pr_sync as any).args;
       const ticketSyncArgs = (tools.kompass_ticket_sync as any).args;
       assert.ok(prSyncArgs.labels);
+      assert.ok(prSyncArgs.removeLabels);
+      assert.ok(prSyncArgs.replaceLabels);
       assert.ok(prSyncArgs.assignees);
       assert.ok(ticketSyncArgs.assignees);
       assert.ok(ticketSyncArgs.comments);

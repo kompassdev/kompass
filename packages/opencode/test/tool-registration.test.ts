@@ -455,12 +455,13 @@ describe("createOpenCodeTools", () => {
     });
   });
 
-  test("exposes ticket assignees and comments, and PR assignees", async () => {
+  test("exposes ticket assignees and comments, and PR labels and assignees", async () => {
     await withTempHome(async () => {
       const tools = await createOpenCodeTools(createMockClient() as never, process.cwd());
 
       const prSyncArgs = (tools.kompass_pr_sync as any).args;
       const ticketSyncArgs = (tools.kompass_ticket_sync as any).args;
+      assert.ok(prSyncArgs.labels);
       assert.ok(prSyncArgs.assignees);
       assert.ok(ticketSyncArgs.assignees);
       assert.ok(ticketSyncArgs.comments);

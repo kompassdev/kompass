@@ -35,6 +35,7 @@ type PrSyncArgs = {
   description?: string;
   base?: string;
   head?: string;
+  labels?: string[];
   assignees?: string[];
   checklists?: Array<{
     name: string;
@@ -95,8 +96,15 @@ function hasMetadataUpdate(args: PrSyncArgs, body?: string) {
     args.title?.trim() ||
       body ||
       args.base?.trim() ||
+      collectLabels(args.labels).length > 0 ||
       collectAssignees(args.assignees).length > 0,
   );
+}
+
+function collectLabels(labels?: string[]): string[] {
+  return (labels ?? [])
+    .filter((label) => label.trim())
+    .map((label) => label.trim());
 }
 
 function collectAssignees(assignees?: string[]): string[] {
@@ -324,7 +332,7 @@ async function updatePullRequest(
   $: Shell,
   worktree: string,
   refUrl: string,
-  args: { title?: string; body?: string; base?: string; assignees?: string[] },
+  args: { title?: string; body?: string; base?: string; labels?: string[]; assignees?: string[] },
 ) {
   const updateArgs: string[] = [];
   if (args.title?.trim()) {
@@ -335,6 +343,9 @@ async function updatePullRequest(
   }
   if (args.base?.trim()) {
     updateArgs.push("--base", args.base.trim());
+  }
+  for (const label of collectLabels(args.labels)) {
+    updateArgs.push("--add-label", label);
   }
   for (const assignee of collectAssignees(args.assignees)) {
     updateArgs.push("--add-assignee", assignee);
@@ -388,6 +399,11 @@ export function createPrSyncTool($: Shell) {
         type: "string",
         optional: true,
         description: "Head branch to open the PR from when creating a new pull request",
+      },
+      labels: {
+        type: "string[]",
+        optional: true,
+        description: "Labels to apply to the PR",
       },
       assignees: {
         type: "string[]",
@@ -460,6 +476,9 @@ export function createPrSyncTool($: Shell) {
         for (const assignee of collectAssignees(args.assignees)) {
           createArgs.push("--assignee", assignee);
         }
+        for (const label of collectLabels(args.labels)) {
+          createArgs.push("--label", label);
+        }
         if (args.draft) {
           createArgs.push("--draft");
         }
@@ -494,6 +513,7 @@ export function createPrSyncTool($: Shell) {
           title: args.title,
           body,
           base: args.base,
+          labels: args.labels,
           assignees: args.assignees,
         });
         if (updated) {
@@ -537,7 +557,7 @@ export function createPrSyncTool($: Shell) {
 
       if (actions.length === 0) {
         throw new Error(
-          "pr_sync requires title, body, description, checklist content, review, commentBody, or replies",
+          "pr_sync requires title, body, description, checklist content, labels, assignees, review, commentBody, or replies",
         );
       }
 

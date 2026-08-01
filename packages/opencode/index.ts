@@ -240,6 +240,7 @@ const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
         description: tool.schema.string().describe("Short PR description rendered above checklist sections").optional(),
         base: tool.schema.string().describe("Base branch to merge into").optional(),
         head: tool.schema.string().describe("Head branch to use when creating a PR").optional(),
+        labels: tool.schema.array(tool.schema.string()).describe("Labels to apply to the PR").optional(),
         assignees: tool.schema.array(tool.schema.string()).describe("Assignees to apply to the PR").optional(),
         checklists: tool.schema.array(tool.schema.object({
           name: tool.schema.string().describe("Checklist section name"),

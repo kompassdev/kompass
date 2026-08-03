@@ -6,7 +6,7 @@ import type { Shell, ShellPromise } from "../tools/shared.ts";
 import { createPrSyncTool } from "../tools/pr-sync.ts";
 
 describe("pr_sync", () => {
-  test("creates a PR with explicit head branch and assignees", async () => {
+  test("creates a PR with explicit head branch, labels, and assignees", async () => {
     const executedCommands: string[] = [];
     const shell = createMockShell(executedCommands, [
       {
@@ -21,6 +21,7 @@ describe("pr_sync", () => {
       body: "Uses explicit head branch when creating PRs.",
       base: "main",
       head: "feature/pr-head",
+      labels: ["enhancement", "ready for review"],
       assignees: ["octocat", "hubot"],
     }, createToolContextForDirectory("/tmp/repo"));
 
@@ -29,6 +30,8 @@ describe("pr_sync", () => {
     assert.equal(result.action, "created");
     assert.match(executedCommands[0], /--base main/);
     assert.match(executedCommands[0], /--head feature\/pr-head/);
+    assert.match(executedCommands[0], /--label enhancement/);
+    assert.match(executedCommands[0], /--label ready for review/);
     assert.match(executedCommands[0], /--assignee octocat/);
     assert.match(executedCommands[0], /--assignee hubot/);
   });
@@ -122,6 +125,7 @@ describe("pr_sync", () => {
     const output = await tool.execute({
       title: "Tighten review automation",
       body: "Updated body",
+      labels: ["automation"],
       assignees: ["octocat"],
       refUrl: "https://github.com/acme/repo/pull/9",
       review: { approve: true },
@@ -131,7 +135,75 @@ describe("pr_sync", () => {
     assert.equal(result.action, "updated_and_approved");
     assert.match(executedCommands[1], /--title Tighten review automation/);
     assert.match(executedCommands[1], /--body Updated body/);
+    assert.match(executedCommands[1], /--add-label automation/);
     assert.match(executedCommands[1], /--add-assignee octocat/);
+  });
+
+  test("removes labels from an existing PR", async () => {
+    const executedCommands: string[] = [];
+    const shell = createMockShell(executedCommands, [
+      {
+        contains: "gh pr view https://github.com/acme/repo/pull/9 --json number,url",
+        stdout: JSON.stringify({ number: 9, url: "https://github.com/acme/repo/pull/9" }),
+      },
+      {
+        contains: "gh pr edit https://github.com/acme/repo/pull/9",
+        stdout: "",
+      },
+    ]);
+
+    const tool = createPrSyncTool(shell);
+    const output = await tool.execute({
+      refUrl: "https://github.com/acme/repo/pull/9",
+      removeLabels: ["blocked", "needs review"],
+    }, createToolContextForDirectory("/tmp/repo"));
+
+    const result = JSON.parse(output);
+    assert.equal(result.action, "updated");
+    assert.match(executedCommands[1], /--remove-label blocked/);
+    assert.match(executedCommands[1], /--remove-label needs review/);
+  });
+
+  test("replaces the complete label set on an existing PR", async () => {
+    const executedCommands: string[] = [];
+    const shell = createMockShell(executedCommands, [
+      {
+        contains: "gh pr view https://github.com/acme/repo/pull/9 --json number,url",
+        stdout: JSON.stringify({ number: 9, url: "https://github.com/acme/repo/pull/9" }),
+      },
+      {
+        contains: "gh repo view --json nameWithOwner",
+        stdout: JSON.stringify({ nameWithOwner: "acme/repo" }),
+      },
+      {
+        contains: "/repos/acme/repo/issues/9/labels --input -",
+        stdout: JSON.stringify([]),
+      },
+    ]);
+
+    const tool = createPrSyncTool(shell);
+    const output = await tool.execute({
+      refUrl: "https://github.com/acme/repo/pull/9",
+      replaceLabels: [],
+    }, createToolContextForDirectory("/tmp/repo"));
+
+    const result = JSON.parse(output);
+    assert.equal(result.action, "updated");
+    assert.match(executedCommands[2], /--method PUT/);
+    assert.match(executedCommands[2], /"labels":\[\]/);
+  });
+
+  test("rejects replacing and incrementally changing labels together", async () => {
+    const tool = createPrSyncTool(createMockShell([], []));
+
+    await assert.rejects(
+      tool.execute({
+        refUrl: "https://github.com/acme/repo/pull/9",
+        labels: ["enhancement"],
+        replaceLabels: ["ready"],
+      }, createToolContextForDirectory("/tmp/repo")),
+      /replaceLabels cannot be combined with labels or removeLabels/,
+    );
   });
 
   test("submits structured review comments through pr_sync", async () => {

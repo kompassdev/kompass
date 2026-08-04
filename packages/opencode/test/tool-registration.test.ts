@@ -224,6 +224,58 @@ describe("createOpenCodeTools", () => {
     assert.equal(configured.directory, `${existing}-2`);
   });
 
+  test("Rift workspace adapter normalizes and deduplicates listed directories", async () => {
+    const sourceDirectory = path.join(os.tmpdir(), "kompass-rift-source");
+    const directory = path.join(path.dirname(sourceDirectory), ".rifts", path.basename(sourceDirectory), "parser-fix");
+    const adapter = createRiftWorkspaceAdapter({
+      init: () => null,
+      create: () => directory,
+      remove: () => undefined,
+      list: () => [directory, path.join(directory, "..", "parser-fix")],
+    }, { sourceDirectory, projectID: "project-1" });
+
+    const listed = await adapter.list?.();
+
+    assert.equal(listed?.length, 1);
+    assert.equal(listed?.[0]?.directory, path.resolve(directory));
+  });
+
+  test("Rift workspace adapter rejects target and removal paths outside its managed root", async () => {
+    let removeCalls = 0;
+    const sourceDirectory = path.join(os.tmpdir(), "kompass-rift-source");
+    const adapter = createRiftWorkspaceAdapter({
+      init: () => null,
+      create: () => "",
+      remove: () => { removeCalls += 1; },
+      list: () => [],
+    }, { sourceDirectory, projectID: "project-1" });
+    const foreign = {
+      id: "wrk_foreign",
+      type: "rift",
+      name: "foreign",
+      branch: null,
+      directory: path.join(os.tmpdir(), "foreign-rift"),
+      extra: null,
+      projectID: "project-1",
+    };
+
+    assert.throws(() => adapter.target(foreign), /outside managed root/);
+    await assert.rejects(adapter.remove(foreign), /outside managed root/);
+    assert.equal(removeCalls, 0);
+  });
+
+  test("Rift workspace adapter rejects foreign listed paths", async () => {
+    const sourceDirectory = path.join(os.tmpdir(), "kompass-rift-source");
+    const adapter = createRiftWorkspaceAdapter({
+      init: () => null,
+      create: () => "",
+      remove: () => undefined,
+      list: () => [path.join(os.tmpdir(), "foreign-rift")],
+    }, { sourceDirectory, projectID: "project-1" });
+
+    await assert.rejects(Promise.resolve().then(() => adapter.list?.()), /outside managed root/);
+  });
+
   test("Rift source resolution unwraps a removed managed workspace", () => {
     assert.equal(
       resolveRiftSourceDirectory("/projects/.rifts/repo/removed-workspace"),

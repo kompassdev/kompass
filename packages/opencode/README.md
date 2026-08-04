@@ -80,7 +80,11 @@ Set `adapters.opencode.navigator.enabled` to `false` to disable all Navigator to
 
 Navigator accepts only sessions from the current OpenCode project and only worktrees returned by OpenCode. New sessions inherit the calling session's agent, model, and variant unless explicitly overridden. It rejects self-targeting lifecycle calls, arbitrary directories, unknown V2 agent overrides, main-checkout removal, unmanaged worktrees, and removal while a worktree has active sessions. `session_send` can switch the target session's agent or model before admitting a steered prompt when the detected OpenCode protocol supports it. `session_wait` defaults to `maxWaitMs`, caps requested timeouts at `maxWaitMs`, and treats `timeoutMs: 0` as an immediate snapshot. Navigator never force-removes or automatically cleans up resources after a partial failure.
 
-When OpenCode exposes experimental workspace adapters, Kompass registers a `rift` workspace adapter backed by its bundled `rift-snapshot` dependency. Navigator automatically uses that adapter for `new_worktree` sessions when no `startCommand` is requested, falling back to Git worktrees otherwise.
+When OpenCode exposes experimental workspace adapters, Kompass registers a `rift` workspace adapter backed by its bundled `rift-snapshot` dependency. Navigator automatically uses that adapter for `new_worktree` sessions when no `startCommand` is requested, falling back to Git worktrees only when the experimental API or Rift adapter is unavailable.
+
+Kompass preserves the OpenCode workspace ID when it creates future sessions in Rift workspaces. Existing sessions without workspace identity are not migrated automatically. Rift workspaces are experimental OpenCode workspaces, not legacy Desktop sandboxes, and Kompass does not modify `project.sandboxes` or OpenCode's workspace database.
+
+Current OpenCode Desktop versions may not display adapter-backed workspaces until Desktop adopts the experimental workspace API. Desktop also currently filters Home sessions through legacy sandbox metadata, does not enumerate experimental adapters, and OpenCode synchronization may retain stale or duplicate workspace records. Users can select or move sessions between available locations with the TUI `/warp` workflow. OpenCode's public plugin workspace adapter type also needs to expose the runtime-supported optional `list()` method upstream.
 
 ## Workspace
 

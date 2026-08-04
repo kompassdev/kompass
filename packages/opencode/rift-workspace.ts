@@ -66,17 +66,32 @@ function managedRoot(sourceDirectory: string) {
   return path.join(path.dirname(sourceDirectory), ".rifts", path.basename(sourceDirectory));
 }
 
+function requireManagedDirectory(sourceDirectory: string, directory: unknown, operation: string) {
+  if (typeof directory !== "string" || !directory) {
+    throw new Error(`Rift workspace ${operation} is missing a directory`);
+  }
+  const resolved = path.resolve(directory);
+  const root = path.resolve(managedRoot(sourceDirectory));
+  if (path.dirname(resolved) !== root) {
+    throw new Error(`Rift workspace ${operation} directory ${resolved} is outside managed root ${root}`);
+  }
+  return resolved;
+}
+
+function requireProject(config: WorkspaceInfo, projectID: string) {
+  if (config.projectID !== projectID) {
+    throw new Error(`Rift workspace belongs to project ${config.projectID}; expected ${projectID}`);
+  }
+}
+
 function workspaceDirectory(sourceDirectory: string, name: string) {
   return path.join(managedRoot(sourceDirectory), name);
 }
 
 function availableWorkspaceName(rift: RiftModule, sourceDirectory: string, requested: string) {
-  let existing: Set<string>;
-  try {
-    existing = new Set(rift.list({ of: sourceDirectory }).map((directory) => path.basename(directory)));
-  } catch {
-    return requested;
-  }
+  const existing = new Set(rift.list({ of: sourceDirectory }).map((directory) =>
+    path.basename(requireManagedDirectory(sourceDirectory, directory, "listed")),
+  ));
   if (!existing.has(requested)) return requested;
   let suffix = 2;
   while (existing.has(`${requested}-${suffix}`)) suffix += 1;
@@ -92,11 +107,6 @@ export function resolveRiftSourceDirectory(directory: string) {
   return namespace ? path.join(resolved.slice(0, markerIndex), namespace) : resolved;
 }
 
-function requireDirectory(config: WorkspaceInfo) {
-  if (!config.directory) throw new Error("Rift workspace is missing a directory");
-  return config.directory;
-}
-
 export function createRiftWorkspaceAdapter(rift: RiftModule, options: RiftAdapterOptions): WorkspaceAdapter {
   const sourceDirectory = path.resolve(options.sourceDirectory);
 
@@ -104,19 +114,30 @@ export function createRiftWorkspaceAdapter(rift: RiftModule, options: RiftAdapte
     name: "Rift",
     description: "Create a copy-on-write Rift workspace",
     configure(config) {
+      requireProject(config, options.projectID);
       const name = availableWorkspaceName(rift, sourceDirectory, workspaceName(config));
+      const directory = requireManagedDirectory(
+        sourceDirectory,
+        workspaceDirectory(sourceDirectory, name),
+        "configured",
+      );
       return {
         ...config,
         type: "rift",
         name,
         branch: null,
-        directory: workspaceDirectory(sourceDirectory, name),
+        directory,
         extra: { ...(typeof config.extra === "object" && config.extra ? config.extra : {}), sourceDirectory },
       };
     },
     async create(config, _env, from) {
+      requireProject(config, options.projectID);
       const source = path.resolve(from?.directory ?? sourceDirectory);
-      const expected = path.resolve(requireDirectory(config));
+      if (from) {
+        requireProject(from, options.projectID);
+        requireManagedDirectory(sourceDirectory, source, "creation source");
+      }
+      const expected = requireManagedDirectory(sourceDirectory, config.directory, "creation target");
       rift.init({ at: source });
       const created = path.resolve(rift.create({
         from: source,
@@ -136,7 +157,10 @@ export function createRiftWorkspaceAdapter(rift: RiftModule, options: RiftAdapte
       }
     },
     list() {
-      return rift.list({ of: sourceDirectory }).map((directory) => ({
+      const directories = new Set(rift.list({ of: sourceDirectory }).map((directory) =>
+        requireManagedDirectory(sourceDirectory, directory, "listed"),
+      ));
+      return [...directories].map((directory) => ({
         id: `rift-${path.basename(directory)}`,
         type: "rift",
         name: path.basename(directory),
@@ -147,10 +171,15 @@ export function createRiftWorkspaceAdapter(rift: RiftModule, options: RiftAdapte
       }));
     },
     async remove(config) {
-      rift.remove({ at: requireDirectory(config) });
+      requireProject(config, options.projectID);
+      rift.remove({ at: requireManagedDirectory(sourceDirectory, config.directory, "removal target") });
     },
     target(config) {
-      return { type: "local", directory: requireDirectory(config) };
+      requireProject(config, options.projectID);
+      return {
+        type: "local",
+        directory: requireManagedDirectory(sourceDirectory, config.directory, "target"),
+      };
     },
   };
 }

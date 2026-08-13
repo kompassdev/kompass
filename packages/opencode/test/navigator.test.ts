@@ -395,6 +395,30 @@ describe("Kompass Navigator", () => {
     assert.equal(output.messages[0].items[0].text, "visible");
   });
 
+  test("validates explicit options before sending a legacy prompt", async () => {
+    let prompts = 0;
+    const client = createClient({
+      legacySession: {
+        promptAsync: async () => { prompts += 1; return response(undefined); },
+      },
+    });
+    const navigator = tools(client, navigatorConfig, "v1");
+
+    await assert.rejects(
+      (navigator.session_send as any).execute({ sessionID: "session-1", prompt: "work", agent: "missing" }, context()),
+      /Unknown OpenCode agent "missing"/,
+    );
+    await assert.rejects(
+      (navigator.session_send as any).execute({
+        sessionID: "session-1",
+        prompt: "work",
+        model: { providerID: "openai", modelID: "missing" },
+      }, context()),
+      /Unknown or disabled OpenCode model/,
+    );
+    assert.equal(prompts, 0);
+  });
+
   test("preserves legacy errored tool output text", async () => {
     const client = createClient({
       legacySession: {

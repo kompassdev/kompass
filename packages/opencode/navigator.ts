@@ -863,6 +863,12 @@ export function createNavigatorTools(
       async execute(args, context) {
         assertNotCallingSession(args.sessionID, context, "send to");
         const session = await getOwnedSession(client, navigator.projectID, args.sessionID);
+        if (args.agent) {
+          await assertKnownV2Agent(client, session.location, args.agent);
+        }
+        if (args.model) {
+          await assertKnownV2Model(client, session.location, args.model);
+        }
         if (navigator.protocol === "v1") {
           const response = await navigator.legacyClient(session.location.directory).session.promptAsync({
             path: { id: args.sessionID },
@@ -876,7 +882,6 @@ export function createNavigatorTools(
           return json({ sessionID: args.sessionID, admitted: true });
         }
         if (args.agent) {
-          await assertKnownV2Agent(client, session.location, args.agent);
           const response = await client.v2.session.switchAgent({
             sessionID: args.sessionID,
             agent: args.agent,
@@ -884,7 +889,6 @@ export function createNavigatorTools(
           if (response.error !== undefined) failResponse(response.error, `OpenCode agent switch for session ${args.sessionID}`);
         }
         if (args.model) {
-          await assertKnownV2Model(client, session.location, args.model);
           const response = await client.v2.session.switchModel({
             sessionID: args.sessionID,
             model: {

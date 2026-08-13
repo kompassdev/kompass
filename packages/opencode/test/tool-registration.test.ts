@@ -287,9 +287,12 @@ describe("createOpenCodeTools", () => {
     await withTempHome(async () => {
       const navigatorClient = {
         worktree: { list() {}, create() {}, remove() {} },
-        v2: { session: {
-          create() {}, list() {}, get() {}, messages() {}, prompt() {}, active() {}, wait() {}, interrupt() {},
-        } },
+        v2: {
+          agent: { list: async () => ({ data: { data: [{ id: "build" }, { id: "reviewer" }] } }) },
+          session: {
+            create() {}, list() {}, get() {}, messages() {}, prompt() {}, active() {}, wait() {}, interrupt() {},
+          },
+        },
       };
       const tools = await createOpenCodeTools(createMockClient() as never, process.cwd(), {
         client: navigatorClient as never,
@@ -299,6 +302,10 @@ describe("createOpenCodeTools", () => {
       });
       assert.ok(tools.kompass_session_create);
       assert.ok(tools.kompass_worktree_list);
+      assert.deepEqual(
+        (tools.kompass_session_create as any).args.agent.unwrap().options,
+        ["build", "reviewer"],
+      );
     });
   });
 

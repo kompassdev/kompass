@@ -330,8 +330,18 @@ export async function createOpenCodeTools(
   const shell = createNodeShell(projectRoot);
 
   const navigatorEnabled = config.adapters.opencode.navigator.enabled;
+  let agentNames: string[] | undefined;
+  if (navigatorEnabled && navigator) {
+    try {
+      const response = await navigator.client.v2.agent.list({ location: { directory: projectRoot } });
+      agentNames = response.data?.data.map((agent) => agent.id);
+    } catch {
+      // Target-workspace validation remains authoritative if discovery is unavailable during registration.
+    }
+  }
   const navigatorTools: Record<string, ToolDefinition> = navigatorEnabled && navigator
     ? createNavigatorTools({
+        agentNames,
         client: navigator.client,
         legacyClient: navigator.legacyClient,
         projectID: navigator.projectID,

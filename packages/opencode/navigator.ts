@@ -6,6 +6,7 @@ import type {
   Part as LegacyPart,
 } from "@opencode-ai/sdk/client";
 import type {
+  ModelV2Info,
   OpencodeClient,
   SessionMessage,
   SessionV2Info,
@@ -82,6 +83,7 @@ type NavigatorToolName =
   | "worktree_remove";
 
 type NavigatorContext = {
+  agentNames?: string[];
   checkout: string;
   projectID: string;
   config: NavigatorConfig;
@@ -119,6 +121,35 @@ async function assertKnownV2Agent(client: NavigatorClient, location: NavigatorLo
   );
   if (agents.some((item) => item.id === agent)) return;
   throw new Error(`Unknown OpenCode agent "${agent}". Available agents: ${agents.map((item) => item.id).join(", ")}`);
+}
+
+async function assertKnownV2Model(
+  client: NavigatorClient,
+  location: NavigatorLocation,
+  model: { providerID: string; modelID: string; variant?: string },
+) {
+  const models = envelopeData<ModelV2Info[]>(
+    await client.v2.model.list({ location }),
+    "OpenCode model list",
+  );
+  const match = models.find((item) => item.providerID === model.providerID && item.id === model.modelID && item.enabled);
+  if (!match) {
+    const available = models
+      .filter((item) => item.enabled && item.providerID === model.providerID)
+      .slice(0, 20)
+      .map((item) => item.id);
+    throw new Error(
+      `Unknown or disabled OpenCode model "${model.providerID}/${model.modelID}"` +
+      (available.length ? `. Available ${model.providerID} models: ${available.join(", ")}` : ""),
+    );
+  }
+  if (!model.variant) return;
+  const variants = match.variants.map((item) => item.id);
+  if (variants.includes(model.variant)) return;
+  throw new Error(
+    `Unknown variant "${model.variant}" for OpenCode model "${model.providerID}/${model.modelID}"` +
+    (variants.length ? `. Available variants: ${variants.join(", ")}` : ". This model has no variants"),
+  );
 }
 
 function normalizeDirectory(directory: string) {
@@ -532,6 +563,10 @@ export function createNavigatorTools(
   input: NavigatorContext & { client: NavigatorClient },
 ): Record<NavigatorToolName, ToolDefinition> {
   const { client, ...navigator } = input;
+  const agentNames = [...new Set(navigator.agentNames ?? [])].sort();
+  const agentSchema = agentNames.length
+    ? tool.schema.enum(agentNames as [string, ...string[]])
+    : tool.schema.string().min(1);
   return {
     worktree_list: tool({
       description: `${explicitNavigatorUse} List the current OpenCode project checkout and its managed native worktrees.`,
@@ -560,7 +595,7 @@ export function createNavigatorTools(
             startCommand: tool.schema.string().min(1).optional(),
           }),
         ]),
-        agent: tool.schema.string().min(1).optional(),
+        agent: agentSchema.describe("Registered OpenCode agent; omit to inherit the caller/default agent").optional(),
         model: tool.schema.object({
           providerID: tool.schema.string().min(1),
           modelID: tool.schema.string().min(1),
@@ -654,8 +689,11 @@ export function createNavigatorTools(
 
         let session: SessionV2Info | { id: string; projectID: string };
         try {
-          if (navigator.protocol === "v2" && selectedAgent) {
+          if (selectedAgent) {
             await assertKnownV2Agent(client, location, selectedAgent);
+          }
+          if (selectedModel) {
+            await assertKnownV2Model(client, location, selectedModel);
           }
           session = navigator.protocol === "v1"
             ? responseData(
@@ -815,15 +853,22 @@ export function createNavigatorTools(
       args: {
         sessionID: tool.schema.string().min(1),
         prompt: tool.schema.string().min(1),
-        agent: tool.schema.string().min(1).optional(),
+        agent: agentSchema.describe("Registered OpenCode agent; omit to keep the session's current agent").optional(),
         model: tool.schema.object({
           providerID: tool.schema.string().min(1),
           modelID: tool.schema.string().min(1),
+          variant: tool.schema.string().min(1).optional(),
         }).optional(),
       },
       async execute(args, context) {
         assertNotCallingSession(args.sessionID, context, "send to");
         const session = await getOwnedSession(client, navigator.projectID, args.sessionID);
+        if (args.agent) {
+          await assertKnownV2Agent(client, session.location, args.agent);
+        }
+        if (args.model) {
+          await assertKnownV2Model(client, session.location, args.model);
+        }
         if (navigator.protocol === "v1") {
           const response = await navigator.legacyClient(session.location.directory).session.promptAsync({
             path: { id: args.sessionID },
@@ -837,7 +882,6 @@ export function createNavigatorTools(
           return json({ sessionID: args.sessionID, admitted: true });
         }
         if (args.agent) {
-          await assertKnownV2Agent(client, session.location, args.agent);
           const response = await client.v2.session.switchAgent({
             sessionID: args.sessionID,
             agent: args.agent,
@@ -847,7 +891,11 @@ export function createNavigatorTools(
         if (args.model) {
           const response = await client.v2.session.switchModel({
             sessionID: args.sessionID,
-            model: { providerID: args.model.providerID, id: args.model.modelID },
+            model: {
+              providerID: args.model.providerID,
+              id: args.model.modelID,
+              ...(args.model.variant ? { variant: args.model.variant } : {}),
+            },
           });
           if (response.error !== undefined) failResponse(response.error, `OpenCode model switch for session ${args.sessionID}`);
         }

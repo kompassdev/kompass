@@ -37,6 +37,15 @@ function createClient(overrides: Record<string, any> = {}) {
       agent: {
         list: async () => response({ location: { directory: "/repo" }, data: [{ id: "build" }, { id: "reviewer" }, { id: "worker" }] }),
       },
+      model: {
+        list: async () => response({
+          location: { directory: "/repo" },
+          data: [
+            { id: "gpt-5.6-sol", providerID: "openai", enabled: true, variants: [{ id: "xhigh" }] },
+            { id: "gpt-5.5", providerID: "openai", enabled: true, variants: [] },
+          ],
+        }),
+      },
       session: {
         active: async () => response({ data: {} }),
         get: async ({ sessionID }: { sessionID: string }) => response({
@@ -80,6 +89,7 @@ function tools(client = createClient(), config = navigatorConfig, protocol: "v1"
     projectID: "project-1",
     checkout: "/repo",
     protocol,
+    agentNames: ["build", "reviewer", "worker"],
   });
 }
 
@@ -94,6 +104,12 @@ describe("Kompass Navigator", () => {
       assert.match(definition.description, /Do not use for subagent delegation/);
       assert.match(definition.description, /built-in task tool/);
     }
+  });
+
+  test("exposes registered agents as tool enums", () => {
+    const navigator = tools();
+    assert.deepEqual((navigator.session_create as any).args.agent.unwrap().options, ["build", "reviewer", "worker"]);
+    assert.deepEqual((navigator.session_send as any).args.agent.unwrap().options, ["build", "reviewer", "worker"]);
   });
 
   test("matches Desktop protocol detection", async () => {
@@ -327,6 +343,25 @@ describe("Kompass Navigator", () => {
     assert.equal(sessionCreates, 0);
   });
 
+  test("validates explicit models and variants before creating a V2 session", async () => {
+    let sessionCreates = 0;
+    const client = createClient({
+      session: { create: async () => { sessionCreates += 1; return response({ data: session("created") }); } },
+    });
+
+    await assert.rejects((tools(client).session_create as any).execute({
+      prompt: "work",
+      model: { providerID: "openai", modelID: "missing" },
+      environment: { type: "checkout" },
+    }, context()), /Unknown or disabled OpenCode model.*Available openai models/);
+    await assert.rejects((tools(client).session_create as any).execute({
+      prompt: "work",
+      model: { providerID: "openai", modelID: "gpt-5.6-sol", variant: "missing" },
+      environment: { type: "checkout" },
+    }, context()), /Unknown variant.*Available variants: xhigh/);
+    assert.equal(sessionCreates, 0);
+  });
+
   test("uses one legacy transcript path when Desktop selects V1", async () => {
     const prompts: any[] = [];
     const client = createClient({
@@ -358,6 +393,30 @@ describe("Kompass Navigator", () => {
 
     assert.equal(prompts[0].body.parts[0].text, "follow up");
     assert.equal(output.messages[0].items[0].text, "visible");
+  });
+
+  test("validates explicit options before sending a legacy prompt", async () => {
+    let prompts = 0;
+    const client = createClient({
+      legacySession: {
+        promptAsync: async () => { prompts += 1; return response(undefined); },
+      },
+    });
+    const navigator = tools(client, navigatorConfig, "v1");
+
+    await assert.rejects(
+      (navigator.session_send as any).execute({ sessionID: "session-1", prompt: "work", agent: "missing" }, context()),
+      /Unknown OpenCode agent "missing"/,
+    );
+    await assert.rejects(
+      (navigator.session_send as any).execute({
+        sessionID: "session-1",
+        prompt: "work",
+        model: { providerID: "openai", modelID: "missing" },
+      }, context()),
+      /Unknown or disabled OpenCode model/,
+    );
+    assert.equal(prompts, 0);
   });
 
   test("preserves legacy errored tool output text", async () => {

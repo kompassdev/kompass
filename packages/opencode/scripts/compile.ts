@@ -14,6 +14,7 @@ import YAML from "yaml";
 import {
   getConfiguredAgentNames,
   getConfiguredCommandNames,
+  getConfiguredToolNames,
   getEnabledToolNames,
   loadKompassConfig,
   mergeWithDefaults,
@@ -52,9 +53,14 @@ async function main() {
   const config = mergeWithDefaults(userConfig);
   const enabledTools = getEnabledToolNames(config.tools, config.adapters.opencode.navigator.enabled);
   const configuredToolNames = Object.fromEntries(
-    Object.entries(config.tools).map(([toolName, toolConfig]) => [
+    Object.entries(getConfiguredToolNames(config.tools)).map(([toolName, toolConfig]) => [
       toolName,
-      { name: getConfiguredOpenCodeToolName(toolName, toolConfig.name) },
+      {
+        name: getConfiguredOpenCodeToolName(
+          toolName,
+          toolConfig.name === toolName ? undefined : toolConfig.name,
+        ),
+      },
     ]),
   );
   const names = {
@@ -141,13 +147,16 @@ async function main() {
       Object.keys(resolvedAgents).map((name) => [name, { enabled: true }]),
     ),
     tools: Object.fromEntries(
-      enabledTools.map((toolName) => [
+      [
+        ["provider", config.tools.provider],
+        ...enabledTools.map((toolName) => [
         toolName,
         {
           enabled: true,
           ...(config.tools[toolName].name ? { name: config.tools[toolName].name } : {}),
         },
-      ]),
+        ]),
+      ],
     ),
     defaults: config.defaults,
     adapters: config.adapters,

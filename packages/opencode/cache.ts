@@ -1,6 +1,7 @@
 import {
   getConfiguredAgentNames,
   getConfiguredCommandNames,
+  getConfiguredToolNames,
   loadKompassConfig,
   mergeWithDefaults,
   type AgentName,
@@ -51,9 +52,14 @@ export function loadConfiguredNames(projectRoot: string): Promise<ConfiguredName
     const config = await loadMergedKompassConfig(projectRoot);
     return {
       tools: Object.fromEntries(
-        Object.entries(config.tools).map(([toolName, toolConfig]) => [
+        Object.entries(getConfiguredToolNames(config.tools)).map(([toolName, toolConfig]) => [
           toolName,
-          { name: getConfiguredOpenCodeToolName(toolName, toolConfig.name) },
+          {
+            name: getConfiguredOpenCodeToolName(
+              toolName,
+              toolConfig.name === toolName ? undefined : toolConfig.name,
+            ),
+          },
         ]),
       ) as Record<ToolName, { name: string }>,
       commands: getConfiguredCommandNames(config.commands),

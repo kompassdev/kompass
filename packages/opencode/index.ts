@@ -278,8 +278,8 @@ const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
       execute: (args, context) => definition.execute(args, context),
     });
   },
-  ticket_sync(_: PluginInput["client"], __: MergedKompassConfig, _projectRoot: string, shell: Shell) {
-    const definition = createTicketSyncTool(shell);
+  ticket_sync(_: PluginInput["client"], config: MergedKompassConfig, _projectRoot: string, shell: Shell) {
+    const definition = createTicketSyncTool(shell, config.tools.provider);
     return tool({
       description: definition.description,
       args: {
@@ -297,12 +297,13 @@ const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
         })).describe("Checklist sections rendered as markdown").optional(),
         refUrl: tool.schema.string().describe("Optional issue URL to update").optional(),
         comments: tool.schema.array(tool.schema.string()).describe("Optional issue comments to post").optional(),
+        projectKey: tool.schema.string().describe("Jira project key for issue creation").optional(),
       },
       execute: (args, context) => definition.execute(args, context),
     });
   },
-  ticket_load(_: PluginInput["client"], __: MergedKompassConfig, _projectRoot: string, shell: Shell) {
-    const definition = createTicketLoadTool(shell);
+  ticket_load(_: PluginInput["client"], config: MergedKompassConfig, _projectRoot: string, shell: Shell) {
+    const definition = createTicketLoadTool(shell, config.tools.provider);
     return tool({
       description: definition.description,
       args: {

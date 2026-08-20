@@ -47,6 +47,7 @@
   },
 
   "tools": {
+    "provider": "github",
     "changes_load": { "enabled": true },
     "pr_load": { "enabled": true },
     "pr_load_review": { "enabled": true },

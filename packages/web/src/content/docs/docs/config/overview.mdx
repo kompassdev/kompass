@@ -29,6 +29,16 @@ Shared render-time guidance, including:
 - `prApprove`
 - `validation`
 
+### `tools.provider`
+
+Selects the provider used by the built-in `ticket_load` and `ticket_sync` tools.
+
+- `tools.provider`: `github` (default) or `jira`
+
+When using Jira, configure `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`, and optionally `JIRA_PROJECT_KEY` in `.opencode/tools/jira/.env` or the process environment.
+
+The built-in ticket tools are backed by a provider chain. The configured provider is preferred for new tickets, while recognizable GitHub or Jira references are routed to the matching provider.
+
 ### `commands`
 
 Controls command availability, template overrides, and adapter-facing command names.
@@ -69,6 +79,27 @@ Adapter-specific configuration. Today this includes:
 ## Tool alias example
 
 You can keep bundled surfaces enabled but expose them under custom adapter-facing names. OpenCode tool defaults use `kompass_<tool>`, such as `kompass_ticket_load`; command and agent defaults use their config keys. Built-in command, component, and agent templates read resolved names from render config values like `<%= it.config.tools.ticket_load.name %>`.
+
+To use Jira through the built-in ticket tools:
+
+```jsonc
+{
+  "tools": {
+    "provider": "jira"
+  }
+}
+```
+
+The existing disable-and-override flow remains available when a project needs its own ticket tools:
+
+```jsonc
+{
+  "tools": {
+    "ticket_load": { "enabled": false },
+    "ticket_sync": { "enabled": false }
+  }
+}
+```
 
 ```jsonc
 {

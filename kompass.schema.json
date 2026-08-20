@@ -218,6 +218,12 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["github", "jira"],
+          "default": "github",
+          "description": "Ticket provider used by ticket_load and ticket_sync"
+        },
         "changes_load": {
           "$ref": "#/$defs/toolConfig"
         },

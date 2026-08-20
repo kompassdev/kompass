@@ -1,11 +1,15 @@
 ---
 title: ticket_sync
-description: Create or update a GitHub issue with structured checklist support.
+description: Create or update a ticket in the configured GitHub or Jira provider.
 ---
 
 ## Purpose
 
 Use one tool surface for issue creation, issue updates, and ticket comments.
+
+GitHub is the default provider. Set `tools.provider` to `jira` to use Jira, and pass `projectKey` when creating an issue if `JIRA_PROJECT_KEY` is not configured.
+
+Jira supports one assignee per issue; use a Jira account ID when passing `assignees`.
 
 ## Notable inputs
 
@@ -17,6 +21,7 @@ Use one tool surface for issue creation, issue updates, and ticket comments.
 - `checklists`
 - `refUrl`
 - `comments`
+- `projectKey` (Jira)
 
 ## Useful for
 

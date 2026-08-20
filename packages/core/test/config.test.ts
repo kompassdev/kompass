@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 
 import { loadKompassConfig, mergeWithDefaults } from "../lib/config.ts";
+import { TicketProviderName } from "../tools/provider/interface.ts";
 
 const originalHome = process.env.HOME;
 
@@ -229,6 +230,11 @@ describe("config loading", () => {
 });
 
 describe("object-based config", () => {
+  test("defaults to GitHub and supports Jira as the ticket provider", () => {
+    assert.equal(mergeWithDefaults(null).tools.provider, TicketProviderName.GitHub);
+    assert.equal(mergeWithDefaults({ tools: { provider: TicketProviderName.Jira } }).tools.provider, TicketProviderName.Jira);
+  });
+
   test("merges Navigator defaults and validates limits", () => {
     const defaults = mergeWithDefaults(null);
     assert.deepEqual(defaults.adapters.opencode.navigator, {

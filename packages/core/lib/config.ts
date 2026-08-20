@@ -3,6 +3,8 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { TicketProviderName } from "../tools/provider/interface.ts";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export interface AgentDefinition {
@@ -158,6 +160,7 @@ export interface KompassConfig {
     enabled?: string[];
   };
   tools?: {
+    provider?: TicketProviderName;
     changes_load?: ToolConfig;
     pr_load?: ToolConfig;
     pr_load_review?: ToolConfig;
@@ -220,6 +223,7 @@ export interface MergedKompassConfig {
     planner: AgentDefinition;
   };
   tools: {
+    provider: TicketProviderName;
     changes_load: ToolConfig;
     pr_load: ToolConfig;
     pr_load_review: ToolConfig;
@@ -700,6 +704,7 @@ export function mergeWithDefaults(
       planner: { ...defaultAgentPlanner, ...plannerOverrides },
     },
     tools: {
+      provider: config?.tools?.provider ?? TicketProviderName.GitHub,
       changes_load: { ...defaultToolConfig.changes_load, ...config?.tools?.changes_load },
       pr_load: { ...defaultToolConfig.pr_load, ...config?.tools?.pr_load },
       pr_load_review: {

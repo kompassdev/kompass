@@ -4,7 +4,20 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { applyCommandsConfig } from "../config.ts";
+import { loadResolvedCommands } from "../cache.ts";
+import { applyCommandsConfig as applyCommandsTransform } from "../config.ts";
+
+async function applyCommandsConfig(cfg: { command?: Record<string, any> }, projectRoot: string) {
+  cfg.command ??= {};
+  const draft = {
+    update(name: string, update: (command: Record<string, any>) => void) {
+      const command = cfg.command![name] ?? { name, template: "" };
+      cfg.command![name] = command;
+      update(command);
+    },
+  };
+  applyCommandsTransform(draft as never, await loadResolvedCommands(projectRoot));
+}
 
 const originalCi = process.env.CI;
 const isolatedHome = path.join(os.tmpdir(), `kompass-test-home-${process.pid}-commands-config`);

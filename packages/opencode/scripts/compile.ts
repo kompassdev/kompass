@@ -50,7 +50,7 @@ async function main() {
   // Load configuration
   const userConfig = await loadKompassConfig(WORKSPACE_ROOT);
   const config = mergeWithDefaults(userConfig);
-  const enabledTools = getEnabledToolNames(config.tools, config.adapters.opencode.navigator.enabled);
+  const enabledTools = getEnabledToolNames(config.tools);
   const configuredToolNames = Object.fromEntries(
     Object.entries(config.tools).map(([toolName, toolConfig]) => [
       toolName,

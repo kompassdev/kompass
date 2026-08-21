@@ -235,30 +235,6 @@
         },
         "ticket_load": {
           "$ref": "#/$defs/toolConfig"
-        },
-        "worktree_list": {
-          "$ref": "#/$defs/toolConfig"
-        },
-        "session_create": {
-          "$ref": "#/$defs/toolConfig"
-        },
-        "session_list": {
-          "$ref": "#/$defs/toolConfig"
-        },
-        "session_read": {
-          "$ref": "#/$defs/toolConfig"
-        },
-        "session_send": {
-          "$ref": "#/$defs/toolConfig"
-        },
-        "session_wait": {
-          "$ref": "#/$defs/toolConfig"
-        },
-        "session_interrupt": {
-          "$ref": "#/$defs/toolConfig"
-        },
-        "worktree_remove": {
-          "$ref": "#/$defs/toolConfig"
         }
       }
     },
@@ -351,17 +327,6 @@
             "agentMode": {
               "type": "string",
               "enum": ["subagent", "primary", "all"]
-            },
-            "navigator": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "enabled": { "type": "boolean", "default": true },
-                "maxConcurrentSessions": { "type": "integer", "minimum": 1, "maximum": 8, "default": 8 },
-                "maxReadChars": { "type": "integer", "minimum": 1, "default": 20000 },
-                "maxOutputCharsPerItem": { "type": "integer", "minimum": 1, "default": 4000 },
-                "maxWaitMs": { "type": "integer", "minimum": 1, "default": 120000 }
-              }
             }
           }
         }
@@ -467,15 +432,7 @@
         "pr_load_review",
         "pr_sync",
         "ticket_sync",
-        "ticket_load",
-        "worktree_list",
-        "session_create",
-        "session_list",
-        "session_read",
-        "session_send",
-        "session_wait",
-        "session_interrupt",
-        "worktree_remove"
+        "ticket_load"
       ]
     }
   }

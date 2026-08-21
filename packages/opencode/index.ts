@@ -1,14 +1,12 @@
-import type { Hooks, Plugin, PluginInput } from "@opencode-ai/plugin";
-import { tool, type ToolDefinition } from "@opencode-ai/plugin/tool";
-import { createOpencodeClient as createLegacyClient, type OpencodeClient as LegacyClient } from "@opencode-ai/sdk/client";
-import { createOpencodeClient as createV2Client, type OpencodeClient as V2Client } from "@opencode-ai/sdk/v2";
+import { Plugin } from "@opencode-ai/plugin";
+import { Schema } from "effect";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
 import {
   createChangesLoadTool,
-  createPrLoadTool,
   createPrLoadReviewTool,
+  createPrLoadTool,
   createPrSyncTool,
   createTicketLoadTool,
   createTicketSyncTool,
@@ -17,29 +15,24 @@ import {
   type Shell,
   type ShellPromise,
 } from "../core/index.ts";
-import { loadMergedKompassConfig } from "./cache.ts";
+import { loadMergedKompassConfig, loadResolvedAgents, loadResolvedCommands } from "./cache.ts";
 import { applyAgentsConfig, applyCommandsConfig } from "./config.ts";
-import { createPluginLogger, getErrorDetails, type PluginLogger } from "./logging.ts";
-import { createNavigatorTools, detectNavigatorProtocol, getNavigatorCompatibilityWarning } from "./navigator.ts";
-import { registerRiftWorkspaceAdapter } from "./rift-workspace.ts";
-import {
-  getConfiguredOpenCodeToolName,
-} from "./tool-names.ts";
+import { createPluginLogger, getErrorDetails } from "./logging.ts";
+import { getConfiguredOpenCodeToolName } from "./tool-names.ts";
 
 const execFileAsync = promisify(execFile);
 
-type CommandExecuteBeforeHook = NonNullable<Hooks["command.execute.before"]>;
-type CommandExecuteBeforeInput = Parameters<CommandExecuteBeforeHook>[0];
-type CommandExecuteBeforeOutput = Parameters<CommandExecuteBeforeHook>[1];
-type OpenCodeToolCreator = (
-  client: PluginInput["client"],
-  config: MergedKompassConfig,
-  projectRoot: string,
-  shell: Shell,
-) => ToolDefinition;
+type PluginContext = Plugin.Context;
+type ToolDraft = Parameters<Parameters<PluginContext["tool"]["transform"]>[0]>[0];
+type OpenCodeTool = Parameters<ToolDraft["add"]>[0];
 
 type ShellResult = ShellPromise & {
   stdout: Buffer;
+};
+
+type CoreTool = {
+  description: string;
+  execute(args: never, context: { worktree: string; directory: string }): Promise<string>;
 };
 
 function shellEscape(value: unknown): string {
@@ -150,322 +143,156 @@ function createNodeShell(defaultDirectory: string): Shell {
   };
 }
 
-export type CommandExecution = {
-  command: string;
-  arguments: string;
-  prompt: string;
+const checklist = Schema.Struct({
+  name: Schema.String,
+  items: Schema.Array(Schema.Struct({
+    name: Schema.String,
+    completed: Schema.Boolean,
+  })),
+});
+
+const toolInputs = {
+  changes_load: Schema.Struct({
+    base: Schema.optional(Schema.String),
+    head: Schema.optional(Schema.String),
+    depthHint: Schema.optional(Schema.Int),
+    uncommitted: Schema.optional(Schema.Boolean),
+  }),
+  pr_load: Schema.Struct({ pr: Schema.optional(Schema.String) }),
+  pr_load_review: Schema.Struct({
+    pr: Schema.optional(Schema.String),
+    since: Schema.String,
+  }),
+  ticket_load: Schema.Struct({
+    source: Schema.String,
+    comments: Schema.optional(Schema.Boolean),
+  }),
+  ticket_sync: Schema.Struct({
+    title: Schema.optional(Schema.String),
+    body: Schema.optional(Schema.String),
+    description: Schema.optional(Schema.String),
+    labels: Schema.optional(Schema.Array(Schema.String)),
+    assignees: Schema.optional(Schema.Array(Schema.String)),
+    checklists: Schema.optional(Schema.Array(checklist)),
+    refUrl: Schema.optional(Schema.String),
+    comments: Schema.optional(Schema.Array(Schema.String)),
+  }),
 };
 
-function getString(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
-}
+function prSyncInput(allowApprove: boolean) {
+  const review = Schema.Struct({
+    body: Schema.optional(Schema.String),
+    comments: Schema.optional(Schema.Array(Schema.Struct({
+      path: Schema.String,
+      body: Schema.String,
+      line: Schema.Int,
+      startLine: Schema.optional(Schema.Int),
+      side: Schema.optional(Schema.Literals(["LEFT", "RIGHT"])),
+      startSide: Schema.optional(Schema.Literals(["LEFT", "RIGHT"])),
+    }))),
+    ...(allowApprove ? { approve: Schema.optional(Schema.Boolean) } : {}),
+  });
 
-function logObservedFailure(
-  logger: PluginLogger,
-  message: string,
-  error: unknown,
-  extra?: Record<string, unknown>,
-) {
-  logger.warn(message, {
-    ...(extra ?? {}),
-    ...getErrorDetails(error),
+  return Schema.Struct({
+    title: Schema.optional(Schema.String),
+    body: Schema.optional(Schema.String),
+    description: Schema.optional(Schema.String),
+    base: Schema.optional(Schema.String),
+    head: Schema.optional(Schema.String),
+    labels: Schema.optional(Schema.Array(Schema.String)),
+    removeLabels: Schema.optional(Schema.Array(Schema.String)),
+    replaceLabels: Schema.optional(Schema.Array(Schema.String)),
+    assignees: Schema.optional(Schema.Array(Schema.String)),
+    checklists: Schema.optional(Schema.Array(checklist)),
+    draft: Schema.optional(Schema.Boolean),
+    refUrl: Schema.optional(Schema.String),
+    commitId: Schema.optional(Schema.String),
+    review: Schema.optional(review),
+    replies: Schema.optional(Schema.Array(Schema.Struct({
+      inReplyTo: Schema.Int,
+      body: Schema.String,
+    }))),
+    commentBody: Schema.optional(Schema.String),
   });
 }
 
-export function getCommandExecution(
-  input: CommandExecuteBeforeInput,
-  output: CommandExecuteBeforeOutput,
-): CommandExecution | undefined {
-  const prompt = output.parts
-    .flatMap((part) => part.type === "text" ? [part.text] : [])
-    .join("\n")
-    .trim();
-
-  if (!prompt) return;
-
-  return {
-    command: input.command,
-    arguments: input.arguments,
-    prompt,
-  };
-}
-
-const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
-  changes_load(_: PluginInput["client"], __: MergedKompassConfig, _projectRoot: string, shell: Shell) {
-    const definition = createChangesLoadTool(shell);
-    return tool({
-      description: definition.description,
-      args: {
-        base: tool.schema.string().describe("Base branch or ref").optional(),
-        head: tool.schema.string().describe("Head branch, commit, or ref override").optional(),
-        depthHint: tool.schema.number().int().positive()
-          .describe("Optional shallow-fetch hint, such as PR commit count")
-          .optional(),
-        uncommitted: tool.schema.boolean()
-          .describe("Only load uncommitted changes (staged and unstaged), never fall back to branch comparison")
-          .optional(),
-      },
-      execute: (args, context) => definition.execute(args, context),
-    });
-  },
-  pr_load(_: PluginInput["client"], __: MergedKompassConfig, _projectRoot: string, shell: Shell) {
-    const definition = createPrLoadTool(shell);
-    return tool({
-      description: definition.description,
-      args: {
-        pr: tool.schema.string().describe("PR number or URL").optional(),
-      },
-      execute: (args, context) => definition.execute(args, context),
-    });
-  },
-  pr_load_review(_: PluginInput["client"], __: MergedKompassConfig, _projectRoot: string, shell: Shell) {
-    const definition = createPrLoadReviewTool(shell);
-    return tool({
-      description: definition.description,
-      args: {
-        pr: tool.schema.string().describe("PR number or URL").optional(),
-        since: tool.schema.string().describe("Exclusive ISO-8601 review checkpoint"),
-      },
-      execute: (args, context) => definition.execute(args, context),
-    });
-  },
-  pr_sync(_: PluginInput["client"], config: MergedKompassConfig, _projectRoot: string, shell: Shell) {
-    const definition = createPrSyncTool(shell);
-
-    return tool({
-      description: definition.description,
-      args: {
-        title: tool.schema.string().describe("PR title; required when creating or renaming a PR").optional(),
-        body: tool.schema.string().describe("PR body override").optional(),
-        description: tool.schema.string().describe("Short PR description rendered above checklist sections").optional(),
-        base: tool.schema.string().describe("Base branch to merge into").optional(),
-        head: tool.schema.string().describe("Head branch to use when creating a PR").optional(),
-        labels: tool.schema.array(tool.schema.string()).describe("Labels to add to the PR").optional(),
-        removeLabels: tool.schema.array(tool.schema.string()).describe("Labels to remove from an existing PR").optional(),
-        replaceLabels: tool.schema.array(tool.schema.string()).describe("Exact label set for the PR; an empty array clears all labels").optional(),
-        assignees: tool.schema.array(tool.schema.string()).describe("Assignees to apply to the PR").optional(),
-        checklists: tool.schema.array(tool.schema.object({
-          name: tool.schema.string().describe("Checklist section name"),
-          items: tool.schema.array(tool.schema.object({
-            name: tool.schema.string().describe("Checklist item name"),
-            completed: tool.schema.boolean().describe("Whether the item is completed"),
-          })).describe("Checklist items"),
-        })).describe("Checklist sections rendered as markdown").optional(),
-        draft: tool.schema.boolean().describe("Create as draft PR").optional(),
-        refUrl: tool.schema.string().describe("Optional PR URL to update").optional(),
-        commitId: tool.schema.string().describe("Commit SHA to anchor review comments to; omit unless sending review comments").optional(),
-        review: tool.schema.object({
-          body: tool.schema.string().describe("Optional review summary body").optional(),
-          comments: tool.schema.array(tool.schema.object({
-            path: tool.schema.string().describe("Changed file path"),
-            body: tool.schema.string().describe("Inline review comment body"),
-            line: tool.schema.number().int().describe("Ending line on the diff side"),
-            startLine: tool.schema.number().int().describe("Starting line for multi-line comments").optional(),
-            side: tool.schema.enum(["LEFT", "RIGHT"]).describe("Diff side for the ending line").optional(),
-            startSide: tool.schema.enum(["LEFT", "RIGHT"]).describe("Diff side for the starting line").optional(),
-          })).describe("Inline review comments to submit").optional(),
-          ...(config.shared.prApprove
-            ? { approve: tool.schema.boolean().describe("Approve the PR with this review comment").optional() }
-            : {}
-          ),
-        }).describe("Optional structured review submission; omit the field entirely unless submitting a review body, inline comments, or approval").optional(),
-        replies: tool.schema.array(tool.schema.object({
-          inReplyTo: tool.schema.number().int().describe("Existing review comment ID to reply to"),
-          body: tool.schema.string().describe("Reply body"),
-        })).describe("Replies to existing review comments").optional(),
-        commentBody: tool.schema.string().describe("General PR comment body").optional(),
-      },
-      execute: (args, context) => definition.execute(args, context),
-    });
-  },
-  ticket_sync(_: PluginInput["client"], __: MergedKompassConfig, _projectRoot: string, shell: Shell) {
-    const definition = createTicketSyncTool(shell);
-    return tool({
-      description: definition.description,
-      args: {
-        title: tool.schema.string().describe("Issue title").optional(),
-        body: tool.schema.string().describe("Issue body override").optional(),
-        description: tool.schema.string().describe("Issue description rendered above checklist sections").optional(),
-        labels: tool.schema.array(tool.schema.string()).describe("Labels to apply to the issue").optional(),
-        assignees: tool.schema.array(tool.schema.string()).describe("Assignees to apply to the issue").optional(),
-        checklists: tool.schema.array(tool.schema.object({
-          name: tool.schema.string().describe("Checklist section name"),
-          items: tool.schema.array(tool.schema.object({
-            name: tool.schema.string().describe("Checklist item name"),
-            completed: tool.schema.boolean().describe("Whether the item is completed"),
-          })).describe("Checklist items"),
-        })).describe("Checklist sections rendered as markdown").optional(),
-        refUrl: tool.schema.string().describe("Optional issue URL to update").optional(),
-        comments: tool.schema.array(tool.schema.string()).describe("Optional issue comments to post").optional(),
-      },
-      execute: (args, context) => definition.execute(args, context),
-    });
-  },
-  ticket_load(_: PluginInput["client"], __: MergedKompassConfig, _projectRoot: string, shell: Shell) {
-    const definition = createTicketLoadTool(shell);
-    return tool({
-      description: definition.description,
-      args: {
-        source: tool.schema.string().describe("Issue URL, repo#id, #id, file path, or raw text"),
-        comments: tool.schema.boolean().describe("Include issue comments").optional(),
-      },
-      execute: (args, context) => definition.execute(args, context),
-    });
-  },
-};
-
-export async function createOpenCodeTools(
-  client: PluginInput["client"],
+function toOpenCodeTool(
+  name: string,
+  definition: CoreTool,
+  input: OpenCodeTool["input"],
   projectRoot: string,
-  navigator?: {
-    client: V2Client;
-    legacyClient: (directory: string) => LegacyClient;
-    projectID: string;
-    protocol: "v1" | "v2";
-  },
-): Promise<Record<string, ToolDefinition>> {
-  const config = await loadMergedKompassConfig(projectRoot);
-  const tools: Record<string, ToolDefinition> = {};
-  const logger = createPluginLogger(client, projectRoot);
-  const shell = createNodeShell(projectRoot);
-
-  const navigatorEnabled = config.adapters.opencode.navigator.enabled;
-  let agentNames: string[] | undefined;
-  if (navigatorEnabled && navigator) {
-    try {
-      const response = await navigator.client.v2.agent.list({ location: { directory: projectRoot } });
-      agentNames = response.data?.data.map((agent) => agent.id);
-    } catch {
-      // Target-workspace validation remains authoritative if discovery is unavailable during registration.
-    }
-  }
-  const navigatorTools: Record<string, ToolDefinition> = navigatorEnabled && navigator
-    ? createNavigatorTools({
-        agentNames,
-        client: navigator.client,
-        legacyClient: navigator.legacyClient,
-        projectID: navigator.projectID,
-        checkout: projectRoot,
-        config: config.adapters.opencode.navigator,
-        protocol: navigator.protocol,
-      })
-    : {};
-
-  for (const toolName of getEnabledToolNames(config.tools, navigatorEnabled)) {
-    const creator = opencodeToolCreators[toolName as keyof typeof opencodeToolCreators];
-    const navigatorTool = navigatorTools[toolName];
-    if (creator || navigatorTool) {
-      const registeredName = getConfiguredOpenCodeToolName(toolName, config.tools[toolName].name);
-      tools[registeredName] = navigatorTool ?? creator(client, config, projectRoot, shell);
-      logger.info("Loaded Kompass tool", {
-        tool: toolName,
-        registeredName,
-      });
-    }
-  }
-
-  return tools;
-}
-
-export const OpenCodeCompassPlugin: Plugin = async (input: PluginInput) => {
-  const { client, worktree } = input;
-  const logger = createPluginLogger(client, worktree);
-
-  logger.info("Initialized Kompass plugin", {
-    directory: getString(input.directory),
-    worktree: getString(worktree),
-    projectPath: getString((input as { project?: { path?: string } }).project?.path),
-  });
-
-  async function createToolsSafely() {
-    try {
-      const config = await loadMergedKompassConfig(worktree);
-      let navigator: {
-        client: V2Client;
-        legacyClient: (directory: string) => LegacyClient;
-        projectID: string;
-        protocol: "v1" | "v2";
-      } | undefined;
-      if (config.adapters.opencode.navigator.enabled) {
-        const projectID = getString(input.project?.id);
-        if (!input.serverUrl || !projectID) {
-          logger.warn("Navigator requires OpenCode 1.17.12 or newer; Navigator tools were not registered");
-        } else {
-          const legacyClients = new Map<string, LegacyClient>();
-          const navigatorClient = createV2Client({ baseUrl: input.serverUrl.toString() });
-          const protocol = await detectNavigatorProtocol(navigatorClient);
-          navigator = {
-            // A client-wide directory would silently hide sessions in managed worktrees.
-            client: navigatorClient,
-            legacyClient(directory) {
-              let located = legacyClients.get(directory);
-              if (!located) {
-                located = createLegacyClient({ baseUrl: input.serverUrl!.toString(), directory });
-                legacyClients.set(directory, located);
-              }
-              return located;
-            },
-            projectID,
-            protocol,
-          };
-          const warning = await getNavigatorCompatibilityWarning(
-            navigator.client,
-            navigator.protocol,
-            navigator.legacyClient(worktree),
-          );
-          if (warning) {
-            logger.warn(`${warning}; Navigator tools were not registered`);
-            navigator = undefined;
-          }
-        }
-      }
-      return await createOpenCodeTools(client, worktree, navigator);
-    } catch (error) {
-      logger.warn("Skipping Kompass tool registration", {
-        ...getErrorDetails(error),
-      });
-      return {};
-    }
-  }
-
-  async function runConfigStep(name: string, register: () => Promise<void>) {
-    try {
-      await register();
-    } catch (error) {
-      logger.warn("Skipping Kompass config registration step", {
-        step: name,
-        worktree,
-        ...getErrorDetails(error),
-      });
-    }
-  }
-
-  const tools = await createToolsSafely();
-  await registerRiftWorkspaceAdapter(input as never, logger);
-
+): OpenCodeTool {
   return {
-    tool: tools,
-    async config(cfg) {
-      await runConfigStep("agents", () => applyAgentsConfig(cfg, worktree, { logger }));
-      await runConfigStep("commands", () => applyCommandsConfig(cfg, worktree, { logger }));
-    },
-    async "command.execute.before"(input, output) {
-      try {
-        const commandExecution = getCommandExecution(input, output);
-
-        if (!commandExecution) return;
-
-        logger.info("Executing Kompass command", commandExecution as Record<string, unknown>);
-      } catch (error) {
-        logObservedFailure(logger, "command.execute.before hook failed", error, {
-          command: input.command,
-          arguments: input.arguments,
-          sessionID: input.sessionID,
-        });
-      }
+    name,
+    description: definition.description,
+    input,
+    output: Schema.Unknown,
+    options: { codemode: false },
+    async execute(args) {
+      const content = await definition.execute(args as never, {
+        worktree: projectRoot,
+        directory: projectRoot,
+      });
+      return { output: JSON.parse(content), content };
     },
   };
-};
+}
+
+export async function createOpenCodeTools(projectRoot: string): Promise<OpenCodeTool[]> {
+  const config = await loadMergedKompassConfig(projectRoot);
+  const shell = createNodeShell(projectRoot);
+  const creators: Record<string, { definition: CoreTool; input: OpenCodeTool["input"] }> = {
+    changes_load: { definition: createChangesLoadTool(shell) as CoreTool, input: toolInputs.changes_load },
+    pr_load: { definition: createPrLoadTool(shell) as CoreTool, input: toolInputs.pr_load },
+    pr_load_review: { definition: createPrLoadReviewTool(shell) as CoreTool, input: toolInputs.pr_load_review },
+    pr_sync: {
+      definition: createPrSyncTool(shell) as CoreTool,
+      input: prSyncInput(config.shared.prApprove) as unknown as OpenCodeTool["input"],
+    },
+    ticket_load: { definition: createTicketLoadTool(shell) as CoreTool, input: toolInputs.ticket_load },
+    ticket_sync: { definition: createTicketSyncTool(shell) as CoreTool, input: toolInputs.ticket_sync },
+  };
+
+  return getEnabledToolNames(config.tools).flatMap((toolName) => {
+    const creator = creators[toolName];
+    if (!creator) return [];
+    const registeredName = getConfiguredOpenCodeToolName(toolName, config.tools[toolName].name);
+    return [toOpenCodeTool(registeredName, creator.definition, creator.input, projectRoot)];
+  });
+}
+
+async function setup(ctx: PluginContext) {
+  const location = await ctx.agent.list();
+  const projectRoot = location.location.directory;
+  const logger = createPluginLogger(projectRoot);
+
+  try {
+    const [agents, commands, tools] = await Promise.all([
+      loadResolvedAgents(projectRoot),
+      loadResolvedCommands(projectRoot),
+      createOpenCodeTools(projectRoot),
+    ]);
+
+    await ctx.agent.transform((draft) => applyAgentsConfig(draft, agents, { logger }));
+    await ctx.command.transform((draft) => applyCommandsConfig(draft, commands, { logger }));
+    await ctx.tool.transform((draft) => {
+      for (const tool of tools) draft.add(tool);
+    });
+
+    logger.info("Initialized Kompass v2 plugin", {
+      directory: projectRoot,
+      tools: tools.length,
+    });
+  } catch (error) {
+    logger.error("Failed to initialize Kompass v2 plugin", getErrorDetails(error));
+    throw error;
+  }
+}
+
+export const OpenCodeCompassPlugin = Plugin.define({
+  id: "kompass",
+  setup,
+});
 
 export { applyAgentsConfig, applyCommandsConfig };
 export default OpenCodeCompassPlugin;

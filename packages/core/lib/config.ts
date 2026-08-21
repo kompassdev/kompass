@@ -20,25 +20,6 @@ export const DEFAULT_TOOL_NAMES = [
   "pr_sync",
   "ticket_sync",
   "ticket_load",
-  "worktree_list",
-  "session_create",
-  "session_list",
-  "session_read",
-  "session_send",
-  "session_wait",
-  "session_interrupt",
-  "worktree_remove",
-] as const;
-
-export const NAVIGATOR_TOOL_NAMES = [
-  "worktree_list",
-  "session_create",
-  "session_list",
-  "session_read",
-  "session_send",
-  "session_wait",
-  "session_interrupt",
-  "worktree_remove",
 ] as const;
 
 export const DEFAULT_COMMAND_NAMES = [
@@ -164,14 +145,6 @@ export interface KompassConfig {
     pr_sync?: ToolConfig;
     ticket_sync?: ToolConfig;
     ticket_load?: ToolConfig;
-    worktree_list?: ToolConfig;
-    session_create?: ToolConfig;
-    session_list?: ToolConfig;
-    session_read?: ToolConfig;
-    session_send?: ToolConfig;
-    session_wait?: ToolConfig;
-    session_interrupt?: ToolConfig;
-    worktree_remove?: ToolConfig;
   };
   components?: {
     "change-summary"?: ComponentConfig;
@@ -198,7 +171,6 @@ export interface KompassConfig {
   adapters?: {
     opencode?: {
       agentMode?: "subagent" | "primary" | "all";
-      navigator?: Partial<NavigatorConfig>;
     };
   };
 }
@@ -226,14 +198,6 @@ export interface MergedKompassConfig {
     pr_sync: ToolConfig;
     ticket_sync: ToolConfig;
     ticket_load: ToolConfig;
-    worktree_list: ToolConfig;
-    session_create: ToolConfig;
-    session_list: ToolConfig;
-    session_read: ToolConfig;
-    session_send: ToolConfig;
-    session_wait: ToolConfig;
-    session_interrupt: ToolConfig;
-    worktree_remove: ToolConfig;
   };
   components: {
     enabled: string[];
@@ -245,17 +209,8 @@ export interface MergedKompassConfig {
   adapters: {
     opencode: {
       agentMode: "subagent" | "primary" | "all";
-      navigator: NavigatorConfig;
     };
   };
-}
-
-export interface NavigatorConfig {
-  enabled: boolean;
-  maxConcurrentSessions: number;
-  maxReadChars: number;
-  maxOutputCharsPerItem: number;
-  maxWaitMs: number;
 }
 
 const BUNDLED_CONFIG_CANDIDATES = [path.resolve(__dirname, "..", "kompass.jsonc")] as const;
@@ -526,14 +481,6 @@ const defaultToolConfig: Record<ToolName, ToolConfig> = {
   pr_sync: { enabled: true },
   ticket_sync: { enabled: true },
   ticket_load: { enabled: true },
-  worktree_list: { enabled: true },
-  session_create: { enabled: true },
-  session_list: { enabled: true },
-  session_read: { enabled: true },
-  session_send: { enabled: true },
-  session_wait: { enabled: true },
-  session_interrupt: { enabled: true },
-  worktree_remove: { enabled: true },
 };
 
 function getToggleEntry<T extends ToggleConfig>(
@@ -590,12 +537,8 @@ function getComponentPath(
 
 export function getEnabledToolNames(
   tools: MergedKompassConfig["tools"],
-  navigatorEnabled = false,
 ): ToolName[] {
-  const navigatorTools = new Set<string>(NAVIGATOR_TOOL_NAMES);
-  return DEFAULT_TOOL_NAMES.filter((toolName) =>
-    tools[toolName].enabled !== false && (navigatorEnabled || !navigatorTools.has(toolName))
-  );
+  return DEFAULT_TOOL_NAMES.filter((toolName) => tools[toolName].enabled !== false);
 }
 
 export function getConfiguredToolName(
@@ -641,28 +584,6 @@ export function mergeWithDefaults(
   const { enabled: _workerEnabled, ...workerOverrides } = config?.agents?.worker ?? {};
   const { enabled: _reviewerEnabled, ...reviewerOverrides } = config?.agents?.reviewer ?? {};
   const { enabled: _plannerEnabled, ...plannerOverrides } = config?.agents?.planner ?? {};
-  const navigator = {
-    enabled: config?.adapters?.opencode?.navigator?.enabled ?? true,
-    maxConcurrentSessions:
-      config?.adapters?.opencode?.navigator?.maxConcurrentSessions ?? 8,
-    maxReadChars: config?.adapters?.opencode?.navigator?.maxReadChars ?? 20_000,
-    maxOutputCharsPerItem:
-      config?.adapters?.opencode?.navigator?.maxOutputCharsPerItem ?? 4_000,
-    maxWaitMs: config?.adapters?.opencode?.navigator?.maxWaitMs ?? 120_000,
-  };
-
-  for (const [name, value] of Object.entries(navigator).filter(([name]) => name !== "enabled") as Array<[string, number]>) {
-    if (!Number.isInteger(value) || value <= 0) {
-      throw new Error(`adapters.opencode.navigator.${name} must be a positive integer`);
-    }
-  }
-  if (navigator.maxConcurrentSessions > 8) {
-    throw new Error("adapters.opencode.navigator.maxConcurrentSessions cannot exceed 8");
-  }
-  if (navigator.maxOutputCharsPerItem > navigator.maxReadChars) {
-    throw new Error("adapters.opencode.navigator.maxOutputCharsPerItem cannot exceed maxReadChars");
-  }
-
   return {
     shared: {
       prApprove: config?.shared?.prApprove ?? false,
@@ -709,14 +630,6 @@ export function mergeWithDefaults(
       pr_sync: { ...defaultToolConfig.pr_sync, ...config?.tools?.pr_sync },
       ticket_sync: { ...defaultToolConfig.ticket_sync, ...config?.tools?.ticket_sync },
       ticket_load: { ...defaultToolConfig.ticket_load, ...config?.tools?.ticket_load },
-      worktree_list: { ...defaultToolConfig.worktree_list, ...config?.tools?.worktree_list },
-      session_create: { ...defaultToolConfig.session_create, ...config?.tools?.session_create },
-      session_list: { ...defaultToolConfig.session_list, ...config?.tools?.session_list },
-      session_read: { ...defaultToolConfig.session_read, ...config?.tools?.session_read },
-      session_send: { ...defaultToolConfig.session_send, ...config?.tools?.session_send },
-      session_wait: { ...defaultToolConfig.session_wait, ...config?.tools?.session_wait },
-      session_interrupt: { ...defaultToolConfig.session_interrupt, ...config?.tools?.session_interrupt },
-      worktree_remove: { ...defaultToolConfig.worktree_remove, ...config?.tools?.worktree_remove },
     },
     components: {
       enabled: getEnabledNames(
@@ -741,7 +654,6 @@ export function mergeWithDefaults(
           config?.adapters?.opencode?.agentMode ??
           config?.defaults?.agentMode ??
           "all",
-        navigator,
       },
     },
   };

@@ -4,7 +4,20 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { applyAgentsConfig } from "../config.ts";
+import { loadResolvedAgents } from "../cache.ts";
+import { applyAgentsConfig as applyAgentsTransform } from "../config.ts";
+
+async function applyAgentsConfig(cfg: { agent?: Record<string, any> }, projectRoot: string) {
+  cfg.agent ??= {};
+  const draft = {
+    update(name: string, update: (agent: Record<string, any>) => void) {
+      const agent = cfg.agent![name] ?? { id: name, mode: "primary", permissions: [] };
+      cfg.agent![name] = agent;
+      update(agent);
+    },
+  };
+  applyAgentsTransform(draft as never, await loadResolvedAgents(projectRoot));
+}
 
 process.env.HOME = path.join(os.tmpdir(), `kompass-test-home-${process.pid}-agents-config`);
 
@@ -15,8 +28,8 @@ describe("applyAgentsConfig", () => {
         string,
         {
           description: string;
-          prompt?: string;
-          permission: Record<string, string>;
+          system?: string;
+          permissions: Array<{ action: string; resource: string; effect: string }>;
           mode?: string;
         }
       >;
@@ -29,24 +42,24 @@ describe("applyAgentsConfig", () => {
       cfg.agent.worker?.description,
       "Generic worker agent.",
     );
-    assert.deepEqual(cfg.agent.worker?.permission, {
-      question: "allow",
-      todowrite: "allow",
-    });
-    assert.equal(cfg.agent.worker?.mode, undefined);
-    assert.deepEqual(cfg.agent.reviewer?.permission, {
-      edit: "deny",
-      question: "allow",
-      todowrite: "allow",
-    });
-    assert.deepEqual(cfg.agent.planner?.permission, {
-      edit: "deny",
-      question: "allow",
-      todowrite: "allow",
-    });
-    assert.equal(cfg.agent.worker?.prompt, undefined);
+    assert.deepEqual(cfg.agent.worker?.permissions.slice(-2), [
+      { action: "question", resource: "*", effect: "allow" },
+      { action: "todowrite", resource: "*", effect: "allow" },
+    ]);
+    assert.equal(cfg.agent.worker?.mode, "primary");
+    assert.deepEqual(cfg.agent.reviewer?.permissions.slice(-3), [
+      { action: "edit", resource: "*", effect: "deny" },
+      { action: "question", resource: "*", effect: "allow" },
+      { action: "todowrite", resource: "*", effect: "allow" },
+    ]);
+    assert.deepEqual(cfg.agent.planner?.permissions.slice(-3), [
+      { action: "edit", resource: "*", effect: "deny" },
+      { action: "question", resource: "*", effect: "allow" },
+      { action: "todowrite", resource: "*", effect: "allow" },
+    ]);
+    assert.equal(cfg.agent.worker?.system, undefined);
     assert.equal(cfg.agent.navigator, undefined);
-    assert.match(cfg.agent.reviewer?.prompt ?? "", /Never switch branches/i);
+    assert.match(cfg.agent.reviewer?.system ?? "", /Never switch branches/i);
   });
 
   test("overwrites existing agent configuration", async () => {
@@ -55,8 +68,8 @@ describe("applyAgentsConfig", () => {
         string,
         {
           description: string;
-          prompt?: string;
-          permission: Record<string, string>;
+          system?: string;
+          permissions: Array<{ action: string; resource: string; effect: string }>;
           mode?: string;
         }
       >;
@@ -64,8 +77,8 @@ describe("applyAgentsConfig", () => {
       agent: {
         worker: {
           description: "Existing worker",
-          prompt: "Existing prompt",
-          permission: { question: "deny" },
+          system: "Existing prompt",
+          permissions: [{ action: "question", resource: "*", effect: "deny" }],
         },
       },
     };
@@ -73,11 +86,16 @@ describe("applyAgentsConfig", () => {
     await applyAgentsConfig(cfg as never, process.cwd());
 
     assert.equal(cfg.agent?.worker?.description, "Generic worker agent.");
-    assert.equal(cfg.agent?.worker?.prompt, undefined);
-    assert.deepEqual(cfg.agent?.worker?.permission, {
-      question: "allow",
-      todowrite: "allow",
+    assert.equal(cfg.agent?.worker?.system, undefined);
+    assert.deepEqual(cfg.agent?.worker?.permissions[0], {
+      action: "question",
+      resource: "*",
+      effect: "deny",
     });
+    assert.deepEqual(cfg.agent?.worker?.permissions.slice(-2), [
+      { action: "question", resource: "*", effect: "allow" },
+      { action: "todowrite", resource: "*", effect: "allow" },
+    ]);
   });
 
   test("registers configured agent aliases", async () => {

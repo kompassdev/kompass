@@ -20,7 +20,7 @@
 - Choose `<invocation-mode>` as `model` when the agent or another skill must discover this skill autonomously; choose `user` only when a person will invoke it explicitly and the runtime supports user-only invocation
 - For `model` invocation, write a description that starts with `Use when` and names each distinct trigger branch once
 - For `user` invocation, use the runtime's supported user-only frontmatter and write a one-line human summary instead of a trigger list
-- Put the ordered actions and their checkable completion criteria in `SKILL.md`
+- For procedural skills, put the ordered actions and their checkable completion criteria in `SKILL.md`; for reference-only skills, organize the guidance around the decisions it informs instead of inventing procedural steps
 - Co-locate each concept's definition, rules, and exceptions; move branch-only or long reference material to a support file with an explicit condition telling the agent when to read it
 - Keep one source of truth for each instruction and rely on repository files or command help for facts the agent can cheaply inspect
 - Use direct positive instructions; keep prohibitions for safety or destructive actions
@@ -30,7 +30,7 @@
 
 - Create or update `<skill-dir>/SKILL.md`
 - Keep frontmatter to the fields required by `<invocation-mode>` and demonstrated project conventions
-- Write concrete actions with observable end states; replace vague bounds such as "be thorough" or "use relevant context"
+- For procedural skills, write concrete actions with observable end states; replace vague bounds such as "be thorough" or "use relevant context"
 - Remove duplicate instructions, stale reference material, and statements that merely restate repository files
 - Store the changed file list as `<file-lines>` with one bullet per file path
 

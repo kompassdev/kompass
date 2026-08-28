@@ -60,3 +60,21 @@ Remaining: 0
 
 No additional steps are required.
 ```
+
+When plan approval is not granted, display:
+```
+Todo waiting: <task>
+Reason: plan approval not granted
+Todo file unchanged: <todo-file>
+
+No additional steps are required.
+```
+
+When implementation, validation, change loading, or commit stops, store the exact stopping reason as `<blocker>` and display:
+```
+Todo blocked: <task>
+Reason: <blocker>
+Todo file unchanged: <todo-file>
+
+No additional steps are required.
+```

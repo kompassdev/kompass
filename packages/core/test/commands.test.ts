@@ -131,6 +131,10 @@ describe("resolveCommands", () => {
       commands["skill/create"]?.template ?? "",
       /Choose `<invocation-mode>` as `model` when the agent or another skill must discover this skill/,
     );
+    assert.match(
+      commands["skill/create"]?.template ?? "",
+      /for reference-only skills, organize the guidance around the decisions it informs instead of inventing procedural steps/,
+    );
   });
 
   test("renders complete terminal output contracts", async () => {
@@ -140,6 +144,8 @@ describe("resolveCommands", () => {
     assert.match(commands["ticket/dev"]?.template ?? "", /Commit: <commit-result>/);
     assert.match(commands["ticket/dev"]?.template ?? "", /no new commit/);
     assert.match(commands.learn?.template ?? "", /No agent guidance updates needed/);
+    assert.match(commands.todo?.template ?? "", /Todo waiting: <task>/);
+    assert.match(commands.todo?.template ?? "", /Todo blocked: <task>/);
 
     for (const name of ["dev", "ship", "pr/create", "ticket/dev"]) {
       assert.match(commands[name]?.template ?? "", /Completed: <completed-state>/);

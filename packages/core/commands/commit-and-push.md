@@ -36,8 +36,6 @@ $ARGUMENTS
 
 <%~ include("@commit") %>
 
-### Push to Remote
-
 <%~ include("@push", { config: it.config }) %>
 
 ### Output

@@ -18,9 +18,10 @@ Use `/skill/create` to author a new reusable Agent Skill that is grounded in the
 - inspect existing skills, skill roots, and nearby project artifacts
 - stop if the request would duplicate an existing skill without a clear scope boundary
 - derive a valid hyphenated skill name and default root such as `.agents/skills/`
-- create a concise `SKILL.md` with an intent-oriented trigger description and focused execution guidance
-- add `references/`, `scripts/`, or `assets/` only when they materially improve the skill
-- validate the structure, frontmatter, trigger description, and references
+- choose a supported model or user invocation mode based on who must discover the skill
+- create a concise `SKILL.md` with checkable steps and one source of truth for each instruction
+- move branch-only detail into support files with explicit load conditions
+- validate invocation frontmatter, completion criteria, and file references
 
 ## Common tools
 

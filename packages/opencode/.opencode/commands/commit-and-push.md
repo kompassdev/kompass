@@ -28,22 +28,18 @@ $ARGUMENTS
 
 #### Load Changes
 
-- call `kompass_changes_load`
+- Call `kompass_changes_load`
 - pass `uncommitted: true` to get uncommitted changes only
 - Store the returned result as `<changes>`
-- If `<changes>.deferredDiffs` is present, inspect the needed deferred diffs directly one file at a time using the returned comparison and changed paths
+- If `<changes>.deferredDiffs` is present, inspect every deferred diff directly using the returned comparison and changed paths before summarizing
 #### Analyze And Summarize Changes
 
-- Use `<changes>` as the source of truth; do not run additional git commands to rediscover its comparison
-- Note the comparison mode, base branch, and current branch from `<changes>`
-- When `<changes>.comparison` is not `uncommitted`, treat `<changes>.commits` as the authoritative scope of work: only summarize commits ahead of the resolved base branch
-- Review commit messages when available to understand the delivery narrative
-- Review paths, statuses, line counts, and diffs from `<changes>` as file-level context for the commits in scope
-- Read only the most relevant changed source files when the diff does not provide enough context
-- Identify the nature of changes (added, modified, deleted)
-- Group related changes into logical themes
-- Summarize the "what" and "why" (not the "how")
-- Do not infer scope from branch names or describe work that exists only on the base branch or outside the commits ahead of base
+- Use `<changes>` as the source of truth for the comparison, branches, commits, changed paths, and diffs
+- For a branch comparison, limit the work scope to `<changes>.commits`; use paths and diffs to explain those commits, not to import work from the base branch
+- Read a changed source file when its diff does not establish its purpose or behavioral effect
+- Group the work into `<change-themes>` by delivered behavior or purpose, then store a concise "what" and "why" summary as `<change-summary>`
+- Account for every changed path under one theme or identify it as generated, supporting, or non-behavioral before finishing the summary
+- Base every theme on commit or diff evidence rather than the branch name
 
 ### Check Blockers
 
@@ -51,39 +47,33 @@ $ARGUMENTS
 
 ### Create Commit
 
-### Message Format
-- Prefer this format unless the change is tiny:
+#### Message Format
+- Use this format when the change has more than one meaningful theme:
 
 ```text
 type: summary
 
-- change
-- change
-- change
+- grouped change
+- grouped change
 ```
 
-- Keep the subject concise and under 72 characters
-- Use conventional commit format: "feat:", "fix:", "refactor:", "docs:", etc.
-- For non-trivial changes, add 2-5 short bullets with the main grouped changes
-- Use a one-line commit only when a body would add no value
+- Use a conventional type such as `feat`, `fix`, `refactor`, or `docs`, and keep the subject under 72 characters
+- Add one short body bullet per meaningful change theme; use a subject-only message when there is only one self-explanatory theme
 
-### Commit Phase
-1. Use the loaded change data as the source of truth for what will be committed
-2. Stage changes with `git add` (use `-A` for all, or specific files)
-3. Generate the commit message and store it as `<commit-message>`
-4. Preserve the blank line between subject and bullets when present
-5. Create the commit with `<commit-message>`
-6. Store the created commit hash as `<hash>`
-7. Only run `git status` if the commit fails and needs diagnosis
-
-### Push to Remote
+#### Commit Phase
+1. Treat the file set in `<changes>` as the complete intended commit scope
+2. Stage exactly that file set, including intended deletions, without staging paths outside `<changes>`
+3. Compare the staged paths with `<changes>` and resolve any missing or extra path before committing
+4. Generate `<commit-message>` from the loaded change themes, preserving the blank line between subject and body
+5. Create the commit and store the resulting hash as `<hash>` only after it succeeds
+6. If the commit fails, inspect repository status, fix the cause when safe, or STOP with the exact blocker
 
 ### Push Branch
 
 - If `<current-branch>` is not defined, run `git branch --show-current` and store the trimmed result as `<current-branch>`
 - Run `git push` and use its output as the source of truth
 - If the current branch has no upstream, retry with `git push -u origin <current-branch>`
-- Store whether a push occurred as `<push-status>` and the successful destination as `<push-target>`
+- After a successful push, store whether commits were transferred as `<push-status>` and the reported destination as `<push-target>`
 - If push fails, STOP and report the push error
 
 ### Output

@@ -32,8 +32,8 @@ $ARGUMENTS
 - Use `kompass_ticket_load` with `source: <request-source>`
 - Store the result as `<request-context>`
 - Treat the loaded ticket body, discussion, and any attachments or linked artifacts returned by the loader as part of the source context
-- Review attached images, PDFs, and other linked files whenever they can affect requirements, acceptance criteria, reproduction steps, design direction, or the requested answer
-- If any relevant attachment cannot be accessed, note that gap and continue only when the remaining ticket context is still sufficient to proceed reliably
+- Review each attachment that can change requirements, acceptance criteria, reproduction steps, design direction, or the requested answer
+- Store inaccessible relevant attachments as `<attachment-gaps>`; STOP when a gap prevents a supported decision, otherwise exclude the missing material from the evidence used
 - Otherwise, treat `<request>` as `<request-context>`
 - If `<request-context>` cannot be determined, STOP and report that the implementation request is missing
 
@@ -42,13 +42,15 @@ $ARGUMENTS
 - Summarize the goal, constraints, and acceptance criteria from `<request-context>` before making changes
 - Store that summary as `<request-summary>`
 
-### Development Flow Navigation Guide
+### Implement The Change
 
-- Orient yourself using the normalized request context before editing
-- Survey the codebase before plotting the implementation
-- Prefer the smallest course correction that fully reaches the destination
-- Validate the path with targeted checks before handing off to PR creation
-- Surface any detours or follow-up destinations that should stay off the current route
+- Load the repository instructions that apply to every file likely to change
+- Inspect the current implementation, its callers, and its tests until the existing behavior and local conventions are clear
+- Derive `<acceptance-checks>` from every explicit requirement, constraint, and approved plan item in `<request-context>`, `<request-summary>`, and `<additional-context>`
+- Store the files and behaviors intentionally excluded from this change as `<out-of-scope>`
+- Implement the smallest complete change that satisfies every item in `<acceptance-checks>` while preserving unrelated work
+- Before validation, account for every item in `<acceptance-checks>` with an implementation change, an existing behavior that already satisfies it, or a concrete blocker
+- Continue implementing while any item remains unaccounted for; STOP and report the blocker when an item cannot be completed without changing the approved scope
 
 ### Validate Changes
 
@@ -65,6 +67,14 @@ $ARGUMENTS
 - Do not create the pull request in this command; stop when the branch is ready for `pr/create`
 
 ### Output
+
+If any step stops on a blocker not covered by another output, store its reason as `<reason>` and completed phases as `<completed-state>`, then display:
+```
+Implementation blocked: <reason>
+Completed: <completed-state>
+
+No additional steps are required.
+```
 
 When the implementation is ready for PR creation, display:
 ```

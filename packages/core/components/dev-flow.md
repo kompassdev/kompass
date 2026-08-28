@@ -1,7 +1,9 @@
-### Development Flow Navigation Guide
+### Implement The Change
 
-- Orient yourself using the normalized request context before editing
-- Survey the codebase before plotting the implementation
-- Prefer the smallest course correction that fully reaches the destination
-- Validate the path with targeted checks before handing off to PR creation
-- Surface any detours or follow-up destinations that should stay off the current route
+- Load the repository instructions that apply to every file likely to change
+- Inspect the current implementation, its callers, and its tests until the existing behavior and local conventions are clear
+- Derive `<acceptance-checks>` from every explicit requirement, constraint, and approved plan item in <%= it.context %>
+- Store the files and behaviors intentionally excluded from this change as `<out-of-scope>`
+- Implement the smallest complete change that satisfies every item in `<acceptance-checks>` while preserving unrelated work
+- Before validation, account for every item in `<acceptance-checks>` with an implementation change, an existing behavior that already satisfies it, or a concrete blocker
+- Continue implementing while any item remains unaccounted for; STOP and report the blocker when an item cannot be completed without changing the approved scope

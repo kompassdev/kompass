@@ -4,5 +4,5 @@
 - Do not run separate git or GitHub commands just to discover the PR before calling `<%= it.config.tools.pr_load.name %>`
 - Store the result as `<%= it.result %>`
 - Treat the loaded PR body, discussion, review history, and any attachments or linked artifacts returned by the loader as part of the source context
-- Review attached images, screenshots, videos, PDFs, and other linked files whenever they can affect the requested fix, review outcome, reproduction steps, or acceptance criteria
-- If any relevant attachment cannot be accessed, note that gap and continue only when the remaining PR context is still sufficient to proceed reliably
+- Review each attachment that can change the requested fix, review outcome, reproduction steps, or acceptance criteria
+- Store inaccessible relevant attachments as `<attachment-gaps>`; STOP when a gap prevents a supported decision, otherwise exclude the missing material from the evidence used

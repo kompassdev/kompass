@@ -14,6 +14,7 @@
 
 ### Interpret Planning Context
 
+- Treat ticket providers generically unless `<planning-context>` requires provider-specific behavior
 - From `<planning-context>` and `<additional-context>`, derive:
   - `<planning-objective>` - the current planning task or request
   - `<operative-constraints>` - earlier context that still applies
@@ -21,13 +22,12 @@
   - `<open-questions>` - only the issues that are still unresolved
 - Use the current request to determine `<planning-objective>`
 - Do not discard earlier comments when they still define constraints, business rules, implementation decisions, migration rules, naming, sequencing, or scoping limits
+- Ask one focused question only when an unresolved issue prevents a reliable plan
 
 ### Inspect Repo Context
 
-- If the request is technical and repository context is available, perform light targeted reconnaissance before finalizing the plan
-- Inspect the relevant code, schema, config, UI patterns, and tests needed to validate `<proposed-technical-direction>` and ground the plan
-- Confirm current behavior and existing patterns instead of relying on ticket text alone
-- If relevant repo context cannot be found or verified, note that gap and avoid false certainty
+- For a technical request with repository access, inspect the implementation, contracts, configuration, and tests needed to verify current behavior and `<proposed-technical-direction>`
+- Store unverified material claims as `<planning-gaps>` instead of presenting them as facts
 
 ### Shape the Plan
 
@@ -40,3 +40,5 @@
 - Improve incomplete technical details when repo inspection provides a better grounded direction
 - Do not replace material technical guidance with generic outcome language
 - Avoid placeholder-like labels or awkward title formats such as `Ticket`, `Description`, or `Ticket : Description`
+- Before finishing, account for every item in `<operative-constraints>` and every resolved item in `<open-questions>` in the description or a requirement item
+- Give every requirement at least one validation item that would prove it works, combining checks only when one check genuinely covers several requirements

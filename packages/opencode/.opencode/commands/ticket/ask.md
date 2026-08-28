@@ -34,8 +34,8 @@ $ARGUMENTS
 - Use `kompass_ticket_load` with `source: <ticket-url>` and `comments: true`
 - Store the result as `<ticket-context>`
 - Treat the loaded ticket body, discussion, and any attachments or linked artifacts returned by the loader as part of the source context
-- Review attached images, PDFs, and other linked files whenever they can affect requirements, acceptance criteria, reproduction steps, design direction, or the requested answer
-- If any relevant attachment cannot be accessed, note that gap and continue only when the remaining ticket context is still sufficient to proceed reliably
+- Review each attachment that can change requirements, acceptance criteria, reproduction steps, design direction, or the requested answer
+- Store inaccessible relevant attachments as `<attachment-gaps>`; STOP when a gap prevents a supported decision, otherwise exclude the missing material from the evidence used
 - If `<ticket-url>` is missing or `<ticket-context>` cannot be loaded, STOP and report that the ticket context is missing or invalid
 
 ### Draft The Answer

@@ -87,7 +87,7 @@ async function main() {
     // Generate YAML frontmatter per OpenCode spec, then append content with embedded components
     const frontmatter = YAML.stringify({
       description: command.description,
-      agent: command.agent,
+      ...(command.agent ? { agent: command.agent } : {}),
       ...(command.subtask === false ? { subtask: false } : {}),
     });
     const content = ensureTrailingNewline(

@@ -5,7 +5,9 @@ description: Shared guidance block for creating and improving Agent Skills.
 
 ## Behavior
 
-- loads only the related code, skills, docs, evals, and conversation context needed to understand the skill well
-- designs the skill as one coherent reusable job with a clear trigger description and sensible defaults
-- writes or updates `SKILL.md` concisely, adding support files only when they materially help
-- validates naming, frontmatter, file references, and relevant scripts or eval helpers
+- grounds changes in project conventions, examples, and observed failures
+- defines one reusable job with observable completion criteria
+- selects model or user invocation from the modes supported by the project's skill runtime
+- writes each model-invoked trigger branch once and uses a human summary for supported user-only skills
+- keeps each instruction in one place and moves branch-only detail behind an explicit load condition
+- validates invocation frontmatter, completion criteria, references, and relevant scripts or eval helpers

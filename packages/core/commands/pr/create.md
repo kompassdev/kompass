@@ -31,6 +31,14 @@ $ARGUMENTS
 
 ### Output
 
+If any step stops on a blocker not covered by another output, store its reason as `<reason>` and completed phases as `<completed-state>`, then display:
+```
+PR creation blocked: <reason>
+Completed: <completed-state>
+
+No additional steps are required.
+```
+
 When complete, display:
 ```
 Created PR: <pr-title>

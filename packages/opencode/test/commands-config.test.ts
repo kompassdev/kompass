@@ -62,7 +62,7 @@ describe("applyCommandsConfig", () => {
 
     test("registers commands with correct properties", async () => {
       delete process.env.CI;
-      const cfg: { command?: Record<string, { description: string; agent: string; template: string; subtask: boolean }> } = {};
+      const cfg: { command?: Record<string, { description: string; agent?: string; template: string; subtask: boolean }> } = {};
 
       await applyCommandsConfig(cfg as never, process.cwd());
 
@@ -83,6 +83,12 @@ describe("applyCommandsConfig", () => {
       assert.equal(cfg.command!["ship"]?.agent, "worker");
       assert.equal(cfg.command!["todo"]?.agent, "worker");
       assert.equal(cfg.command!["ticket/dev"]?.agent, "worker");
+      assert.equal(cfg.command!["branch/inline"]?.agent, undefined);
+      assert.equal(cfg.command!["commit/inline"]?.agent, undefined);
+      assert.equal(cfg.command!["commit-and-push/inline"]?.agent, undefined);
+      assert.equal(cfg.command!["pr/create/inline"]?.agent, undefined);
+      assert.equal(cfg.command!["ship/inline"]?.agent, undefined);
+      assert.equal(cfg.command!["learn"]?.agent, undefined);
       assert.ok(cfg.command!["pr/review"]?.description);
       assert.ok(cfg.command!["dev"]?.template);
       assert.ok(cfg.command!["pr/fix/loop"]?.template);
@@ -271,7 +277,7 @@ describe("applyCommandsConfig", () => {
       assert.ok(cfg.command);
       assert.ok(cfg.command!["dev"]);
       // Should contain the actual content from dev-flow.md
-      assert.match(cfg.command!["dev"].template, /Development Flow Navigation Guide/);
+      assert.match(cfg.command!["dev"].template, /Implement The Change/);
       assert.doesNotMatch(cfg.command!["dev"].template, /<%/);
     });
 
@@ -395,9 +401,9 @@ describe("applyCommandsConfig", () => {
       assert.equal(cfg.command!["todo"]?.subtask, true);
     });
 
-    test("disables subtask mode in CI", async () => {
+    test("disables subtask mode in CI without dropping configured agents", async () => {
       process.env.CI = "true";
-      const cfg: { command?: Record<string, { subtask: boolean }> } = {};
+      const cfg: { command?: Record<string, { agent?: string; subtask: boolean }> } = {};
 
       await applyCommandsConfig(cfg as never, process.cwd());
 
@@ -413,6 +419,17 @@ describe("applyCommandsConfig", () => {
       assert.equal(cfg.command!["pr/create/inline"]?.subtask, false);
       assert.equal(cfg.command!["ship/inline"]?.subtask, false);
       assert.equal(cfg.command!["todo"]?.subtask, false);
+      assert.equal(cfg.command!["pr/review"]?.agent, "reviewer");
+      assert.equal(cfg.command!["review"]?.agent, "reviewer");
+      assert.equal(cfg.command!["ticket/plan"]?.agent, "planner");
+      assert.equal(cfg.command!["ticket/plan-and-sync"]?.agent, "planner");
+      assert.equal(cfg.command!["dev"]?.agent, "worker");
+      assert.equal(cfg.command!["branch/inline"]?.agent, undefined);
+      assert.equal(cfg.command!["commit/inline"]?.agent, undefined);
+      assert.equal(cfg.command!["commit-and-push/inline"]?.agent, undefined);
+      assert.equal(cfg.command!["pr/create/inline"]?.agent, undefined);
+      assert.equal(cfg.command!["ship/inline"]?.agent, undefined);
+      assert.equal(cfg.command!["learn"]?.agent, undefined);
     });
   });
 
@@ -516,7 +533,8 @@ describe("applyCommandsConfig", () => {
       const devTemplate = cfg.command!["dev"].template;
       
       // Should have replaced components
-      assert.match(devTemplate, /Development Flow Navigation Guide/);
+      assert.match(devTemplate, /Implement The Change/);
+      assert.match(devTemplate, /account for every item in `<acceptance-checks>`/);
       // PR Author content is now inline in pr/create, not embedded in dev
       assert.match(devTemplate, /## Goal/);
       assert.match(devTemplate, /Implement a feature or fix/);
@@ -571,7 +589,11 @@ describe("applyCommandsConfig", () => {
       assert.match(skillCreateTemplate, /## Goal/);
       assert.match(skillCreateTemplate, /Shared Skill Workflow/);
       assert.match(skillCreateTemplate, /Load Related Context/);
-      assert.match(skillCreateTemplate, /Ground decisions in project-specific patterns/);
+      assert.match(skillCreateTemplate, /observed project patterns/);
+      assert.match(
+        skillCreateTemplate,
+        /Choose `<invocation-mode>` as `model` when the agent or another skill must discover this skill/,
+      );
       assert.doesNotMatch(skillCreateTemplate, /<%/);
 
       assert.match(skillOptimizeTemplate, /## Goal/);
@@ -592,7 +614,7 @@ describe("applyCommandsConfig", () => {
       const ticketDevTemplate = cfg.command!["ticket/dev"].template;
       
       // Should have replaced components
-      assert.match(ticketDevTemplate, /Development Flow Navigation Guide/);
+      assert.match(ticketDevTemplate, /Implement The Change/);
       assert.match(ticketDevTemplate, /## Goal/);
       assert.match(ticketDevTemplate, /Implement a ticket/);
       assert.match(ticketDevTemplate, /Load Uncommitted Changes Once/);
@@ -615,7 +637,8 @@ describe("applyCommandsConfig", () => {
       assert.match(todoTemplate, /## Goal/);
       assert.match(todoTemplate, /Work through a todo file one pending item at a time by planning/);
       assert.match(todoTemplate, /Plan Task/);
-      assert.match(todoTemplate, /Implement Task/);
+      assert.match(todoTemplate, /Implement The Change/);
+      assert.match(todoTemplate, /Validate Task/);
       assert.match(todoTemplate, /Load And Commit Task Changes/);
       assert.doesNotMatch(todoTemplate, /<delegate/);
       assert.match(todoTemplate, /Todo complete: <todo-file>/);

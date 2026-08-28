@@ -1,12 +1,11 @@
 ## Goal
 
-Extract non-obvious learnings from this session and document them appropriately.
+Turn non-obvious session discoveries into scoped instructions for future agents.
 
 ## Additional Context
 
-- Document non-obvious discoveries only
-- Skip obvious facts, standard behavior, and already-documented items
-- Avoid verbose explanations and session-specific details
+- Capture project-specific instructions that would change a future agent's behavior
+- Leave facts that are obvious from repository files or command help in their source of truth
 - Use `<focus-scope>` and `<additional-context>` to decide where to look more closely
 
 ## Workflow
@@ -27,37 +26,33 @@ $ARGUMENTS
 ### Review Session
 
 - Analyze the session for discoveries, repeated failed attempts, unexpected connections, and non-obvious constraints
-- Focus on insights that would help a future agent avoid relearning the same thing
+- Store discoveries that would change a future agent's behavior as `<candidate-learnings>`
 
 ### Identify Learnings
 
-- Capture non-obvious learnings only, such as:
-  - Hidden relationships between files or modules
-  - Execution paths that differ from how code appears
-  - Non-obvious configuration, environment variables, or flags
-  - Debugging breakthroughs when error messages were misleading
-  - API or tool quirks and workarounds
-  - Project-specific validation or verification steps not documented elsewhere
-  - Architectural decisions and constraints
-  - Files that must change together
-  - Environment-specific behavior
+- Keep project-specific relationships, constraints, tool quirks, validation requirements, and files that must change together
+- Exclude session details, generic advice, and facts that repository files or command help make obvious
+- Store the remaining items as `<learnings>`
 
 ### Determine Documentation Scope
 
 - Place each learning at the most specific useful level:
-  - Project-wide -> root `AGENTS.md` or `CONTRIBUTING.md`
+  - Project-wide -> root `AGENTS.md`
   - Package-specific -> `packages/foo/AGENTS.md`
-  - Feature-specific -> a deeper `AGENTS.md` or concise inline documentation when appropriate
+  - Feature-specific -> a deeper `AGENTS.md`
 
 ### Read Existing Docs
 
 - Read the relevant `AGENTS.md` files before editing to avoid duplication and drift
+- Remove candidates already covered by existing guidance
+- If `<learnings>` is empty, STOP without editing and store the reason as `<no-learning-reason>`
 
 ### Create or Update Documentation
 
-- Add the learnings in the selected location
-- Keep each learning to 1-3 concise, actionable lines
-- Prefer updates over new files unless a new scope boundary is warranted
+- Co-locate each learning with related guidance at the narrowest scope where it remains true
+- Write each learning as a concrete instruction with the condition that makes it relevant
+- Replace stale or duplicate guidance instead of adding another version
+- Keep each learning to 1-3 actionable lines and create a new file only for a real scope boundary
 
 ### Summarize Results
 
@@ -65,6 +60,15 @@ $ARGUMENTS
 - Store those summary lines as `<file-update-lines>` in the format `- <file-path>: <learning-count> learnings`
 
 ### Output
+
+When no learning needs documentation, display:
+```
+No agent guidance updates needed
+
+Reason: <no-learning-reason>
+
+No additional steps are required.
+```
 
 When the documentation update is complete, display:
 ```

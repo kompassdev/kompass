@@ -11,12 +11,16 @@ import {
 } from "../lib/config.ts";
 import { loadProjectText } from "../lib/text.ts";
 
-interface CommandDefinition {
+interface CommandDefinitionBase {
   description: string;
-  agent: string;
   templatePath: string;
-  subtask?: boolean;
 }
+
+type CommandDefinition = CommandDefinitionBase &
+  (
+    | { agent: string; subtask?: true }
+    | { agent?: never; subtask: false }
+  );
 
 export const commandDefinitions: Record<string, CommandDefinition> = {
   ask: {
@@ -31,7 +35,6 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   "branch/inline": {
     description: "Create a branch using context from the current session",
-    agent: "worker",
     templatePath: "commands/branch.md",
     subtask: false,
   },
@@ -42,7 +45,6 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   "commit/inline": {
     description: "Commit changes using context from the current session",
-    agent: "worker",
     templatePath: "commands/commit.md",
     subtask: false,
   },
@@ -53,7 +55,6 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   "commit-and-push/inline": {
     description: "Commit and push using context from the current session",
-    agent: "worker",
     templatePath: "commands/commit-and-push.md",
     subtask: false,
   },
@@ -64,7 +65,6 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   learn: {
     description: "Extract learnings from session to AGENTS.md files",
-    agent: "worker",
     templatePath: "commands/learn.md",
     subtask: false,
   },
@@ -85,7 +85,6 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   "pr/create/inline": {
     description: "Create a PR in the current session",
-    agent: "worker",
     templatePath: "commands/pr/create.md",
     subtask: false,
   },
@@ -121,7 +120,6 @@ export const commandDefinitions: Record<string, CommandDefinition> = {
   },
   "ship/inline": {
     description: "Ship branch work using context from the current session",
-    agent: "worker",
     templatePath: "commands/ship.md",
     subtask: false,
   },
@@ -250,11 +248,14 @@ export async function resolveCommands(
     }
 
     const resolvedName = names.commands[name as CommandName]?.name ?? name;
+    const subtask = definition.subtask ?? !isCi;
 
     commands[resolvedName] = {
       description: definition.description,
-      agent: names.agents[definition.agent as AgentName]?.name ?? definition.agent,
-      subtask: definition.subtask ?? !isCi,
+      ...(definition.agent
+        ? { agent: names.agents[definition.agent as AgentName]?.name ?? definition.agent }
+        : {}),
+      subtask,
       template,
       ...(Object.keys(commandConfig).length > 0 ? { config: commandConfig } : {}),
     };

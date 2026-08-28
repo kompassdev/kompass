@@ -48,6 +48,14 @@ $ARGUMENTS
 
 ### Output
 
+If any step stops on a blocker not covered by another output, store its reason as `<reason>` and completed phases as `<completed-state>`, then display:
+```
+Ship blocked: <reason>
+Completed: <completed-state>
+
+No additional steps are required.
+```
+
 When complete, display:
 ```
 Ship flow complete

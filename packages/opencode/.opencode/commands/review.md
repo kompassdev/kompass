@@ -49,6 +49,7 @@ If `<changes>.comparison` is not "uncommitted":
 Following the reviewer agent guidance:
 1. Store the overall rating as `<star-rating>`, the top-line conclusion as `<short-verdict>`, and the severity counts as `<critical>`, `<high>`, `<medium>`, and `<low>`
 2. Store the total number of findings as `<count>`
+3. Store the ordered actionable findings as `<findings>`; use `No material issues found` when `<count>` is `0`
 
 While reading files:
 - Load any relevant nested `AGENTS.md` in the current session before applying review criteria
@@ -64,6 +65,9 @@ Review complete for <scope-description>
 - Grade: <star-rating>
 - Verdict: <short-verdict>
 - Findings: <count> total (<critical> critical, <high> high, <medium> medium, <low> low)
+
+Findings:
+<findings>
 
 No additional steps are required.
 ```

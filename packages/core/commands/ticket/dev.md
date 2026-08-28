@@ -25,10 +25,10 @@ $ARGUMENTS
 - Store a concise `<ticket-summary>` and canonical `<ticket-url>` when available
 - STOP if ticket context cannot be loaded
 
-### Implement Ticket
+<%~ include("@dev-flow", { context: "`<ticket-context>` and `<additional-context>`" }) %>
 
-<%~ include("@dev-flow") %>
-- Implement the smallest complete change for `<ticket-context>` and `<additional-context>`
+### Validate Changes
+
 - Run the most relevant available validation
 <% for (const line of it.config.shared.validation) { -%>
 - <%= line %>
@@ -46,7 +46,8 @@ $ARGUMENTS
 
 - If `<changes>` contains files:
 <%~ include("@commit") %>
-- Otherwise, continue so previously committed ticket work can still be shipped
+- Store `<commit-result>` as the created `<hash>` and `<commit-message>`
+- Otherwise, store `<commit-result>` as `no new commit` and continue so previously committed ticket work can still be shipped
 
 ### Load Branch Changes
 
@@ -57,13 +58,21 @@ $ARGUMENTS
 
 ### Output
 
+If any step stops on a blocker not covered by another output, store its reason as `<reason>` and completed phases as `<completed-state>`, then display:
+```
+Ticket development blocked: <reason>
+Completed: <completed-state>
+
+No additional steps are required.
+```
+
 When complete, display:
 ```
 Implemented ticket: <ticket-summary>
 
 Validation: <validation-results>
 Branch: <current-branch>
-Commit: <hash>
+Commit: <commit-result>
 PR: <pr-url>
 
 No additional steps are required.

@@ -54,7 +54,7 @@ When the branch is created, display:
 ```
 Created branch: <current-branch>
 
-From: <current-branch>
+From: <starting-branch>
 
 No additional steps are required.
 ```

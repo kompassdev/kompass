@@ -1,6 +1,5 @@
 ---
 description: Create a PR in the current session
-agent: worker
 subtask: false
 ---
 
@@ -31,23 +30,19 @@ $ARGUMENTS
 - Retain the authoritative branch comparison load even though this command runs in the invoking session; do not infer the final base, commit scope, or diff from session memory
 #### Load Changes
 
-- call `kompass_changes_load`
+- Call `kompass_changes_load`
 - If `<base>` is defined, pass it as `base`; otherwise call the tool with no parameters
 - Never pass `uncommitted: true`
 - Store the returned result as `<changes>`
-- If `<changes>.deferredDiffs` is present, inspect the needed deferred diffs directly one file at a time using the returned comparison and changed paths
+- If `<changes>.deferredDiffs` is present, inspect every deferred diff directly using the returned comparison and changed paths before summarizing
 #### Analyze And Summarize Changes
 
-- Use `<changes>` as the source of truth; do not run additional git commands to rediscover its comparison
-- Note the comparison mode, base branch, and current branch from `<changes>`
-- When `<changes>.comparison` is not `uncommitted`, treat `<changes>.commits` as the authoritative scope of work: only summarize commits ahead of the resolved base branch
-- Review commit messages when available to understand the delivery narrative
-- Review paths, statuses, line counts, and diffs from `<changes>` as file-level context for the commits in scope
-- Read only the most relevant changed source files when the diff does not provide enough context
-- Identify the nature of changes (added, modified, deleted)
-- Group related changes into logical themes
-- Summarize the "what" and "why" (not the "how")
-- Do not infer scope from branch names or describe work that exists only on the base branch or outside the commits ahead of base
+- Use `<changes>` as the source of truth for the comparison, branches, commits, changed paths, and diffs
+- For a branch comparison, limit the work scope to `<changes>.commits`; use paths and diffs to explain those commits, not to import work from the base branch
+- Read a changed source file when its diff does not establish its purpose or behavioral effect
+- Group the work into `<change-themes>` by delivered behavior or purpose, then store a concise "what" and "why" summary as `<change-summary>`
+- Account for every changed path under one theme or identify it as generated, supporting, or non-behavioral before finishing the summary
+- Base every theme on commit or diff evidence rather than the branch name
 
 ### Check PR Blockers
 
@@ -93,7 +88,7 @@ Otherwise, preserve the provided `<ticket-url>` or store the literal `SKIPPED` f
 - If `<current-branch>` is not defined, run `git branch --show-current` and store the trimmed result as `<current-branch>`
 - Run `git push` and use its output as the source of truth
 - If the current branch has no upstream, retry with `git push -u origin <current-branch>`
-- Store whether a push occurred as `<push-status>` and the successful destination as `<push-target>`
+- After a successful push, store whether commits were transferred as `<push-status>` and the reported destination as `<push-target>`
 - If push fails, STOP and report the push error
 
 ### Create PR
@@ -107,6 +102,14 @@ Otherwise, preserve the provided `<ticket-url>` or store the literal `SKIPPED` f
 - Store the created or existing PR URL as `<pr-url>` and whether it already existed as `<pr-existing>`
 
 ### Output
+
+If any step stops on a blocker not covered by another output, store its reason as `<reason>` and completed phases as `<completed-state>`, then display:
+```
+PR creation blocked: <reason>
+Completed: <completed-state>
+
+No additional steps are required.
+```
 
 When complete, display:
 ```

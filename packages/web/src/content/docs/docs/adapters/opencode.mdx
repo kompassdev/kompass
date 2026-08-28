@@ -67,7 +67,7 @@ Most command execution runs on the bundled `worker` agent.
 
 Kompass also provides the `worker`, `planner`, and `reviewer` agent roles for workflow execution, planning, and review-specific execution.
 
-Commands run as subtasks outside CI unless their definition opts out. The `/inline` variants of `/branch`, `/commit`, `/commit-and-push`, `/pr/create`, and `/ship`, plus `/learn`, opt out so they can use the invoking session directly.
+Commands run as subtasks outside CI unless their definition opts out. Agent selection is independent of subtask mode, so CI keeps the configured `worker`, `planner`, or `reviewer` role when it disables subtasks. The `/inline` variants of `/branch`, `/commit`, `/commit-and-push`, `/pr/create`, and `/ship`, plus `/learn`, explicitly omit the agent override so OpenCode keeps the invoking session's active agent.
 
 ## Useful OpenCode notes
 

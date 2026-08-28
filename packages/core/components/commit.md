@@ -1,24 +1,20 @@
-### Message Format
-- Prefer this format unless the change is tiny:
+#### Message Format
+- Use this format when the change has more than one meaningful theme:
 
 ```text
 type: summary
 
-- change
-- change
-- change
+- grouped change
+- grouped change
 ```
 
-- Keep the subject concise and under 72 characters
-- Use conventional commit format: "feat:", "fix:", "refactor:", "docs:", etc.
-- For non-trivial changes, add 2-5 short bullets with the main grouped changes
-- Use a one-line commit only when a body would add no value
+- Use a conventional type such as `feat`, `fix`, `refactor`, or `docs`, and keep the subject under 72 characters
+- Add one short body bullet per meaningful change theme; use a subject-only message when there is only one self-explanatory theme
 
-### Commit Phase
-1. Use the loaded change data as the source of truth for what will be committed
-2. Stage changes with `git add` (use `-A` for all, or specific files)
-3. Generate the commit message and store it as `<commit-message>`
-4. Preserve the blank line between subject and bullets when present
-5. Create the commit with `<commit-message>`
-6. Store the created commit hash as `<hash>`
-7. Only run `git status` if the commit fails and needs diagnosis
+#### Commit Phase
+1. Treat the file set in `<changes>` as the complete intended commit scope
+2. Stage exactly that file set, including intended deletions, without staging paths outside `<changes>`
+3. Compare the staged paths with `<changes>` and resolve any missing or extra path before committing
+4. Generate `<commit-message>` from the loaded change themes, preserving the blank line between subject and body
+5. Create the commit and store the resulting hash as `<hash>` only after it succeeds
+6. If the commit fails, inspect repository status, fix the cause when safe, or STOP with the exact blocker

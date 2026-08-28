@@ -33,8 +33,8 @@ $ARGUMENTS
 - Do not run separate git or GitHub commands just to discover the PR before calling `kompass_pr_load`
 - Store the result as `<pr-context>`
 - Treat the loaded PR body, discussion, review history, and any attachments or linked artifacts returned by the loader as part of the source context
-- Review attached images, screenshots, videos, PDFs, and other linked files whenever they can affect the requested fix, review outcome, reproduction steps, or acceptance criteria
-- If any relevant attachment cannot be accessed, note that gap and continue only when the remaining PR context is still sufficient to proceed reliably
+- Review each attachment that can change the requested fix, review outcome, reproduction steps, or acceptance criteria
+- Store inaccessible relevant attachments as `<attachment-gaps>`; STOP when a gap prevents a supported decision, otherwise exclude the missing material from the evidence used
 
 ### Load Ticket Context
 
@@ -43,8 +43,8 @@ If `<pr-context.pr.body>` links to exactly one clear ticket:
 - Use `kompass_ticket_load` with `source: <ticket-ref>` and `comments: true`
 - Store the result as `<ticket-context>`
 - Treat the loaded ticket body, discussion, and any attachments or linked artifacts returned by the loader as part of the source context
-- Review attached images, PDFs, and other linked files whenever they can affect requirements, acceptance criteria, reproduction steps, design direction, or the requested answer
-- If any relevant attachment cannot be accessed, note that gap and continue only when the remaining ticket context is still sufficient to proceed reliably
+- Review each attachment that can change requirements, acceptance criteria, reproduction steps, design direction, or the requested answer
+- Store inaccessible relevant attachments as `<attachment-gaps>`; STOP when a gap prevents a supported decision, otherwise exclude the missing material from the evidence used
 - Use `<ticket-context>` for consideration during review
 
 ### Load Changes

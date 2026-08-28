@@ -1,6 +1,5 @@
 ---
 description: Ship branch work using context from the current session
-agent: worker
 subtask: false
 ---
 
@@ -33,7 +32,8 @@ $ARGUMENTS
 
 ### Check Branch
 
-- Store the current branch from `<changes>` as `<current-branch>` when available
+- Store the current branch from `<changes>` as `<current-branch>`; if unavailable, resolve it with `git branch --show-current`
+- Store its initial value as `<starting-branch>`
 - If `<changes>` contains no files, store `<branch-result>` as `nothing to branch from` and skip branch creation
 - If `<current-branch>` starts with a conventional work category such as `feature/`, `fix/`, `refactor/`, `docs/`, `test/`, `chore/`, `feat/`, `bugfix/`, `hotfix/`, `perf/`, `build/`, or `ci/`, store `<branch-result>` as `kept <current-branch>` and skip branch creation
 
@@ -44,36 +44,32 @@ When branch creation was not skipped:
 - Generate a concise kebab-case slug from the same context
 - Create and checkout `<branch-category>/<branch-slug>` with `git checkout -b`
 - If that name exists, retry once with a short numeric suffix
-- Store the checked-out branch as `<current-branch>` and `<branch-result>` as `created <current-branch>`
+- Confirm the checked-out branch matches the created name, then store it as `<current-branch>` and `<branch-result>` as `created <current-branch>`
 - If branch creation fails, STOP and report the blocker
 
 ### Create Commit
 
 - If `<changes>` contains files, create the commit from the already loaded `<changes>`:
-### Message Format
-- Prefer this format unless the change is tiny:
+#### Message Format
+- Use this format when the change has more than one meaningful theme:
 
 ```text
 type: summary
 
-- change
-- change
-- change
+- grouped change
+- grouped change
 ```
 
-- Keep the subject concise and under 72 characters
-- Use conventional commit format: "feat:", "fix:", "refactor:", "docs:", etc.
-- For non-trivial changes, add 2-5 short bullets with the main grouped changes
-- Use a one-line commit only when a body would add no value
+- Use a conventional type such as `feat`, `fix`, `refactor`, or `docs`, and keep the subject under 72 characters
+- Add one short body bullet per meaningful change theme; use a subject-only message when there is only one self-explanatory theme
 
-### Commit Phase
-1. Use the loaded change data as the source of truth for what will be committed
-2. Stage changes with `git add` (use `-A` for all, or specific files)
-3. Generate the commit message and store it as `<commit-message>`
-4. Preserve the blank line between subject and bullets when present
-5. Create the commit with `<commit-message>`
-6. Store the created commit hash as `<hash>`
-7. Only run `git status` if the commit fails and needs diagnosis
+#### Commit Phase
+1. Treat the file set in `<changes>` as the complete intended commit scope
+2. Stage exactly that file set, including intended deletions, without staging paths outside `<changes>`
+3. Compare the staged paths with `<changes>` and resolve any missing or extra path before committing
+4. Generate `<commit-message>` from the loaded change themes, preserving the blank line between subject and body
+5. Create the commit and store the resulting hash as `<hash>` only after it succeeds
+6. If the commit fails, inspect repository status, fix the cause when safe, or STOP with the exact blocker
 - Store `<commit-result>` as the created hash and message
 - If `<changes>` contains no files, store `<commit-result>` as `no new commit`
 
@@ -92,16 +88,12 @@ type: summary
 
 #### Analyze And Summarize Changes
 
-- Use `<changes>` as the source of truth; do not run additional git commands to rediscover its comparison
-- Note the comparison mode, base branch, and current branch from `<changes>`
-- When `<changes>.comparison` is not `uncommitted`, treat `<changes>.commits` as the authoritative scope of work: only summarize commits ahead of the resolved base branch
-- Review commit messages when available to understand the delivery narrative
-- Review paths, statuses, line counts, and diffs from `<changes>` as file-level context for the commits in scope
-- Read only the most relevant changed source files when the diff does not provide enough context
-- Identify the nature of changes (added, modified, deleted)
-- Group related changes into logical themes
-- Summarize the "what" and "why" (not the "how")
-- Do not infer scope from branch names or describe work that exists only on the base branch or outside the commits ahead of base
+- Use `<changes>` as the source of truth for the comparison, branches, commits, changed paths, and diffs
+- For a branch comparison, limit the work scope to `<changes>.commits`; use paths and diffs to explain those commits, not to import work from the base branch
+- Read a changed source file when its diff does not establish its purpose or behavioral effect
+- Group the work into `<change-themes>` by delivered behavior or purpose, then store a concise "what" and "why" summary as `<change-summary>`
+- Account for every changed path under one theme or identify it as generated, supporting, or non-behavioral before finishing the summary
+- Base every theme on commit or diff evidence rather than the branch name
 
 ### Resolve Ticket
 
@@ -138,7 +130,7 @@ Otherwise, preserve the provided `<ticket-url>` or store the literal `SKIPPED` f
 - If `<current-branch>` is not defined, run `git branch --show-current` and store the trimmed result as `<current-branch>`
 - Run `git push` and use its output as the source of truth
 - If the current branch has no upstream, retry with `git push -u origin <current-branch>`
-- Store whether a push occurred as `<push-status>` and the successful destination as `<push-target>`
+- After a successful push, store whether commits were transferred as `<push-status>` and the reported destination as `<push-target>`
 - If push fails, STOP and report the push error
 
 ### Create PR
@@ -152,6 +144,14 @@ Otherwise, preserve the provided `<ticket-url>` or store the literal `SKIPPED` f
 - Store the created or existing PR URL as `<pr-url>` and whether it already existed as `<pr-existing>`
 
 ### Output
+
+If any step stops on a blocker not covered by another output, store its reason as `<reason>` and completed phases as `<completed-state>`, then display:
+```
+Ship blocked: <reason>
+Completed: <completed-state>
+
+No additional steps are required.
+```
 
 When complete, display:
 ```

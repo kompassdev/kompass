@@ -1,6 +1,5 @@
 ---
 description: Create a branch using context from the current session
-agent: worker
 subtask: false
 ---
 
@@ -33,7 +32,8 @@ $ARGUMENTS
 
 ### Check Branch
 
-- Store the current branch from `<changes>` as `<current-branch>` when available
+- Store the current branch from `<changes>` as `<current-branch>`; if unavailable, resolve it with `git branch --show-current`
+- Store its initial value as `<starting-branch>`
 - If `<changes>` contains no files, store `<branch-result>` as `nothing to branch from` and skip branch creation
 - If `<current-branch>` starts with a conventional work category such as `feature/`, `fix/`, `refactor/`, `docs/`, `test/`, `chore/`, `feat/`, `bugfix/`, `hotfix/`, `perf/`, `build/`, or `ci/`, store `<branch-result>` as `kept <current-branch>` and skip branch creation
 
@@ -44,7 +44,7 @@ When branch creation was not skipped:
 - Generate a concise kebab-case slug from the same context
 - Create and checkout `<branch-category>/<branch-slug>` with `git checkout -b`
 - If that name exists, retry once with a short numeric suffix
-- Store the checked-out branch as `<current-branch>` and `<branch-result>` as `created <current-branch>`
+- Confirm the checked-out branch matches the created name, then store it as `<current-branch>` and `<branch-result>` as `created <current-branch>`
 - If branch creation fails, STOP and report the blocker
 
 ### Output
@@ -69,7 +69,7 @@ When the branch is created, display:
 ```
 Created branch: <current-branch>
 
-From: <current-branch>
+From: <starting-branch>
 
 No additional steps are required.
 ```

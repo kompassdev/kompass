@@ -35,8 +35,8 @@ $ARGUMENTS
 - Do not run separate git or GitHub commands just to discover the PR before calling `kompass_pr_load`
 - Store the result as `<pr-context>`
 - Treat the loaded PR body, discussion, review history, and any attachments or linked artifacts returned by the loader as part of the source context
-- Review attached images, screenshots, videos, PDFs, and other linked files whenever they can affect the requested fix, review outcome, reproduction steps, or acceptance criteria
-- If any relevant attachment cannot be accessed, note that gap and continue only when the remaining PR context is still sufficient to proceed reliably
+- Review each attachment that can change the requested fix, review outcome, reproduction steps, or acceptance criteria
+- Store inaccessible relevant attachments as `<attachment-gaps>`; STOP when a gap prevents a supported decision, otherwise exclude the missing material from the evidence used
 - Store `<pr-url>`, `<pr-number>`, and `<review-checkpoint>` from `<pr-context.pr.url>`, `<pr-context.pr.number>`, and `<pr-context.loadedAt>`
 - Store the initial reviews, issue comments, and threads as `<review-context>`
 - STOP if any required value is unavailable

@@ -18,7 +18,7 @@ Kompass keeps AI coding agents on course with token-efficient, composable workfl
 
 ## Bundled Surface
 
-- Commands cover direct work (`/ask`, `/commit`, `/merge`, `/skill/create`, `/skill/optimize`), orchestration (`/dev`, `/ship`, `/todo`, `/pr/fix/loop`), ticket planning/sync, and PR review/shipping flows. `/branch/inline`, `/commit/inline`, `/commit-and-push/inline`, `/pr/create/inline`, and `/ship/inline` reuse the invoking session instead of starting a subtask.
+- Commands cover direct work (`/ask`, `/commit`, `/merge`, `/skill/create`, `/skill/optimize`), orchestration (`/dev`, `/ship`, `/todo`, `/pr/fix/loop`), ticket planning/sync, and PR review/shipping flows. Commands explicitly defined with `subtask: false` reuse the invoking session and its active agent. This includes `/learn` and the `/inline` variants of `/branch`, `/commit`, `/commit-and-push`, `/pr/create`, and `/ship`.
 - Agents are intentionally narrow: `worker` handles implementation and multi-step workflows, `planner` is no-edit planning, and `reviewer` is a no-edit review specialist.
 - Structured tools keep workflows grounded in repo and GitHub state: `changes_load`, `pr_load`, `pr_load_review`, `pr_sync`, `ticket_load`, `ticket_sync`. OpenCode users can opt into the eight Navigator session and worktree tools.
 - Reusable command-template components live in `packages/core/components/` and are documented in the components reference.

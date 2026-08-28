@@ -46,7 +46,7 @@ export async function applyCommandsConfig(
   for (const [name, definition] of Object.entries(commands)) {
     cfg.command[name] = {
       description: definition.description,
-      agent: definition.agent,
+      ...(definition.agent ? { agent: definition.agent } : {}),
       subtask: definition.subtask,
       template: definition.template,
     };

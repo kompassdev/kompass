@@ -82,17 +82,24 @@ describe("resolveCommands", () => {
   test("registers current-session completion variants", async () => {
     const commands = await resolveCommands(process.cwd());
 
+    assert.equal(commands.commit?.agent, "worker");
     assert.equal(commands["branch/inline"]?.subtask, false);
+    assert.equal(commands["branch/inline"]?.agent, undefined);
     assert.equal(commands["commit/inline"]?.subtask, false);
+    assert.equal(commands["commit/inline"]?.agent, undefined);
     assert.equal(commands["commit-and-push/inline"]?.subtask, false);
+    assert.equal(commands["commit-and-push/inline"]?.agent, undefined);
     assert.equal(commands["pr/create/inline"]?.subtask, false);
+    assert.equal(commands["pr/create/inline"]?.agent, undefined);
     assert.equal(commands["ship/inline"]?.subtask, false);
+    assert.equal(commands["ship/inline"]?.agent, undefined);
+    assert.equal(commands.learn?.agent, undefined);
     assert.match(commands["branch/inline"]?.template ?? "", /Do not call `changes_load`/);
     assert.match(commands["commit/inline"]?.template ?? "", /Reuse the current session's known uncommitted changes/);
     assert.match(commands["commit-and-push/inline"]?.template ?? "", /Do not call `changes_load`/);
     assert.match(commands["commit-and-push/inline"]?.template ?? "", /git push -u origin <current-branch>/);
     assert.match(commands["pr/create/inline"]?.template ?? "", /Retain the authoritative branch comparison load/);
-    assert.match(commands["pr/create/inline"]?.template ?? "", /call `changes_load`/);
+    assert.match(commands["pr/create/inline"]?.template ?? "", /Call `changes_load`/);
     assert.match(commands["ship/inline"]?.template ?? "", /Do not call `changes_load` before the branch and commit phases/);
     assert.doesNotMatch(commands.commit?.template ?? "", /Reuse the current session's known uncommitted changes/);
   });
@@ -105,11 +112,63 @@ describe("resolveCommands", () => {
     assert.equal(commands.ship?.template.match(marker)?.length, 2);
   });
 
+  test("renders checkable shared workflow completion criteria", async () => {
+    const commands = await resolveCommands(process.cwd());
+
+    assert.match(
+      commands.dev?.template ?? "",
+      /account for every item in `<acceptance-checks>`/,
+    );
+    assert.match(
+      commands.commit?.template ?? "",
+      /Stage exactly that file set/,
+    );
+    assert.match(
+      commands["ticket/plan"]?.template ?? "",
+      /Give every requirement at least one validation item/,
+    );
+    assert.match(
+      commands["skill/create"]?.template ?? "",
+      /Choose `<invocation-mode>` as `model` when the agent or another skill must discover this skill/,
+    );
+    assert.match(
+      commands["skill/create"]?.template ?? "",
+      /for reference-only skills, organize the guidance around the decisions it informs instead of inventing procedural steps/,
+    );
+  });
+
+  test("renders complete terminal output contracts", async () => {
+    const commands = await resolveCommands(process.cwd());
+
+    assert.match(commands.review?.template ?? "", /Findings:\n<findings>/);
+    assert.match(commands["ticket/dev"]?.template ?? "", /Commit: <commit-result>/);
+    assert.match(commands["ticket/dev"]?.template ?? "", /no new commit/);
+    assert.match(commands.learn?.template ?? "", /No agent guidance updates needed/);
+    assert.match(commands.todo?.template ?? "", /Todo waiting: <task>/);
+    assert.match(commands.todo?.template ?? "", /Todo blocked: <task>/);
+
+    for (const name of ["dev", "ship", "pr/create", "ticket/dev"]) {
+      assert.match(commands[name]?.template ?? "", /Completed: <completed-state>/);
+    }
+  });
+
+  test("nests shared phases without duplicate command headings", async () => {
+    const commands = await resolveCommands(process.cwd());
+
+    assert.match(commands.commit?.template ?? "", /#### Message Format/);
+    assert.doesNotMatch(commands["ticket/dev"]?.template ?? "", /### Implement Ticket/);
+    assert.match(commands["ticket/dev"]?.template ?? "", /### Validate Changes/);
+    assert.doesNotMatch(commands.todo?.template ?? "", /### Implement Task/);
+    assert.match(commands.todo?.template ?? "", /### Validate Task/);
+    assert.doesNotMatch(commands["commit-and-push"]?.template ?? "", /### Push to Remote/);
+  });
+
   test("uses declared subtask mode instead of the CI fallback for templates", async () => {
     const commands = await resolveCommands(process.cwd(), { ci: true });
 
     assert.equal(commands.commit?.subtask, false);
-    assert.match(commands.commit?.template ?? "", /call `changes_load`/);
+    assert.equal(commands.commit?.agent, "worker");
+    assert.match(commands.commit?.template ?? "", /Call `changes_load`/);
     assert.doesNotMatch(commands.commit?.template ?? "", /Reuse the current session's known uncommitted changes/);
     assert.match(commands["commit/inline"]?.template ?? "", /Reuse the current session's known uncommitted changes/);
   });

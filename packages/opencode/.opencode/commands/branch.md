@@ -28,27 +28,24 @@ $ARGUMENTS
 
 #### Load Changes
 
-- call `kompass_changes_load`
+- Call `kompass_changes_load`
 - pass `uncommitted: true` to get uncommitted changes only
 - Store the returned result as `<changes>`
-- If `<changes>.deferredDiffs` is present, inspect the needed deferred diffs directly one file at a time using the returned comparison and changed paths
+- If `<changes>.deferredDiffs` is present, inspect every deferred diff directly using the returned comparison and changed paths before summarizing
 #### Analyze And Summarize Changes
 
-- Use `<changes>` as the source of truth; do not run additional git commands to rediscover its comparison
-- Note the comparison mode, base branch, and current branch from `<changes>`
-- When `<changes>.comparison` is not `uncommitted`, treat `<changes>.commits` as the authoritative scope of work: only summarize commits ahead of the resolved base branch
-- Review commit messages when available to understand the delivery narrative
-- Review paths, statuses, line counts, and diffs from `<changes>` as file-level context for the commits in scope
-- Read only the most relevant changed source files when the diff does not provide enough context
-- Identify the nature of changes (added, modified, deleted)
-- Group related changes into logical themes
-- Summarize the "what" and "why" (not the "how")
-- Do not infer scope from branch names or describe work that exists only on the base branch or outside the commits ahead of base
+- Use `<changes>` as the source of truth for the comparison, branches, commits, changed paths, and diffs
+- For a branch comparison, limit the work scope to `<changes>.commits`; use paths and diffs to explain those commits, not to import work from the base branch
+- Read a changed source file when its diff does not establish its purpose or behavioral effect
+- Group the work into `<change-themes>` by delivered behavior or purpose, then store a concise "what" and "why" summary as `<change-summary>`
+- Account for every changed path under one theme or identify it as generated, supporting, or non-behavioral before finishing the summary
+- Base every theme on commit or diff evidence rather than the branch name
 - Store the current branch as `<current-branch>` when it is available
 
 ### Check Branch
 
-- Store the current branch from `<changes>` as `<current-branch>` when available
+- Store the current branch from `<changes>` as `<current-branch>`; if unavailable, resolve it with `git branch --show-current`
+- Store its initial value as `<starting-branch>`
 - If `<changes>` contains no files, store `<branch-result>` as `nothing to branch from` and skip branch creation
 - If `<current-branch>` starts with a conventional work category such as `feature/`, `fix/`, `refactor/`, `docs/`, `test/`, `chore/`, `feat/`, `bugfix/`, `hotfix/`, `perf/`, `build/`, or `ci/`, store `<branch-result>` as `kept <current-branch>` and skip branch creation
 
@@ -59,7 +56,7 @@ When branch creation was not skipped:
 - Generate a concise kebab-case slug from the same context
 - Create and checkout `<branch-category>/<branch-slug>` with `git checkout -b`
 - If that name exists, retry once with a short numeric suffix
-- Store the checked-out branch as `<current-branch>` and `<branch-result>` as `created <current-branch>`
+- Confirm the checked-out branch matches the created name, then store it as `<current-branch>` and `<branch-result>` as `created <current-branch>`
 - If branch creation fails, STOP and report the blocker
 
 ### Output
@@ -84,7 +81,7 @@ When the branch is created, display:
 ```
 Created branch: <current-branch>
 
-From: <current-branch>
+From: <starting-branch>
 
 No additional steps are required.
 ```

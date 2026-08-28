@@ -33,7 +33,7 @@ $ARGUMENTS
 - Summarize the goal, constraints, and acceptance criteria from `<request-context>` before making changes
 - Store that summary as `<request-summary>`
 
-<%~ include("@dev-flow") %>
+<%~ include("@dev-flow", { context: "`<request-context>`, `<request-summary>`, and `<additional-context>`" }) %>
 
 ### Validate Changes
 
@@ -51,6 +51,14 @@ $ARGUMENTS
 - Do not create the pull request in this command; stop when the branch is ready for `pr/create`
 
 ### Output
+
+If any step stops on a blocker not covered by another output, store its reason as `<reason>` and completed phases as `<completed-state>`, then display:
+```
+Implementation blocked: <reason>
+Completed: <completed-state>
+
+No additional steps are required.
+```
 
 When the implementation is ready for PR creation, display:
 ```

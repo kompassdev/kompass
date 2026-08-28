@@ -9,15 +9,7 @@ Create a scoped implementation plan from a request or ticket, then capture that 
 
 ## Additional Context
 
-- Treat ticket systems generically. Do not assume GitHub or any specific provider unless the provided context makes it relevant.
-- Use the current request to determine `<planning-objective>`.
-- Earlier comments remain in force when they add operative constraints, business rules, technical decisions, migration rules, exact labels or renames, ordering rules, or scoping rules.
-- Use `<additional-context>` to emphasize the most important constraints, dependencies, or focus areas.
-- For technical tickets, repo inspection is expected unless the request is clearly non-technical or repository context is unavailable.
-- If technical details provided in the conversation are good, keep them.
-- If those details are incomplete, validate and improve them.
-- For existing tickets, update the same ticket instead of creating a replacement.
-- Ask only when blocked by a missing or invalid ticket source, or by ambiguity that prevents a reliable plan.
+Use `<additional-context>` to prioritize constraints, dependencies, and focus areas. Update a provided ticket in place; create a ticket only when the source is a request rather than an existing ticket.
 
 ## Workflow
 
@@ -40,13 +32,14 @@ $ARGUMENTS
 - Use `kompass_ticket_load` with `source: <ticket-url>` and `comments: true`
 - Store the result as `<planning-context>`
 - Treat the loaded ticket body, discussion, and any attachments or linked artifacts returned by the loader as part of the source context
-- Review attached images, PDFs, and other linked files whenever they can affect requirements, acceptance criteria, reproduction steps, design direction, or the requested answer
-- If any relevant attachment cannot be accessed, note that gap and continue only when the remaining ticket context is still sufficient to proceed reliably
+- Review each attachment that can change requirements, acceptance criteria, reproduction steps, design direction, or the requested answer
+- Store inaccessible relevant attachments as `<attachment-gaps>`; STOP when a gap prevents a supported decision, otherwise exclude the missing material from the evidence used
 - Otherwise, treat the relevant request and conversation context as `<planning-context>`
 - If `<planning-context>` is empty or missing, STOP and report that planning context could not be determined
 
 ### Interpret Planning Context
 
+- Treat ticket providers generically unless `<planning-context>` requires provider-specific behavior
 - From `<planning-context>` and `<additional-context>`, derive:
   - `<planning-objective>` - the current planning task or request
   - `<operative-constraints>` - earlier context that still applies
@@ -54,13 +47,12 @@ $ARGUMENTS
   - `<open-questions>` - only the issues that are still unresolved
 - Use the current request to determine `<planning-objective>`
 - Do not discard earlier comments when they still define constraints, business rules, implementation decisions, migration rules, naming, sequencing, or scoping limits
+- Ask one focused question only when an unresolved issue prevents a reliable plan
 
 ### Inspect Repo Context
 
-- If the request is technical and repository context is available, perform light targeted reconnaissance before finalizing the plan
-- Inspect the relevant code, schema, config, UI patterns, and tests needed to validate `<proposed-technical-direction>` and ground the plan
-- Confirm current behavior and existing patterns instead of relying on ticket text alone
-- If relevant repo context cannot be found or verified, note that gap and avoid false certainty
+- For a technical request with repository access, inspect the implementation, contracts, configuration, and tests needed to verify current behavior and `<proposed-technical-direction>`
+- Store unverified material claims as `<planning-gaps>` instead of presenting them as facts
 
 ### Shape the Plan
 
@@ -73,6 +65,8 @@ $ARGUMENTS
 - Improve incomplete technical details when repo inspection provides a better grounded direction
 - Do not replace material technical guidance with generic outcome language
 - Avoid placeholder-like labels or awkward title formats such as `Ticket`, `Description`, or `Ticket : Description`
+- Before finishing, account for every item in `<operative-constraints>` and every resolved item in `<open-questions>` in the description or a requirement item
+- Give every requirement at least one validation item that would prove it works, combining checks only when one check genuinely covers several requirements
 
 ### Sync Ticket
 

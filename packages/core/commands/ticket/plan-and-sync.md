@@ -4,15 +4,7 @@ Create a scoped implementation plan from a request or ticket, then capture that 
 
 ## Additional Context
 
-- Treat ticket systems generically. Do not assume GitHub or any specific provider unless the provided context makes it relevant.
-- Use the current request to determine `<planning-objective>`.
-- Earlier comments remain in force when they add operative constraints, business rules, technical decisions, migration rules, exact labels or renames, ordering rules, or scoping rules.
-- Use `<additional-context>` to emphasize the most important constraints, dependencies, or focus areas.
-- For technical tickets, repo inspection is expected unless the request is clearly non-technical or repository context is unavailable.
-- If technical details provided in the conversation are good, keep them.
-- If those details are incomplete, validate and improve them.
-- For existing tickets, update the same ticket instead of creating a replacement.
-- Ask only when blocked by a missing or invalid ticket source, or by ambiguity that prevents a reliable plan.
+Use `<additional-context>` to prioritize constraints, dependencies, and focus areas. Update a provided ticket in place; create a ticket only when the source is a request rather than an existing ticket.
 
 ## Workflow
 

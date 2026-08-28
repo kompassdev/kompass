@@ -34,10 +34,10 @@ $ARGUMENTS
 - Show the plan and ask one `Plan Review` question with `Implement` and `Revise`, with custom answers enabled
 - Apply revision feedback and repeat until approved; STOP without editing when approval is not granted
 
-### Implement Task
+<%~ include("@dev-flow", { context: "`<task>`, `<task-context>`, `<plan>`, and `<additional-context>`" }) %>
 
-<%~ include("@dev-flow") %>
-- Implement the approved `<plan>`
+### Validate Task
+
 - Run relevant validation and STOP without marking complete if implementation or validation is incomplete
 
 ### Load And Commit Task Changes
@@ -57,6 +57,24 @@ When all pending tasks are complete, display:
 ```
 Todo complete: <todo-file>
 Remaining: 0
+
+No additional steps are required.
+```
+
+When plan approval is not granted, display:
+```
+Todo waiting: <task>
+Reason: plan approval not granted
+Todo file unchanged: <todo-file>
+
+No additional steps are required.
+```
+
+When implementation, validation, change loading, or commit stops, store the exact stopping reason as `<blocker>` and display:
+```
+Todo blocked: <task>
+Reason: <blocker>
+Todo file unchanged: <todo-file>
 
 No additional steps are required.
 ```

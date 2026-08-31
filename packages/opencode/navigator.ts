@@ -1,5 +1,4 @@
-import type { ToolContext, ToolDefinition } from "@opencode-ai/plugin/tool";
-import { tool } from "@opencode-ai/plugin/tool";
+import { tool, type ToolContext, type ToolDefinition } from "./legacy-plugin.ts";
 import type {
   Message as LegacyMessage,
   OpencodeClient as LegacyOpencodeClient,

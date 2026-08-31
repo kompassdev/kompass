@@ -1,5 +1,5 @@
-import type { Config } from "@opencode-ai/plugin";
 import type { AgentConfig } from "@opencode-ai/sdk";
+import type { Config } from "./legacy-plugin.ts";
 
 import { loadResolvedAgents, loadResolvedCommands } from "./cache.ts";
 import type { PluginLogger } from "./logging.ts";

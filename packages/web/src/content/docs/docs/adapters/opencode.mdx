@@ -7,6 +7,10 @@ description: Use Kompass workflows inside OpenCode through the published adapter
 
 The OpenCode adapter package is `@kompassdev/opencode`.
 
+It exports one definition for both plugin APIs. Configure it with `"plugin": ["@kompassdev/opencode"]` on OpenCode 1 or `"plugins": ["@kompassdev/opencode"]` on OpenCode 2.
+
+OpenCode 2 agent transforms are update-only. If an agent is renamed in Kompass config, the host must register that agent ID before Kompass setup runs.
+
 ## What it provides
 
 Inside OpenCode, the adapter exposes:
@@ -14,7 +18,7 @@ Inside OpenCode, the adapter exposes:
 - Kompass commands
 - Kompass agents
 - Kompass tools
-- Kompass Navigator session and worktree orchestration
+- Kompass Navigator session and worktree orchestration through the OpenCode 1 plugin API
 - project override loading from local config files
 
 ## Project overrides
@@ -33,7 +37,7 @@ You can use overrides to:
 
 ## Kompass Navigator
 
-Navigator is for explicitly requested native-session and managed-worktree workflows. It is not a subagent mechanism; ordinary delegation should use OpenCode's built-in `task` tool. Navigator follows OpenCode Desktop's protocol detection so session creation, prompts, reads, status, and interrupts stay on the same compatible API in the current checkout or managed Git worktrees. Until OpenCode implements V2 wait, Navigator waits by polling the active-session API locally. It requires OpenCode `1.17.12` or newer and is enabled by default.
+Navigator is available through the OpenCode 1 plugin API for explicitly requested native-session and managed-worktree workflows. OpenCode 2 does not yet expose the workspace, worktree, and session-discovery APIs required to register Navigator safely. Navigator is not a subagent mechanism; ordinary delegation should use OpenCode's built-in `task` tool. Navigator follows OpenCode Desktop's protocol detection so session creation, prompts, reads, status, and interrupts stay on the same compatible API in the current checkout or managed Git worktrees. Until OpenCode implements V2 wait, Navigator waits by polling the active-session API locally. It requires OpenCode `1.17.12` or newer and is enabled by default on OpenCode 1.
 
 ```jsonc
 {

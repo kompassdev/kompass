@@ -20,7 +20,7 @@ Kompass keeps AI coding agents on course with token-efficient, composable workfl
 
 - Commands cover direct work (`/ask`, `/commit`, `/merge`, `/skill/create`, `/skill/optimize`), orchestration (`/dev`, `/ship`, `/todo`, `/pr/fix/loop`), ticket planning/sync, and PR review/shipping flows. `/branch/inline`, `/commit/inline`, `/commit-and-push/inline`, `/pr/create/inline`, and `/ship/inline` reuse the invoking session instead of starting a subtask.
 - Agents are intentionally narrow: `worker` handles implementation and multi-step workflows, `planner` is no-edit planning, and `reviewer` is a no-edit review specialist.
-- Structured tools keep workflows grounded in repo and GitHub state: `changes_load`, `pr_load`, `pr_load_review`, `pr_sync`, `ticket_load`, `ticket_sync`. OpenCode users can opt into the eight Navigator session and worktree tools.
+- Structured tools keep workflows grounded in repo and GitHub state: `changes_load`, `pr_load`, `pr_load_review`, `pr_sync`, `ticket_load`, `ticket_sync`. OpenCode 1 also includes the eight Navigator session and worktree tools.
 - Reusable command-template components live in `packages/core/components/` and are documented in the components reference.
 
 ## Prerequisites
@@ -29,13 +29,23 @@ Kompass keeps AI coding agents on course with token-efficient, composable workfl
 
 ## Installation
 
-For OpenCode, add the adapter package to your config:
+The same package supports both OpenCode plugin APIs. For OpenCode 1, add:
 
 ```json
 {
   "plugin": ["@kompassdev/opencode"]
 }
 ```
+
+For OpenCode 2, use the plural `plugins` key:
+
+```json
+{
+  "plugins": ["@kompassdev/opencode"]
+}
+```
+
+OpenCode 2 agent transforms are update-only. If an agent is renamed in Kompass config, the host must register that agent ID before Kompass setup runs.
 
 Project config is optional. To start from the published base config:
 
@@ -54,7 +64,7 @@ The recommended project override path is `.opencode/kompass.jsonc`.
 
 ## Kompass Navigator
 
-Navigator is an OpenCode capability for explicitly requested orchestration of native sessions in the current checkout and OpenCode-managed Git worktrees. It is not a subagent mechanism; ordinary delegation should use OpenCode's built-in `task` tool. Navigator is enabled by default, follows OpenCode Desktop's protocol detection so session creation, prompts, reads, status, and interrupts stay on one compatible API, returns immediately after admitting prompts, and supports parallel sessions. Until OpenCode implements V2 wait, Navigator waits by polling the active-session API locally. It requires OpenCode `1.17.12` or newer.
+Navigator is available through the OpenCode 1 plugin API for explicitly requested orchestration of native sessions in the current checkout and OpenCode-managed Git worktrees. OpenCode 2 does not yet expose the workspace, worktree, and session-discovery APIs required to register Navigator safely. Navigator is not a subagent mechanism; ordinary delegation should use OpenCode's built-in `task` tool. It is enabled by default on OpenCode 1, follows OpenCode Desktop's protocol detection so session creation, prompts, reads, status, and interrupts stay on one compatible API, returns immediately after admitting prompts, and supports parallel sessions. Until OpenCode implements V2 wait, Navigator waits by polling the active-session API locally. It requires OpenCode `1.17.12` or newer.
 
 Configure Navigator and its limits with:
 

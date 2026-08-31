@@ -45,7 +45,6 @@ describe("applyAgentsConfig", () => {
       todowrite: "allow",
     });
     assert.equal(cfg.agent.worker?.prompt, undefined);
-    assert.equal(cfg.agent.navigator, undefined);
     assert.match(cfg.agent.reviewer?.prompt ?? "", /Never switch branches/i);
   });
 

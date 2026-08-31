@@ -50,7 +50,7 @@ Creates or updates GitHub issues, renders checklist sections, and can append iss
 
 ## OpenCode Navigator tools
 
-Navigator tools are enabled by default and are available only through the OpenCode adapter. Use them only for explicitly requested native-session or managed-worktree workflows, not for subagent delegation; OpenCode's built-in `task` tool owns subagent lifecycle and waiting. Their default runtime names use the `kompass_` prefix. See [Kompass Navigator](./navigator/) for arguments and safety behavior.
+Navigator tools are enabled by default through the OpenCode 1 plugin API. OpenCode 2 does not yet expose the host APIs they require. Use them only for explicitly requested native-session or managed-worktree workflows, not for subagent delegation; OpenCode's built-in `task` tool owns subagent lifecycle and waiting. Their default runtime names use the `kompass_` prefix. See [Kompass Navigator](./navigator/) for arguments and safety behavior.
 
 ### `worktree_list`
 

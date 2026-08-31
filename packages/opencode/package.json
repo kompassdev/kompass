@@ -46,16 +46,13 @@
   "bugs": {
     "url": "https://github.com/kompassdev/kompass/issues"
   },
-  "peerDependencies": {
-    "@opencode-ai/plugin": "^1.18.7",
-    "@opencode-ai/sdk": "^1.18.7"
-  },
   "dependencies": {
-    "rift-snapshot": "^0.0.10"
+    "@opencode-ai/plugin": "0.0.0-beta-18684",
+    "@opencode-ai/sdk": "^1.18.7",
+    "rift-snapshot": "^0.0.10",
+    "zod": "^4.1.8"
   },
   "devDependencies": {
-    "@opencode-ai/plugin": "^1.18.7",
-    "@opencode-ai/sdk": "^1.18.7",
     "yaml": "^2.8.2"
   }
 }

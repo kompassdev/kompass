@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 
-import { createOpenCodeTools, OpenCodeCompassPlugin } from "../index.ts";
+import { createOpenCodeTools, OpenCodeCompassPluginV1 } from "../index.ts";
 import { createRiftWorkspaceAdapter, resolveRiftSourceDirectory } from "../rift-workspace.ts";
 
 const execFileAsync = promisify(execFile);
@@ -535,7 +535,7 @@ describe("createOpenCodeTools", () => {
       const tempDir = await createTempGitRepo();
 
       try {
-        const plugin = await OpenCodeCompassPlugin({
+        const plugin = await OpenCodeCompassPluginV1({
           client: createMockClient() as never,
           directory: tempDir,
           worktree: tempDir,

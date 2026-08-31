@@ -80,7 +80,7 @@ const argumentPattern = /(?:\[Image\s+\d+\]|"[^"]*"|'[^']*'|[^\s"']+)/gi;
 const placeholderPattern = /\$(\d+)/g;
 const shellPattern = /!`([^`]+)`/g;
 
-async function expandCommand(template: string, input: string, projectRoot: string) {
+export async function expandCommand(template: string, input: string, projectRoot: string) {
   const args = (input.match(argumentPattern) ?? []).map((arg) => arg.replace(/^['"]|['"]$/g, ""));
   const placeholders = template.match(placeholderPattern) ?? [];
   const last = Math.max(0, ...placeholders.map((item) => Number(item.slice(1))));
@@ -95,12 +95,17 @@ async function expandCommand(template: string, input: string, projectRoot: strin
     : withArguments.trim();
   const matches = Array.from(text.matchAll(shellPattern));
   const outputs = await Promise.all(matches.map(async (match) => {
-    const { stdout, stderr } = await execFileAsync("/bin/sh", ["-lc", match[1] ?? ""], {
-      cwd: projectRoot,
-      encoding: "utf8",
-      maxBuffer: 10 * 1024 * 1024,
-    });
-    return `${stdout}${stderr}`;
+    try {
+      const { stdout, stderr } = await execFileAsync("/bin/bash", ["-lc", match[1] ?? ""], {
+        cwd: projectRoot,
+        encoding: "utf8",
+        maxBuffer: 10 * 1024 * 1024,
+      });
+      return `${stdout}${stderr}`;
+    } catch (error) {
+      const failed = error as { stdout?: unknown; stderr?: unknown; message?: unknown };
+      return `${String(failed.stdout ?? "")}${String(failed.stderr ?? failed.message ?? "")}`;
+    }
   }));
   const iterator = outputs[Symbol.iterator]();
   return text.replace(shellPattern, () => iterator.next().value ?? "");

@@ -5,11 +5,22 @@ import {
   OpenCodeCompassPluginV2,
   setupOpenCodeV2,
 } from "../index.ts";
+import { expandCommand } from "../v2.ts";
 
 describe("OpenCode v2 plugin", () => {
   test("exports the v2 plugin definition", () => {
     assert.equal(OpenCodeCompassPluginV2.id, "kompass");
     assert.equal(OpenCodeCompassPluginV2.setup, setupOpenCodeV2);
+  });
+
+  test("inlines output from failing shell substitutions", async () => {
+    const prompt = await expandCommand(
+      "Result: !`printf stdout; printf stderr >&2; exit 1`",
+      "",
+      process.cwd(),
+    );
+
+    assert.equal(prompt, "Result: stdoutstderr");
   });
 
   test("registers location-scoped agents, commands, and tools", async () => {

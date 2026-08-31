@@ -14,8 +14,8 @@ import {
   loadResolvedCommands,
 } from "./cache.ts";
 import { createPluginLogger } from "./logging.ts";
+import { createCoreOpenCodeToolDefinitions } from "./shared-tools.ts";
 import { getConfiguredOpenCodeToolName } from "./tool-names.ts";
-import { createCoreOpenCodeToolDefinitions } from "./v1.ts";
 
 type PluginContext = Plugin.Context;
 type ToolDraft = Parameters<Parameters<PluginContext["tool"]["transform"]>[0]>[0];

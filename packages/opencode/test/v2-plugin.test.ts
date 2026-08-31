@@ -30,6 +30,7 @@ describe("OpenCode v2 plugin", () => {
     const prompts: Array<Record<string, unknown>> = [];
     const switchedAgents: string[] = [];
     const createdSessions: Array<Record<string, unknown>> = [];
+    const disposed: string[] = [];
     const availableAgents = new Map([
       ["worker", { id: "worker", permissions: [] as unknown[] }],
       ["planner", { id: "planner", permissions: [] as unknown[] }],
@@ -38,31 +39,40 @@ describe("OpenCode v2 plugin", () => {
     const context = {
       location: { directory: process.cwd() },
       agent: {
-        transform: async (transform: (draft: unknown) => void) => transform({
-          get(name: string) {
-            return availableAgents.get(name);
-          },
-          update(name: string, update: (agent: Record<string, unknown>) => void) {
-            agents.push(name);
-            update(availableAgents.get(name) as Record<string, unknown>);
-          },
-        }),
+        transform: async (transform: (draft: unknown) => void) => {
+          transform({
+            get(name: string) {
+              return availableAgents.get(name);
+            },
+            update(name: string, update: (agent: Record<string, unknown>) => void) {
+              agents.push(name);
+              update(availableAgents.get(name) as Record<string, unknown>);
+            },
+          });
+          return { dispose: async () => { disposed.push("agent"); } };
+        },
         reload: async () => {},
       },
       command: {
-        transform: async (transform: (draft: unknown) => void) => transform({
-          add(command: { name: string; execute(input: unknown): Promise<void> }) {
-            commands.set(command.name, command);
-          },
-        }),
+        transform: async (transform: (draft: unknown) => void) => {
+          transform({
+            add(command: { name: string; execute(input: unknown): Promise<void> }) {
+              commands.set(command.name, command);
+            },
+          });
+          return { dispose: async () => { disposed.push("command"); } };
+        },
         reload: async () => {},
       },
       tool: {
-        transform: async (transform: (draft: unknown) => void) => transform({
-          add(tool: { name: string; input: unknown }) {
-            tools.set(tool.name, tool);
-          },
-        }),
+        transform: async (transform: (draft: unknown) => void) => {
+          transform({
+            add(tool: { name: string; input: unknown }) {
+              tools.set(tool.name, tool);
+            },
+          });
+          return { dispose: async () => { disposed.push("tool"); } };
+        },
         reload: async () => {},
       },
       session: {
@@ -79,7 +89,7 @@ describe("OpenCode v2 plugin", () => {
       },
     };
 
-    await setupOpenCodeV2(context as never);
+    const cleanup = await setupOpenCodeV2(context as never);
     assert.ok(agents.includes("worker"));
     assert.ok(commands.has("dev"));
     assert.deepEqual([...tools.keys()].sort(), [
@@ -110,5 +120,8 @@ describe("OpenCode v2 plugin", () => {
     });
     assert.deepEqual(switchedAgents, ["worker"]);
     assert.equal(prompts[1]?.sessionID, "session-1");
+
+    await cleanup();
+    assert.deepEqual(disposed.sort(), ["agent", "command", "tool"]);
   });
 });

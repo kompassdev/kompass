@@ -154,12 +154,19 @@ export async function setupOpenCodeV2(ctx: PluginContext) {
     loadResolvedCommands(projectRoot),
     createOpenCodeV2Tools(projectRoot),
   ]);
-  await ctx.agent.transform((draft) => applyAgents(draft, agents));
-  await ctx.command.transform((draft) => applyCommands(draft, commands, ctx, projectRoot));
-  await ctx.tool.transform((draft) => {
+  const agentRegistration = await ctx.agent.transform((draft) => applyAgents(draft, agents));
+  const commandRegistration = await ctx.command.transform((draft) => applyCommands(draft, commands, ctx, projectRoot));
+  const toolRegistration = await ctx.tool.transform((draft) => {
     for (const tool of tools) draft.add(tool);
   });
   logger.info("Initialized Kompass v2 plugin", { directory: projectRoot, tools: tools.length });
+  return async () => {
+    await Promise.all([
+      agentRegistration.dispose(),
+      commandRegistration.dispose(),
+      toolRegistration.dispose(),
+    ]);
+  };
 }
 
 export const OpenCodeCompassPluginV2 = Plugin.define({

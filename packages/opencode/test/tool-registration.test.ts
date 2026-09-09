@@ -129,7 +129,7 @@ async function createTempGitRepo() {
 
 describe("createOpenCodeTools", () => {
   test("Rift workspace adapter maps OpenCode workspaces to Rift snapshots", async () => {
-    const calls: Array<{ name: string; options?: Record<string, unknown> }> = [];
+    const calls: Array<{ name: string; options?: unknown }> = [];
     const sourceDirectory = path.join(os.tmpdir(), "kompass-rift-source");
     const adapter = createRiftWorkspaceAdapter({
       init: (options) => {

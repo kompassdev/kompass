@@ -1,4 +1,5 @@
 import path from "node:path";
+import { createRiftSnapshot, loadRift, type RiftBackend } from "./rift.ts";
 
 type WorkspaceInfo = {
   id: string;
@@ -22,12 +23,7 @@ type WorkspaceAdapter = {
   target(config: WorkspaceInfo): WorkspaceTarget | Promise<WorkspaceTarget>;
 };
 
-type RiftModule = {
-  init(options?: { at?: string }): null;
-  create(options?: { from?: string; name?: string; copyAll?: boolean; hooks?: boolean }): string;
-  remove(options?: { at?: string; all?: false }): void;
-  list(options?: { of?: string }): string[];
-};
+type RiftModule = Pick<RiftBackend, "init" | "create" | "remove" | "list">;
 
 type RiftAdapterOptions = {
   sourceDirectory: string;
@@ -45,8 +41,6 @@ type Logger = {
   info(message: string, extra?: Record<string, unknown>): void;
   warn(message: string, extra?: Record<string, unknown>): void;
 };
-
-const importModule = new Function("specifier", "return import(specifier)") as (specifier: string) => Promise<unknown>;
 
 function slugify(input: string) {
   return input
@@ -138,12 +132,9 @@ export function createRiftWorkspaceAdapter(rift: RiftModule, options: RiftAdapte
         requireManagedDirectory(sourceDirectory, source, "creation source");
       }
       const expected = requireManagedDirectory(sourceDirectory, config.directory, "creation target");
-      rift.init({ at: source });
-      const created = path.resolve(rift.create({
+      const created = path.resolve(createRiftSnapshot(rift, {
         from: source,
         name: config.name,
-        // Use Rift's APFS full-clone path; the filtered walker can fail on protected macOS xattrs.
-        copyAll: true,
       }));
       if (created !== expected) {
         try {
@@ -195,7 +186,7 @@ export async function registerRiftWorkspaceAdapter(input: ExperimentalWorkspaceI
 
   let rift: RiftModule;
   try {
-    rift = await importModule("rift-snapshot") as RiftModule;
+    rift = await loadRift();
   } catch (error) {
     logger.info("Rift workspace adapter not registered", {
       reason: "Install rift-snapshot to enable the experimental Rift workspace adapter",

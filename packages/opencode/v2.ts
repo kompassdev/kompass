@@ -1,6 +1,4 @@
-import { Plugin } from "@opencode-ai/plugin";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import { Plugin } from "@opencode/plugin";
 import { z } from "zod";
 
 import {
@@ -16,11 +14,11 @@ import {
 import { createPluginLogger } from "./logging.ts";
 import { createCoreOpenCodeToolDefinitions } from "./shared-tools.ts";
 import { getConfiguredOpenCodeToolName } from "./tool-names.ts";
+import { createRiftWorktreeStrategy } from "./rift-worktree.ts";
 
 type PluginContext = Plugin.Context;
 type ToolDraft = Parameters<Parameters<PluginContext["tool"]["transform"]>[0]>[0];
 type OpenCodeTool = Parameters<ToolDraft["add"]>[0];
-const execFileAsync = promisify(execFile);
 
 function toOpenCodeTool(
   name: string,
@@ -60,9 +58,6 @@ function applyAgents(
   agents: Record<string, ResolvedAgentDefinition>,
 ) {
   for (const [name, definition] of Object.entries(agents)) {
-    if (!draft.get(name)) {
-      throw new Error(`OpenCode v2 agent "${name}" must be registered before Kompass setup`);
-    }
     draft.update(name, (agent) => {
       agent.description = definition.description;
       agent.permissions.push(...Object.entries(definition.permission).map(([action, effect]) => ({
@@ -74,41 +69,6 @@ function applyAgents(
       if (definition.mode) agent.mode = definition.mode;
     });
   }
-}
-
-const argumentPattern = /(?:\[Image\s+\d+\]|"[^"]*"|'[^']*'|[^\s"']+)/gi;
-const placeholderPattern = /\$(\d+)/g;
-const shellPattern = /!`([^`]+)`/g;
-
-export async function expandCommand(template: string, input: string, projectRoot: string) {
-  const args = (input.match(argumentPattern) ?? []).map((arg) => arg.replace(/^['"]|['"]$/g, ""));
-  const placeholders = template.match(placeholderPattern) ?? [];
-  const last = Math.max(0, ...placeholders.map((item) => Number(item.slice(1))));
-  const expanded = template.replaceAll(placeholderPattern, (_, rawIndex: string) => {
-    const index = Number(rawIndex) - 1;
-    if (index >= args.length) return "";
-    return index + 1 === last ? args.slice(index).join(" ") : args[index] ?? "";
-  });
-  const withArguments = expanded.replaceAll("$ARGUMENTS", input);
-  const text = placeholders.length === 0 && !template.includes("$ARGUMENTS") && input.trim()
-    ? `${withArguments}\n\n${input}`.trim()
-    : withArguments.trim();
-  const matches = Array.from(text.matchAll(shellPattern));
-  const outputs = await Promise.all(matches.map(async (match) => {
-    try {
-      const { stdout, stderr } = await execFileAsync("/bin/bash", ["-lc", match[1] ?? ""], {
-        cwd: projectRoot,
-        encoding: "utf8",
-        maxBuffer: 10 * 1024 * 1024,
-      });
-      return `${stdout}${stderr}`;
-    } catch (error) {
-      const failed = error as { stdout?: unknown; stderr?: unknown; message?: unknown };
-      return `${String(failed.stdout ?? "")}${String(failed.stderr ?? failed.message ?? "")}`;
-    }
-  }));
-  const iterator = outputs[Symbol.iterator]();
-  return text.replace(shellPattern, () => iterator.next().value ?? "");
 }
 
 function applyCommands(
@@ -138,7 +98,9 @@ function applyCommands(
         await ctx.session.prompt({
           ...prompt,
           sessionID: targetSessionID,
-          text: await expandCommand(definition.template, prompt.text, projectRoot),
+          text: definition.template.includes("$ARGUMENTS")
+            ? definition.template.replaceAll("$ARGUMENTS", () => prompt.text)
+            : `${definition.template}\n\n${prompt.text}`.trim(),
           delivery,
         });
       },
@@ -159,12 +121,16 @@ export async function setupOpenCodeV2(ctx: PluginContext) {
   const toolRegistration = await ctx.tool.transform((draft) => {
     for (const tool of tools) draft.add(tool);
   });
+  const worktreeRegistration = await ctx.worktree.transform((draft) => {
+    draft.add(createRiftWorktreeStrategy());
+  });
   logger.info("Initialized Kompass v2 plugin", { directory: projectRoot, tools: tools.length });
   return async () => {
     await Promise.all([
       agentRegistration.dispose(),
       commandRegistration.dispose(),
       toolRegistration.dispose(),
+      worktreeRegistration.dispose(),
     ]);
   };
 }

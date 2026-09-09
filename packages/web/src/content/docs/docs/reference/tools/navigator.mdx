@@ -3,7 +3,7 @@ title: Kompass Navigator
 description: Native OpenCode session and managed-worktree orchestration tools.
 ---
 
-Navigator is enabled by default through the OpenCode 1 plugin API. OpenCode 2 does not yet expose the workspace, worktree, and session-discovery APIs required by these tools. Use Navigator only when the user explicitly requests native-session, managed-worktree, or multi-session workflow orchestration. Do not use it for subagent delegation: OpenCode's built-in `task` tool creates child sessions, waits for foreground tasks, and reports background completion automatically. Default runtime names use the `kompass_` prefix; set `adapters.opencode.navigator.enabled` to `false` to disable all eight tools.
+Navigator is enabled by default through the OpenCode 1 plugin API. These eight tools have not been ported to the V2 plugin API; OpenCode 2 uses Kompass's [native Rift worktree strategy](/docs/adapters/opencode/#opencode-2-worktrees). Use Navigator only when the user explicitly requests native-session, managed-worktree, or multi-session workflow orchestration. Do not use it for subagent delegation: OpenCode's built-in `task` tool creates child sessions, waits for foreground tasks, and reports background completion automatically. Default runtime names use the `kompass_` prefix; set `adapters.opencode.navigator.enabled` to `false` to disable all eight tools.
 
 | Logical tool | Purpose |
 | --- | --- |

@@ -47,7 +47,7 @@
     "url": "https://github.com/kompassdev/kompass/issues"
   },
   "dependencies": {
-    "@opencode-ai/plugin": "0.0.0-beta-18684",
+    "@opencode/plugin": "0.0.0-beta-19381",
     "@opencode-ai/sdk": "^1.18.7",
     "rift-snapshot": "^0.0.10",
     "zod": "^4.1.8"

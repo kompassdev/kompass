@@ -98,6 +98,37 @@ function context(sessionID = "caller", abort = new AbortController().signal) {
 }
 
 describe("Kompass Navigator", () => {
+  test("defaults to the caller directory and creates idle sessions on both protocols", async () => {
+    for (const protocol of ["v1", "v2"] as const) {
+      let prompts = 0;
+      const client = createClient({
+        session: {
+          get: async ({ sessionID }: any) => response({ data: session(sessionID, "/repo-worktree/src") }),
+          prompt: async () => { prompts++; return response({ data: {} }); },
+        },
+        legacySession: { promptAsync: async () => { prompts++; return response(undefined); } },
+      });
+      const result = JSON.parse(await tools(client, navigatorConfig, protocol).session_create.execute({}, context()) as string);
+      assert.equal(result.directory, "/repo-worktree/src");
+      assert.equal(result.status, "created");
+      assert.equal(result.admitted, false);
+      assert.equal(prompts, 0);
+      const checkout = JSON.parse(await tools(client, navigatorConfig, protocol).session_create.execute({ directory: "/repo" }, context()) as string);
+      assert.equal(checkout.directory, "/repo");
+    }
+  });
+
+  test("legacy idle sessions reject agent/model options that the API cannot persist", async () => {
+    const navigator = tools(createClient(), navigatorConfig, "v1");
+    await assert.rejects(navigator.session_create.execute({ agent: "worker" }, context()), /when prompting/);
+    await assert.rejects(navigator.session_create.execute({ environment: { type: "new_worktree" } }, context()), /no longer supported/);
+  });
+  test("creates standalone worktrees without creating a session", async () => {
+    const client = createClient({ session: { create: async () => { throw new Error("Must not create a session"); } } });
+    const output = JSON.parse(await tools(client).worktree_create.execute({ name: "task" }, context()) as string);
+    assert.equal(output.status, "created");
+    assert.equal(output.worktree.directory, "/repo-new");
+  });
   test("reserves Navigator tools for explicit native-session workflows", () => {
     for (const definition of Object.values(tools())) {
       assert.match(definition.description, /explicitly asks/);
@@ -247,7 +278,7 @@ describe("Kompass Navigator", () => {
     await assert.rejects(
       (tools().session_create as any).execute({
         prompt: "work",
-        environment: { type: "existing_worktree", directory: "/tmp/arbitrary" },
+        directory: "/tmp/arbitrary",
       }, context()),
       /not a managed OpenCode workspace/,
     );
@@ -277,7 +308,7 @@ describe("Kompass Navigator", () => {
     });
     const output = JSON.parse(await (tools(client).session_create as any).execute({
       prompt: "implement it",
-      environment: { type: "existing_worktree", directory: "/repo-worktree" },
+      directory: "/repo-worktree",
     }, context()));
 
     assert.equal(output.directory, "/repo-worktree");
@@ -305,7 +336,7 @@ describe("Kompass Navigator", () => {
 
     await (tools(client).session_create as any).execute({
       prompt: "review it",
-      environment: { type: "checkout" },
+      directory: "/repo",
     }, context());
 
     assert.equal(creates[0].agent, "reviewer");
@@ -317,7 +348,7 @@ describe("Kompass Navigator", () => {
     });
   });
 
-  test("validates an unknown V2 agent in a newly created worktree and rolls it back", async () => {
+  test("validates an unknown agent without mutating worktrees", async () => {
     let worktreeCreates = 0;
     let worktreeRemoves = 0;
     let sessionCreates = 0;
@@ -334,12 +365,12 @@ describe("Kompass Navigator", () => {
       (tools(client).session_create as any).execute({
         prompt: "review it",
         agent: "review",
-        environment: { type: "new_worktree" },
+        directory: "/repo-worktree",
       }, context()),
       /Unknown OpenCode agent "review".*reviewer/,
     );
-    assert.equal(worktreeCreates, 1);
-    assert.equal(worktreeRemoves, 1);
+    assert.equal(worktreeCreates, 0);
+    assert.equal(worktreeRemoves, 0);
     assert.equal(sessionCreates, 0);
   });
 
@@ -352,12 +383,12 @@ describe("Kompass Navigator", () => {
     await assert.rejects((tools(client).session_create as any).execute({
       prompt: "work",
       model: { providerID: "openai", modelID: "missing" },
-      environment: { type: "checkout" },
+      directory: "/repo",
     }, context()), /Unknown or disabled OpenCode model.*Available openai models/);
     await assert.rejects((tools(client).session_create as any).execute({
       prompt: "work",
       model: { providerID: "openai", modelID: "gpt-5.6-sol", variant: "missing" },
-      environment: { type: "checkout" },
+      directory: "/repo",
     }, context()), /Unknown variant.*Available variants: xhigh/);
     assert.equal(sessionCreates, 0);
   });
@@ -462,11 +493,10 @@ describe("Kompass Navigator", () => {
   });
 
   test("returns new worktree details", async () => {
-    const output = JSON.parse(await (tools().session_create as any).execute({
-      prompt: "implement it",
-      environment: { type: "new_worktree", name: "feature" },
+    const output = JSON.parse(await (tools().worktree_create as any).execute({
+      name: "feature",
     }, context()));
-    assert.deepEqual(output.worktree, { created: true, type: "worktree", name: "new", branch: "new" });
+    assert.deepEqual(output.worktree, { directory: "/repo-new", type: "worktree", name: "new", branch: "new" });
   });
 
   test("prefers Rift workspace adapter for new workspaces when available", async () => {
@@ -499,16 +529,15 @@ describe("Kompass Navigator", () => {
       },
     };
 
-    const output = JSON.parse(await (tools(client).session_create as any).execute({
-      prompt: "implement it",
-      environment: { type: "new_worktree", name: "Parser Fix" },
+    const output = JSON.parse(await (tools(client).worktree_create as any).execute({
+      name: "Parser Fix",
     }, context()));
 
     assert.deepEqual(workspaceCreates, [{ directory: "/repo", type: "rift", extra: { name: "Parser Fix" } }]);
-    assert.deepEqual(sessionCreates[0].location, { directory: "/repo-rift", workspaceID: "wrk_rift" });
-    assert.equal(output.workspaceID, "wrk_rift");
+    assert.deepEqual(sessionCreates, []);
     assert.deepEqual(output.worktree, {
-      created: true,
+      directory: "/repo-rift",
+      projectID: "project-1",
       type: "rift",
       name: "parser-fix",
       id: "wrk_rift",
@@ -545,7 +574,7 @@ describe("Kompass Navigator", () => {
 
     await (tools(client).session_create as any).execute({
       prompt: "continue",
-      environment: { type: "existing_worktree", directory: "/repo-rift" },
+      directory: "/repo-rift",
     }, context());
 
     assert.deepEqual(creates[0].location, { directory: "/repo-rift", workspaceID: "wrk_existing" });
@@ -566,14 +595,13 @@ describe("Kompass Navigator", () => {
       workspace: {
         adapter: { list: async () => response([{ type: "rift" }]) },
         syncList: async () => response(undefined),
-        list: async () => response([]),
-        create: async () => response({
+        list: async () => response([{
           id: "wrk_expected",
           type: "rift",
           name: "new",
           directory: "/repo-rift",
           projectID: "project-1",
-        }),
+        }]),
         remove: async () => { removes += 1; return response(undefined); },
       },
     };
@@ -581,12 +609,12 @@ describe("Kompass Navigator", () => {
     await assert.rejects(
       (tools(client).session_create as any).execute({
         prompt: "work",
-        environment: { type: "new_worktree" },
+        directory: "/repo-rift",
       }, context()),
-      /workspace ID wrk_wrong; expected wrk_expected.*not prompted.*rolled back/,
+      /workspace ID wrk_wrong; expected wrk_expected.*not prompted/,
     );
     assert.equal(prompts, 0);
-    assert.equal(removes, 1);
+    assert.equal(removes, 0);
   });
 
   test("does not remove an existing Rift after returned location validation fails", async () => {
@@ -611,7 +639,7 @@ describe("Kompass Navigator", () => {
 
     await assert.rejects((tools(client).session_create as any).execute({
       prompt: "work",
-      environment: { type: "existing_worktree", directory: "/repo-rift" },
+      directory: "/repo-rift",
     }, context()), /uses directory \/wrong.*not prompted/);
     assert.equal(removes, 0);
   });
@@ -621,13 +649,13 @@ describe("Kompass Navigator", () => {
     await assert.rejects(
       (tools(client).session_create as any).execute({
         prompt: "implement it",
-        environment: { type: "new_worktree" },
+        directory: "/repo-worktree",
       }, context()),
-      /Session created: created.*Worktree created: new \(\/repo-new\)/,
+      /Session created: created/,
     );
   });
 
-  test("reports a worktree created before a session failure", async () => {
+  test("session creation failure preserves existing worktrees", async () => {
     const removes: any[] = [];
     const client = createClient({
       worktree: { remove: async (args: any) => { removes.push(args); return response(true); } },
@@ -636,11 +664,11 @@ describe("Kompass Navigator", () => {
     await assert.rejects(
       (tools(client).session_create as any).execute({
         prompt: "implement it",
-        environment: { type: "new_worktree" },
+        directory: "/repo-worktree",
       }, context()),
-      /Workspace \/repo-new was rolled back/,
+      /session creation failed.*create failed/,
     );
-    assert.equal(removes[0].worktreeRemoveInput.directory, "/repo-new");
+    assert.deepEqual(removes, []);
   });
 
   test("discovers a worktree left behind by a failed native create", async () => {
@@ -655,15 +683,14 @@ describe("Kompass Navigator", () => {
       },
     });
     await assert.rejects(
-      (tools(client).session_create as any).execute({
-        prompt: "implement it",
-        environment: { type: "new_worktree", startCommand: "false" },
+      (tools(client).worktree_create as any).execute({
+        startCommand: "false",
       }, context()),
-      /partially created workspace was removed/,
+      /start command failed/,
     );
   });
 
-  test("rejects a foreign Rift workspace before creating a session and rolls it back", async () => {
+  test("reports a foreign Rift workspace and preserves it for recovery", async () => {
     const removes: any[] = [];
     let sessionCreates = 0;
     const client = createClient({
@@ -687,14 +714,11 @@ describe("Kompass Navigator", () => {
     };
 
     await assert.rejects(
-      (tools(client).session_create as any).execute({
-        prompt: "implement it",
-        environment: { type: "new_worktree" },
-      }, context()),
-      /registered workspace wrk_foreign to project project-2; expected project-1.*partially created workspace was removed/,
+      (tools(client).worktree_create as any).execute({}, context()),
+      /another project.*preserved for recovery/,
     );
     assert.equal(sessionCreates, 0);
-    assert.deepEqual(removes, [{ id: "wrk_foreign", directory: "/repo" }]);
+    assert.deepEqual(removes, []);
   });
 
   test("rejects self send, wait, and interrupt", async () => {

@@ -21,6 +21,7 @@ export const DEFAULT_TOOL_NAMES = [
   "ticket_sync",
   "ticket_load",
   "worktree_list",
+  "worktree_create",
   "session_create",
   "session_list",
   "session_read",
@@ -32,6 +33,7 @@ export const DEFAULT_TOOL_NAMES = [
 
 export const NAVIGATOR_TOOL_NAMES = [
   "worktree_list",
+  "worktree_create",
   "session_create",
   "session_list",
   "session_read",
@@ -40,6 +42,18 @@ export const NAVIGATOR_TOOL_NAMES = [
   "session_interrupt",
   "worktree_remove",
 ] as const;
+
+// V2 lacks session listing. Worktree removal uses native force semantics.
+export const V2_NAVIGATOR_TOOL_NAMES = [
+  "worktree_list",
+  "worktree_create",
+  "worktree_remove",
+  "session_create",
+  "session_read",
+  "session_send",
+  "session_wait",
+  "session_interrupt",
+] as const satisfies readonly (typeof NAVIGATOR_TOOL_NAMES)[number][];
 
 export const DEFAULT_COMMAND_NAMES = [
   "ask",
@@ -165,6 +179,7 @@ export interface KompassConfig {
     ticket_sync?: ToolConfig;
     ticket_load?: ToolConfig;
     worktree_list?: ToolConfig;
+    worktree_create?: ToolConfig;
     session_create?: ToolConfig;
     session_list?: ToolConfig;
     session_read?: ToolConfig;
@@ -227,6 +242,7 @@ export interface MergedKompassConfig {
     ticket_sync: ToolConfig;
     ticket_load: ToolConfig;
     worktree_list: ToolConfig;
+    worktree_create: ToolConfig;
     session_create: ToolConfig;
     session_list: ToolConfig;
     session_read: ToolConfig;
@@ -252,6 +268,7 @@ export interface MergedKompassConfig {
 
 export interface NavigatorConfig {
   enabled: boolean;
+  /** OpenCode 1 only; V2 plugins cannot discover all active sessions. */
   maxConcurrentSessions: number;
   maxReadChars: number;
   maxOutputCharsPerItem: number;
@@ -527,6 +544,7 @@ const defaultToolConfig: Record<ToolName, ToolConfig> = {
   ticket_sync: { enabled: true },
   ticket_load: { enabled: true },
   worktree_list: { enabled: true },
+  worktree_create: { enabled: true },
   session_create: { enabled: true },
   session_list: { enabled: true },
   session_read: { enabled: true },
@@ -710,6 +728,7 @@ export function mergeWithDefaults(
       ticket_sync: { ...defaultToolConfig.ticket_sync, ...config?.tools?.ticket_sync },
       ticket_load: { ...defaultToolConfig.ticket_load, ...config?.tools?.ticket_load },
       worktree_list: { ...defaultToolConfig.worktree_list, ...config?.tools?.worktree_list },
+      worktree_create: { ...defaultToolConfig.worktree_create, ...config?.tools?.worktree_create },
       session_create: { ...defaultToolConfig.session_create, ...config?.tools?.session_create },
       session_list: { ...defaultToolConfig.session_list, ...config?.tools?.session_list },
       session_read: { ...defaultToolConfig.session_read, ...config?.tools?.session_read },

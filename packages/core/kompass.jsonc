@@ -54,8 +54,9 @@
     "ticket_load": { "enabled": true },
     "ticket_sync": { "enabled": true },
     "worktree_list": { "enabled": true },
+    "worktree_create": { "enabled": true },
     "session_create": { "enabled": true },
-    "session_list": { "enabled": true },
+    "session_list": { "enabled": true }, // OpenCode 1 only
     "session_read": { "enabled": true },
     "session_send": { "enabled": true },
     "session_wait": { "enabled": true },
@@ -88,7 +89,7 @@
       "agentMode": "all",
       "navigator": {
         "enabled": true,
-        "maxConcurrentSessions": 8,
+        "maxConcurrentSessions": 8, // OpenCode 1 only; V2 plugins lack active-session discovery
         "maxReadChars": 20000,
         "maxOutputCharsPerItem": 4000,
         "maxWaitMs": 120000,

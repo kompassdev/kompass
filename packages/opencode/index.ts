@@ -7,7 +7,7 @@ import {
 export const OpenCodeCompassPlugin = {
   id: "kompass",
   server: OpenCodeCompassPluginV1,
-  setup: setupOpenCodeV2,
+  effect: OpenCodeCompassPluginV2.effect,
 };
 
 export {

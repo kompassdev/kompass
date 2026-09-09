@@ -12,6 +12,7 @@ import {
   type MergedKompassConfig,
   type Shell,
   type ShellPromise,
+  type ToolExecutionContext,
 } from "../core/index.ts";
 
 export type ToolContext = {
@@ -36,24 +37,25 @@ export type ToolResult = string | {
   metadata?: Record<string, unknown>;
 };
 
-export function tool<Args extends z.ZodRawShape>(input: {
+export function tool<Args extends z.ZodRawShape, Context = ToolContext>(input: {
   description: string;
   args: Args;
-  execute(args: z.infer<z.ZodObject<Args>>, context: ToolContext): Promise<ToolResult>;
+  execute(args: z.infer<z.ZodObject<Args>>, context: Context): Promise<ToolResult>;
 }) {
   return input;
 }
 
 tool.schema = z;
 
-export type ToolDefinition = ReturnType<typeof tool>;
+export type ToolDefinition = ReturnType<typeof tool<z.ZodRawShape, ToolContext>>;
+export type CoreToolDefinition = ReturnType<typeof tool<z.ZodRawShape, ToolExecutionContext>>;
 
 const execFileAsync = promisify(execFile);
 
 type OpenCodeToolCreator = (
   config: MergedKompassConfig,
   shell: Shell,
-) => ToolDefinition;
+) => CoreToolDefinition;
 
 type ShellResult = ShellPromise & {
   stdout: Buffer;
@@ -88,10 +90,12 @@ class NodeShellCommand implements PromiseLike<ShellResult> {
   #quiet = false;
   #nothrow = false;
   #result?: Promise<ShellResult>;
+  #signal?: AbortSignal;
 
-  constructor(command: string, cwd: string) {
+  constructor(command: string, cwd: string, signal?: AbortSignal) {
     this.#command = command;
     this.#cwd = cwd;
+    this.#signal = signal;
   }
 
   cwd(dir: string) {
@@ -122,16 +126,20 @@ class NodeShellCommand implements PromiseLike<ShellResult> {
   }
 
   private async execute() {
+    this.#signal?.throwIfAborted();
     try {
       const { stdout, stderr } = await execFileAsync("/bin/bash", ["-lc", this.#command], {
         cwd: this.#cwd,
         encoding: "utf8",
         maxBuffer: 10 * 1024 * 1024,
+        signal: this.#signal,
       });
 
       this.write(stdout, stderr);
       return shellResult(stdout, stderr, 0);
     } catch (error) {
+      // Cancellation must stop the workflow even for a nothrow command.
+      this.#signal?.throwIfAborted();
       const failed = error as { stdout?: unknown; stderr?: unknown; message?: unknown; code?: unknown };
       const stdout = String(failed.stdout ?? "");
       const stderr = String(failed.stderr ?? failed.message ?? "");
@@ -152,7 +160,7 @@ class NodeShellCommand implements PromiseLike<ShellResult> {
   }
 }
 
-export function createNodeShell(defaultDirectory: string): Shell {
+export function createNodeShell(defaultDirectory: string, signal?: AbortSignal): Shell {
   return (strings: TemplateStringsArray, ...expressions: unknown[]) => {
     let command = strings[0] ?? "";
 
@@ -163,7 +171,7 @@ export function createNodeShell(defaultDirectory: string): Shell {
       command += strings[index + 1] ?? "";
     });
 
-    return new NodeShellCommand(command, defaultDirectory) as unknown as ShellPromise;
+    return new NodeShellCommand(command, defaultDirectory, signal) as unknown as ShellPromise;
   };
 }
 
@@ -182,7 +190,7 @@ const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
           .describe("Only load uncommitted changes (staged and unstaged), never fall back to branch comparison")
           .optional(),
       },
-      execute: (args, context) => definition.execute(args, context),
+      execute: (args, context: ToolExecutionContext) => definition.execute(args, context),
     });
   },
   pr_load(_: MergedKompassConfig, shell: Shell) {
@@ -192,7 +200,7 @@ const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
       args: {
         pr: tool.schema.string().describe("PR number or URL").optional(),
       },
-      execute: (args, context) => definition.execute(args, context),
+      execute: (args, context: ToolExecutionContext) => definition.execute(args, context),
     });
   },
   pr_load_review(_: MergedKompassConfig, shell: Shell) {
@@ -203,7 +211,7 @@ const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
         pr: tool.schema.string().describe("PR number or URL").optional(),
         since: tool.schema.string().describe("Exclusive ISO-8601 review checkpoint"),
       },
-      execute: (args, context) => definition.execute(args, context),
+      execute: (args, context: ToolExecutionContext) => definition.execute(args, context),
     });
   },
   pr_sync(config: MergedKompassConfig, shell: Shell) {
@@ -251,7 +259,7 @@ const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
         })).describe("Replies to existing review comments").optional(),
         commentBody: tool.schema.string().describe("General PR comment body").optional(),
       },
-      execute: (args, context) => definition.execute(args, context),
+      execute: (args, context: ToolExecutionContext) => definition.execute(args, context),
     });
   },
   ticket_sync(_: MergedKompassConfig, shell: Shell) {
@@ -274,7 +282,7 @@ const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
         refUrl: tool.schema.string().describe("Optional issue URL to update").optional(),
         comments: tool.schema.array(tool.schema.string()).describe("Optional issue comments to post").optional(),
       },
-      execute: (args, context) => definition.execute(args, context),
+      execute: (args, context: ToolExecutionContext) => definition.execute(args, context),
     });
   },
   ticket_load(_: MergedKompassConfig, shell: Shell) {
@@ -285,7 +293,7 @@ const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
         source: tool.schema.string().describe("Issue URL, repo#id, #id, file path, or raw text"),
         comments: tool.schema.boolean().describe("Include issue comments").optional(),
       },
-      execute: (args, context) => definition.execute(args, context),
+      execute: (args, context: ToolExecutionContext) => definition.execute(args, context),
     });
   },
 };
@@ -293,8 +301,9 @@ const opencodeToolCreators: Record<string, OpenCodeToolCreator> = {
 export function createCoreOpenCodeToolDefinitions(
   config: MergedKompassConfig,
   projectRoot: string,
-): Record<string, ToolDefinition> {
-  const shell = createNodeShell(projectRoot);
+  signal?: AbortSignal,
+): Record<string, CoreToolDefinition> {
+  const shell = createNodeShell(projectRoot, signal);
   return Object.fromEntries(
     Object.entries(opencodeToolCreators).map(([name, create]) => [name, create(config, shell)]),
   );

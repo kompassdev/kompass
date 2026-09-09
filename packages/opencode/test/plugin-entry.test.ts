@@ -17,8 +17,8 @@ describe("plugin entry", () => {
     );
     assert.equal(mod.default, mod.OpenCodeCompassPlugin);
     assert.equal(mod.default.server, mod.OpenCodeCompassPluginV1);
-    assert.equal(mod.default.setup, mod.setupOpenCodeV2);
+    assert.equal(mod.default.effect, mod.OpenCodeCompassPluginV2.effect);
     assert.equal(mod.default.id, "kompass");
-    assert.equal(mod.OpenCodeCompassPluginV2.setup, mod.setupOpenCodeV2);
+    assert.equal(typeof mod.OpenCodeCompassPluginV2.effect, "function");
   });
 });

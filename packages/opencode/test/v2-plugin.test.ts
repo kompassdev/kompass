@@ -1,128 +1,122 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-
-import {
-  OpenCodeCompassPluginV2,
-  setupOpenCodeV2,
-} from "../index.ts";
+import { Agent, Location, type Plugin } from "@opencode/plugin/effect";
+import type { CommandDefinition } from "@opencode/plugin/effect/command";
+import type { Transform } from "@opencode/plugin/effect/registration";
+import type { WorktreeDefinition } from "@opencode/plugin/effect/worktree";
+import { Session } from "@opencode/schema/session";
+import { Tool } from "@opencode/schema/tool";
+import { Effect, Schema } from "effect";
+import { z } from "zod";
+import { OpenCodeCompassPluginV2, setupOpenCodeV2 } from "../index.ts";
 import { loadResolvedCommands } from "../cache.ts";
-import type { WorktreeDefinition } from "@opencode/plugin/promise/worktree";
+import { createOpenCodeV2Tools } from "../v2.ts";
+import { mergeWithDefaults } from "../../core/index.ts";
+
+function fixture() {
+  const agents = new Map<string, Agent.Info>();
+  const commands = new Map<string, CommandDefinition>();
+  const tools = new Map<string, Tool.Info>();
+  const worktrees: WorktreeDefinition[] = [];
+  const prompts: Array<Record<string, unknown>> = [];
+  const createdSessions: Array<Record<string, unknown>> = [];
+  const switchedAgents: string[] = [];
+  const disposed: string[] = [];
+  function transform<Editor>(name: string, editor: Editor): Transform<Editor> {
+    return (callback) => Effect.gen(function* () {
+      callback(editor);
+      let active = true;
+      const dispose = Effect.sync(() => { if (active) disposed.push(name); active = false; });
+      yield* Effect.addFinalizer(() => dispose);
+      return { dispose };
+    });
+  }
+  const ctx = {
+    location: Schema.decodeUnknownSync(Location.Info)({ directory: process.cwd(), project: { id: "project", directory: process.cwd(), canonical: process.cwd() } }),
+    agent: { transform: transform("agent", {
+      update: (id: string, update: (agent: Agent.Info) => void) => {
+        const agent = agents.get(id) ?? Agent.Info.default(Agent.ID.make(id));
+        update(agent);
+        agents.set(id, agent);
+      },
+    }) },
+    command: { transform: transform("command", { add: (command: CommandDefinition) => commands.set(command.name, command) }) },
+    tool: { transform: transform("tool", { add: (tool: Tool.Info) => tools.set(tool.name, tool) }) },
+    worktree: { transform: transform("worktree", { add: (strategy: WorktreeDefinition) => worktrees.push(strategy) }) },
+    session: {
+      create: (input: Record<string, unknown>) => Effect.sync(() => {
+        createdSessions.push(input);
+        return { id: Session.ID.make("ses_child") };
+      }),
+      switchAgent: ({ agent }: { agent: string }) => Effect.sync(() => { switchedAgents.push(agent); }),
+      prompt: (input: Record<string, unknown>) => Effect.sync(() => { prompts.push(input); }),
+    },
+  };
+  return { ctx, context: ctx as unknown as Plugin.Context, agents, commands, tools, worktrees, prompts, createdSessions, switchedAgents, disposed };
+}
 
 describe("OpenCode v2 plugin", () => {
-  test("exports the v2 plugin definition", () => {
+  test("exports the native Effect setup directly", () => {
     assert.equal(OpenCodeCompassPluginV2.id, "kompass");
-    assert.equal(OpenCodeCompassPluginV2.setup, setupOpenCodeV2);
+    assert.equal(OpenCodeCompassPluginV2.effect, setupOpenCodeV2);
   });
 
-  test("registers location-scoped agents, commands, and tools", async () => {
-    const agents: string[] = [];
-    type Command = { name: string; execute(input: { sessionID: string; prompt: { text: string; files?: unknown[] }; delivery: string }): Promise<void> };
-    const commands = new Map<string, Command>();
-    const prompts: Array<Record<string, unknown>> = [];
-    const switchedAgents: string[] = [];
-    const createdSessions: Array<Record<string, unknown>> = [];
-    const tools = new Map<string, { input: unknown }>();
-    const disposed: string[] = [];
-    const worktrees: WorktreeDefinition[] = [];
-    const availableAgents = new Map<string, Record<string, unknown>>();
-    const context = {
-      location: { directory: process.cwd() },
-      worktree: {
-        transform: async (transform: (draft: { add(strategy: WorktreeDefinition): void }) => void) => {
-          transform({ add: (strategy) => { worktrees.push(strategy); } });
-          return { dispose: async () => { disposed.push("worktree"); } };
-        },
-      },
-      agent: {
-        transform: async (transform: (draft: unknown) => void) => {
-          transform({
-            update(name: string, update: (agent: Record<string, unknown>) => void) {
-              agents.push(name);
-              const agent = availableAgents.get(name) ?? { id: name, permissions: [] };
-              update(agent);
-              availableAgents.set(name, agent);
-            },
-          });
-          return { dispose: async () => { disposed.push("agent"); } };
-        },
-        reload: async () => {},
-      },
-      command: {
-        transform: async (transform: (draft: unknown) => void) => {
-          transform({
-            add(command: Command) {
-              commands.set(command.name, command);
-            },
-          });
-          return { dispose: async () => { disposed.push("command"); } };
-        },
-        reload: async () => {},
-      },
-      tool: {
-        transform: async (transform: (draft: unknown) => void) => {
-          transform({
-            add(tool: { name: string; input: unknown }) {
-              tools.set(tool.name, tool);
-            },
-          });
-          return { dispose: async () => { disposed.push("tool"); } };
-        },
-        reload: async () => {},
-      },
-      session: {
-        create: async (input: Record<string, unknown>) => {
-          createdSessions.push(input);
-          return { id: "child-1" };
-        },
-        switchAgent: async ({ agent }: { agent: string }) => {
-          switchedAgents.push(agent);
-        },
-        prompt: async (input: Record<string, unknown>) => {
-          prompts.push(input);
-        },
-      },
-    };
+  test("registers agents, commands, all tools, and Rift on the host scope", async () => {
+    const f = fixture();
+    await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
+      yield* setupOpenCodeV2(f.context);
+      assert.ok(f.agents.has("worker"));
+      assert.ok(f.commands.has("dev"));
+      assert.deepEqual(f.worktrees.map((strategy) => strategy.id), ["rift"]);
+      assert.equal(Effect.isEffect(f.worktrees[0]!.list(process.cwd())), true);
+      assert.deepEqual([...f.tools.keys()].sort(), [
+        "kompass_changes_load", "kompass_pr_load", "kompass_pr_load_review", "kompass_pr_sync",
+        "kompass_session_create", "kompass_session_interrupt", "kompass_session_read", "kompass_session_send", "kompass_session_wait",
+        "kompass_ticket_load", "kompass_ticket_sync", "kompass_worktree_create", "kompass_worktree_list", "kompass_worktree_remove",
+      ]);
+      assert.equal(typeof (f.tools.get("kompass_changes_load")!.input as z.ZodType)["~standard"].validate, "function");
+      assert.deepEqual(f.disposed, []);
+    })));
+    assert.deepEqual(f.disposed.sort(), ["agent", "command", "tool", "worktree"]);
+  });
 
-    const cleanup = await setupOpenCodeV2(context as never);
-    assert.ok(agents.includes("worker"));
-    assert.ok(commands.has("dev"));
-    assert.deepEqual(worktrees.map((strategy) => strategy.id), ["rift"]);
-    assert.deepEqual([...tools.keys()].sort(), [
-      "kompass_changes_load",
-      "kompass_pr_load",
-      "kompass_pr_load_review",
-      "kompass_pr_sync",
-      "kompass_ticket_load",
-      "kompass_ticket_sync",
-    ]);
-    assert.equal(typeof (tools.get("kompass_changes_load")?.input as any)?.["~standard"]?.validate, "function");
-
+  test("native command effects preserve arguments, attachments, delivery, and session selection", async () => {
+    const f = fixture();
     const resolved = await loadResolvedCommands(process.cwd());
-    assert.equal(commands.size, Object.keys(resolved).length);
     const text = "Keep literal $& $$ $1 $ARGUMENTS and !`printf should-not-run`";
     const files = [{ uri: "file:///project/example.ts" }];
-    await commands.get("dev")!.execute({
-      sessionID: "session-1",
-      prompt: { text, files },
-      delivery: "queue",
-    });
-    assert.equal(prompts[0]?.text, resolved.dev!.template.replaceAll("$ARGUMENTS", () => text));
-    assert.equal(prompts[0]?.files, files);
-    assert.equal(prompts[0]?.delivery, "queue");
-    assert.equal(prompts[0]?.sessionID, process.env.CI ? "session-1" : "child-1");
-    assert.equal(createdSessions.length, process.env.CI ? 0 : 1);
-    if (!process.env.CI) assert.equal(createdSessions[0]?.agent, "worker");
+    const sessionID = Session.ID.make("ses_current");
+    await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
+      yield* setupOpenCodeV2(f.context);
+      assert.equal(f.commands.size, Object.keys(resolved).length);
+      yield* f.commands.get("dev")!.execute({ sessionID, prompt: { text, files }, delivery: "queue" });
+      assert.equal(f.prompts[0]?.text, resolved.dev!.template.replaceAll("$ARGUMENTS", () => text));
+      assert.equal(f.prompts[0]?.files, files);
+      assert.equal(f.prompts[0]?.delivery, "queue");
+      assert.equal(f.prompts[0]?.sessionID, process.env.CI ? sessionID : "ses_child");
+      assert.equal(f.createdSessions.length, process.env.CI ? 0 : 1);
+      if (!process.env.CI) assert.equal(f.createdSessions[0]?.agent, "worker");
+      yield* f.commands.get("learn")!.execute({ sessionID, prompt: { text: "remember this" }, delivery: "steer" });
+      assert.equal(f.switchedAgents.at(-1), "worker");
+      assert.equal(f.prompts[1]?.sessionID, sessionID);
+      assert.equal(f.prompts[1]?.text, resolved.learn!.template.replaceAll("$ARGUMENTS", "remember this"));
+    })));
+  });
 
-    await commands.get("learn")!.execute({
-      sessionID: "session-1",
-      prompt: { text: "remember this" },
-      delivery: "steer",
-    });
-    assert.equal(switchedAgents.at(-1), "worker");
-    assert.equal(prompts[1]?.sessionID, "session-1");
-    assert.equal(prompts[1]?.text, resolved.learn!.template.replaceAll("$ARGUMENTS", "remember this"));
+  test("failed setup releases prior native registrations", async () => {
+    const f = fixture();
+    f.ctx.tool.transform = () => Effect.die(new Error("Registration failed"));
+    await assert.rejects(Effect.runPromise(Effect.scoped(setupOpenCodeV2(f.context))), /Registration failed/);
+    assert.deepEqual(f.disposed.sort(), ["agent", "command"]);
+    assert.deepEqual(f.worktrees, []);
+  });
 
-    await cleanup();
-    assert.deepEqual(disposed.sort(), ["agent", "command", "tool", "worktree"]);
+  test("shared core failures enter the native Tool.Error channel", async () => {
+    const tools = createOpenCodeV2Tools(process.cwd(), mergeWithDefaults({}));
+    const tool = tools.find((entry) => entry.name === "kompass_ticket_load")!;
+    const invocation = { sessionID: Session.ID.make("ses_current") } as Tool.Context;
+    const error = await Effect.runPromise(Effect.flip(tool.execute({ source: process.cwd() }, invocation)));
+    assert.ok(error instanceof Tool.Error);
+    assert.ok(error.message.length > 0);
   });
 });

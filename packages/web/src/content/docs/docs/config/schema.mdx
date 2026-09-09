@@ -54,7 +54,9 @@ Deprecated array fields still exist in the schema for compatibility, but the new
 `adapters.opencode.navigator` supports:
 
 - `enabled`
-- `maxConcurrentSessions` from 1 through 8
+- `maxConcurrentSessions` from 1 through 8, enforced by the OpenCode 1 adapter only
 - positive `maxReadChars`
 - positive `maxOutputCharsPerItem`, no greater than `maxReadChars`
 - positive `maxWaitMs`
+
+OpenCode 2 registers eight native Navigator tools. `session_list` and the concurrency limit require session discovery APIs that V2 plugins do not expose. V2 worktree removal uses native force semantics without an active-session check. All other Navigator settings and supported tool aliases/disables apply to V2.

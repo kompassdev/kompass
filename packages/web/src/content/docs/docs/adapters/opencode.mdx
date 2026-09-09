@@ -18,7 +18,7 @@ Inside OpenCode, the adapter exposes:
 - Kompass commands
 - Kompass agents
 - Kompass tools
-- Kompass Navigator session and worktree orchestration through the OpenCode 1 plugin API
+- Kompass Navigator session orchestration on both OpenCode versions, with eight native V2 tools
 - a native Rift worktree strategy for OpenCode 2
 - project override loading from local config files
 
@@ -38,7 +38,7 @@ You can use overrides to:
 
 ## OpenCode 2 worktrees
 
-Kompass registers `rift` through V2's native `ctx.worktree.transform` API. Registration selects it as the location's default, so OpenCode's own worktree actions use Rift. The adapter targets `@opencode/plugin` beta `19381`, including support for a strategy's returned directory.
+Kompass registers `rift` through V2's native `ctx.worktree.transform` API. Registration selects it as the location's default for calls that omit a strategy. Desktop's current New worktree button explicitly selects Git; use Kompass's `worktree_create` tool for the registered default, then `session_create` to start work in the returned directory. The adapter targets `@opencode/plugin` beta `19381`, including support for a strategy's returned directory.
 
 Load Kompass in OpenCode's `opencode.jsonc`; no destination setting is needed:
 
@@ -56,9 +56,33 @@ Load Kompass in OpenCode's `opencode.jsonc`; no destination setting is needed:
 
 The bundled `rift-snapshot` native bindings load on first use and require a supported copy-on-write filesystem. Native calls are synchronous and cannot be interrupted mid-operation; the adapter checks cancellation between calls. The V2 strategy is independent of the V1 Navigator settings.
 
-## Kompass Navigator
+## OpenCode 2 session orchestration
 
-Navigator is available through the OpenCode 1 plugin API for explicitly requested native-session and managed-worktree workflows. Its eight tools have not been ported to the OpenCode 2 plugin API; V2 uses the native Rift strategy above. Navigator is not a subagent mechanism; ordinary delegation should use OpenCode's built-in `task` tool. Navigator follows OpenCode Desktop's protocol detection so session creation, prompts, reads, status, and interrupts stay on the same compatible API in the current checkout or managed Git worktrees. The V1 Navigator adapter polls the active-session API locally when using the V2 session protocol. It requires OpenCode `1.17.12` or newer and is enabled by default on OpenCode 1.
+V2 registers eight Navigator tools: `worktree_create`, `worktree_list`, `worktree_remove`, `session_create`, `session_read`, `session_send`, `session_wait`, and `session_interrupt`. Default names have the `kompass_` prefix. The V2 plugin uses native Effect setup, commands, tools, and Rift operations. Registrations belong to the host's plugin scope. Shared Promise-based core tools run at an explicit Effect boundary that passes cancellation to their shell commands.
+
+Ask the agent to create a worktree and start work there. It calls `kompass_worktree_create` with `{ "name": "parser-fix" }`, then passes the returned directory to `kompass_session_create`:
+
+```json
+{
+  "prompt": "Implement the parser fix and run tests.",
+  "title": "Parser fix",
+  "directory": "/projects/.rifts/repo/parser-fix"
+}
+```
+
+Session creation uses the supplied directory or defaults to the calling session's current location. It inherits the caller's agent/model/variant unless overridden and admits the optional prompt. It returns the session ID and directory immediately. `session_send` uses the target session's stored location and accepts `delivery: "steer"` or `"queue"`. Reads return bounded current model context. Waits use OpenCode's native wait, race up to eight targets, and release subscriptions on timeout or cancellation without interrupting the target sessions.
+
+Worktree creation is always a separate call to `worktree_create({ name?, strategy?, branch? })`. V2 `session_create` has no environment options and never creates or removes a worktree. Omit `prompt` to create an idle session. `worktree_remove({ directory, force? })` uses native removal and does not delete sessions. It protects the checkout and calling location. V2 cannot discover other active sessions, so finish known work before removal.
+
+Navigator follows the existing feature toggle and tool aliases/disables. `maxReadChars`, `maxOutputCharsPerItem`, and `maxWaitMs` apply. V2 `timeoutMs` is positive and capped by `maxWaitMs`. Session listing and `maxConcurrentSessions` remain V1-only because V2 plugins lack session discovery. Known session IDs still work after reloads. Partial failures preserve resources and return recovery details.
+
+See the [Navigator tool reference](/docs/reference/tools/navigator/) for V2 arguments and examples.
+
+## OpenCode 1 Navigator
+
+V1 session creation also accepts optional `directory` and `prompt`. Worktree creation is a separate call; the `environment` argument has been removed. With no directory, creation uses the calling session's current location. With no prompt, it creates an idle session. The legacy session protocol cannot persist agent/model selection before prompting; provide those overrides when sending the first prompt instead.
+
+The OpenCode 1 adapter exposes nine Navigator tools, including standalone worktree creation. Ordinary delegation uses OpenCode's built-in `task` tool. Navigator follows Desktop's protocol detection so session operations stay on one compatible API. The V1 adapter polls the active-session API locally when using the V2 session protocol. It requires OpenCode `1.17.12` or newer and is enabled by default.
 
 ```jsonc
 {
@@ -80,11 +104,11 @@ Navigator is available through the OpenCode 1 plugin API for explicitly requeste
 }
 ```
 
-Navigator registers all eight logical tools unless the feature or an individual tool is disabled. Default names receive the `kompass_` prefix; configured aliases such as `start_workflow_session` are registered exactly.
+The V1 adapter registers all nine logical tools unless the feature or an individual tool is disabled. Default names receive the `kompass_` prefix; configured aliases such as `start_workflow_session` are registered exactly.
 
 Navigator is scoped to the current project. New sessions inherit the calling session's agent, model, and variant unless explicitly overridden. Session IDs are ownership-checked, directories must be native managed worktrees, and lifecycle calls cannot target the calling session. `session_send` can switch the target session's agent or model before admitting a steered prompt. Waits default to `maxWaitMs`, cap requested timeouts at `maxWaitMs`, and use `timeoutMs: 0` for an immediate snapshot. Removal rejects the checkout, unmanaged worktrees, and worktrees containing active sessions. Navigator does not force removal, merge branches, create pull requests, or maintain a separate job database.
 
-On OpenCode 1, when experimental workspace adapters are available, Kompass registers a `rift` workspace adapter for OpenCode's workspace API using its bundled `rift-snapshot` dependency. Navigator automatically uses Rift for `new_worktree` sessions when no `startCommand` is requested, falling back to Git worktrees otherwise.
+On OpenCode 1, when experimental workspace adapters are available, Kompass registers a `rift` workspace adapter using its bundled `rift-snapshot` dependency. `worktree_create` uses Rift when no `startCommand` is requested, using Git worktrees otherwise. Pass the returned directory to `session_create`.
 
 ## Agent model
 

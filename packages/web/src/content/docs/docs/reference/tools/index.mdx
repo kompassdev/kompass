@@ -14,6 +14,7 @@ Current built-in tools:
 - `ticket_load`
 - `ticket_sync`
 - `worktree_list` (OpenCode Navigator)
+- `worktree_create` (OpenCode Navigator)
 - `session_create` (OpenCode Navigator)
 - `session_list` (OpenCode Navigator)
 - `session_read` (OpenCode Navigator)
@@ -50,7 +51,7 @@ Creates or updates GitHub issues, renders checklist sections, and can append iss
 
 ## OpenCode Navigator tools
 
-Navigator tools are enabled by default through the OpenCode 1 plugin API. These tools have not been ported to the V2 plugin API; OpenCode 2 uses Kompass's [native Rift worktree strategy](/docs/adapters/opencode/#opencode-2-worktrees). Use them only for explicitly requested native-session or managed-worktree workflows, not for subagent delegation; OpenCode's built-in `task` tool owns subagent lifecycle and waiting. Their default runtime names use the `kompass_` prefix. See [Kompass Navigator](./navigator/) for arguments and safety behavior.
+Navigator is enabled by default on both OpenCode versions. V1 exposes all nine tools below. V2 exposes eight native tools, omitting `session_list` because the plugin API lacks session discovery. Use Navigator for explicitly requested native-session workflows; ordinary delegation uses OpenCode's built-in subagent mechanism. Default runtime names use the `kompass_` prefix. See [Kompass Navigator](./navigator/) for version-specific arguments and limits.
 
 ### `worktree_list`
 
@@ -58,23 +59,25 @@ Lists the current checkout explicitly and all native OpenCode-managed worktrees.
 
 ### `session_create`
 
-Creates a native session in the checkout, an existing managed workspace, or a newly created workspace; inherits the calling session's agent, model, and variant unless overridden, admits its initial prompt, and returns immediately. New workspaces prefer the registered Rift adapter when available and fall back to Git worktrees.
+On V2, the initial `prompt` is optional. Omit it to create an idle session, then start execution with `session_send`.
+
+Both adapters create a native session in an optional `directory`, defaulting to the calling session's current location. An optional prompt starts execution immediately. Create new worktrees separately with `worktree_create`. The legacy session protocol selects agent/model only when prompting; pass overrides to `session_send` when starting an idle session.
 
 ### `session_list`
 
-Lists paginated sessions filtered to the current OpenCode project, with location, agent, model, timestamps, and active or idle state.
+V1 only. Lists paginated sessions filtered to the current OpenCode project, with location, agent, model, timestamps, and active or idle state.
 
 ### `session_read`
 
-Reads a bounded page of recent projected messages. Tool outputs are excluded by default, and per-item and total truncation metadata is returned.
+Reads bounded recent messages with optional tool output. V2 reads current model context; V1 supports paginated history. Configured per-item and total message limits apply.
 
 ### `session_send`
 
-Sends a steered follow-up through the same session protocol selected by OpenCode Desktop, optionally switching the target agent or model first.
+Admits a follow-up, optionally switching agent/model first. V2 uses native `steer` or `queue` delivery; V1 sends through the protocol selected by Desktop.
 
 ### `session_wait`
 
-Polls the active-session API for the detected protocol until the first of up to eight sessions becomes idle, then returns bounded recent output. The timeout defaults to configured `maxWaitMs`, is capped by `maxWaitMs`, and `0` returns an immediate snapshot.
+Waits for the first of up to eight sessions to become idle and returns bounded context. V2 uses native Effect waits and releases subscriptions on timeout or cancellation; V1 polls active state. Timeouts default to and are capped by `maxWaitMs`. V2 requires a positive timeout; V1 also supports `0` for an immediate snapshot.
 
 ### `session_interrupt`
 
@@ -82,4 +85,8 @@ Interrupts active native execution for another session in the current project.
 
 ### `worktree_remove`
 
-Removes an idle native managed worktree. It rejects the main checkout, unmanaged paths, and worktrees containing active sessions; force removal is not available.
+Removes a native managed worktree. V2 uses native removal with optional `force`, protects the checkout and calling location, and cannot discover other active sessions. V1 checks for active sessions and has no force option.
+
+### `worktree_create`
+
+Creates a managed worktree without a session. V2 accepts `name`, `strategy`, and `branch`. V1 accepts `name` and `startCommand`. On either version, pass the returned directory to `session_create`.

@@ -122,6 +122,9 @@
     "worktree_list": {
       "enabled": true
     },
+    "worktree_create": {
+      "enabled": true
+    },
     "session_create": {
       "enabled": true
     },

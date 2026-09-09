@@ -9,6 +9,7 @@ export {
   getConfiguredToolName,
   getEnabledToolNames,
   NAVIGATOR_TOOL_NAMES,
+  V2_NAVIGATOR_TOOL_NAMES,
   loadKompassConfig,
   mergeWithDefaults,
 } from "./lib/config.ts";

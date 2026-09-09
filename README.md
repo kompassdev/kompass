@@ -82,6 +82,8 @@ The last active strategy registration wins. Unloading Kompass restores the previ
 
 ## OpenCode 2 session orchestration
 
+All V2 commands execute inline in the invoking session, including commands marked `subtask` in shared definitions. They switch to the command's agent and submit its expanded template there. Separate sessions are created explicitly through Navigator tools.
+
 Worktrees and sessions have separate lifecycles. `kompass_worktree_create({ name?, strategy?, branch? })` creates a worktree without a session. Pass its returned `directory` to `session_create`. Omit `directory` to use the calling session's current location, including when it is already in a worktree. Omit `prompt` to create an idle session, then start it with `session_send`. With a prompt, creation starts execution immediately. `session_send` targets a session ID and uses that session's location.
 
 `kompass_worktree_remove({ directory, force? })` removes a managed worktree through OpenCode. It rejects the checkout and any worktree containing the calling session or plugin. `force` defaults to false; true permits discarding uncommitted files. Rift still rejects snapshots with children. V2 cannot discover other active sessions, so finish or interrupt known sessions in that directory before removal. Removing a worktree does not delete its sessions.

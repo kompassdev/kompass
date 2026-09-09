@@ -1,4 +1,4 @@
-import { Agent, Location, Plugin } from "@opencode/plugin/effect";
+import { Agent, Plugin } from "@opencode/plugin/effect";
 import { Tool } from "@opencode/schema/tool";
 import { Effect } from "effect";
 import { z } from "zod";
@@ -69,19 +69,14 @@ function applyCommands(
       name,
       description: definition.description,
       execute: Effect.fn(`kompass.command.${name}`)(function* ({ sessionID, prompt, delivery }) {
-        let targetSessionID = sessionID;
-        if (definition.subtask) {
-          const session = yield* ctx.session.create({
-            agent: definition.agent ? Agent.ID.make(definition.agent) : undefined,
-            location: Location.Ref.make({ directory: ctx.location.directory, workspaceID: ctx.location.workspaceID }),
-          });
-          targetSessionID = session.id;
-        } else if (definition.agent) {
+        // V2 commands always execute in the invoking session, regardless of
+        // the shared definition's V1 subtask setting.
+        if (definition.agent) {
           yield* ctx.session.switchAgent({ sessionID, agent: Agent.ID.make(definition.agent) });
         }
         yield* ctx.session.prompt({
           ...prompt,
-          sessionID: targetSessionID,
+          sessionID,
           text: definition.template.includes("$ARGUMENTS")
             ? definition.template.replaceAll("$ARGUMENTS", () => prompt.text)
             : `${definition.template}\n\n${prompt.text}`.trim(),

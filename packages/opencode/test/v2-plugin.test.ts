@@ -80,7 +80,7 @@ describe("OpenCode v2 plugin", () => {
     assert.deepEqual(f.disposed.sort(), ["agent", "command", "tool", "worktree"]);
   });
 
-  test("native command effects preserve arguments, attachments, delivery, and session selection", async () => {
+  test("native commands always run inline and preserve arguments, attachments, and delivery", async () => {
     const f = fixture();
     const resolved = await loadResolvedCommands(process.cwd());
     const text = "Keep literal $& $$ $1 $ARGUMENTS and !`printf should-not-run`";
@@ -93,9 +93,9 @@ describe("OpenCode v2 plugin", () => {
       assert.equal(f.prompts[0]?.text, resolved.dev!.template.replaceAll("$ARGUMENTS", () => text));
       assert.equal(f.prompts[0]?.files, files);
       assert.equal(f.prompts[0]?.delivery, "queue");
-      assert.equal(f.prompts[0]?.sessionID, process.env.CI ? sessionID : "ses_child");
-      assert.equal(f.createdSessions.length, process.env.CI ? 0 : 1);
-      if (!process.env.CI) assert.equal(f.createdSessions[0]?.agent, "worker");
+      assert.equal(f.prompts[0]?.sessionID, sessionID);
+      assert.equal(f.createdSessions.length, 0);
+      assert.equal(f.switchedAgents.at(-1), "worker");
       yield* f.commands.get("learn")!.execute({ sessionID, prompt: { text: "remember this" }, delivery: "steer" });
       assert.equal(f.switchedAgents.at(-1), "worker");
       assert.equal(f.prompts[1]?.sessionID, sessionID);

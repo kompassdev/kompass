@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 
-import { createOpenCodeTools, OpenCodeCompassPlugin } from "../index.ts";
+import { createOpenCodeTools, OpenCodeCompassPluginV1 } from "../index.ts";
 import { createRiftWorkspaceAdapter, resolveRiftSourceDirectory } from "../rift-workspace.ts";
 
 const execFileAsync = promisify(execFile);
@@ -129,7 +129,7 @@ async function createTempGitRepo() {
 
 describe("createOpenCodeTools", () => {
   test("Rift workspace adapter maps OpenCode workspaces to Rift snapshots", async () => {
-    const calls: Array<{ name: string; options?: Record<string, unknown> }> = [];
+    const calls: Array<{ name: string; options?: unknown }> = [];
     const sourceDirectory = path.join(os.tmpdir(), "kompass-rift-source");
     const adapter = createRiftWorkspaceAdapter({
       init: (options) => {
@@ -535,7 +535,7 @@ describe("createOpenCodeTools", () => {
       const tempDir = await createTempGitRepo();
 
       try {
-        const plugin = await OpenCodeCompassPlugin({
+        const plugin = await OpenCodeCompassPluginV1({
           client: createMockClient() as never,
           directory: tempDir,
           worktree: tempDir,

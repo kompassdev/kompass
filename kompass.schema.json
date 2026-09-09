@@ -239,11 +239,15 @@
         "worktree_list": {
           "$ref": "#/$defs/toolConfig"
         },
+        "worktree_create": {
+          "$ref": "#/$defs/toolConfig"
+        },
         "session_create": {
           "$ref": "#/$defs/toolConfig"
         },
         "session_list": {
-          "$ref": "#/$defs/toolConfig"
+          "$ref": "#/$defs/toolConfig",
+          "description": "OpenCode 1 Navigator only; V2 plugins do not expose session listing."
         },
         "session_read": {
           "$ref": "#/$defs/toolConfig"
@@ -258,7 +262,8 @@
           "$ref": "#/$defs/toolConfig"
         },
         "worktree_remove": {
-          "$ref": "#/$defs/toolConfig"
+          "$ref": "#/$defs/toolConfig",
+          "description": "Remove managed worktrees. V2 uses native removal with optional force and cannot discover active sessions."
         }
       }
     },
@@ -356,8 +361,8 @@
               "type": "object",
               "additionalProperties": false,
               "properties": {
-                "enabled": { "type": "boolean", "default": true },
-                "maxConcurrentSessions": { "type": "integer", "minimum": 1, "maximum": 8, "default": 8 },
+                "enabled": { "type": "boolean", "default": true, "description": "Enable Navigator: nine tools on OpenCode 1 and eight native orchestration tools on OpenCode 2." },
+                "maxConcurrentSessions": { "type": "integer", "minimum": 1, "maximum": 8, "default": 8, "description": "OpenCode 1 only. The V2 plugin API does not expose active-session discovery, so V2 does not enforce this limit." },
                 "maxReadChars": { "type": "integer", "minimum": 1, "default": 20000 },
                 "maxOutputCharsPerItem": { "type": "integer", "minimum": 1, "default": 4000 },
                 "maxWaitMs": { "type": "integer", "minimum": 1, "default": 120000 }
@@ -469,6 +474,7 @@
         "ticket_sync",
         "ticket_load",
         "worktree_list",
+        "worktree_create",
         "session_create",
         "session_list",
         "session_read",

@@ -3,28 +3,72 @@ title: Kompass Navigator
 description: Native OpenCode session and managed-worktree orchestration tools.
 ---
 
-Navigator is enabled by default in the OpenCode adapter. Use it only when the user explicitly requests native-session, managed-worktree, or multi-session workflow orchestration. Do not use it for subagent delegation: OpenCode's built-in `task` tool creates child sessions, waits for foreground tasks, and reports background completion automatically. Default runtime names use the `kompass_` prefix; set `adapters.opencode.navigator.enabled` to `false` to disable all eight tools.
+Navigator is enabled by default on both OpenCode versions. V1 exposes nine tools; V2 exposes eight tools through native session and worktree APIs, using the [Rift strategy](/docs/adapters/opencode/#opencode-2-worktrees) for default worktree creation. Use Navigator for explicitly requested native-session and multi-session workflows. Ordinary delegation uses OpenCode's built-in subagent mechanism. Default runtime names use the `kompass_` prefix; `adapters.opencode.navigator.enabled: false` disables Navigator. Individual logical names can be disabled or aliased through `tools`.
 
-| Logical tool | Purpose |
-| --- | --- |
-| `worktree_list` | List the checkout and native managed worktrees. |
-| `session_create` | Create a native session in the checkout, an existing managed workspace, or a newly created workspace, inheriting the caller's agent, model, and variant unless overridden, and admit its first prompt asynchronously. New workspaces prefer Rift when available. |
-| `session_list` | List paginated sessions filtered to the current project. |
-| `session_read` | Read a bounded page of recent messages with optional tool outputs. |
-| `session_send` | Send a steered follow-up through the detected session API, optionally switching agent or model first. |
-| `session_wait` | Poll the detected active-session API until the first of one to eight sessions becomes idle. The timeout defaults to and is capped by `maxWaitMs`; zero returns an immediate snapshot. |
-| `session_interrupt` | Interrupt another session's active execution. |
-| `worktree_remove` | Remove an idle native managed worktree without force. |
+| Logical tool | Versions | Purpose |
+| --- | --- | --- |
+| `worktree_list` | V1, V2 | List the checkout and native managed worktrees. |
+| `worktree_create` | V1, V2 | Create a managed worktree without a session. |
+| `session_create` | V1, V2 | Create a native session, inherit agent/model/variant unless overridden, admit its first prompt, and return immediately. |
+| `session_list` | V1 | List paginated current-project sessions. |
+| `session_read` | V1, V2 | Read bounded messages. V2 reads current model context; V1 supports paginated history. |
+| `session_send` | V1, V2 | Send a follow-up, optionally switching agent/model. V2 supports steer or queue delivery. |
+| `session_wait` | V1, V2 | Wait for the first of up to eight targets to become idle. V2 uses native waits with cancellation; V1 polls active-session state. |
+| `session_interrupt` | V1, V2 | Interrupt another session's active execution. |
+| `worktree_remove` | V1, V2 | Remove a managed worktree. V2 supports native force semantics; V1 checks active sessions and has no force option. |
+
+## Independent worktree lifecycle
+
+On V2, `worktree_create({ name?, strategy?, branch? })` returns `{ status: "created", worktree: { directory } }`. It uses the calling session's location as source. Omit `strategy` for the registered default, normally Rift. A starting `branch` requires `strategy: "git"`. Pass the returned directory to `session_create` in a separate call.
+
+Use `worktree_remove({ directory, force? })` to remove a managed directory. `force` defaults to false and permits discarding uncommitted files when true. Rift rejects snapshots with children even with force. The checkout and worktrees containing the calling session or plugin cannot be removed.
+
+V2 cannot discover all active sessions. Finish or interrupt known sessions using the directory before removal. The tool does not delete or interrupt sessions. V1 retains its active-session checks and has no force option. V1 standalone creation accepts `{ name?, startCommand? }`.
+
+## V2 create and follow up
+
+First call `kompass_worktree_create` with `{ "name": "parser-fix" }`. Then invoke `kompass_session_create` with the returned directory:
+
+```json
+{
+  "prompt": "Implement the parser fix and run tests.",
+  "title": "Parser fix",
+  "directory": "/projects/.rifts/repo/parser-fix"
+}
+```
+
+V2 `session_create` accepts `directory?`, `prompt?`, `title?`, `agent?`, and `model?`. Without a directory, it uses the calling session's current location, even inside a worktree or subdirectory. An explicit directory can select the project checkout or a managed worktree. Relative paths resolve from the caller's directory. The removed `environment` field is rejected. V2 uses OpenCode's project setup rather than V1's `startCommand` argument.
+
+Session creation never creates or removes worktrees. Both adapters accept optional `directory` and `prompt` and have removed the `environment` argument. V1's legacy session protocol cannot persist agent/model selection for an idle session; provide those overrides to `session_send` with its first prompt. V1 returns `sessionID` and `directory` at the top level; V2 returns them inside `session`.
+
+Optional `agent` is a registered agent ID. V2's optional `model` uses `{ "providerID": "...", "id": "...", "variant": "..." }`; V1 uses `modelID` instead of `id`.
+
+With a prompt, `status` is `started`, `admitted` is `true`, and `session.sessionID` and `session.directory` identify the native session. Omit `prompt` on V2 to create an idle session with `status: "created"` and `admitted: false`. Start it later with `session_send`. Creation does not wait for an answer.
+
+Use the returned ID with `kompass_session_send`:
+
+```json
+{ "sessionID": "ses_...", "prompt": "Also add regression coverage.", "delivery": "queue" }
+```
+
+`delivery` defaults to `steer`. Send targets a session ID and uses that session's stored location; it does not take a directory or move the session. Agent/model overrides are validated before switching. A later failure may leave a successfully applied agent/model change in place.
+
+Read with `session_read({ sessionID, turnLimit?, includeOutputs?, maxOutputCharsPerItem? })`. V2 defaults to the latest 20 current-context messages, excludes tool outputs, and caps requested output limits at configured limits. It does not expose a history cursor.
+
+Wait with `session_wait({ targets: [{ sessionID }], timeoutMs? })`. V2 requires a positive timeout, defaulting to and capped by `maxWaitMs`. `completed` means a target became idle; inspect `completed.session.outcome` for success, failure, or interruption. A timeout returns the target IDs without claiming they are all still active. Timeout, cancellation, and a winning target release the other native wait subscriptions without stopping their sessions. V1 also supports `timeoutMs: 0` for an immediate active-state snapshot.
+
+## V2 API limits
+
+The plugin context has no session list or active-session discovery API. V2 therefore omits `session_list`, cannot check other active sessions during removal, and does not enforce `maxConcurrentSessions`. Use known session IDs from tool results or Desktop. The feature toggle, aliases, `maxReadChars`, `maxOutputCharsPerItem`, and `maxWaitMs` apply on both versions.
 
 ## Safety and limits
 
 - Every session ID is validated against the current OpenCode project.
 - Existing-worktree paths must appear in OpenCode's native worktree list.
 - Send, wait, and interrupt reject the calling session.
-- Reads default to ten recent messages, exclude tool outputs, and enforce configured per-item and total character limits.
-- Navigator uses the same V1-or-V2 protocol choice as OpenCode Desktop so created sessions remain visible there.
-- V2 create and send operations reject unknown agent names before admitting a prompt.
-- Worktree removal rejects the main checkout, unmanaged worktrees, and worktrees containing active sessions.
-- Partial creation errors identify resources already created and never automatically delete them.
+- V1 uses Desktop's protocol detection; V2 calls the native plugin context directly.
+- V2 create/send validate agent and model overrides at the destination location.
+- V1 worktree removal rejects the main checkout, unmanaged worktrees, and worktrees containing active sessions.
+- V2 partial creation failures return `status: "partial_failure"`, a failure phase, known session/worktree details, and recovery guidance. Progress updates report created resources before prompting. No automatic deletion occurs.
 
-Navigator does not keep a separate job database. Existing native sessions and worktrees remain discoverable after plugin restarts.
+Navigator does not keep a separate job database. V2 worktrees are discoverable after reloads and known native session IDs remain usable. Desktop's current New worktree button explicitly selects Git; the V2 Navigator create tool can use Rift without that UI change.

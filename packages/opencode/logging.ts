@@ -1,4 +1,4 @@
-import type { PluginInput } from "@opencode-ai/plugin";
+import type { PluginInput } from "./legacy-plugin.ts";
 
 type LogLevel = "debug" | "info" | "warn" | "error";
 
@@ -21,9 +21,23 @@ export function getErrorDetails(error: unknown): Record<string, unknown> {
 }
 
 export function createPluginLogger(
-  client: PluginInput["client"],
-  directory: string,
+  clientOrDirectory: PluginInput["client"] | string,
+  directory = typeof clientOrDirectory === "string" ? clientOrDirectory : "",
 ): PluginLogger {
+  if (typeof clientOrDirectory === "string") {
+    function write(level: LogLevel, message: string, extra?: Record<string, unknown>) {
+      const output = extra ? [`[kompass] ${message}`, { directory, ...extra }] : [`[kompass] ${message}`];
+      console[level](...output);
+    }
+    return {
+      debug: (message, extra) => write("debug", message, extra),
+      info: (message, extra) => write("info", message, extra),
+      warn: (message, extra) => write("warn", message, extra),
+      error: (message, extra) => write("error", message, extra),
+    };
+  }
+  const client = clientOrDirectory;
+
   function dispatch(level: LogLevel, message: string, extra?: Record<string, unknown>) {
     void client.app.log({
       query: { directory },
@@ -33,7 +47,7 @@ export function createPluginLogger(
         message: `[kompass] ${message}`,
         ...(extra ? { extra } : {}),
       },
-    }).catch((err) => {
+    }).catch((err: unknown) => {
       // Log to console for debugging; plugin behavior must not depend on logging.
       console.error("[kompass] Log write failed:", err);
     });

@@ -14,8 +14,10 @@ const packageReadme = path.join(packageRoot, "README.md");
 
 const runtimeDirs = ["agents", "commands", "components"] as const;
 const bundleExternals = [
-  "@opencode-ai/plugin",
-  "@opencode-ai/plugin/tool",
+  "@opencode/plugin",
+  "@opencode/schema",
+  "rift-snapshot",
+  "effect",
   "@opencode-ai/sdk/v2",
 ] as const;
 const bundleArgs = [
